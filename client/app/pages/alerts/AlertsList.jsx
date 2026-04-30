@@ -1,6 +1,8 @@
 import { toUpper } from "lodash";
 import React from "react";
+import Button from "antd/lib/button";
 import routeWithUserSession from "@/components/ApplicationArea/routeWithUserSession";
+import navigateTo from "@/components/ApplicationArea/navigateTo";
 import Link from "@/components/Link";
 import PageHeader from "@/components/PageHeader";
 import Paginator from "@/components/Paginator";
@@ -87,10 +89,10 @@ class AlertsList extends React.Component {
             title={controller.params.pageTitle}
             actions={
               currentUser.hasPermission("list_alerts") ? (
-                <Link.Button block type="primary" href="alerts/new">
+                <Button block type="primary" onClick={() => navigateTo("alerts/new")}>
                   <i className="fa fa-plus m-r-5" aria-hidden="true" />
                   New Alert
-                </Link.Button>
+                </Button>
               ) : null
             }
           />

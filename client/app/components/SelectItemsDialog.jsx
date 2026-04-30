@@ -102,7 +102,9 @@ function SelectItemsDialog({
       title={dialogTitle}
       footer={
         <div className="d-flex align-items-center">
-          <span className="flex-fill m-r-5" style={{ textAlign: "left", color: "rgba(0, 0, 0, 0.5)" }}>
+          <span
+            className="flex-fill m-r-5"
+            style={{ textAlign: "left", color: "var(--rd-color-text-muted)" }}>
             {extraFooterContent}
           </span>
           <Button {...dialog.props.cancelButtonProps} onClick={dialog.dismiss}>

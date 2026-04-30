@@ -1,0 +1,245 @@
+/* ============================================================
+   Redash Design Tokens — single source of truth
+   ============================================================
+   All UI colors, spacing, radius, shadows, motion, and typography
+   are defined here as CSS custom properties so they can be:
+
+     1. Changed at runtime (e.g. dark mode via [data-theme="dark"]).
+     2. Consumed equally from LESS, plain CSS, and inline styles.
+     3. Customized in ONE place without hunting through the codebase.
+
+   Naming conventions
+     --rd-color-*  semantic color tokens     (preferred over hex)
+     --rd-brand-*  raw brand channels        (used to derive colors)
+     --rd-radius-* corner radii
+     --rd-space-*  4-pt spacing scale
+     --rd-shadow-* elevation
+     --rd-font-*   typography
+     --rd-ease/duration motion
+
+   ┌─────────────────────────────────────────────────────────────┐
+   │ HOW TO CHANGE THE BRAND COLOR                              │
+   │                                                             │
+   │ To rebrand the entire UI (buttons, links, focus rings,      │
+   │ active states, soft tints, sidebar highlight) update the    │
+   │ THREE values in the "Brand" block below:                    │
+   │                                                             │
+   │   --rd-brand-rgb        →  the brand color in R, G, B form  │
+   │   --rd-color-brand      →  same color as a hex (auto)       │
+   │   @primary-color        →  mirror in inc/ant-variables.less │
+   │                            (compiled into AntD output)      │
+   │                                                             │
+   │ Soft tints, focus shadow, active background, and the        │
+   │ dark-theme highlight are derived from --rd-brand-rgb so     │
+   │ they update automatically.                                  │
+   └─────────────────────────────────────────────────────────────┘
+============================================================ */
+
+:root {
+  /* ============================================================
+     BRAND — change these to rebrand the product
+     ============================================================ */
+  /* RGB channels of the primary brand color.
+     Keep in sync with @primary-color in inc/ant-variables.less. */
+  --rd-brand-rgb:             255, 114, 48;
+  --rd-color-brand:           rgb(var(--rd-brand-rgb)); /* #FF7230 */
+  --rd-color-brand-hover:     #f05a12;
+  --rd-color-brand-active:    #d3490a;
+
+  /* Tints derived from --rd-brand-rgb (no need to edit) */
+  --rd-color-brand-soft:      rgba(var(--rd-brand-rgb), 0.10);
+  --rd-color-brand-soft-hover:rgba(var(--rd-brand-rgb), 0.16);
+
+  /* Secondary accent — teal pairs well with the warm orange brand
+     (used sparingly: badges, secondary chips, info-like highlights) */
+  --rd-color-accent:          #0ea5b7;
+  --rd-color-accent-soft:     #cff7fa;
+
+  /* ============================================================
+     NEUTRAL PALETTE
+     Slightly warm-tinted grays so chrome harmonizes with the
+     orange brand instead of clashing as cool-blue grays.
+     ============================================================ */
+  --rd-color-bg:              #faf8f5;
+  --rd-color-bg-subtle:       #f5f2ec;
+  --rd-color-surface:         #ffffff;
+  --rd-color-surface-alt:     #fbfaf7;
+  --rd-color-surface-hover:   #f5f2ec;
+  --rd-color-border:          #ece8e1;
+  --rd-color-border-strong:   #d6cfc2;
+  --rd-color-divider:         #f1eee8;
+
+  /* ============================================================
+     TEXT
+     ============================================================ */
+  --rd-color-text:            #1f1a16;
+  --rd-color-text-secondary:  #524a42;
+  --rd-color-text-muted:      #7a7068;
+  --rd-color-text-disabled:   #a59c92;
+  --rd-color-text-inverse:    #ffffff;
+  --rd-color-link:            var(--rd-color-brand);
+  --rd-color-link-hover:      var(--rd-color-brand-hover);
+
+  /* ============================================================
+     STATUS
+     Warning shifted to a punchy yellow so it stays distinct from
+     the orange brand color. Info shifted to teal to share the
+     accent family.
+     ============================================================ */
+  --rd-color-success:         #16a34a;
+  --rd-color-success-soft:    #dcfce7;
+  --rd-color-warning:         #eab308;
+  --rd-color-warning-soft:    #fef9c3;
+  --rd-color-danger:          #dc2626;
+  --rd-color-danger-soft:     #fee2e2;
+  --rd-color-info:            var(--rd-color-accent);
+  --rd-color-info-soft:       var(--rd-color-accent-soft);
+
+  /* ============================================================
+     SIDEBAR
+     ============================================================ */
+  --rd-sidebar-bg:            #ffffff;
+  --rd-sidebar-border:        var(--rd-color-border);
+  --rd-sidebar-text:          #475569;
+  --rd-sidebar-text-hover:    #0f172a;
+  --rd-sidebar-active-bg:     var(--rd-color-brand-soft);
+  --rd-sidebar-active-text:   var(--rd-color-brand);
+
+  /* ============================================================
+     SPACING (4-pt grid)
+     ============================================================ */
+  --rd-space-0:   0;
+  --rd-space-1:   4px;
+  --rd-space-2:   8px;
+  --rd-space-3:   12px;
+  --rd-space-4:   16px;
+  --rd-space-5:   20px;
+  --rd-space-6:   24px;
+  --rd-space-7:   32px;
+  --rd-space-8:   40px;
+  --rd-space-9:   48px;
+  --rd-space-10:  64px;
+
+  /* ============================================================
+     RADIUS
+     ============================================================ */
+  --rd-radius-xs: 4px;
+  --rd-radius-sm: 6px;
+  --rd-radius-md: 10px;
+  --rd-radius-lg: 14px;
+  --rd-radius-xl: 20px;
+  --rd-radius-pill: 9999px;
+
+  /* ============================================================
+     ELEVATION (focus shadow derived from --rd-brand-rgb)
+     ============================================================ */
+  --rd-shadow-1: 0 1px 2px rgba(16, 24, 40, 0.06),
+                 0 1px 3px rgba(16, 24, 40, 0.04);
+  --rd-shadow-2: 0 4px 12px rgba(16, 24, 40, 0.08),
+                 0 2px 4px rgba(16, 24, 40, 0.04);
+  --rd-shadow-3: 0 12px 32px rgba(16, 24, 40, 0.12),
+                 0 4px 8px rgba(16, 24, 40, 0.05);
+  --rd-shadow-4: 0 24px 56px rgba(16, 24, 40, 0.18),
+                 0 8px 16px rgba(16, 24, 40, 0.06);
+  --rd-shadow-focus: 0 0 0 3px rgba(var(--rd-brand-rgb), 0.18);
+
+  /* ============================================================
+     MOTION
+     ============================================================ */
+  --rd-ease:           cubic-bezier(0.2, 0.7, 0.2, 1);
+  --rd-ease-in:        cubic-bezier(0.4, 0, 1, 1);
+  --rd-ease-out:       cubic-bezier(0, 0, 0.2, 1);
+  --rd-duration-fast:  120ms;
+  --rd-duration-base:  200ms;
+  --rd-duration-slow:  320ms;
+
+  /* ============================================================
+     TYPOGRAPHY
+     ============================================================ */
+  --rd-font:
+    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, system-ui, sans-serif;
+  --rd-font-mono:
+    "JetBrains Mono", "SF Mono", ui-monospace, Menlo, Consolas,
+    "Liberation Mono", monospace;
+  --rd-font-feature: "cv11", "ss01", "ss02", "ss03";
+
+  --rd-font-size-xs:   12px;
+  --rd-font-size-sm:   13px;
+  --rd-font-size-base: 14px;
+  --rd-font-size-md:   15px;
+  --rd-font-size-lg:   16px;
+  --rd-font-size-xl:   18px;
+  --rd-font-size-2xl:  22px;
+  --rd-font-size-3xl:  28px;
+  --rd-font-size-4xl:  36px;
+
+  --rd-font-weight-regular: 400;
+  --rd-font-weight-medium:  500;
+  --rd-font-weight-semibold: 600;
+  --rd-font-weight-bold:    700;
+
+  --rd-line-height-tight:  1.25;
+  --rd-line-height-snug:   1.4;
+  --rd-line-height-normal: 1.55;
+  --rd-line-height-loose:  1.7;
+
+  /* ============================================================
+     LAYOUT
+     ============================================================ */
+  --rd-sidebar-width: 80px;
+}
+
+/* ============================================================
+   DARK MODE — opt-in via [data-theme="dark"] on <html>
+   Only neutrals/sidebar/shadows are overridden. The brand
+   palette is shared between light and dark, with a slightly
+   stronger soft tint and a brighter focus ring tuned for
+   dark backgrounds.
+============================================================ */
+
+:root[data-theme="dark"] {
+  /* Warm-tinted dark neutrals (very subtle) so they pair with
+     the orange brand without looking blue-cold. */
+  --rd-color-bg:              #100d0a;
+  --rd-color-bg-subtle:       #15110d;
+  --rd-color-surface:         #1a1612;
+  --rd-color-surface-alt:     #1f1a16;
+  --rd-color-surface-hover:   #251f1a;
+  --rd-color-border:          #2e2620;
+  --rd-color-border-strong:   #3d342c;
+  --rd-color-divider:         #241e19;
+
+  --rd-color-text:            #f3eee8;
+  --rd-color-text-secondary:  #d6cfc7;
+  --rd-color-text-muted:      #a59c91;
+  --rd-color-text-disabled:   #756c63;
+
+  /* Brand tints — slightly punchier on dark */
+  --rd-color-brand-soft:      rgba(var(--rd-brand-rgb), 0.18);
+  --rd-color-brand-soft-hover:rgba(var(--rd-brand-rgb), 0.28);
+
+  /* Status soft tints rebalanced for dark backgrounds */
+  --rd-color-success-soft:    rgba(34, 197, 94, 0.18);
+  --rd-color-warning-soft:    rgba(234, 179, 8, 0.20);
+  --rd-color-danger-soft:     rgba(220, 38, 38, 0.20);
+  --rd-color-accent-soft:     rgba(14, 165, 183, 0.20);
+  --rd-color-info-soft:       var(--rd-color-accent-soft);
+
+  --rd-sidebar-bg:            #1a1612;
+  --rd-sidebar-border:        #261f1a;
+  --rd-sidebar-text:          #d6cfc7;
+  --rd-sidebar-text-hover:    #ffffff;
+  --rd-sidebar-active-bg:     rgba(var(--rd-brand-rgb), 0.18);
+  /* Light orange tint — readable on dark surfaces */
+  --rd-sidebar-active-text:   #ffb089;
+
+  --rd-shadow-1: 0 1px 2px rgba(0, 0, 0, 0.45);
+  --rd-shadow-2: 0 4px 12px rgba(0, 0, 0, 0.5),
+                 0 2px 4px rgba(0, 0, 0, 0.35);
+  --rd-shadow-3: 0 12px 32px rgba(0, 0, 0, 0.55),
+                 0 4px 8px rgba(0, 0, 0, 0.35);
+  --rd-shadow-4: 0 24px 56px rgba(0, 0, 0, 0.65),
+                 0 8px 16px rgba(0, 0, 0, 0.4);
+  --rd-shadow-focus: 0 0 0 3px rgba(var(--rd-brand-rgb), 0.45);
+}

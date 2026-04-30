@@ -16,13 +16,14 @@ import AlertOutlinedIcon from "@ant-design/icons/AlertOutlined";
 import PlusOutlinedIcon from "@ant-design/icons/PlusOutlined";
 import QuestionCircleOutlinedIcon from "@ant-design/icons/QuestionCircleOutlined";
 import SettingOutlinedIcon from "@ant-design/icons/SettingOutlined";
+import ThemeToggle from "@/components/ThemeToggle";
 import VersionInfo from "./VersionInfo";
 
 import "./DesktopNavbar.less";
 
 function NavbarSection({ children, ...props }) {
   return (
-    <Menu selectable={false} mode="vertical" theme="dark" {...props}>
+    <Menu selectable={false} mode="vertical" {...props}>
       {children}
     </Menu>
   );
@@ -161,6 +162,11 @@ export default function DesktopNavbar() {
             </Link>
           </Menu.Item>
         )}
+        
+
+        <Menu.Item key="theme" className="desktop-navbar-theme-item" data-test="ThemeToggle">
+          <ThemeToggle />
+        </Menu.Item>
       </NavbarSection>
 
       <NavbarSection className="desktop-navbar-profile-menu">

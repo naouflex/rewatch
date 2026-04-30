@@ -1,7 +1,9 @@
 import React, { useCallback, useEffect, useRef } from "react";
 import cx from "classnames";
+import Button from "antd/lib/button";
 
 import routeWithUserSession from "@/components/ApplicationArea/routeWithUserSession";
+import navigateTo from "@/components/ApplicationArea/navigateTo";
 import Link from "@/components/Link";
 import PageHeader from "@/components/PageHeader";
 import Paginator from "@/components/Paginator";
@@ -136,10 +138,10 @@ function QueriesList({ controller }) {
           title={controller.params.pageTitle}
           actions={
             currentUser.hasPermission("create_query") ? (
-              <Link.Button block type="primary" href="queries/new">
+              <Button block type="primary" onClick={() => navigateTo("queries/new")}>
                 <i className="fa fa-plus m-r-5" aria-hidden="true" />
                 New Query
-              </Link.Button>
+              </Button>
             ) : null
           }
         />

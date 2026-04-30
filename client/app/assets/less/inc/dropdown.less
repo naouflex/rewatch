@@ -1,14 +1,16 @@
 
 .dropdown-menu {
     z-index: 1000000000;
-    box-shadow: @dropdown-shadow;
-    margin-top: 1px;
-    border-width: 0;
-    .animated(fadeIn, 300ms);
+    background: var(--rd-color-surface);
+    border: 1px solid var(--rd-color-border);
+    border-radius: var(--rd-radius-md);
+    box-shadow: var(--rd-shadow-3);
+    margin-top: 4px;
+    padding: 6px;
+    .animated(fadeIn, 200ms);
 
     > .disabled{
         cursor: not-allowed;
-        // The real magic ;)
         > a {
             pointer-events: none;
             color: @dropdown-link-disabled-color;
@@ -16,7 +18,17 @@
     }
 
     & > li > a {
-        padding: 8px 17px;
+        padding: 8px 12px;
+        border-radius: var(--rd-radius-sm);
+        color: var(--rd-color-text-secondary);
+        transition: background-color var(--rd-duration-fast) var(--rd-ease),
+                    color var(--rd-duration-fast) var(--rd-ease);
+
+        &:hover,
+        &:focus {
+            background-color: var(--rd-color-surface-hover);
+            color: var(--rd-color-text);
+        }
     }
 
     &.dm-icon {
@@ -28,18 +40,10 @@
         }
     }
 
-    &:not([class*="bg-"]) {
-        & > li > a {
-            &:hover {
-                color: #000;
-            }
-        }
-    }
-
     &[class*="bg-"] {
         & > li > a {
             font-weight: 300;
-            color: #fff;
+            color: var(--rd-color-text-inverse);
         }
     }
 }
@@ -53,7 +57,7 @@
     border-radius: 2px 2px 0 0;
 
     &[class*="bg-"] {
-        color: #fff;
+        color: var(--rd-color-text-inverse);
     }
 
     .actions {
@@ -67,7 +71,7 @@
             text-align: center;
 
             &:hover {
-                background: rgba(0,0,0,0.08);
+                background: var(--rd-color-surface-hover);
             }
         }
     }
@@ -82,12 +86,12 @@
         clear: both;
         font-weight: normal;
         line-height: 1.428571429;
-        color: #333333;
+        color: var(--rd-color-text-secondary);
         white-space: nowrap;
         &:hover, &:focus {
-          color: #ffffff;
+          color: var(--rd-color-text-inverse);
           text-decoration: none;
-          background-color: #428bca;
+          background-color: var(--rd-color-brand);
         }
       }
     }

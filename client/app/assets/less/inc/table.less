@@ -1,17 +1,18 @@
 .table {
   margin-bottom: 0;
+  color: var(--rd-color-text);
 
   th.sortable-column {
     cursor: pointer;
   }
 
   &:not(.table-striped) > thead > tr > th {
-    background-color: #fafafa;
+    background-color: var(--rd-color-surface-alt);
   }
 
   [class*="bg-"] {
     & > tr > th {
-      color: #fff;
+      color: var(--rd-color-text-inverse);
       border-bottom: 0;
       background: transparent !important;
     }
@@ -23,8 +24,8 @@
 
   & > thead > tr > th {
     vertical-align: middle;
-    font-weight: 500;
-    color: #333;
+    font-weight: var(--rd-font-weight-medium);
+    color: var(--rd-color-text);
     border-width: 1px;
     text-transform: uppercase;
     padding: 15px 10px;
@@ -91,7 +92,7 @@
 }
 
 .table-hover > tbody > tr:hover {
-  background-color: #f4f4f4;
+  background-color: var(--rd-color-surface-hover);
 }
 
 .table-data {
@@ -115,7 +116,7 @@
 }
 
 .btn-favorite {
-  color: #d4d4d4;
+  color: var(--rd-color-border-strong);
   transition: all 0.25s ease-in-out;
 
   .fa-star {
@@ -135,16 +136,16 @@
 }
 
 .btn-archive {
-  color: #d4d4d4;
+  color: var(--rd-color-border-strong);
   transition: all 0.25s ease-in-out;
 
   &:hover,
   &:focus {
-    color: @gray-light;
+    color: var(--rd-color-text-muted);
   }
 
   .fa-archive {
-    color: @gray-light;
+    color: var(--rd-color-text-muted);
   }
 }
 

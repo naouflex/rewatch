@@ -27,12 +27,14 @@
   }
 
   .ant-badge-count {
-    background-color: fade(@redash-gray, 10%);
-    color: fade(@redash-gray, 75%);
+    background-color: var(--rd-color-surface-hover);
+    color: var(--rd-color-text-secondary);
+    box-shadow: none;
   }
 
   .ant-menu.ant-menu-inline {
     border: none;
+    background: transparent;
 
     .ant-menu-item {
       width: 100%;
@@ -40,8 +42,8 @@
 
     .ant-menu-item-selected {
       .ant-badge-count {
-        background-color: @primary-color;
-        color: white;
+        background-color: var(--rd-color-brand);
+        color: var(--rd-color-text-inverse);
       }
     }
 
@@ -50,7 +52,7 @@
       &:active,
       &:focus,
       &:focus-within {
-        color: @primary-color;
+        color: var(--rd-color-brand);
         transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
       }
     }

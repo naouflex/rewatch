@@ -1,8 +1,16 @@
 /* --------------------------------------------------------
     Colors
+
+    NOTE: @primary-color is consumed by Ant Design at LESS
+    compile time. To rebrand the product, update BOTH:
+      • this file's @primary-color and @lightblue
+      • inc/tokens.less    (--rd-brand-rgb / --rd-color-brand)
+    Both must hold the same color value.
 -----------------------------------------------------------*/
-@lightblue: #03a9f4;
-@primary-color: #2196f3;
+/* @lightblue is a legacy name; still consumed in pagination etc.
+   It must mirror @primary-color and tokens.less --rd-color-brand. */
+@lightblue: #ff7230;
+@primary-color: #ff7230;
 
 @redash-gray: rgba(102, 136, 153, 1);
 @redash-orange: rgba(255, 120, 100, 1);
@@ -12,31 +20,31 @@
 /* --------------------------------------------------------
     Font
 -----------------------------------------------------------*/
-@redash-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue",
-  sans-serif;
+@redash-font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell,
+  "Helvetica Neue", system-ui, sans-serif;
 @font-family-no-number: @redash-font;
 @font-family: @redash-font;
-@code-family: @redash-font;
-@font-size-base: 13px;
+@code-family: "JetBrains Mono", "SF Mono", ui-monospace, Menlo, Consolas, "Liberation Mono", monospace;
+@font-size-base: 14px;
 
 /* --------------------------------------------------------
     Borders
 -----------------------------------------------------------*/
-@border-color-split: #f0f0f0;
+@border-color-split: #eef0f3;
 
 /* --------------------------------------------------------
     Typograpgy
 -----------------------------------------------------------*/
-@text-color: #595959;
+@text-color: #4b5563;
 
 /* --------------------------------------------------------
     Form
 -----------------------------------------------------------*/
-@input-height-base: 35px;
-@input-color: #595959;
-@input-color-placeholder: #b4b4b4;
-@border-radius-base: 2px;
-@border-color-base: #e8e8e8;
+@input-height-base: 38px;
+@input-color: #1f2937;
+@input-color-placeholder: #9ca3af;
+@border-radius-base: 8px;
+@border-color-base: #e5e7eb;
 
 /* --------------------------------------------------------
     Pagination

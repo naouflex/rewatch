@@ -271,6 +271,27 @@ const config = {
         chunkModules: false
       },
     },
+    client: {
+      overlay: {
+        errors: true,
+        warnings: false,
+        // Ignore benign browser warnings that aren't actionable, most notably
+        // `ResizeObserver loop completed with undelivered notifications.` which
+        // is fired by libraries like Ant Design tables, ace-editor, and
+        // react-grid-layout when an observed element resizes inside its own
+        // callback. Real runtime errors still surface in the overlay.
+        runtimeErrors: (error) => {
+          const message = (error && (error.message || String(error))) || "";
+          if (
+            message.includes("ResizeObserver loop") ||
+            message.includes("Non-Error promise rejection captured")
+          ) {
+            return false;
+          }
+          return true;
+        },
+      },
+    },
     historyApiFallback: {
       index: "/static/index.html",
       rewrites: [{ from: /./, to: "/static/index.html" }]

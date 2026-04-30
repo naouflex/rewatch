@@ -1,88 +1,63 @@
-// based on https://github.com/outbrain/tech-companies-logos-in-css/pull/28
+// Sunset-style logo matching client/app/assets/images/logo.png
+// A half-circle "sun" sitting above a series of horizontal "reflection"
+// stripes that become progressively shorter toward the bottom.
 
 @primary: #ff7964;
-@shadow: #ef6c58;
-@bar: white;
 
 #css-logo {
   width: 100px;
   height: 100px;
   position: relative;
-  
-  #circle {
-    width: 79px;
-    height: 79px;
-    background-color: @shadow;
-    border-radius: 50%;
-    margin: auto;
-    overflow: hidden;
-    position: relative;
 
-    & > div {
-      width: 79px;
-      height: 73px;
-      background-color: @primary;
-      border-radius: 50%;
-      position: absolute;
-      top: 0;
-    }
+  // Top half of the sun
+  #sun {
+    width: 88px;
+    height: 44px;
+    background-color: @primary;
+    border-radius: 88px 88px 0 0;
+    position: absolute;
+    top: 4px;
+    left: 6px;
   }
-  
+
+  // Reflection stripes under the sun
   #bars {
     position: absolute;
+    top: 50px;
     left: 0;
-    top: 24px;
     right: 0;
-    height: 33px;
     display: flex;
-    padding: 0 22px 0;
+    flex-direction: column;
+    align-items: center;
 
     .bar {
-      background: @bar;
-      box-shadow: 0px 2px 0 0 @shadow;
-      display: inline-block;
-      border-radius: 1px;
-      align-self: flex-end;
-      flex: 1;
-      margin: 0 2px;
-      border-radius: 3px;
-
-      &:nth-child(1) {
-        height: 32%;
-      }
-      
-      &:nth-child(2) {
-        height: 71%;
-      }
-      
-      &:nth-child(3) {
-        height: 50%;
-      }
-      
-      &:nth-child(4) {
-        height: 100%;
-      }
+      background-color: @primary;
+      border-radius: 2px;
+      height: 3px;
     }
-  }
-  
-  #point,
-  #point > div {
-    position: absolute;
-    width: 0;
-    height: 0;
-    border: 17px solid @shadow;
-    border-right-color: transparent !important;
-    border-bottom-color: transparent !important;
-    bottom: 0;
-    left: 48px;
-    transform: scaleX(0.87);
-    transform-origin: left;
-  }
-  
-  #point > div {
-    bottom: -12px;
-    border-color: @primary;
-    transform: scaleX(1.04);
-    left: -17px;
+
+    // Cluster of stripes right under the sun (tight spacing)
+    .bar:nth-child(1) { width: 88px; margin-top: 0; }
+    .bar:nth-child(2) { width: 88px; margin-top: 2px; }
+    .bar:nth-child(3) { width: 84px; margin-top: 3px; }
+    .bar:nth-child(4) { width: 78px; margin-top: 4px; }
+
+    // Stripes that fan out with increasing spacing and shorter widths
+    .bar:nth-child(5) { width: 66px; margin-top: 5px; }
+    .bar:nth-child(6) { width: 50px; margin-top: 6px; }
+
+    // Trailing fade — thinner and shorter to suggest a dissolving reflection
+    .bar:nth-child(7) {
+      width: 28px;
+      height: 2px;
+      margin-top: 5px;
+      border-radius: 1px;
+    }
+    .bar:nth-child(8) {
+      width: 12px;
+      height: 2px;
+      margin-top: 5px;
+      border-radius: 1px;
+    }
   }
 }

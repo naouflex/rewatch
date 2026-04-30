@@ -85,12 +85,83 @@
 }
 
 // Button overrides
+//
+// All Ant buttons (`.ant-btn`) get the Redash motion / radius / weight
+// chrome here. Primary buttons are pinned to runtime brand tokens so
+// changing --rd-color-brand at runtime (or in tokens.less) instantly
+// re-themes every primary button without recompiling LESS.
 .@{btn-prefix-cls} {
-  transition-duration: 150ms;
+  transition:
+    background-color var(--rd-duration-fast) var(--rd-ease),
+    border-color var(--rd-duration-fast) var(--rd-ease),
+    color var(--rd-duration-fast) var(--rd-ease),
+    box-shadow var(--rd-duration-fast) var(--rd-ease),
+    transform var(--rd-duration-fast) var(--rd-ease);
+  border-radius: var(--rd-radius-sm);
+  font-weight: var(--rd-font-weight-medium);
+  letter-spacing: -0.005em;
 
   &.icon-button {
     width: 32px;
     padding: 0 10px;
+  }
+
+  &:focus-visible {
+    box-shadow: var(--rd-shadow-focus);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0.5px);
+  }
+
+  // ---- Primary (filled brand button) ----
+  &-primary {
+    background-color: var(--rd-color-brand);
+    border-color: var(--rd-color-brand);
+    color: var(--rd-color-text-inverse);
+    box-shadow: var(--rd-shadow-1);
+
+    &:hover,
+    &:focus {
+      background-color: var(--rd-color-brand-hover);
+      border-color: var(--rd-color-brand-hover);
+      color: var(--rd-color-text-inverse);
+      box-shadow: var(--rd-shadow-2);
+    }
+
+    &:active {
+      background-color: var(--rd-color-brand-active);
+      border-color: var(--rd-color-brand-active);
+      color: var(--rd-color-text-inverse);
+    }
+
+    // Ghost variant — outlined brand on transparent surface
+    &.@{btn-prefix-cls}-background-ghost {
+      background-color: transparent;
+      color: var(--rd-color-brand);
+      border-color: var(--rd-color-brand);
+
+      &:hover,
+      &:focus {
+        background-color: var(--rd-color-brand-soft);
+        color: var(--rd-color-brand-hover);
+        border-color: var(--rd-color-brand-hover);
+      }
+    }
+  }
+
+  // ---- Link ----
+  &-link {
+    color: var(--rd-color-brand);
+
+    &:hover,
+    &:focus {
+      color: var(--rd-color-brand-hover);
+    }
+
+    &:active {
+      color: var(--rd-color-brand-active);
+    }
   }
 }
 
@@ -99,6 +170,33 @@
 .ant-input-number-input::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
+}
+
+// Modern input styling — applies to all AntD inputs/selects/pickers
+.ant-input,
+.ant-input-affix-wrapper,
+.ant-input-number,
+.ant-picker,
+.ant-select:not(.ant-select-customize-input) .ant-select-selector {
+  border-radius: var(--rd-radius-sm);
+  border-color: var(--rd-color-border);
+  transition:
+    border-color var(--rd-duration-fast) var(--rd-ease),
+    box-shadow var(--rd-duration-fast) var(--rd-ease);
+
+  &:hover {
+    border-color: var(--rd-color-border-strong);
+  }
+}
+
+.ant-input:focus,
+.ant-input-focused,
+.ant-input-affix-wrapper-focused,
+.ant-input-number-focused,
+.ant-picker-focused,
+.ant-select-focused:not(.ant-select-disabled).ant-select:not(.ant-select-customize-input) .ant-select-selector {
+  border-color: var(--rd-color-brand) !important;
+  box-shadow: var(--rd-shadow-focus) !important;
 }
 
 // Pagination overrides (based on existing Bootstrap overrides)
@@ -248,11 +346,11 @@
   &-item {
     // custom rule
     &.selected {
-      background-color: #f6f8f9;
+      background-color: var(--rd-color-surface-hover);
     }
 
     &.disabled {
-      background-color: fade(#f6f8f9, 40%);
+      background-color: var(--rd-color-bg-subtle);
 
       & > * {
         opacity: 0.4;
@@ -378,9 +476,9 @@
     top: auto !important;
     bottom: 8px;
 
-    // makes the icon white instead of see-through
+    // makes the icon stand out against the input surface
     & svg {
-      background: white;
+      background: var(--rd-color-surface);
       border-radius: 50%;
     }
   }
@@ -409,11 +507,58 @@
   }
 }
 
+.@{dropdown-prefix-cls}-menu {
+  border-radius: var(--rd-radius-md);
+  box-shadow: var(--rd-shadow-3);
+  border: 1px solid var(--rd-color-border);
+  padding: 6px;
+}
+
 .@{dropdown-prefix-cls}-menu-item {
+  border-radius: var(--rd-radius-sm);
+  margin: 1px 0;
+  transition: background-color var(--rd-duration-fast) var(--rd-ease);
+
   &:focus,
-  &:focus-within {
-    background-color: @item-hover-bg;
+  &:focus-within,
+  &:hover {
+    background-color: var(--rd-color-surface-hover);
   }
+}
+
+.ant-modal-content {
+  border-radius: var(--rd-radius-lg);
+  box-shadow: var(--rd-shadow-4);
+  overflow: hidden;
+}
+
+.ant-modal-header {
+  border-radius: var(--rd-radius-lg) var(--rd-radius-lg) 0 0;
+  border-bottom: 1px solid var(--rd-color-divider);
+  padding: 18px 24px;
+}
+
+.ant-modal-title {
+  font-weight: var(--rd-font-weight-semibold);
+  font-size: var(--rd-font-size-lg);
+  letter-spacing: -0.01em;
+}
+
+.ant-modal-footer {
+  border-top: 1px solid var(--rd-color-divider);
+  padding: 14px 24px;
+}
+
+.ant-popover-inner {
+  border-radius: var(--rd-radius-md);
+  box-shadow: var(--rd-shadow-3);
+}
+
+.ant-tooltip-inner {
+  border-radius: var(--rd-radius-sm);
+  font-size: var(--rd-font-size-xs);
+  padding: 6px 10px;
+  box-shadow: var(--rd-shadow-2);
 }
 
 // overrides for checkbox
@@ -434,3 +579,9 @@
     }
   }
 }
+
+/** Dark theme overrides — must come last so they win the cascade.
+    Tokens (and therefore the [data-theme="dark"] selectors) are also
+    imported here so AntD-only bundles still pick up the dark palette. **/
+@import "inc/tokens";
+@import "inc/dark-theme";

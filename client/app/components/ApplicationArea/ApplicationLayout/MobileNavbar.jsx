@@ -6,6 +6,7 @@ import MenuOutlinedIcon from "@ant-design/icons/MenuOutlined";
 import Dropdown from "antd/lib/dropdown";
 import Menu from "antd/lib/menu";
 import Link from "@/components/Link";
+import ThemeToggle from "@/components/ThemeToggle";
 import { Auth, currentUser } from "@/services/auth";
 import settingsMenu from "@/services/settingsMenu";
 import logoUrl from "@/assets/images/icon_small.png";
@@ -28,7 +29,7 @@ export default function MobileNavbar({ getPopupContainer }) {
           trigger={["click"]}
           getPopupContainer={getPopupContainer} // so the overlay menu stays with the fixed header when page scrolls
           overlay={
-            <Menu mode="vertical" theme="dark" selectable={false} className="mobile-navbar-menu">
+            <Menu mode="vertical" selectable={false} className="mobile-navbar-menu">
               {currentUser.hasPermission("list_dashboards") && (
                 <Menu.Item key="dashboards">
                   <Link href="dashboards">Dashboards</Link>
@@ -65,12 +66,15 @@ export default function MobileNavbar({ getPopupContainer }) {
                   Help
                 </Link>
               </Menu.Item>
+              <Menu.Item key="theme" className="mobile-navbar-theme-item">
+                <ThemeToggle variant="menu-item" />
+              </Menu.Item>
               <Menu.Item key="logout" onClick={() => Auth.logout()}>
                 Log out
               </Menu.Item>
             </Menu>
           }>
-          <Button className="mobile-navbar-toggle-button" ghost>
+          <Button className="mobile-navbar-toggle-button">
             <MenuOutlinedIcon />
           </Button>
         </Dropdown>

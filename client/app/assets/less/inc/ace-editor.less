@@ -1,25 +1,25 @@
 .ace_editor {
-  border: 1px solid fade(@redash-gray, 15%);
+  border: 1px solid var(--rd-color-divider);
   height: 100%;
   margin-bottom: 10px;
 
   &.ace_autocomplete .ace_completion-highlight {
     text-shadow: none !important;
-    background: #ffff005e;
+    background: rgba(250, 204, 21, 0.4);
     font-weight: 600;
   }
 
   &.ace-tm {
     .ace_gutter {
-      background: #fff !important;
+      background: var(--rd-color-surface-alt) !important;
     }
 
     .ace_gutter-active-line {
-      background-color: fade(@redash-gray, 20%) !important;
+      background-color: var(--rd-color-surface-hover) !important;
     }
 
     .ace_marker-layer .ace_active-line {
-      background: fade(@redash-gray, 9%) !important;
+      background: var(--rd-color-surface-hover) !important;
     }
   }
 }

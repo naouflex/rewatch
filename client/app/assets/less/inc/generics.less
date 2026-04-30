@@ -136,8 +136,27 @@
 
 /* --------------------------------------------------------
     Background Colors and Colors
+    NOTE: `bg-white` and `c-black` are routed through the design
+    tokens so they participate in the dark theme automatically
+    instead of being baked to literal #fff / #000.
 -----------------------------------------------------------*/
-@array: c-white bg-white @white, c-ace bg-ace @ace, c-black bg-black @black, c-brown bg-brown @brown,
+.bg-white {
+  background-color: var(--rd-color-surface) !important;
+}
+
+.c-white {
+  color: var(--rd-color-text-inverse) !important;
+}
+
+.c-black {
+  color: var(--rd-color-text) !important;
+}
+
+.bg-black {
+  background-color: var(--rd-color-text) !important;
+}
+
+@array: c-ace bg-ace @ace, c-brown bg-brown @brown,
   c-pink bg-pink @pink, c-red bg-red @red, c-blue bg-blue @blue, c-purple bg-purple @purple,
   c-deeppurple bg-deeppurple @deeppurple, c-lightblue bg-lightblue @lightblue, c-cyan bg-cyan @cyan,
   c-teal bg-teal @teal, c-green bg-green @green, c-lightgreen bg-lightgreen @lightgreen, c-lime bg-lime @lime,

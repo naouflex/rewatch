@@ -5,6 +5,7 @@
 @import '~bootstrap/less/bootstrap';
 @import '~material-design-iconic-font/dist/css/material-design-iconic-font.css';
 
+@import 'inc/tokens';
 @import 'inc/variables';
 @import 'inc/mixins';
 @import 'inc/font';
@@ -23,27 +24,42 @@ html, body {
   height: 100%;
   margin: 0;
   padding: 0;
-  background: #F6F8F9;
-}
-
-.signed-out {
-
+  background: var(--rd-color-bg);
+  color: var(--rd-color-text);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
+  font-size: var(--rd-font-size-base);
+  line-height: var(--rd-line-height-normal);
+  letter-spacing: -0.005em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 hr {
-  border-top-width: 2px;
-  margin: 25px 0;
+  border-top: 1px solid var(--rd-color-divider);
+  margin: 24px 0;
 }
 
 .tiled {
-  padding: 25px;
+  padding: 32px;
+  background: var(--rd-color-surface);
+  border: 1px solid var(--rd-color-divider);
+  border-radius: var(--rd-radius-lg);
+  box-shadow: var(--rd-shadow-2);
 }
 
 .header {
-  margin-top: 25px;
+  margin-top: 32px;
+  text-align: center;
+
+  h3 {
+    color: var(--rd-color-text);
+    font-weight: var(--rd-font-weight-semibold);
+    letter-spacing: -0.012em;
+    font-size: var(--rd-font-size-2xl);
+  }
 
   img {
-    height: 40px;
+    height: 44px;
   }
 }
 
@@ -61,7 +77,26 @@ hr {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 20px 0;
+  gap: 8px;
+  margin: 12px 0;
+  padding: 10px 16px;
+  border-radius: var(--rd-radius-sm);
+  border: 1px solid var(--rd-color-border);
+  background: var(--rd-color-surface);
+  color: var(--rd-color-text);
+  font-weight: var(--rd-font-weight-medium);
+  transition:
+    background-color var(--rd-duration-fast) var(--rd-ease),
+    border-color var(--rd-duration-fast) var(--rd-ease),
+    box-shadow var(--rd-duration-fast) var(--rd-ease);
+
+  &:hover,
+  &:focus {
+    background: var(--rd-color-surface-hover);
+    border-color: var(--rd-color-border-strong);
+    box-shadow: var(--rd-shadow-1);
+    text-decoration: none;
+  }
 
   &:first-of-type {
     margin-top: 0;
@@ -71,13 +106,13 @@ hr {
   }
 
   img {
-    height: 25px;
-    margin-right: 5px;
+    height: 22px;
+    margin-right: 4px;
   }
 
   &:before {
     content: "";
     display: inline-block;
-    height: 25px;
+    height: 22px;
   }
 }

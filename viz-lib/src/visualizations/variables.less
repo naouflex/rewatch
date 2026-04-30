@@ -19,17 +19,20 @@
 -----------------------------------------------------------*/
 @border-width-base: 1px;
 @border-style-base: solid;
-@border-color-split: hsv(0, 0, 91%);
+@border-color-split: var(--rd-color-divider, hsv(0, 0, 91%));
 
 /* --------------------------------------------------------
     Typography
+    Mirrors Redash design tokens (--rd-color-*) when consumed
+    inside the host app, with light-theme fallbacks for
+    standalone use.
 -----------------------------------------------------------*/
-@text-color: #595959;
-@text-muted: #828282;
-@text-color-secondary: fade(@black, 45%);
+@text-color: var(--rd-color-text, #595959);
+@text-muted: var(--rd-color-text-muted, #828282);
+@text-color-secondary: var(--rd-color-text-secondary, fade(@black, 45%));
 
 /* --------------------------------------------------------
     Table
 -----------------------------------------------------------*/
-@table-border-color: #f0f0f0;
-@table-header-color: #333;
+@table-border-color: var(--rd-color-divider, #f0f0f0);
+@table-header-color: var(--rd-color-text, #333);

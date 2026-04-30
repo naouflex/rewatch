@@ -1,35 +1,62 @@
-@backgroundColor: #001529;
-@dividerColor: rgba(255, 255, 255, 0.5);
-@textColor: rgba(255, 255, 255, 0.75);
-
 .mobile-navbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: @backgroundColor;
-  box-shadow: 0 4px 9px -3px rgba(102, 136, 153, 0.15);
-  padding: 0 15px;
+  background: var(--rd-sidebar-bg);
+  border-bottom: 1px solid var(--rd-sidebar-border);
+  box-shadow: var(--rd-shadow-1);
+  padding: 0 16px;
   height: 100%;
 
   &-logo {
     img {
-      height: 40px;
-      width: 40px;
+      height: 36px;
+      width: 36px;
     }
   }
 
   .ant-btn.mobile-navbar-toggle-button {
     padding: 0 10px;
+    color: var(--rd-color-text-secondary);
+    background: transparent;
+    border: 1px solid transparent;
+
+    &:hover,
+    &:focus {
+      color: var(--rd-color-text);
+      background: var(--rd-color-surface-hover);
+      border-color: var(--rd-color-border);
+    }
   }
 }
 
 .mobile-navbar-menu {
+  border-radius: var(--rd-radius-md);
+  box-shadow: var(--rd-shadow-3);
+  border: 1px solid var(--rd-color-border);
+  padding: 6px;
+
   .ant-dropdown-menu-item {
-    font-weight: 500;
-    color: @textColor;
+    font-weight: var(--rd-font-weight-medium);
+    color: var(--rd-color-text-secondary);
+    border-radius: var(--rd-radius-sm);
+    margin: 2px 0;
+
+    &:hover {
+      color: var(--rd-color-text);
+      background: var(--rd-color-surface-hover);
+    }
   }
 
   .ant-dropdown-menu-item-divider {
-    background: @dividerColor;
+    background: var(--rd-color-divider);
+    margin: 6px 0;
+  }
+
+  .mobile-navbar-theme-item {
+    .theme-toggle--menu-item {
+      width: 100%;
+      gap: 10px;
+    }
   }
 }

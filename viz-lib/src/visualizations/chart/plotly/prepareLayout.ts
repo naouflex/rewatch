@@ -1,5 +1,6 @@
 import { isObject, isUndefined, filter, map } from "lodash";
 import { getPieDimensions } from "./preparePieData";
+import getThemePalette from "./getThemePalette";
 
 function getAxisTitle(axis: any) {
   return isObject(axis.title) ? axis.title.text : null;
@@ -14,6 +15,20 @@ function getAxisScaleType(axis: any) {
     default:
       return axis.type;
   }
+}
+
+function applyThemeToAxis(axis: any, palette: ReturnType<typeof getThemePalette>) {
+  axis.gridcolor = palette.divider;
+  axis.zerolinecolor = palette.border;
+  axis.linecolor = palette.border;
+  axis.tickcolor = palette.border;
+  axis.tickfont = { color: palette.textMuted };
+  if (axis.title && typeof axis.title === "string") {
+    axis.title = { text: axis.title, font: { color: palette.text } };
+  } else if (axis.title) {
+    axis.title.font = { ...(axis.title.font || {}), color: palette.text };
+  }
+  return axis;
 }
 
 function prepareXAxis(axisOptions: any, additionalOptions: any) {
@@ -82,12 +97,13 @@ function preparePieLayout(layout: any, options: any, data: any) {
 
 function prepareDefaultLayout(layout: any, options: any, data: any) {
   const y2Series = data.filter((s: any) => s.yaxis === "y2");
+  const palette = getThemePalette();
 
-  layout.xaxis = prepareXAxis(options.xAxis, options);
+  layout.xaxis = applyThemeToAxis(prepareXAxis(options.xAxis, options), palette);
 
-  layout.yaxis = prepareYAxis(options.yAxis[0]);
+  layout.yaxis = applyThemeToAxis(prepareYAxis(options.yAxis[0]), palette);
   if (y2Series.length > 0) {
-    layout.yaxis2 = prepareYAxis(options.yAxis[1]);
+    layout.yaxis2 = applyThemeToAxis(prepareYAxis(options.yAxis[1]), palette);
     layout.yaxis2.overlaying = "y";
     layout.yaxis2.side = "right";
   }
@@ -107,6 +123,7 @@ function prepareBoxLayout(layout: any, options: any, data: any) {
 }
 
 export default function prepareLayout(element: any, options: any, data: any) {
+  const palette = getThemePalette();
   const layout: any = {
     margin: { l: 10, r: 10, b: 5, t: 20, pad: 4 },
     // plot size should be at least 5x5px
@@ -114,11 +131,18 @@ export default function prepareLayout(element: any, options: any, data: any) {
     height: Math.max(5, Math.floor(element.offsetHeight)),
     autosize: false,
     showlegend: options.legend.enabled,
+    paper_bgcolor: "rgba(0,0,0,0)",
+    plot_bgcolor: "rgba(0,0,0,0)",
+    font: { color: palette.text },
     legend: {
       traceorder: options.legend.traceorder,
+      font: { color: palette.text },
+      bgcolor: "rgba(0,0,0,0)",
     },
     hoverlabel: {
       namelength: -1,
+      bordercolor: palette.border,
+      font: { color: palette.text },
     },
   };
 

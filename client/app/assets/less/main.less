@@ -8,6 +8,7 @@
 @import "~font-awesome/less/font-awesome";
 @import "~material-design-iconic-font/dist/css/material-design-iconic-font.css";
 
+@import "inc/tokens";
 @import "inc/variables";
 @import "inc/mixins";
 @import "inc/font";
@@ -54,3 +55,6 @@
 @import "redash/tags-control";
 @import "redash/css-logo";
 @import "redash/loading-indicator";
+
+/** Dark theme overrides — must be last so they win the cascade **/
+@import "inc/dark-theme";

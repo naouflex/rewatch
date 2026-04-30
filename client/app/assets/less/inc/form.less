@@ -1,5 +1,8 @@
 label {
-  font-weight: 500;
+  font-weight: var(--rd-font-weight-medium);
+  color: var(--rd-color-text);
+  font-size: var(--rd-font-size-sm);
+  letter-spacing: -0.005em;
 }
 
 textarea.v-resizable {
@@ -33,18 +36,29 @@ textarea.v-resizable {
     Input Fields
 -----------------------------------------------------------*/
 .form-control {
-  .transition(all);
-  .transition-duration(300ms);
   resize: none;
-  box-shadow: 0 0 0 40px rgba(0, 0, 0, 0) !important;
-  border-radius: @redash-input-radius;
+  border-radius: var(--rd-radius-sm);
+  border-color: var(--rd-color-border);
+  background-color: var(--rd-color-surface);
+  color: var(--rd-color-text);
+  transition:
+    border-color var(--rd-duration-fast) var(--rd-ease),
+    box-shadow var(--rd-duration-fast) var(--rd-ease),
+    background-color var(--rd-duration-fast) var(--rd-ease);
 
-  &:focus {
-    box-shadow: none !important;
-    border-color: @blue;
+  &::placeholder {
+    color: var(--rd-color-text-disabled);
   }
+
   &:hover {
-    border-color: @blue;
+    border-color: var(--rd-color-border-strong);
+  }
+
+  &:focus,
+  &:focus-visible {
+    border-color: var(--rd-color-brand);
+    box-shadow: var(--rd-shadow-focus) !important;
+    outline: none;
   }
 }
 
@@ -99,10 +113,10 @@ textarea.v-resizable {
     cursor: pointer;
 
     & + .input-helper {
-      border: 1px solid @input-border;
+      border: 1px solid var(--rd-color-border-strong);
       width: 19px;
       height: 19px;
-      background: #fff;
+      background: var(--rd-color-surface);
       position: absolute;
       left: 0;
       top: -1px;
@@ -113,7 +127,7 @@ textarea.v-resizable {
       content: "";
       width: 9px;
       height: 9px;
-      background: #31acff;
+      background: var(--rd-color-brand);
       position: absolute;
       left: 4px;
       top: 4px;
@@ -146,7 +160,9 @@ textarea.v-resizable {
 .input-group {
   .input-group-addon {
     min-width: 40px;
-    color: #333;
+    color: var(--rd-color-text-secondary);
+    background-color: var(--rd-color-surface-hover);
+    border-color: var(--rd-color-border);
     padding: 0;
   }
 

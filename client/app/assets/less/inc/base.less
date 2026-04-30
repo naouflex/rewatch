@@ -4,18 +4,36 @@ input,
 i,
 a {
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 *,
 *:active,
 *:hover {
-  outline: none !important;
   -webkit-tap-highlight-color: rgba(0, 0, 0, 0) !important;
+}
+
+// Suppress the browser's default outline / "white rectangle" that appears
+// when an element is focused via mouse click (e.g. clicking a link in a
+// table or in the sidebar). Keyboard focus still renders the accessible
+// brand-colored ring below via :focus-visible.
+:focus:not(:focus-visible) {
+  outline: none;
+  box-shadow: none;
+}
+
+// Accessible focus ring — only when the user navigated by keyboard.
+:focus-visible {
+  outline: none;
+  box-shadow: var(--rd-shadow-focus);
+  border-radius: var(--rd-radius-sm);
+  transition: box-shadow var(--rd-duration-fast) var(--rd-ease);
 }
 
 html {
   overflow-x: ~"hidden\0/";
   -ms-overflow-style: auto;
+  font-feature-settings: "cv11", "ss01", "ss02";
 }
 
 html,
@@ -25,13 +43,36 @@ body {
 
 body {
   padding-top: 0;
-  background: #f6f8f9;
-  font-family: @redash-font;
+  background: var(--rd-color-bg);
+  color: var(--rd-color-text);
+  font-family: var(--rd-font, @redash-font);
+  font-size: var(--rd-font-size-base);
+  line-height: var(--rd-line-height-normal);
+  letter-spacing: -0.005em;
   position: relative;
 
   #application-root {
     padding-bottom: 15px;
   }
+}
+
+// Tabular numerics across data-dense surfaces — vital for a query / dashboard tool
+table,
+.ant-table,
+.ant-pagination,
+.counter-visualization-content,
+.rd-timer,
+.table-main-title + small,
+code,
+pre,
+.ace_editor {
+  font-variant-numeric: tabular-nums;
+}
+
+code,
+pre,
+.ace_editor {
+  font-family: var(--rd-font-mono);
 }
 
 #application-root {
@@ -126,7 +167,7 @@ strong {
 .rg-top span,
 .rg-bottom span {
   height: 3px;
-  border-color: #b1c1ce; // TODO: variable
+  border-color: var(--rd-color-border-strong);
 }
 
 .rg-bottom {
@@ -153,8 +194,8 @@ text.slicetext {
 
 .dropdown-menu > li > a:hover,
 .dropdown-menu > li > a:focus {
-  background-color: fade(@redash-gray, 15%);
-  color: #111;
+  background-color: var(--rd-color-surface-hover);
+  color: var(--rd-color-text);
 }
 
 .profile__image--sidebar {
@@ -189,7 +230,7 @@ text.slicetext {
   .error-state__icon {
     .zmdi {
       font-size: 64px;
-      color: @redash-gray;
+      color: var(--rd-color-text-muted);
     }
   }
 

@@ -1,7 +1,7 @@
 .four-zero {
-	background: @white;
-	box-shadow: 0 1px 11px rgba(0, 0, 0, 0.27);
-	border-radius: 2px;
+	background: var(--rd-color-surface);
+	box-shadow: var(--rd-shadow-3);
+	border-radius: var(--rd-radius-md);
 	position: absolute;
 	top: 50%;
 	margin-top: -150px;
@@ -10,7 +10,7 @@
 	height: 300px;
 	width: 500px;
 	left: 50%;
-	color: #333;
+	color: var(--rd-color-text);
 	margin-left: -250px;
 	
 	h2 {
@@ -43,27 +43,27 @@
 	
 	
 	footer {
-		background: @ace;
+		background: var(--rd-color-surface-alt);
 		position: absolute;
 		left: 0;
 		bottom: 0;
 		width: 100%;
 		padding: 10px;
-		
+
 		& > a {
 			font-size: 21px;
 			display: inline-block;
-			color: #333;
+			color: var(--rd-color-text);
 			margin: 0 1px;
 			line-height: 40px;
 			width: 40px;
 			height: 40px;
-			background: rgba(0, 0, 0, 0.09);
+			background: var(--rd-color-surface-hover);
 			border-radius: 50%;
 			text-align: center;
-			
+
 			&:hover {
-				background: rgba(0, 0, 0, 0.2);
+				background: var(--rd-color-border-strong);
 			}
 		}
 	}

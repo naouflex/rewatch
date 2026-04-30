@@ -22,7 +22,7 @@
         top: 0;
         border-top: 0;
         z-index: 1;
-        background: #fafafa !important;
+        background: var(--rd-color-surface-alt, #fafafa) !important;
       }
     }
   }
@@ -114,10 +114,10 @@
             height: @size;
             font-size: @size * 3/4;
             border-radius: @size / 2;
-            background: #c0c0c0;
+            background: var(--rd-color-text-muted, #c0c0c0);
             text-align: center;
             line-height: @size;
-            color: #fff;
+            color: var(--rd-color-text-inverse, #fff);
             padding: 0 @size * 1/4;
             margin: 0 5px 0 0;
           }

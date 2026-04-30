@@ -34,7 +34,7 @@
 .pvtAxisContainer,
 .pvtVals {
   border: 1px solid fade(@visualizations-gray, 15%);
-  background: #fff;
+  background: var(--rd-color-surface, #fff);
 }
 
 .pvtAxisContainer li span.pvtAttr {
@@ -60,11 +60,11 @@
 table.pvtTable thead tr th,
 table.pvtTable tbody tr th {
   background-color: fade(@visualizations-gray, 10%);
-  border: 1px solid #ced8dc;
+  border: 1px solid var(--rd-color-border, #ced8dc);
 }
 
 table.pvtTable tbody tr td {
-  border: 1px solid #ced8dc;
+  border: 1px solid var(--rd-color-border, #ced8dc);
 }
 
 .pvtFilterBox {
@@ -91,7 +91,9 @@ table.pvtTable tbody tr td {
     margin: 0 auto 10px;
     height: 35px;
     padding: 6px 12px;
-    border: 1px solid #e8e8e8;
+    border: 1px solid var(--rd-color-border, #e8e8e8);
     border-radius: 3px;
+    background: var(--rd-color-surface, #fff);
+    color: var(--rd-color-text, #333);
   }
 }

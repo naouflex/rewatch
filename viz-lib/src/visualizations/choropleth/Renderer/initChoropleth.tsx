@@ -25,7 +25,7 @@ const CustomControl = L.Control.extend({
   onAdd() {
     const div = document.createElement("div");
     div.className = "leaflet-bar leaflet-custom-toolbar";
-    div.style.background = "#fff";
+    div.style.background = "var(--rd-color-surface, #fff)";
     div.style.backgroundClip = "padding-box";
     return div;
   },

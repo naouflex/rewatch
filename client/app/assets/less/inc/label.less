@@ -1,20 +1,22 @@
 .label {
-    border-radius: 2px;
+    border-radius: var(--rd-radius-xs);
     padding: 3px 6px 4px;
-    font-weight: 500;
+    font-weight: var(--rd-font-weight-medium);
     font-size: 11px;
 }
 
 .badge {
-    border-radius: 1px;
+    border-radius: var(--rd-radius-xs);
 }
 
 .label-default {
-    background: fade(@redash-gray, 85%);
+    background: var(--rd-color-text-muted);
+    color: var(--rd-color-text-inverse);
 }
 
 .label-tag-unpublished {
-    background: fade(@redash-gray, 85%);
+    background: var(--rd-color-text-muted);
+    color: var(--rd-color-text-inverse);
 }
 
 .label-tag-archived {
@@ -22,8 +24,9 @@
 }
 
 .label-tag {
-    background: fade(@redash-gray, 10%);
-    color: fade(@redash-gray, 75%);
+    background: var(--rd-color-surface-hover);
+    color: var(--rd-color-text-secondary);
+    border: 1px solid var(--rd-color-divider);
 }
 
 .label-tag-unpublished,
