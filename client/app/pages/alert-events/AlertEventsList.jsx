@@ -7,6 +7,7 @@ import Tag from "antd/lib/tag";
 import routeWithUserSession from "@/components/ApplicationArea/routeWithUserSession";
 import Link from "@/components/Link";
 import PageHeader from "@/components/PageHeader";
+import Paginator from "@/components/Paginator";
 import Tooltip from "@/components/Tooltip";
 import TimeAgo from "@/components/TimeAgo";
 import PlainButton from "@/components/PlainButton";
@@ -251,6 +252,16 @@ class AlertEventsList extends React.Component {
                     orderByReverse={controller.orderByReverse}
                     toggleSorting={controller.toggleSorting}
                   />
+                  <Paginator
+                    showPageSizeSelect
+                    totalCount={controller.totalItemsCount}
+                    pageSize={controller.itemsPerPage}
+                    onPageSizeChange={itemsPerPage =>
+                      controller.updatePagination({ itemsPerPage })
+                    }
+                    page={controller.page}
+                    onChange={page => controller.updatePagination({ page })}
+                  />
                 </div>
               )}
             </Layout.Content>
@@ -271,7 +282,7 @@ const AlertEventsListPage = itemsList(
         return {
           q: request.q,
           include_archived: currentPage === "archive",
-          limit: 200,
+          limit: 500,
         };
       },
       doRequest(request) {
@@ -298,7 +309,7 @@ const AlertEventsListPage = itemsList(
         });
       },
     }),
-  () => new UrlStateStorage({ orderByField: "created_at", orderByReverse: true })
+  () => new UrlStateStorage({ orderByField: "created_at", orderByReverse: true, itemsPerPage: 20 })
 );
 
 routes.register(
