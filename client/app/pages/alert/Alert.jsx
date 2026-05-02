@@ -159,6 +159,13 @@ class Alert extends React.Component {
     this.setState({ pendingRearm });
   };
 
+  onTagsChange = (tags) => {
+    const { alert } = this.state;
+    this.setState({
+      alert: Object.assign(alert, { tags }),
+    });
+  };
+
   setAlertOptions = (obj) => {
     const { alert } = this.state;
     const options = { ...alert.options, ...obj };
@@ -255,6 +262,7 @@ class Alert extends React.Component {
       onQuerySelected: this.onQuerySelected,
       onRearmChange: this.onRearmChange,
       onNameChange: this.onNameChange,
+      onTagsChange: this.onTagsChange,
       onCriteriaChange: this.setAlertOptions,
       onNotificationTemplateChange: this.setAlertOptions,
     };

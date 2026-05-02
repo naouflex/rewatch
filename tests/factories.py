@@ -164,6 +164,11 @@ alert_subscription_factory = ModelFactory(
     alert=alert_factory.create,
 )
 
+alert_event_factory = ModelFactory(
+    redash.models.AlertEvent,
+    alert=alert_factory.create,
+)
+
 query_snippet_factory = ModelFactory(
     redash.models.QuerySnippet,
     trigger=Sequence("trigger {}"),
@@ -240,10 +245,29 @@ class Factory:
         return g
 
     def create_alert(self, **kwargs):
-        args = {"user": self.user, "query_rel": self.create_query()}
+        args = {"user": self.user, "query_rel": self.create_query(), "org": self.org}
 
         args.update(**kwargs)
         return alert_factory.create(**args)
+
+    def create_alert_event(self, **kwargs):
+        alert = kwargs.pop("alert", None) or self.create_alert()
+        args = {
+            "alert": alert,
+            "alert_id": alert.id,
+            "org": alert.org,
+            "user": alert.user,
+            "query_id": alert.query_id,
+            "destination_id": kwargs.pop("destination_id", None),
+            "alert_type": kwargs.pop("alert_type", "email"),
+            "state": kwargs.pop("state", redash.models.Alert.TRIGGERED_STATE),
+            "status": kwargs.pop("status", redash.models.AlertEvent.STATUS_OK),
+            "content": kwargs.pop("content", "test content"),
+            "additional_properties": kwargs.pop("additional_properties", {}),
+            "row_index": kwargs.pop("row_index", None),
+        }
+        args.update(kwargs)
+        return alert_event_factory.create(**args)
 
     def create_alert_subscription(self, **kwargs):
         args = {"user": self.user, "alert": self.create_alert()}

@@ -30,7 +30,7 @@ class Webhook(BaseDestination):
         try:
             data = {
                 "event": "alert_state_change",
-                "alert": serialize_alert(alert, full=False),
+                "alert": serialize_alert(alert, full=False, with_favorite_state=False),
                 "url_base": host,
                 "metadata": metadata,
             }

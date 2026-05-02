@@ -1576,6 +1576,102 @@ class AlertSubscription(TimestampMixin, db.Model):
             return destination.notify(alert, query, user, new_state, app, host, metadata, options)
 
 
+@generic_repr(
+    "id", "alert_id", "alert_type", "destination_id", "state", "status", "row_index", "created_at"
+)
+class AlertEvent(BelongsToOrgMixin, db.Model):
+    """A single record of a notification dispatched on behalf of an alert.
+
+    One ``AlertEvent`` is created every time an ``AlertSubscription`` triggers a
+    destination, regardless of whether the underlying destination call succeeded
+    or failed. The row stores enough context (rendered content, destination,
+    state at the time, optional row index when the alert is configured to send
+    one notification per row) to reconstruct what was sent and to whom.
+    """
+
+    STATUS_OK = "ok"
+    STATUS_ERROR = "error"
+
+    id = primary_key("AlertEvent")
+    org_id = Column(key_type("Organization"), db.ForeignKey("organizations.id"), nullable=False)
+    org = db.relationship(Organization, backref="alert_events")
+    user_id = Column(key_type("User"), db.ForeignKey("users.id"), nullable=True)
+    user = db.relationship(User, backref="alert_events")
+    alert_id = Column(key_type("Alert"), db.ForeignKey("alerts.id"), nullable=True)
+    alert = db.relationship(Alert, backref=backref("events", cascade="all, delete-orphan"))
+    query_id = Column(key_type("Query"), db.ForeignKey("queries.id"), nullable=True)
+    query_rel = db.relationship(Query, backref="alert_events")
+    destination_id = Column(
+        key_type("NotificationDestination"),
+        db.ForeignKey("notification_destinations.id"),
+        nullable=True,
+    )
+    destination = db.relationship(NotificationDestination, backref="alert_events")
+    alert_type = Column(db.String(255), nullable=True)
+    state = Column(db.String(255), nullable=True)
+    status = Column(db.String(32), nullable=True)
+    content = Column(db.Text, nullable=True)
+    additional_properties = Column(MutableDict.as_mutable(JSONB), nullable=True, default={})
+    is_archived = Column(db.Boolean, default=False, index=True, nullable=False)
+    row_index = Column(db.Integer, nullable=True)
+    created_at = Column(db.DateTime(True), default=db.func.now())
+
+    __tablename__ = "alert_events"
+
+    def __str__(self):
+        return "AlertEvent(id={id}, alert_id={alert_id}, status={status})".format(
+            id=self.id, alert_id=self.alert_id, status=self.status
+        )
+
+    @classmethod
+    def get_by_id_and_org(cls, object_id, org):
+        return cls.query.filter(cls.id == object_id, cls.org == org).one()
+
+    @classmethod
+    def for_alert(cls, alert_id, include_archived=False):
+        q = cls.query.filter(cls.alert_id == alert_id)
+        if not include_archived:
+            q = q.filter(cls.is_archived.is_(False))
+        return q.order_by(cls.created_at.desc())
+
+    @classmethod
+    def for_user(cls, user, include_archived=False):
+        q = (
+            cls.query.join(Alert, Alert.id == cls.alert_id)
+            .join(Query, Query.id == Alert.query_id)
+            .join(DataSourceGroup, DataSourceGroup.data_source_id == Query.data_source_id)
+            .filter(DataSourceGroup.group_id.in_(user.group_ids))
+        )
+        if not include_archived:
+            q = q.filter(cls.is_archived.is_(False))
+        return q.order_by(cls.created_at.desc())
+
+    @classmethod
+    def record(cls, alert, destination=None, status=None, state=None, content=None,
+               additional_properties=None, row_index=None, alert_type=None, user=None):
+        event = cls(
+            alert_id=alert.id,
+            org_id=alert.org_id,
+            user_id=(user or alert.user).id if (user or alert.user) else None,
+            query_id=alert.query_id,
+            destination_id=destination.id if destination is not None else None,
+            alert_type=alert_type or (destination.type if destination is not None else None),
+            state=state,
+            status=status,
+            content=content,
+            additional_properties=additional_properties or {},
+            row_index=row_index,
+        )
+        db.session.add(event)
+        db.session.commit()
+        return event
+
+    def archive(self):
+        self.is_archived = True
+        db.session.add(self)
+        db.session.commit()
+
+
 @generic_repr("id", "trigger", "user_id", "org_id")
 class QuerySnippet(TimestampMixin, db.Model, BelongsToOrgMixin):
     id = primary_key("QuerySnippet")

@@ -1,6 +1,8 @@
-import { toUpper } from "lodash";
+import { toUpper, map } from "lodash";
 import React from "react";
 import Button from "antd/lib/button";
+import Modal from "antd/lib/modal";
+import Tag from "antd/lib/tag";
 import routeWithUserSession from "@/components/ApplicationArea/routeWithUserSession";
 import navigateTo from "@/components/ApplicationArea/navigateTo";
 import Link from "@/components/Link";
@@ -11,6 +13,9 @@ import { wrap as itemsList, ControllerType } from "@/components/items-list/Items
 import { ResourceItemsSource } from "@/components/items-list/classes/ItemsSource";
 import { StateStorage } from "@/components/items-list/classes/StateStorage";
 import DynamicComponent from "@/components/DynamicComponent";
+import Tooltip from "@/components/Tooltip";
+import PlainButton from "@/components/PlainButton";
+import notification from "@/services/notification";
 
 import ItemsTable, { Columns } from "@/components/items-list/components/ItemsTable";
 
@@ -27,6 +32,21 @@ export const STATE_CLASS = {
 class AlertsList extends React.Component {
   static propTypes = {
     controller: ControllerType.isRequired,
+  };
+
+  archive = alert => {
+    Modal.confirm({
+      title: `Archive "${alert.name}"?`,
+      content: "Archived alerts no longer appear in the list and stop sending notifications.",
+      okType: "danger",
+      onOk: () =>
+        Alert.archive({ id: alert.id })
+          .then(() => {
+            notification.success("Alert archived.");
+            this.props.controller.update();
+          })
+          .catch(() => notification.error("Failed to archive alert.")),
+    });
   };
 
   listColumns = [
@@ -54,6 +74,15 @@ class AlertsList extends React.Component {
           <Link className="table-main-title" href={"alerts/" + alert.id}>
             {alert.name}
           </Link>
+          {alert.tags && alert.tags.length > 0 && (
+            <span className="m-l-10">
+              {map(alert.tags, t => (
+                <Tag key={t} color="blue" style={{ marginRight: 4 }}>
+                  {t}
+                </Tag>
+              ))}
+            </span>
+          )}
         </div>
       ),
       {
@@ -77,6 +106,23 @@ class AlertsList extends React.Component {
     ),
     Columns.timeAgo.sortable({ title: "Last Updated At", field: "updated_at", width: "1%" }),
     Columns.dateTime.sortable({ title: "Created At", field: "created_at", width: "1%" }),
+    Columns.custom(
+      (text, alert) => {
+        const canArchive = currentUser.isAdmin || currentUser.id === alert.user.id;
+        if (!canArchive) {
+          return null;
+        }
+        return (
+          <Tooltip title="Archive">
+            <PlainButton onClick={() => this.archive(alert)}>
+              <i className="fa fa-archive" aria-hidden="true" />
+              <span className="sr-only">archive</span>
+            </PlainButton>
+          </Tooltip>
+        );
+      },
+      { title: "", width: "1%" }
+    ),
   ];
 
   render() {

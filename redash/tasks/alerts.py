@@ -15,12 +15,49 @@ def _query_result_rows(alert):
     return query_data.data.get("rows") or []
 
 
+def _record_event(alert, subscription, new_state, metadata, status, error_message=None):
+    """Persist an AlertEvent for a subscription dispatch (success or failure)."""
+    try:
+        destination = subscription.destination
+        rendered_body = ""
+        try:
+            rendered_body = alert.render_custom_body(
+                row=(metadata or {}).get("row"),
+                row_index=(metadata or {}).get("row_index"),
+            )
+        except Exception:
+            logger.exception("Failed to render alert body for AlertEvent record")
+
+        additional = {"recipient_user_id": getattr(subscription.user, "id", None)}
+        if error_message:
+            additional["error"] = error_message
+
+        models.AlertEvent.record(
+            alert,
+            destination=destination,
+            status=status,
+            state=new_state,
+            content=rendered_body,
+            additional_properties=additional,
+            row_index=(metadata or {}).get("row_index"),
+            alert_type=destination.type if destination else "email",
+            user=subscription.user,
+        )
+    except Exception:
+        logger.exception("Failed to record AlertEvent for alert %s", alert.id)
+        models.db.session.rollback()
+
+
 def _dispatch_to_subscriptions(alert, new_state, host, metadata):
     for subscription in alert.subscriptions:
         try:
             subscription.notify(alert, alert.query_rel, subscription.user, new_state, current_app, host, metadata)
-        except Exception:
+            _record_event(alert, subscription, new_state, metadata, models.AlertEvent.STATUS_OK)
+        except Exception as exc:
             logger.exception("Error with processing destination")
+            _record_event(
+                alert, subscription, new_state, metadata, models.AlertEvent.STATUS_ERROR, error_message=str(exc)
+            )
 
 
 def notify_subscriptions(alert, new_state, metadata):

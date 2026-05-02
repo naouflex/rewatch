@@ -8,6 +8,7 @@ import { Alert as AlertType } from "@/components/proptypes";
 
 import Form from "antd/lib/form";
 import Button from "antd/lib/button";
+import Tag from "antd/lib/tag";
 import Tooltip from "@/components/Tooltip";
 import AntAlert from "antd/lib/alert";
 import * as Grid from "antd/lib/grid";
@@ -17,6 +18,7 @@ import Criteria from "./components/Criteria";
 import Rearm from "./components/Rearm";
 import Query from "./components/Query";
 import AlertDestinations from "./components/AlertDestinations";
+import AlertHistory from "./components/AlertHistory";
 import HorizontalFormItem from "./components/HorizontalFormItem";
 import { STATE_CLASS } from "../alerts/AlertsList";
 import DynamicComponent from "@/components/DynamicComponent";
@@ -96,6 +98,15 @@ export default class AlertView extends React.Component {
                 <HorizontalFormItem label="Query">
                   <Query query={query} queryResult={queryResult} />
                 </HorizontalFormItem>
+                {alert.tags && alert.tags.length > 0 && (
+                  <HorizontalFormItem label="Tags">
+                    {alert.tags.map(t => (
+                      <Tag key={t} color="blue">
+                        {t}
+                      </Tag>
+                    ))}
+                  </HorizontalFormItem>
+                )}
                 {queryResult && options && (
                   <>
                     <HorizontalFormItem label="Trigger when" className="alert-criteria">
@@ -162,6 +173,11 @@ export default class AlertView extends React.Component {
                 </Tooltip>
               </h4>
               <AlertDestinations alertId={alert.id} />
+            </Grid.Col>
+          </Grid.Row>
+          <Grid.Row className="m-t-20">
+            <Grid.Col span={24}>
+              <AlertHistory alertId={alert.id} canManage={canEdit} />
             </Grid.Col>
           </Grid.Row>
         </div>

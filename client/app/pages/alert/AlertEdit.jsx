@@ -8,6 +8,7 @@ import { Alert as AlertType } from "@/components/proptypes";
 import Form from "antd/lib/form";
 import Button from "antd/lib/button";
 import Switch from "antd/lib/switch";
+import Select from "antd/lib/select";
 
 import Title from "./components/Title";
 import Criteria from "./components/Criteria";
@@ -46,9 +47,9 @@ export default class AlertEdit extends React.Component {
   };
 
   render() {
-    const { alert, queryResult, pendingRearm, onNotificationTemplateChange, menuButton } = this.props;
+    const { alert, queryResult, pendingRearm, onNotificationTemplateChange, menuButton, onTagsChange } = this.props;
     const { onQuerySelected, onNameChange, onRearmChange, onCriteriaChange } = this.props;
-    const { query, name, options } = alert;
+    const { query, name, options, tags } = alert;
     const { saving } = this.state;
 
     return (
@@ -79,6 +80,16 @@ export default class AlertEdit extends React.Component {
             <Form className="flex-fill">
               <HorizontalFormItem label="Query">
                 <Query query={query} queryResult={queryResult} onChange={onQuerySelected} editMode />
+              </HorizontalFormItem>
+              <HorizontalFormItem label="Tags" help="Press enter to add a tag.">
+                <Select
+                  mode="tags"
+                  style={{ minWidth: 240 }}
+                  value={tags || []}
+                  onChange={onTagsChange}
+                  tokenSeparators={[","]}
+                  placeholder="Add tags"
+                />
               </HorizontalFormItem>
               {queryResult && options && (
                 <>
@@ -142,6 +153,7 @@ AlertEdit.propTypes = {
   onCriteriaChange: PropTypes.func.isRequired,
   onRearmChange: PropTypes.func.isRequired,
   onNotificationTemplateChange: PropTypes.func.isRequired,
+  onTagsChange: PropTypes.func.isRequired,
 };
 
 AlertEdit.defaultProps = {

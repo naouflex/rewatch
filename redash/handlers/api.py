@@ -2,13 +2,23 @@ from flask import make_response
 from flask_restful import Api
 from werkzeug.wrappers import Response
 
+from redash.handlers.alert_events import (
+    AlertEventListResource,
+    AlertEventResource,
+    MyAlertEventsResource,
+)
 from redash.handlers.alerts import (
+    AlertArchiveResource,
     AlertEvaluateResource,
+    AlertFavoriteListResource,
+    AlertFavoriteResource,
     AlertListResource,
     AlertMuteResource,
     AlertResource,
     AlertSubscriptionListResource,
     AlertSubscriptionResource,
+    AlertTagsResource,
+    MyAlertsResource,
 )
 from redash.handlers.base import org_scoped_rule
 from redash.handlers.dashboards import (
@@ -118,6 +128,10 @@ def json_representation(data, code, headers=None):
 
 api.add_org_resource(AlertResource, "/api/alerts/<alert_id>", endpoint="alert")
 api.add_org_resource(AlertMuteResource, "/api/alerts/<alert_id>/mute", endpoint="alert_mute")
+api.add_org_resource(AlertArchiveResource, "/api/alerts/<alert_id>/archive", endpoint="alert_archive")
+api.add_org_resource(
+    AlertFavoriteResource, "/api/alerts/<alert_id>/favorite", endpoint="alert_favorite"
+)
 api.add_org_resource(AlertEvaluateResource, "/api/alerts/<alert_id>/eval", endpoint="alert_eval")
 api.add_org_resource(
     AlertSubscriptionListResource,
@@ -129,7 +143,19 @@ api.add_org_resource(
     "/api/alerts/<alert_id>/subscriptions/<subscriber_id>",
     endpoint="alert_subscription",
 )
+api.add_org_resource(
+    AlertEventListResource, "/api/alerts/<alert_id>/events", endpoint="alert_events"
+)
+api.add_org_resource(
+    AlertEventResource,
+    "/api/alerts/<alert_id>/events/<event_id>",
+    endpoint="alert_event",
+)
 api.add_org_resource(AlertListResource, "/api/alerts", endpoint="alerts")
+api.add_org_resource(AlertFavoriteListResource, "/api/alerts/favorites", endpoint="alert_favorites")
+api.add_org_resource(AlertTagsResource, "/api/alerts/tags", endpoint="alerts_tags")
+api.add_org_resource(MyAlertsResource, "/api/alerts/my", endpoint="my_alerts")
+api.add_org_resource(MyAlertEventsResource, "/api/alert_events", endpoint="alert_events_feed")
 
 api.add_org_resource(DashboardListResource, "/api/dashboards", endpoint="dashboards")
 api.add_org_resource(DashboardResource, "/api/dashboards/<dashboard_id>", endpoint="dashboard")

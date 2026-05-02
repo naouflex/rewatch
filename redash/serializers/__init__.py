@@ -205,8 +205,14 @@ def serialize_alert(alert, full=True, with_favorite_state=True):
         d["query_id"] = alert.query_id
         d["user_id"] = alert.user_id
 
-    if with_favorite_state and not current_user.is_api_user():
-        d["is_favorite"] = models.Favorite.is_favorite(current_user.id, alert)
+    if with_favorite_state:
+        try:
+            if not current_user.is_api_user():
+                d["is_favorite"] = models.Favorite.is_favorite(current_user.id, alert)
+        except Exception:
+            # ``current_user`` may be unbound when the serializer is invoked outside a
+            # request context (e.g. inside a destination ``notify`` running on a worker).
+            pass
 
     return d
 
