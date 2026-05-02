@@ -1145,6 +1145,17 @@ class Alert(TimestampMixin, BelongsToOrgMixin, db.Model):
         result_table = []  # A two-dimensional array which can rendered as a table in Mustache
         for r in data["rows"]:
             result_table.append([r[col["name"]] for col in data["columns"]])
+
+        column_names = [col["name"] for col in data.get("columns", [])]
+
+        # IW style cross-row reference: `{{ethereum.0}}`,
+        # `{{ethereum.1}}`, ... resolves via pystache's dotted-name lookup by
+        # exposing each column as a dict of {str(index): value}.
+        by_column = {
+            name: {str(idx): r.get(name) for idx, r in enumerate(data.get("rows", []))}
+            for name in column_names
+        }
+
         context = {
             "ALERT_NAME": self.name,
             "ALERT_URL": "{host}/alerts/{alert_id}".format(host=host, alert_id=self.id),
@@ -1160,7 +1171,21 @@ class Alert(TimestampMixin, BelongsToOrgMixin, db.Model):
             "QUERY_RESULT_TABLE": result_table,
             "QUERY_RESULT_ROW": row if row is not None else {},
             "QUERY_RESULT_ROW_INDEX": row_index if row_index is not None else "",
+            "QUERY_RESULT_BY_COLUMN": by_column,
         }
+
+        # IW style "column_name" shortcut. In per-row mode the bare
+        # column name resolves to the current row's value (`{{ethereum}}` is a
+        # scalar); otherwise it points at the cross-row dict so dotted access
+        # (`{{ethereum.0}}`, `{{ethereum.1}}`, ...) works. Reserved variables
+        # above always win; columns named like them stay reachable through the
+        # `QUERY_RESULT_ROW.*` / `QUERY_RESULT_BY_COLUMN.*` namespaces.
+        for name in column_names:
+            if row is not None and name in row:
+                context.setdefault(name, row[name])
+            else:
+                context.setdefault(name, by_column.get(name, {}))
+
         return mustache_render_escape(template, context)
 
     def render_custom_body(self, row=None, row_index=None):

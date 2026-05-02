@@ -228,6 +228,50 @@ class TestAlertRenderTemplate(BaseTestCase):
         self.assertEqual(alert.render_template(template, row=results["rows"][1], row_index=1), "value=2 idx=1")
         self.assertEqual(alert.render_template(template, row=results["rows"][2], row_index=2), "value=3 idx=2")
 
+    def test_render_template_per_row_column_shortcut(self):
+        """Inverse-watch style: `{{column_name}}` resolves to the current row in per-row mode."""
+        results = {
+            "rows": [
+                {"timestamp": "2026-04-30", "ethereum": 7234562, "fantom": 78902341},
+                {"timestamp": "2026-04-29", "ethereum": 7232890, "fantom": 78890234},
+                {"timestamp": "2026-04-28", "ethereum": 7231104, "fantom": 78878123},
+            ],
+            "columns": [
+                {"name": "timestamp", "type": "STRING"},
+                {"name": "ethereum", "type": "INTEGER"},
+                {"name": "fantom", "type": "INTEGER"},
+            ],
+        }
+        alert = self.create_alert(results, column="ethereum", value="0")
+        template = "{{timestamp}} eth={{ethereum}} ftm={{fantom}}"
+
+        self.assertEqual(
+            alert.render_template(template, row=results["rows"][0], row_index=0),
+            "2026-04-30 eth=7234562 ftm=78902341",
+        )
+        self.assertEqual(
+            alert.render_template(template, row=results["rows"][2], row_index=2),
+            "2026-04-28 eth=7231104 ftm=78878123",
+        )
+
+    def test_render_template_cross_row_reference(self):
+        """`{{ethereum.0}}` (and `{{QUERY_RESULT_BY_COLUMN.ethereum.0}}`) point at row 0."""
+        results = {
+            "rows": [
+                {"ethereum": 100, "fantom": 200},
+                {"ethereum": 101, "fantom": 201},
+            ],
+            "columns": [
+                {"name": "ethereum", "type": "INTEGER"},
+                {"name": "fantom", "type": "INTEGER"},
+            ],
+        }
+        alert = self.create_alert(results, column="ethereum", value="0")
+        # Without per-row context the bare column is exposed as the by_column
+        # dict, so dotted access resolves to the indexed row value.
+        template = "row0 eth={{ethereum.0}} fall back ftm={{QUERY_RESULT_BY_COLUMN.fantom.1}}"
+        self.assertEqual(alert.render_template(template), "row0 eth=100 fall back ftm=201")
+
     def test_render_template_without_row_uses_first_row(self):
         results = {
             "rows": [{"foo": 7}, {"foo": 9}],

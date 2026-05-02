@@ -303,6 +303,10 @@ const config = {
           "/logout",
           "/invite",
           "/setup",
+          "/forgot",
+          "/reset",
+          "/verify",
+          "/verification_email",
           "/status.json",
           "/api",
           "/oauth"
