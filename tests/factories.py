@@ -169,6 +169,15 @@ alert_event_factory = ModelFactory(
     alert=alert_factory.create,
 )
 
+indexer_factory = ModelFactory(
+    redash.models.Indexer,
+    name=Sequence("Indexer {}"),
+    query_rel=query_factory.create,
+    user=user_factory.create,
+    data_source=data_source_factory.create,
+    options={},
+)
+
 query_snippet_factory = ModelFactory(
     redash.models.QuerySnippet,
     trigger=Sequence("trigger {}"),
@@ -249,6 +258,19 @@ class Factory:
 
         args.update(**kwargs)
         return alert_factory.create(**args)
+
+    def create_indexer(self, **kwargs):
+        query = kwargs.pop("query_rel", None) or self.create_query()
+        target_data_source = kwargs.pop("data_source", None) or self.data_source
+        args = {
+            "user": self.user,
+            "query_rel": query,
+            "org": self.org,
+            "data_source": target_data_source,
+            "options": {},
+        }
+        args.update(**kwargs)
+        return indexer_factory.create(**args)
 
     def create_alert_event(self, **kwargs):
         alert = kwargs.pop("alert", None) or self.create_alert()

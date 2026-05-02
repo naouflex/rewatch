@@ -12,6 +12,7 @@ from rq.timeouts import JobTimeoutException
 from redash import models, redis_connection, settings
 from redash.query_runner import InterruptException
 from redash.tasks.alerts import check_alerts_for_query
+from redash.tasks.indexers import check_indexers_for_query
 from redash.tasks.failure_report import track_failure
 from redash.tasks.worker import Job, Queue
 from redash.utils import gen_query_hash, utcnow
@@ -256,6 +257,9 @@ class QueryExecutor:
             self._log_progress("checking_alerts")
             for query_id in updated_query_ids:
                 check_alerts_for_query.delay(query_id, self.metadata)
+            self._log_progress("checking_indexers")
+            for query_id in updated_query_ids:
+                check_indexers_for_query.delay(query_id)
             self._log_progress("finished")
 
             result = query_result.id

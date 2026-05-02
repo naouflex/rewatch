@@ -8,6 +8,9 @@ import "./alerts/AlertsList";
 import "./alert/Alert";
 import "./alert-events/AlertEventsList";
 
+import "./indexers/IndexersList";
+import "./indexers/Indexer";
+
 import "./dashboards/DashboardList";
 import "./dashboards/DashboardPage";
 import "./dashboards/PublicDashboardPage";

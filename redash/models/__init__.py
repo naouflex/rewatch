@@ -1697,6 +1697,122 @@ class AlertEvent(BelongsToOrgMixin, db.Model):
         db.session.commit()
 
 
+@gfk_type
+@generic_repr("id", "name", "query_id", "user_id", "org_id", "is_archived", "last_triggered_at")
+class Indexer(TimestampMixin, BelongsToOrgMixin, db.Model):
+    """An indexer copies a query's results into another data source on a schedule.
+
+    Indexers are owned by an organization and a user, and reference both a
+    source ``query`` (whose data source provides the rows) and a target
+    ``data_source`` where the rows will be persisted. Most of the operational
+    knobs live in ``options`` (target table, insert strategy, timestamp field,
+    deduplication, ...).
+    """
+
+    INSERT_STRATEGIES = ("append", "overwrite")
+
+    id = primary_key("Indexer")
+    name = Column(db.String(255), nullable=False)
+    query_id = Column(key_type("Query"), db.ForeignKey("queries.id"), nullable=False)
+    query_rel = db.relationship(Query, backref=backref("indexers", cascade="all"))
+    user_id = Column(key_type("User"), db.ForeignKey("users.id"), nullable=False)
+    user = db.relationship(User, backref="indexers")
+    org_id = Column(key_type("Organization"), db.ForeignKey("organizations.id"), nullable=False)
+    org = db.relationship(Organization, backref="indexers")
+    data_source_id = Column(
+        key_type("DataSource"), db.ForeignKey("data_sources.id"), nullable=False
+    )
+    data_source = db.relationship(DataSource, backref="indexers")
+    options = Column(MutableDict.as_mutable(JSONB), nullable=False, default={})
+    tags = Column("tags", MutableList.as_mutable(ARRAY(db.Unicode)), nullable=True)
+    is_archived = Column(db.Boolean, default=False, index=True, nullable=False)
+    last_triggered_at = Column(db.DateTime(True), nullable=True)
+
+    __tablename__ = "indexers"
+
+    def __str__(self):
+        return "Indexer(id={id}, name={name})".format(id=self.id, name=self.name)
+
+    @property
+    def groups(self):
+        return self.query_rel.groups
+
+    @classmethod
+    def all(cls, group_ids, user_id=None):
+        return cls.all_indexers(group_ids, user_id=user_id)
+
+    @classmethod
+    def all_indexers(cls, group_ids, user_id=None, include_archived=False):
+        indexers = (
+            cls.query.options(joinedload(cls.user), joinedload(cls.query_rel))
+            .join(Query, Query.id == cls.query_id)
+            .join(DataSourceGroup, DataSourceGroup.data_source_id == Query.data_source_id)
+            .filter(DataSourceGroup.group_id.in_(group_ids))
+        )
+        if include_archived:
+            indexers = indexers.filter(cls.is_archived.is_(True))
+        else:
+            indexers = indexers.filter(cls.is_archived.is_(False))
+        return indexers
+
+    @classmethod
+    def by_user(cls, user):
+        return cls.all_indexers(user.group_ids, user.id).filter(cls.user == user)
+
+    @classmethod
+    def search(cls, term, group_ids, user_id=None, limit=None, include_archived=False):
+        query = cls.all_indexers(
+            group_ids, user_id=user_id, include_archived=include_archived
+        ).outerjoin(User, User.id == cls.user_id)
+        like = "%{}%".format(term)
+        query = query.filter(or_(cls.name.ilike(like), User.name.ilike(like)))
+        if limit:
+            query = query.limit(limit)
+        return query
+
+    @classmethod
+    def search_by_user(cls, term, user, limit=None):
+        query = cls.by_user(user).filter(cls.name.ilike("%{}%".format(term)))
+        if limit:
+            query = query.limit(limit)
+        return query
+
+    @classmethod
+    def all_tags(cls, org, user):
+        indexers = cls.all_indexers(user.group_ids)
+        tag_column = func.unnest(cls.tags).label("tag")
+        usage_count = func.count(1).label("usage_count")
+        return (
+            db.session.query(tag_column, usage_count)
+            .group_by(tag_column)
+            .filter(cls.id.in_(indexers.options(load_only("id"))))
+            .order_by(usage_count.desc())
+        )
+
+    @classmethod
+    def favorites(cls, user, base_query=None):
+        if base_query is None:
+            base_query = cls.all_indexers(user.group_ids, user.id)
+        return base_query.join(
+            (
+                Favorite,
+                and_(Favorite.object_type == "Indexer", Favorite.object_id == cls.id),
+            )
+        ).filter(Favorite.user_id == user.id)
+
+    @classmethod
+    def get_by_id_and_org(cls, object_id, org):
+        return super(Indexer, cls).get_by_id_and_org(object_id, org, Query)
+
+    def archive(self):
+        db.session.add(self)
+        self.is_archived = True
+
+    def unarchive(self):
+        db.session.add(self)
+        self.is_archived = False
+
+
 @generic_repr("id", "trigger", "user_id", "org_id")
 class QuerySnippet(TimestampMixin, db.Model, BelongsToOrgMixin):
     id = primary_key("QuerySnippet")

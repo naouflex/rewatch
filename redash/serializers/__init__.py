@@ -250,6 +250,44 @@ def serialize_alert_event(alert_event, include_alert=True, include_destination=T
     return d
 
 
+def serialize_indexer(indexer, full=True, with_favorite_state=True):
+    d = {
+        "id": indexer.id,
+        "name": indexer.name,
+        "options": indexer.options or {},
+        "tags": indexer.tags or [],
+        "is_archived": bool(indexer.is_archived),
+        "last_triggered_at": indexer.last_triggered_at,
+        "updated_at": indexer.updated_at,
+        "created_at": indexer.created_at,
+    }
+
+    if full:
+        d["query"] = serialize_query(indexer.query_rel)
+        d["user"] = indexer.user.to_dict()
+        if indexer.data_source is not None:
+            d["data_source"] = {
+                "id": indexer.data_source.id,
+                "name": indexer.data_source.name,
+                "type": indexer.data_source.type,
+            }
+        else:
+            d["data_source"] = None
+    else:
+        d["query_id"] = indexer.query_id
+        d["user_id"] = indexer.user_id
+        d["data_source_id"] = indexer.data_source_id
+
+    if with_favorite_state:
+        try:
+            if not current_user.is_api_user():
+                d["is_favorite"] = models.Favorite.is_favorite(current_user.id, indexer)
+        except Exception:
+            pass
+
+    return d
+
+
 def serialize_dashboard(obj, with_widgets=False, user=None, with_favorite_state=True):
     layout = obj.layout
 

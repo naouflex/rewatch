@@ -13,6 +13,7 @@ import logoUrl from "@/assets/images/icon_small.png";
 import DesktopOutlinedIcon from "@ant-design/icons/DesktopOutlined";
 import CodeOutlinedIcon from "@ant-design/icons/CodeOutlined";
 import AlertOutlinedIcon from "@ant-design/icons/AlertOutlined";
+import DatabaseOutlinedIcon from "@ant-design/icons/DatabaseOutlined";
 import PlusOutlinedIcon from "@ant-design/icons/PlusOutlined";
 import QuestionCircleOutlinedIcon from "@ant-design/icons/QuestionCircleOutlined";
 import SettingOutlinedIcon from "@ant-design/icons/SettingOutlined";
@@ -67,6 +68,18 @@ function useNavbarActiveState() {
         ],
         currentRoute.id
       ),
+      indexers: includes(
+        [
+          "Indexers.List",
+          "Indexers.My",
+          "Indexers.Favorites",
+          "Indexers.Archived",
+          "Indexers.New",
+          "Indexers.View",
+          "Indexers.Edit",
+        ],
+        currentRoute.id
+      ),
     }),
     [currentRoute.id]
   );
@@ -80,6 +93,7 @@ export default function DesktopNavbar() {
   const canCreateQuery = currentUser.hasPermission("create_query");
   const canCreateDashboard = currentUser.hasPermission("create_dashboard");
   const canCreateAlert = currentUser.hasPermission("list_alerts");
+  const canCreateIndexer = currentUser.hasPermission("create_indexer");
 
   return (
     <nav className="desktop-navbar">
@@ -127,10 +141,18 @@ export default function DesktopNavbar() {
             </Menu.Item>
           </Menu.SubMenu>
         )}
+        {currentUser.hasPermission("list_indexers") && (
+          <Menu.Item key="indexers" className={activeState.indexers ? "navbar-active-item" : null}>
+            <Link href="indexers">
+              <DatabaseOutlinedIcon aria-label="Indexers navigation button" />
+              <span className="desktop-navbar-label">Indexers</span>
+            </Link>
+          </Menu.Item>
+        )}
       </NavbarSection>
 
       <NavbarSection className="desktop-navbar-spacer">
-        {(canCreateQuery || canCreateDashboard || canCreateAlert) && (
+        {(canCreateQuery || canCreateDashboard || canCreateAlert || canCreateIndexer) && (
           <Menu.SubMenu
             key="create"
             popupClassName="desktop-navbar-submenu"
@@ -160,6 +182,13 @@ export default function DesktopNavbar() {
               <Menu.Item key="new-alert">
                 <Link data-test="CreateAlertMenuItem" href="alerts/new">
                   New Alert
+                </Link>
+              </Menu.Item>
+            )}
+            {canCreateIndexer && (
+              <Menu.Item key="new-indexer">
+                <Link data-test="CreateIndexerMenuItem" href="indexers/new">
+                  New Indexer
                 </Link>
               </Menu.Item>
             )}

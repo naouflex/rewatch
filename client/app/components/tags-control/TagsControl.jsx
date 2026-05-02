@@ -115,3 +115,7 @@ export const DashboardTagsControl = modelTagsControl({
 export const AlertTagsControl = modelTagsControl({
   archivedTooltip: "This alert is archived and won't trigger notifications nor appear in search results.",
 });
+
+export const IndexerTagsControl = modelTagsControl({
+  archivedTooltip: "This indexer is archived and won't run for new query results nor appear in search results.",
+});

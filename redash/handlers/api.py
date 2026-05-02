@@ -45,6 +45,16 @@ from redash.handlers.databricks import (
     DatabricksSchemaResource,
     DatabricksTableColumnListResource,
 )
+from redash.handlers.indexers import (
+    IndexerArchiveResource,
+    IndexerArchivedListResource,
+    IndexerFavoriteListResource,
+    IndexerFavoriteResource,
+    IndexerListResource,
+    IndexerResource,
+    IndexerTagsResource,
+    MyIndexersResource,
+)
 from redash.handlers.destinations import (
     DestinationListResource,
     DestinationResource,
@@ -158,6 +168,31 @@ api.add_org_resource(AlertTagsResource, "/api/alerts/tags", endpoint="alerts_tag
 api.add_org_resource(MyAlertsResource, "/api/alerts/my", endpoint="my_alerts")
 api.add_org_resource(AlertArchivedListResource, "/api/alerts/archive", endpoint="alerts_archive")
 api.add_org_resource(MyAlertEventsResource, "/api/alert_events", endpoint="alert_events_feed")
+
+api.add_org_resource(IndexerListResource, "/api/indexers", endpoint="indexers")
+api.add_org_resource(IndexerResource, "/api/indexers/<indexer_id>", endpoint="indexer")
+api.add_org_resource(
+    IndexerArchiveResource,
+    "/api/indexers/<indexer_id>/archive",
+    endpoint="indexer_archive",
+)
+api.add_org_resource(
+    IndexerArchivedListResource,
+    "/api/indexers/archive",
+    endpoint="indexers_archive",
+)
+api.add_org_resource(MyIndexersResource, "/api/indexers/my", endpoint="my_indexers")
+api.add_org_resource(
+    IndexerFavoriteResource,
+    "/api/indexers/<indexer_id>/favorite",
+    endpoint="indexer_favorite",
+)
+api.add_org_resource(
+    IndexerFavoriteListResource,
+    "/api/indexers/favorites",
+    endpoint="indexer_favorites",
+)
+api.add_org_resource(IndexerTagsResource, "/api/indexers/tags", endpoint="indexers_tags")
 
 api.add_org_resource(DashboardListResource, "/api/dashboards", endpoint="dashboards")
 api.add_org_resource(DashboardResource, "/api/dashboards/<dashboard_id>", endpoint="dashboard")

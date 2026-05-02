@@ -3,6 +3,7 @@ from rq.connections import pop_connection, push_connection
 from redash import rq_redis_connection
 from redash.tasks.alerts import check_alerts_for_query
 from redash.tasks.failure_report import send_aggregated_errors
+from redash.tasks.indexers import check_indexers_for_query, index_query_results
 from redash.tasks.general import (
     record_event,
     send_mail,
