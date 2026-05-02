@@ -350,6 +350,14 @@ default_query_runners = [
     "redash.query_runner.risingwave",
     "redash.query_runner.d1",
     "redash.query_runner.duckdb",
+    "redash.query_runner.python",
+    "redash.query_runner.coingecko",
+    "redash.query_runner.dune",
+    "redash.query_runner.graphql",
+    "redash.query_runner.evm_logs",
+    "redash.query_runner.evm_state",
+    "redash.query_runner.evm_transactions",
+    "redash.query_runner.twitter",
 ]
 
 enabled_query_runners = array_from_string(

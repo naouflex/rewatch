@@ -146,6 +146,9 @@ trino = ">=0.305,<1.0"
 vertica-python = "1.1.1"
 xlrd = "2.0.1"
 e6data-python-connector = "2.2.0"
+web3 = "6.20.3"
+eth-utils = "4.1.1"
+tweepy = "4.16.0"
 
 [tool.poetry.group.ldap3]
 optional = true

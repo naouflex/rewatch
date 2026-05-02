@@ -3,12 +3,17 @@ import AceEditor from "react-ace";
 import ace from "ace-builds";
 
 import "ace-builds/src-noconflict/ext-language_tools";
+import "ace-builds/src-noconflict/mode-graphqlschema";
 import "ace-builds/src-noconflict/mode-json";
 import "ace-builds/src-noconflict/mode-python";
 import "ace-builds/src-noconflict/mode-sql";
 import "ace-builds/src-noconflict/mode-yaml";
 import "ace-builds/src-noconflict/theme-textmate";
 import "ace-builds/src-noconflict/ext-searchbox";
+
+ace.define("ace/mode/graphql", ["require", "exports", "module", "ace/mode/graphqlschema"], (require, exports) => {
+  exports.Mode = require("ace/mode/graphqlschema").Mode;
+});
 
 const langTools = ace.acequire("ace/ext/language_tools");
 const snippetsModule = ace.acequire("ace/snippets");
@@ -26,6 +31,7 @@ defineDummySnippets("python");
 defineDummySnippets("sql");
 defineDummySnippets("json");
 defineDummySnippets("yaml");
+defineDummySnippets("graphql");
 
 // without this line, ace will try to load a non-existent mode-custom.js file
 // for data sources with syntax = "custom"
