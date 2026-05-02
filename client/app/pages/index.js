@@ -6,6 +6,7 @@ import "./admin/SystemStatus";
 
 import "./alerts/AlertsList";
 import "./alert/Alert";
+import "./alert-events/AlertEventsList";
 
 import "./dashboards/DashboardList";
 import "./dashboards/DashboardPage";

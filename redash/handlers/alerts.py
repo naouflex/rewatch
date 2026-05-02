@@ -180,6 +180,16 @@ class MyAlertsResource(BaseResource):
         return [serialize_alert(alert) for alert in alerts]
 
 
+class AlertArchivedListResource(BaseResource):
+    """List alerts the current user can see that have been archived."""
+
+    @require_permission("list_alerts")
+    def get(self):
+        alerts = models.Alert.all_alerts(self.current_user.group_ids, include_archived=True)
+        self.record_event({"action": "list", "object_type": "alert", "filter": "archived"})
+        return [serialize_alert(alert) for alert in alerts]
+
+
 class AlertSubscriptionListResource(BaseResource):
     def post(self, alert_id):
         req = request.get_json(True)

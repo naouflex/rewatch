@@ -1,5 +1,5 @@
 import { axios } from "@/services/axios";
-import { merge } from "lodash";
+import { extend, map, merge } from "lodash";
 
 // backwards compatibility
 const normalizeCondition = {
@@ -29,20 +29,38 @@ const transformRequest = data => {
 
 const saveOrCreateUrl = data => (data.id ? `api/alerts/${data.id}` : "api/alerts");
 
-const Alert = {
-  query: () => axios.get("api/alerts"),
+export class Alert {
+  constructor(alert) {
+    extend(this, alert);
+  }
+
+  favorite() {
+    return AlertService.favorite(this);
+  }
+
+  unfavorite() {
+    return AlertService.unfavorite(this);
+  }
+}
+
+const wrap = alert => new Alert(alert);
+const wrapList = list => map(list, wrap);
+
+const AlertService = {
+  query: () => axios.get("api/alerts").then(wrapList),
+  myAlerts: () => axios.get("api/alerts/my").then(wrapList),
+  favorites: () => axios.get("api/alerts/favorites").then(wrapList),
+  archive: () => axios.get("api/alerts/archive").then(wrapList),
+  tags: () => axios.get("api/alerts/tags"),
   get: ({ id }) => axios.get(`api/alerts/${id}`).then(transformResponse),
   save: data => axios.post(saveOrCreateUrl(data), transformRequest(data)),
   delete: data => axios.delete(`api/alerts/${data.id}`),
   mute: data => axios.post(`api/alerts/${data.id}/mute`),
   unmute: data => axios.delete(`api/alerts/${data.id}/mute`),
   evaluate: data => axios.post(`api/alerts/${data.id}/eval`),
-  archive: data => axios.post(`api/alerts/${data.id}/archive`),
+  doArchive: data => axios.post(`api/alerts/${data.id}/archive`),
   favorite: data => axios.post(`api/alerts/${data.id}/favorite`),
   unfavorite: data => axios.delete(`api/alerts/${data.id}/favorite`),
-  favorites: () => axios.get("api/alerts/favorites"),
-  myAlerts: () => axios.get("api/alerts/my"),
-  tags: () => axios.get("api/alerts/tags"),
 };
 
-export default Alert;
+export default AlertService;

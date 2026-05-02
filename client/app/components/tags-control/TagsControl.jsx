@@ -111,3 +111,7 @@ export const QueryTagsControl = modelTagsControl({
 export const DashboardTagsControl = modelTagsControl({
   archivedTooltip: "This dashboard is archived and won't be listed in dashboards nor search results.",
 });
+
+export const AlertTagsControl = modelTagsControl({
+  archivedTooltip: "This alert is archived and won't trigger notifications nor appear in search results.",
+});

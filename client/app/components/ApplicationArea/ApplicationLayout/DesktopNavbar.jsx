@@ -57,7 +57,16 @@ function useNavbarActiveState() {
         currentRoute.id
       ),
       dataSources: includes(["DataSources.List"], currentRoute.id),
-      alerts: includes(["Alerts.List", "Alerts.New", "Alerts.View", "Alerts.Edit"], currentRoute.id),
+      alerts: includes(
+        [
+          "Alerts.List",
+          "Alerts.New",
+          "Alerts.View",
+          "Alerts.Edit",
+          "AlertEvents.List",
+        ],
+        currentRoute.id
+      ),
     }),
     [currentRoute.id]
   );
@@ -100,12 +109,23 @@ export default function DesktopNavbar() {
           </Menu.Item>
         )}
         {currentUser.hasPermission("list_alerts") && (
-          <Menu.Item key="alerts" className={activeState.alerts ? "navbar-active-item" : null}>
-            <Link href="alerts">
-              <AlertOutlinedIcon aria-label="Alerts navigation button" />
-              <span className="desktop-navbar-label">Alerts</span>
-            </Link>
-          </Menu.Item>
+          <Menu.SubMenu
+            key="alerts"
+            popupClassName="desktop-navbar-submenu"
+            className={activeState.alerts ? "navbar-active-item" : null}
+            title={
+              <Link href="alerts" className="navbar-submenu-title">
+                <AlertOutlinedIcon aria-label="Alerts navigation button" />
+                <span className="desktop-navbar-label">Alerts</span>
+              </Link>
+            }>
+            <Menu.Item key="alerts-list">
+              <Link href="alerts">Alerts</Link>
+            </Menu.Item>
+            <Menu.Item key="alerts-history">
+              <Link href="alert_events">Alerts History</Link>
+            </Menu.Item>
+          </Menu.SubMenu>
         )}
       </NavbarSection>
 

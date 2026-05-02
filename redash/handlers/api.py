@@ -9,6 +9,7 @@ from redash.handlers.alert_events import (
 )
 from redash.handlers.alerts import (
     AlertArchiveResource,
+    AlertArchivedListResource,
     AlertEvaluateResource,
     AlertFavoriteListResource,
     AlertFavoriteResource,
@@ -155,6 +156,7 @@ api.add_org_resource(AlertListResource, "/api/alerts", endpoint="alerts")
 api.add_org_resource(AlertFavoriteListResource, "/api/alerts/favorites", endpoint="alert_favorites")
 api.add_org_resource(AlertTagsResource, "/api/alerts/tags", endpoint="alerts_tags")
 api.add_org_resource(MyAlertsResource, "/api/alerts/my", endpoint="my_alerts")
+api.add_org_resource(AlertArchivedListResource, "/api/alerts/archive", endpoint="alerts_archive")
 api.add_org_resource(MyAlertEventsResource, "/api/alert_events", endpoint="alert_events_feed")
 
 api.add_org_resource(DashboardListResource, "/api/dashboards", endpoint="dashboards")
