@@ -1051,7 +1051,7 @@ class Alert(TimestampMixin, BelongsToOrgMixin, db.Model):
     def subscribers(self):
         return User.query.join(AlertSubscription).filter(AlertSubscription.alert == self)
 
-    def render_template(self, template):
+    def render_template(self, template, row=None, row_index=None):
         if template is None:
             return ""
 
@@ -1059,14 +1059,16 @@ class Alert(TimestampMixin, BelongsToOrgMixin, db.Model):
         host = base_url(self.query_rel.org)
 
         col_name = self.options["column"]
-        if data["rows"] and col_name in data["rows"][0]:
+        if row is not None and col_name in row:
+            result_value = row[col_name]
+        elif data["rows"] and col_name in data["rows"][0]:
             result_value = data["rows"][0][col_name]
         else:
             result_value = None
 
         result_table = []  # A two-dimensional array which can rendered as a table in Mustache
-        for row in data["rows"]:
-            result_table.append([row[col["name"]] for col in data["columns"]])
+        for r in data["rows"]:
+            result_table.append([r[col["name"]] for col in data["columns"]])
         context = {
             "ALERT_NAME": self.name,
             "ALERT_URL": "{host}/alerts/{alert_id}".format(host=host, alert_id=self.id),
@@ -1080,18 +1082,30 @@ class Alert(TimestampMixin, BelongsToOrgMixin, db.Model):
             "QUERY_RESULT_ROWS": data["rows"],
             "QUERY_RESULT_COLS": data["columns"],
             "QUERY_RESULT_TABLE": result_table,
+            "QUERY_RESULT_ROW": row if row is not None else {},
+            "QUERY_RESULT_ROW_INDEX": row_index if row_index is not None else "",
         }
         return mustache_render_escape(template, context)
 
+    def render_custom_body(self, row=None, row_index=None):
+        template = self.options.get("custom_body", self.options.get("template"))
+        return self.render_template(template, row=row, row_index=row_index)
+
+    def render_custom_subject(self, row=None, row_index=None):
+        template = self.options.get("custom_subject")
+        return self.render_template(template, row=row, row_index=row_index)
+
     @property
     def custom_body(self):
-        template = self.options.get("custom_body", self.options.get("template"))
-        return self.render_template(template)
+        return self.render_custom_body()
 
     @property
     def custom_subject(self):
-        template = self.options.get("custom_subject")
-        return self.render_template(template)
+        return self.render_custom_subject()
+
+    @property
+    def send_for_each_row(self):
+        return bool(self.options.get("send_for_each_row", False))
 
     @property
     def groups(self):

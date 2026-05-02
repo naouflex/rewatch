@@ -33,17 +33,22 @@ class Email(BaseDestination):
         if not recipients:
             logging.warning("No emails given. Skipping send.")
 
-        if alert.custom_body:
-            html = alert.custom_body
+        row = (metadata or {}).get("row")
+        row_index = (metadata or {}).get("row_index")
+
+        custom_body = alert.render_custom_body(row=row, row_index=row_index)
+        if custom_body:
+            html = custom_body
         else:
             with open(settings.REDASH_ALERTS_DEFAULT_MAIL_BODY_TEMPLATE_FILE, "r") as f:
-                html = alert.render_template(f.read())
+                html = alert.render_template(f.read(), row=row, row_index=row_index)
         logging.debug("Notifying: %s", recipients)
 
         try:
             state = new_state.upper()
-            if alert.custom_subject:
-                subject = alert.custom_subject
+            custom_subject = alert.render_custom_subject(row=row, row_index=row_index)
+            if custom_subject:
+                subject = custom_subject
             else:
                 subject_template = options.get("subject_template", settings.ALERTS_DEFAULT_MAIL_SUBJECT_TEMPLATE)
                 subject = subject_template.format(alert_name=alert.name, state=state)

@@ -216,3 +216,33 @@ class TestAlertRenderTemplate(BaseTestCase):
         """
         result = alert.render_template(textwrap.dedent(custom_alert))
         self.assertMultiLineEqual(result, textwrap.dedent(expected))
+
+    def test_render_template_with_row_overrides_result_value(self):
+        results = {
+            "rows": [{"foo": 1}, {"foo": 2}, {"foo": 3}],
+            "columns": [{"name": "foo", "type": "INTEGER"}],
+        }
+        alert = self.create_alert(results)
+        template = "value={{QUERY_RESULT_VALUE}} idx={{QUERY_RESULT_ROW_INDEX}}"
+
+        self.assertEqual(alert.render_template(template, row=results["rows"][1], row_index=1), "value=2 idx=1")
+        self.assertEqual(alert.render_template(template, row=results["rows"][2], row_index=2), "value=3 idx=2")
+
+    def test_render_template_without_row_uses_first_row(self):
+        results = {
+            "rows": [{"foo": 7}, {"foo": 9}],
+            "columns": [{"name": "foo", "type": "INTEGER"}],
+        }
+        alert = self.create_alert(results)
+
+        self.assertEqual(alert.render_template("{{QUERY_RESULT_VALUE}}"), "7")
+
+
+class TestAlertSendForEachRow(BaseTestCase):
+    def test_default_is_false(self):
+        alert = self.factory.create_alert()
+        self.assertFalse(alert.send_for_each_row)
+
+    def test_reads_from_options(self):
+        alert = self.factory.create_alert(options={"send_for_each_row": True})
+        self.assertTrue(alert.send_for_each_row)

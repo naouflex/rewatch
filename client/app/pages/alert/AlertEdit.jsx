@@ -7,6 +7,7 @@ import { Alert as AlertType } from "@/components/proptypes";
 
 import Form from "antd/lib/form";
 import Button from "antd/lib/button";
+import Switch from "antd/lib/switch";
 
 import Title from "./components/Title";
 import Criteria from "./components/Criteria";
@@ -92,6 +93,14 @@ export default class AlertEdit extends React.Component {
                   </HorizontalFormItem>
                   <HorizontalFormItem label="When triggered, send notification">
                     <Rearm value={pendingRearm || 0} onChange={onRearmChange} editMode />
+                  </HorizontalFormItem>
+                  <HorizontalFormItem
+                    label="Per-row notifications"
+                    help="Send a separate notification for each row of the query result. The current row is exposed to the template via QUERY_RESULT_ROW (and overrides QUERY_RESULT_VALUE).">
+                    <Switch
+                      checked={!!options.send_for_each_row}
+                      onChange={checked => onCriteriaChange({ send_for_each_row: checked })}
+                    />
                   </HorizontalFormItem>
                   <HorizontalFormItem label="Template">
                     <NotificationTemplate

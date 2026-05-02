@@ -8,13 +8,33 @@ from redash.worker import get_job_logger, job
 logger = get_job_logger(__name__)
 
 
-def notify_subscriptions(alert, new_state, metadata):
-    host = utils.base_url(alert.query_rel.org)
+def _query_result_rows(alert):
+    query_data = alert.query_rel.latest_query_data
+    if query_data is None or not query_data.data:
+        return []
+    return query_data.data.get("rows") or []
+
+
+def _dispatch_to_subscriptions(alert, new_state, host, metadata):
     for subscription in alert.subscriptions:
         try:
             subscription.notify(alert, alert.query_rel, subscription.user, new_state, current_app, host, metadata)
         except Exception:
             logger.exception("Error with processing destination")
+
+
+def notify_subscriptions(alert, new_state, metadata):
+    host = utils.base_url(alert.query_rel.org)
+
+    if alert.send_for_each_row and new_state == models.Alert.TRIGGERED_STATE:
+        rows = _query_result_rows(alert)
+        if rows:
+            for row_index, row in enumerate(rows):
+                row_metadata = {**(metadata or {}), "row": row, "row_index": row_index}
+                _dispatch_to_subscriptions(alert, new_state, host, row_metadata)
+            return
+
+    _dispatch_to_subscriptions(alert, new_state, host, metadata)
 
 
 def should_notify(alert, new_state):
