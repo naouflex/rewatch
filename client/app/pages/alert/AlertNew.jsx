@@ -57,8 +57,22 @@ export default class AlertNew extends React.Component {
                       editMode
                     />
                   </HorizontalFormItem>
-                  <HorizontalFormItem label="When triggered, send notification">
-                    <Rearm value={pendingRearm || 0} onChange={onRearmChange} editMode />
+                  <HorizontalFormItem
+                    label="When triggered, send notification"
+                    help={
+                      options.send_for_each_row
+                        ? "When sending one notification per row, the current row is exposed to the template via QUERY_RESULT_ROW (and overrides QUERY_RESULT_VALUE)."
+                        : null
+                    }>
+                    <Rearm
+                      value={pendingRearm || 0}
+                      onChange={onRearmChange}
+                      sendForEachRow={!!options.send_for_each_row}
+                      onSendForEachRowChange={checked =>
+                        onCriteriaChange({ send_for_each_row: checked })
+                      }
+                      editMode
+                    />
                   </HorizontalFormItem>
                   <HorizontalFormItem label="Template">
                     <NotificationTemplate

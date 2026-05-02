@@ -117,13 +117,7 @@ export default class AlertView extends React.Component {
                       />
                     </HorizontalFormItem>
                     <HorizontalFormItem label="Notifications" className="form-item-line-height-normal">
-                      <Rearm value={rearm || 0} />
-                      {options.send_for_each_row && (
-                        <>
-                          <br />
-                          A separate notification is sent for each row in the query result.
-                        </>
-                      )}
+                      <Rearm value={rearm || 0} sendForEachRow={!!options.send_for_each_row} />
                       <br />
                       Set to {options.custom_subject || options.custom_body ? "custom" : "default"} notification
                       template.

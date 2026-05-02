@@ -76,19 +76,51 @@ RearmByDuration.defaultProps = {
   onChange: () => {},
 };
 
-function RearmEditor({ value, onChange }) {
-  const [selected, setSelected] = useState(value < 2 ? value : 2);
+function computeSelected(value, sendForEachRow) {
+  if (sendForEachRow) {
+    return 2;
+  }
+  if (value < 2) {
+    return value;
+  }
+  return 3;
+}
+
+function RearmEditor({ value, onChange, sendForEachRow, onSendForEachRowChange }) {
+  const [selected, setSelected] = useState(computeSelected(value, sendForEachRow));
+
+  useEffect(() => {
+    setSelected(computeSelected(value, sendForEachRow));
+  }, [value, sendForEachRow]);
 
   const _onChange = newSelected => {
     setSelected(newSelected);
-    onChange(newSelected < 2 ? newSelected : 3600);
+    switch (newSelected) {
+      case 0:
+        onChange(0);
+        onSendForEachRowChange(false);
+        break;
+      case 1:
+        onChange(1);
+        onSendForEachRowChange(false);
+        break;
+      case 2:
+        // "for each row in the result" runs at every evaluation
+        onChange(1);
+        onSendForEachRowChange(true);
+        break;
+      default:
+        onChange(value && value >= 3600 ? value : 3600);
+        onSendForEachRowChange(false);
+        break;
+    }
   };
 
   return (
     <div className="alert-rearm">
       <Select
         optionLabelProp="label"
-        defaultValue={selected || 0}
+        value={selected}
         dropdownMatchSelectWidth={false}
         onChange={_onChange}>
         <Select.Option value={0} label="Just once">
@@ -97,11 +129,14 @@ function RearmEditor({ value, onChange }) {
         <Select.Option value={1} label="Each time alert is evaluated">
           Each time alert is evaluated <em>until back to normal</em>
         </Select.Option>
-        <Select.Option value={2} label="At most every">
+        <Select.Option value={2} label="Each time alert is evaluated for each row in the result">
+          Each time alert is evaluated <em>for each row in the result</em>
+        </Select.Option>
+        <Select.Option value={3} label="At most every">
           At most every ... <em>when alert is evaluated</em>
         </Select.Option>
       </Select>
-      {selected === 2 && value && <RearmByDuration value={value} onChange={onChange} editMode />}
+      {selected === 3 && value && <RearmByDuration value={value} onChange={onChange} editMode />}
     </div>
   );
 }
@@ -109,23 +144,34 @@ function RearmEditor({ value, onChange }) {
 RearmEditor.propTypes = {
   onChange: PropTypes.func.isRequired,
   value: PropTypes.number.isRequired,
+  sendForEachRow: PropTypes.bool,
+  onSendForEachRowChange: PropTypes.func,
 };
 
-function RearmViewer({ value }) {
+RearmEditor.defaultProps = {
+  sendForEachRow: false,
+  onSendForEachRowChange: () => {},
+};
+
+function RearmViewer({ value, sendForEachRow }) {
   let phrase = "";
-  switch (value) {
-    case 0:
-      phrase = "just once, until back to normal";
-      break;
-    case 1:
-      phrase = "each time alert is evaluated, until back to normal";
-      break;
-    default:
-      phrase = (
-        <>
-          at most every <RearmByDuration value={value} editMode={false} />, when alert is evaluated
-        </>
-      );
+  if (sendForEachRow) {
+    phrase = "each time alert is evaluated, for each row in the result";
+  } else {
+    switch (value) {
+      case 0:
+        phrase = "just once, until back to normal";
+        break;
+      case 1:
+        phrase = "each time alert is evaluated, until back to normal";
+        break;
+      default:
+        phrase = (
+          <>
+            at most every <RearmByDuration value={value} editMode={false} />, when alert is evaluated
+          </>
+        );
+    }
   }
 
   return <span>Notifications are sent {phrase}.</span>;
@@ -133,6 +179,11 @@ function RearmViewer({ value }) {
 
 RearmViewer.propTypes = {
   value: PropTypes.number.isRequired,
+  sendForEachRow: PropTypes.bool,
+};
+
+RearmViewer.defaultProps = {
+  sendForEachRow: false,
 };
 
 export default function Rearm({ editMode, ...props }) {
@@ -143,9 +194,13 @@ Rearm.propTypes = {
   onChange: PropTypes.func,
   value: PropTypes.number.isRequired,
   editMode: PropTypes.bool,
+  sendForEachRow: PropTypes.bool,
+  onSendForEachRowChange: PropTypes.func,
 };
 
 Rearm.defaultProps = {
   onChange: null,
   editMode: false,
+  sendForEachRow: false,
+  onSendForEachRowChange: () => {},
 };
