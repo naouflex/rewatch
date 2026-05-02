@@ -978,7 +978,8 @@ def next_state(op, value, threshold):
     return new_state
 
 
-@generic_repr("id", "name", "query_id", "user_id", "state", "last_triggered_at", "rearm")
+@gfk_type
+@generic_repr("id", "name", "query_id", "user_id", "org_id", "state", "is_archived", "last_triggered_at", "rearm")
 class Alert(TimestampMixin, BelongsToOrgMixin, db.Model):
     UNKNOWN_STATE = "unknown"
     OK_STATE = "ok"
@@ -991,26 +992,101 @@ class Alert(TimestampMixin, BelongsToOrgMixin, db.Model):
     query_rel = db.relationship(Query, backref=backref("alerts", cascade="all"))
     user_id = Column(key_type("User"), db.ForeignKey("users.id"))
     user = db.relationship(User, backref="alerts")
+    org_id = Column(key_type("Organization"), db.ForeignKey("organizations.id"), nullable=False)
+    org = db.relationship(Organization, backref="alerts")
     options = Column(MutableDict.as_mutable(JSONB), nullable=True)
     state = Column(db.String(255), default=UNKNOWN_STATE)
     subscriptions = db.relationship("AlertSubscription", cascade="all, delete-orphan")
     last_triggered_at = Column(db.DateTime(True), nullable=True)
     rearm = Column(db.Integer, nullable=True)
+    is_archived = Column(db.Boolean, default=False, index=True, nullable=False)
+    tags = Column("tags", MutableList.as_mutable(ARRAY(db.Unicode)), nullable=True)
 
     __tablename__ = "alerts"
 
     @classmethod
     def all(cls, group_ids):
-        return (
+        return cls.all_alerts(group_ids)
+
+    @classmethod
+    def all_alerts(cls, group_ids, user_id=None, include_archived=False):
+        alerts = (
             cls.query.options(joinedload(Alert.user), joinedload(Alert.query_rel))
             .join(Query)
             .join(DataSourceGroup, DataSourceGroup.data_source_id == Query.data_source_id)
             .filter(DataSourceGroup.group_id.in_(group_ids))
         )
+        if include_archived:
+            alerts = alerts.filter(Alert.is_archived.is_(True))
+        else:
+            alerts = alerts.filter(Alert.is_archived.is_(False))
+        return alerts
+
+    @classmethod
+    def by_user(cls, user):
+        return cls.all_alerts(user.group_ids, user.id).filter(Alert.user == user)
+
+    @classmethod
+    def search(cls, term, group_ids, user_id=None, limit=None, include_archived=False):
+        query = cls.all_alerts(group_ids, user_id=user_id, include_archived=include_archived).outerjoin(
+            User, User.id == Alert.user_id
+        )
+        like = "%{}%".format(term)
+        query = query.filter(or_(Alert.name.ilike(like), User.name.ilike(like)))
+        if limit:
+            query = query.limit(limit)
+        return query
+
+    @classmethod
+    def search_by_user(cls, term, user, limit=None):
+        query = cls.by_user(user).filter(Alert.name.ilike("%{}%".format(term)))
+        if limit:
+            query = query.limit(limit)
+        return query
+
+    @classmethod
+    def all_tags(cls, org, user):
+        alerts = cls.all_alerts(user.group_ids)
+        tag_column = func.unnest(cls.tags).label("tag")
+        usage_count = func.count(1).label("usage_count")
+        return (
+            db.session.query(tag_column, usage_count)
+            .group_by(tag_column)
+            .filter(Alert.id.in_(alerts.options(load_only("id"))))
+            .order_by(usage_count.desc())
+        )
+
+    @classmethod
+    def favorites(cls, user, base_query=None):
+        if base_query is None:
+            base_query = cls.all_alerts(user.group_ids, user.id)
+        return base_query.join(
+            (
+                Favorite,
+                and_(Favorite.object_type == "Alert", Favorite.object_id == Alert.id),
+            )
+        ).filter(Favorite.user_id == user.id)
 
     @classmethod
     def get_by_id_and_org(cls, object_id, org):
         return super(Alert, cls).get_by_id_and_org(object_id, org, Query)
+
+    def archive(self, user=None):
+        db.session.add(self)
+        self.is_archived = True
+        if user:
+            self.record_changes(user)
+
+    def unarchive(self, user=None):
+        db.session.add(self)
+        self.is_archived = False
+        if user:
+            self.record_changes(user)
+
+    def record_changes(self, user):
+        # Alert is not (yet) ChangeTrackingMixin; provide a no-op so that the same call sites
+        # used by Query / Dashboard work transparently for alerts too.
+        return None
 
     def evaluate(self):
         data = self.query_rel.latest_query_data.data if self.query_rel.latest_query_data else None

@@ -184,7 +184,7 @@ def serialize_widget(object):
     return d
 
 
-def serialize_alert(alert, full=True):
+def serialize_alert(alert, full=True, with_favorite_state=True):
     d = {
         "id": alert.id,
         "name": alert.name,
@@ -194,6 +194,8 @@ def serialize_alert(alert, full=True):
         "updated_at": alert.updated_at,
         "created_at": alert.created_at,
         "rearm": alert.rearm,
+        "tags": alert.tags or [],
+        "is_archived": bool(alert.is_archived),
     }
 
     if full:
@@ -202,6 +204,42 @@ def serialize_alert(alert, full=True):
     else:
         d["query_id"] = alert.query_id
         d["user_id"] = alert.user_id
+
+    if with_favorite_state and not current_user.is_api_user():
+        d["is_favorite"] = models.Favorite.is_favorite(current_user.id, alert)
+
+    return d
+
+
+def serialize_alert_event(alert_event, include_alert=True, include_destination=True):
+    d = {
+        "id": alert_event.id,
+        "alert_id": alert_event.alert_id,
+        "alert_type": alert_event.alert_type,
+        "query_id": alert_event.query_id,
+        "destination_id": alert_event.destination_id,
+        "user_id": alert_event.user_id,
+        "state": alert_event.state,
+        "status": alert_event.status,
+        "content": alert_event.content,
+        "additional_properties": alert_event.additional_properties or {},
+        "row_index": alert_event.row_index,
+        "is_archived": bool(alert_event.is_archived),
+        "created_at": alert_event.created_at,
+    }
+
+    if include_alert and alert_event.alert is not None:
+        d["alert"] = {"id": alert_event.alert.id, "name": alert_event.alert.name}
+
+    if include_destination and alert_event.destination is not None:
+        d["destination"] = {
+            "id": alert_event.destination.id,
+            "name": alert_event.destination.name,
+            "type": alert_event.destination.type,
+        }
+
+    if alert_event.user is not None:
+        d["user"] = {"id": alert_event.user.id, "name": alert_event.user.name}
 
     return d
 
