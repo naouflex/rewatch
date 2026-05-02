@@ -373,6 +373,7 @@ default_destinations = [
     "redash.destinations.slack",
     "redash.destinations.webhook",
     "redash.destinations.discord",
+    "redash.destinations.discord_webhook",
     "redash.destinations.mattermost",
     "redash.destinations.chatwork",
     "redash.destinations.pagerduty",
@@ -381,6 +382,9 @@ default_destinations = [
     "redash.destinations.asana",
     "redash.destinations.webex",
     "redash.destinations.datadog",
+    "redash.destinations.telegram",
+    "redash.destinations.twitter",
+    "redash.destinations.twitter_private",
 ]
 
 enabled_destinations = array_from_string(os.environ.get("REDASH_ENABLED_DESTINATIONS", ",".join(default_destinations)))
