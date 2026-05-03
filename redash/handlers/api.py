@@ -63,7 +63,53 @@ from redash.handlers.destinations import (
 from redash.handlers.events import EventsResource
 from redash.handlers.favorites import (
     DashboardFavoriteResource,
+    MLModelFavoriteResource,
+    MLModelVersionFavoriteResource,
+    PredictionResultFavoriteResource,
     QueryFavoriteResource,
+)
+from redash.handlers.ml_models import (
+    MLModelArchiveResource,
+    MLModelCopyResource,
+    MLModelCreateFromVersionResource,
+    MLModelFavoriteListResource,
+    MLModelListResource,
+    MLModelMuteResource,
+    MLModelPredictResource,
+    MLModelRecentResource,
+    MLModelResource,
+    MLModelSearchResource,
+    MLModelStopPredictResource,
+    MLModelStopResource,
+    MLModelSubscriptionListResource,
+    MLModelSubscriptionResource,
+    MLModelTagsResource,
+    MLModelTrainResource,
+    MLModelVersionRevertResource,
+    MyMLModelsResource,
+)
+from redash.handlers.ml_model_versions import (
+    MLModelVersionArchiveResource,
+    MLModelVersionFavoriteListResource,
+    MLModelVersionListResource,
+    MLModelVersionRecentResource,
+    MLModelVersionResource,
+    MLModelVersionSearchResource,
+    MLModelVersionTagsResource,
+    ModelVersionsResource,
+    MyMLModelVersionsResource,
+)
+from redash.handlers.prediction_results import (
+    BasePredictionResultListResource,
+    ModelPredictionsResource,
+    MyPredictionResultsResource,
+    PredictionResultArchiveResource,
+    PredictionResultFavoriteListResource,
+    PredictionResultListResource,
+    PredictionResultRecentResource,
+    PredictionResultResource,
+    PredictionResultSearchResource,
+    PredictionResultTagsResource,
 )
 from redash.handlers.groups import (
     GroupDataSourceListResource,
@@ -193,6 +239,133 @@ api.add_org_resource(
     endpoint="indexer_favorites",
 )
 api.add_org_resource(IndexerTagsResource, "/api/indexers/tags", endpoint="indexers_tags")
+
+# --- ML Models ---
+api.add_org_resource(MLModelSearchResource, "/api/ml_models/search", endpoint="ml_models_search")
+api.add_org_resource(MLModelRecentResource, "/api/ml_models/recent", endpoint="ml_models_recent")
+api.add_org_resource(MLModelArchiveResource, "/api/ml_models/archive", endpoint="ml_models_archive")
+api.add_org_resource(MyMLModelsResource, "/api/ml_models/my", endpoint="my_ml_models")
+api.add_org_resource(MLModelFavoriteListResource, "/api/ml_models/favorites", endpoint="ml_model_favorites")
+api.add_org_resource(MLModelTagsResource, "/api/ml_models/tags", endpoint="ml_models_tags")
+api.add_org_resource(
+    MLModelFavoriteResource,
+    "/api/ml_models/<model_id>/favorite",
+    endpoint="ml_model_favorite",
+)
+api.add_org_resource(MLModelTrainResource, "/api/ml_models/<model_id>/train", endpoint="ml_model_train")
+api.add_org_resource(
+    MLModelPredictResource, "/api/ml_models/<model_id>/predict", endpoint="ml_model_predict"
+)
+api.add_org_resource(MLModelStopResource, "/api/ml_models/<model_id>/stop", endpoint="ml_model_stop")
+api.add_org_resource(
+    MLModelStopPredictResource,
+    "/api/ml_models/<model_id>/stop_predict",
+    endpoint="ml_model_stop_predict",
+)
+api.add_org_resource(MLModelMuteResource, "/api/ml_models/<model_id>/mute", endpoint="ml_model_mute")
+api.add_org_resource(MLModelCopyResource, "/api/ml_models/<model_id>/copy", endpoint="ml_model_copy")
+api.add_org_resource(
+    MLModelVersionRevertResource,
+    "/api/ml_models/<model_id>/revert",
+    endpoint="ml_model_revert",
+)
+api.add_org_resource(
+    MLModelCreateFromVersionResource,
+    "/api/ml_models/<model_id>/create_from_version",
+    endpoint="ml_model_create_from_version",
+)
+api.add_org_resource(
+    MLModelSubscriptionListResource,
+    "/api/ml_models/<model_id>/subscriptions",
+    endpoint="ml_model_subscriptions",
+)
+api.add_org_resource(
+    MLModelSubscriptionResource,
+    "/api/ml_models/<model_id>/subscriptions/<subscriber_id>",
+    endpoint="ml_model_subscription",
+)
+api.add_org_resource(
+    ModelVersionsResource,
+    "/api/ml_models/<model_id>/versions",
+    endpoint="ml_model_versions_for_model",
+)
+api.add_org_resource(
+    ModelPredictionsResource,
+    "/api/ml_models/<model_id>/predictions",
+    endpoint="ml_model_predictions_for_model",
+)
+api.add_org_resource(MLModelResource, "/api/ml_models/<model_id>", endpoint="ml_model")
+api.add_org_resource(MLModelListResource, "/api/ml_models", endpoint="ml_models")
+
+# --- ML Model Versions ---
+api.add_org_resource(
+    MLModelVersionSearchResource, "/api/ml_models_versions/search", endpoint="ml_models_versions_search"
+)
+api.add_org_resource(
+    MLModelVersionRecentResource, "/api/ml_models_versions/recent", endpoint="ml_models_versions_recent"
+)
+api.add_org_resource(
+    MLModelVersionArchiveResource, "/api/ml_models_versions/archive", endpoint="ml_models_versions_archive"
+)
+api.add_org_resource(
+    MyMLModelVersionsResource, "/api/ml_models_versions/my", endpoint="my_ml_models_versions"
+)
+api.add_org_resource(
+    MLModelVersionFavoriteListResource,
+    "/api/ml_models_versions/favorites",
+    endpoint="ml_model_version_favorites",
+)
+api.add_org_resource(
+    MLModelVersionTagsResource, "/api/ml_models_versions/tags", endpoint="ml_models_versions_tags"
+)
+api.add_org_resource(
+    MLModelVersionFavoriteResource,
+    "/api/ml_models_versions/<model_version_id>/favorite",
+    endpoint="ml_model_version_favorite",
+)
+api.add_org_resource(
+    MLModelVersionResource,
+    "/api/ml_models_versions/<model_version_id>",
+    endpoint="ml_model_version",
+)
+api.add_org_resource(
+    MLModelVersionListResource, "/api/ml_models_versions", endpoint="ml_models_versions"
+)
+
+# --- Prediction Results ---
+api.add_org_resource(
+    PredictionResultSearchResource, "/api/predictions/search", endpoint="prediction_results_search"
+)
+api.add_org_resource(
+    PredictionResultRecentResource, "/api/predictions/recent", endpoint="prediction_results_recent"
+)
+api.add_org_resource(
+    PredictionResultArchiveResource, "/api/predictions/archive", endpoint="prediction_results_archive"
+)
+api.add_org_resource(
+    MyPredictionResultsResource, "/api/predictions/my", endpoint="my_prediction_results"
+)
+api.add_org_resource(
+    PredictionResultFavoriteListResource,
+    "/api/predictions/favorites",
+    endpoint="prediction_result_favorites",
+)
+api.add_org_resource(
+    PredictionResultTagsResource, "/api/predictions/tags", endpoint="prediction_results_tags"
+)
+api.add_org_resource(
+    PredictionResultFavoriteResource,
+    "/api/predictions/<prediction_result_id>/favorite",
+    endpoint="prediction_result_favorite",
+)
+api.add_org_resource(
+    PredictionResultResource,
+    "/api/predictions/<prediction_result_id>",
+    endpoint="prediction_result",
+)
+api.add_org_resource(
+    PredictionResultListResource, "/api/predictions", endpoint="prediction_results"
+)
 
 api.add_org_resource(DashboardListResource, "/api/dashboards", endpoint="dashboards")
 api.add_org_resource(DashboardResource, "/api/dashboards/<dashboard_id>", endpoint="dashboard")

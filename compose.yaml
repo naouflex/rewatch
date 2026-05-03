@@ -49,6 +49,30 @@ services:
     environment:
       <<: *redash-environment
       PYTHONUNBUFFERED: 0
+  # Dedicated worker for MLModels training/prediction. Built from
+  # Dockerfile.ml which layers the scikit-learn / scipy / statsmodels stack
+  # (plus libgomp1 / libopenblas) on top of the regular redash-worker image.
+  # It listens only on the `training` and `predicting` RQ queues so heavy ML
+  # jobs don't starve the standard query workers.
+  ml-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.ml
+      args:
+        BASE_IMAGE: redash-worker:latest
+    command: dev_worker
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      - server
+      - worker
+    environment:
+      <<: *redash-environment
+      PYTHONUNBUFFERED: 0
+      QUEUES: "training,predicting"
+      WORKERS_COUNT: 1
   redis:
     image: redis:7-alpine
     restart: unless-stopped

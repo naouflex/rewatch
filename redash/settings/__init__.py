@@ -218,6 +218,15 @@ ADHOC_QUERY_TIME_LIMIT = int(os.environ.get("REDASH_ADHOC_QUERY_TIME_LIMIT", -1)
 JOB_EXPIRY_TIME = int(os.environ.get("REDASH_JOB_EXPIRY_TIME", 3600 * 12))
 JOB_DEFAULT_FAILURE_TTL = int(os.environ.get("REDASH_JOB_DEFAULT_FAILURE_TTL", 7 * 24 * 60 * 60))
 
+# ML model training/predicting time limits (seconds). Training defaults to 10h
+# because hyperparameter searches on RandomForest/GradientBoosting can be slow;
+# predicting defaults to 6 minutes which is plenty for sklearn inference.
+ML_MODEL_TRAINING_TIME_LIMIT = int(os.environ.get("REDASH_ML_MODEL_TRAINING_TIME_LIMIT", 36000))
+ML_MODEL_PREDICTING_TIME_LIMIT = int(os.environ.get("REDASH_ML_MODEL_PREDICTING_TIME_LIMIT", 360))
+# Hard cap on a serialized model blob (compressed). Trained models that exceed
+# this are rejected to avoid filling Postgres with multi-GB pickles.
+ML_MODEL_MAX_BLOB_MB = int(os.environ.get("REDASH_ML_MODEL_MAX_BLOB_MB", 100))
+
 LOG_LEVEL = os.environ.get("REDASH_LOG_LEVEL", "INFO")
 LOG_STDOUT = parse_boolean(os.environ.get("REDASH_LOG_STDOUT", "false"))
 LOG_PREFIX = os.environ.get("REDASH_LOG_PREFIX", "")

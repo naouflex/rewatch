@@ -8,6 +8,7 @@ import cohortVisualization from "./cohort";
 import counterVisualization from "./counter";
 import detailsVisualization from "./details";
 import funnelVisualization from "./funnel";
+import graphVisualization from "./graph";
 import mapVisualization from "./map";
 import pivotVisualization from "./pivot";
 import sankeyVisualization from "./sankey";
@@ -85,6 +86,7 @@ each(
     counterVisualization,
     detailsVisualization,
     funnelVisualization,
+    graphVisualization,
     mapVisualization,
     pivotVisualization,
     sankeyVisualization,

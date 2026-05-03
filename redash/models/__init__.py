@@ -1844,6 +1844,14 @@ class QuerySnippet(TimestampMixin, db.Model, BelongsToOrgMixin):
         return d
 
 
+from redash.models.ml_models import (  # noqa: E402,F401
+    MLModel,
+    MLModelSubscription,
+    MLModelVersion,
+    PredictionResult,
+)
+
+
 def init_db():
     default_org = Organization(name="Default", slug="default", settings={})
     admin_group = Group(

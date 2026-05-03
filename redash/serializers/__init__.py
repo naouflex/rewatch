@@ -372,6 +372,169 @@ class DashboardSerializer(Serializer):
         return result
 
 
+def serialize_ml_model(model, full=True, changes=False, with_favorite_state=True):
+    """Serialize an MLModel (or an MLModelVersion when ``changes`` is True)."""
+    d = {
+        "id": model.id,
+        "name": model.name,
+        "description": model.description,
+        "version": model.version,
+        "created_at": model.created_at,
+        "updated_at": model.updated_at,
+        "user_id": model.user_id,
+        "org_id": model.org_id,
+        "is_archived": bool(model.is_archived),
+        "tags": model.tags or [],
+        "metrics": model.metrics,
+        "last_triggered_at": model.last_triggered_at,
+        "rearm": model.rearm,
+        "state": model.state,
+        "state_train": model.state_train,
+        "state_predict": model.state_predict,
+        "options": model.options or {},
+    }
+
+    if full:
+        if model.query_rel is not None:
+            d["query"] = serialize_query(model.query_rel)
+        if model.user is not None:
+            d["user"] = model.user.to_dict()
+        if changes and getattr(model, "model", None) is not None:
+            d["model"] = serialize_ml_model(model.model, full=False, changes=False, with_favorite_state=False)
+    else:
+        d["query_id"] = model.query_id
+        d["user_id"] = model.user_id
+        if changes:
+            d["model_id"] = getattr(model, "model_id", None)
+
+    if changes:
+        d["changes"] = getattr(model, "changes", None)
+
+    if with_favorite_state:
+        try:
+            if not current_user.is_api_user():
+                d["is_favorite"] = models.Favorite.is_favorite(current_user.id, model)
+        except Exception:
+            pass
+
+    return d
+
+
+class MLModelSerializer(Serializer):
+    def __init__(self, object_or_list, **kwargs):
+        self.object_or_list = object_or_list
+        self.options = kwargs
+        self.with_favorites_state = kwargs.get("with_favorite_state", True)
+
+    def serialize(self):
+        if isinstance(self.object_or_list, models.MLModel):
+            return serialize_ml_model(self.object_or_list, with_favorite_state=self.with_favorites_state)
+        objects = list(self.object_or_list)
+        result = [serialize_ml_model(obj, with_favorite_state=False) for obj in objects]
+        if self.with_favorites_state:
+            try:
+                favorite_ids = models.Favorite.are_favorites(current_user.id, objects)
+                for item in result:
+                    item["is_favorite"] = item["id"] in favorite_ids
+            except Exception:
+                pass
+        return result
+
+
+class MLModelVersionSerializer(Serializer):
+    def __init__(self, object_or_list, **kwargs):
+        self.object_or_list = object_or_list
+        self.options = kwargs
+        self.with_favorites_state = kwargs.get("with_favorite_state", True)
+
+    def serialize(self):
+        if isinstance(self.object_or_list, (models.MLModel, models.MLModelVersion)):
+            return serialize_ml_model(self.object_or_list, changes=True, with_favorite_state=self.with_favorites_state)
+        objects = list(self.object_or_list)
+        result = [serialize_ml_model(obj, changes=True, with_favorite_state=False) for obj in objects]
+        if self.with_favorites_state:
+            try:
+                favorite_ids = models.Favorite.are_favorites(current_user.id, objects)
+                for item in result:
+                    item["is_favorite"] = item["id"] in favorite_ids
+            except Exception:
+                pass
+        return result
+
+
+def serialize_prediction_result(prediction, with_nested_objects=True, include_input_data=False):
+    from redash.utils import json_loads
+
+    content = None
+    if prediction.content:
+        try:
+            content = serialize_query_result(json_loads(prediction.content), False)
+        except Exception:
+            content = None
+
+    d = {
+        "id": prediction.id,
+        "model_id": prediction.model_id,
+        "query_id": prediction.query_id,
+        "user_id": prediction.user_id,
+        "org_id": prediction.org_id,
+        "destination_id": prediction.destination_id,
+        "content": content,
+        "additional_properties": prediction.additional_properties or {},
+        "created_at": prediction.created_at,
+        "updated_at": prediction.updated_at,
+        "tags": prediction.tags or [],
+        "is_archived": bool(prediction.is_archived),
+        "model_version": prediction.model_version,
+    }
+
+    if include_input_data:
+        d["input_data"] = prediction.input_data
+
+    if with_nested_objects:
+        if prediction.user is not None:
+            d["user"] = prediction.user.to_dict()
+        if prediction.query_rel is not None:
+            d["query"] = serialize_query(prediction.query_rel)
+        if prediction.destination is not None:
+            d["destination"] = prediction.destination.to_dict(all=True)
+        if prediction.model is not None:
+            d["model"] = serialize_ml_model(prediction.model, with_favorite_state=False)
+
+    return d
+
+
+class PredictionResultSerializer(Serializer):
+    def __init__(self, object_or_list, **kwargs):
+        self.object_or_list = object_or_list
+        self.options = kwargs
+        self.with_favorites_state = kwargs.get("with_favorite_state", True)
+        self.include_input_data = kwargs.get("include_input_data", False)
+
+    def serialize(self):
+        if isinstance(self.object_or_list, models.PredictionResult):
+            result = serialize_prediction_result(
+                self.object_or_list, include_input_data=self.include_input_data
+            )
+            if self.with_favorites_state:
+                try:
+                    if not current_user.is_api_user():
+                        result["is_favorite"] = models.Favorite.is_favorite(current_user.id, self.object_or_list)
+                except Exception:
+                    pass
+            return result
+        objects = list(self.object_or_list)
+        result = [serialize_prediction_result(obj, include_input_data=self.include_input_data) for obj in objects]
+        if self.with_favorites_state:
+            try:
+                favorite_ids = models.Favorite.are_favorites(current_user.id, objects)
+                for item in result:
+                    item["is_favorite"] = item["id"] in favorite_ids
+            except Exception:
+                pass
+        return result
+
+
 def serialize_job(job):
     # TODO: this is mapping to the old Job class statuses. Need to update the client side and remove this
     STATUSES = {

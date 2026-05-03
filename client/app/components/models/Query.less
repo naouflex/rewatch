@@ -1,0 +1,90 @@
+.model-query-link {
+  font-size: 14px;
+
+  .fa-external-link {
+    vertical-align: text-bottom;
+  }
+}
+
+.model-query-schedule {
+  font-style: italic;
+  text-transform: lowercase;
+}
+
+@media only percy {
+  /* Hide query selector arrow in Percy to avoid a flaky snapshot */
+  .model-query-selector {
+    .ant-select-arrow-icon {
+      display: none !important;
+    }
+  }
+}
+
+/* New styles */
+.column-selector-form {
+  margin-top: 30px;
+
+  h4 {
+    margin-bottom: 10px;
+    font-weight: bold;
+  }
+
+  .column-selector-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+
+    div {
+      display: flex;
+      align-items: center;
+    }
+
+    input[type="checkbox"],
+    input[type="radio"] {
+      margin-left: 5px;
+    }
+
+    strong {
+      text-align: center;
+      margin-bottom: 5px;
+    }
+  }
+}
+
+.ant-form-item-explain {
+  margin-top: 10px;
+  color: #8c8c8c; /* Customize color to match your theme */
+}
+
+.warning-icon-danger {
+  color: #ff4d4f; /* Danger color, adjust to your theme */
+}
+
+.m-t-30 {
+  margin-top: 30px;
+}
+
+.m-r-5 {
+  margin-right: 5px;
+}
+
+/* Tooltip customization */
+.model-query-link:hover + .ant-tooltip,
+.model-query-selector:hover + .ant-tooltip {
+  opacity: 0.9;
+  transition: opacity 0.3s ease;
+}
+
+/* Styles for input and select elements */
+input.ant-input,
+.ant-select-selector {
+  border-radius: 4px;
+  border: 1px solid #d9d9d9;
+  padding: 4px 8px;
+  transition: border-color 0.3s;
+
+  &:focus {
+    border-color: #40a9ff;
+    outline: none;
+  }
+}

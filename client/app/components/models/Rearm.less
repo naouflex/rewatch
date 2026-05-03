@@ -1,0 +1,23 @@
+@import (reference, less) "~@/assets/less/inc/variables";
+
+.model-rearm {
+  > * {
+    vertical-align: top;
+    margin-right: 8px !important;
+
+    &.ant-select {
+      width: auto !important;
+    }
+  }
+
+  &.dark-mode {
+    .ant-select {
+      color: var(--text-color);
+
+      .ant-select-selector {
+        background-color: var(--background-color);
+        border-color: var(--border-color);
+      }
+    }
+  }
+}

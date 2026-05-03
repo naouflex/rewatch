@@ -1,0 +1,123 @@
+@import (reference, less) "~@/assets/less/inc/variables";
+
+.predictions-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  margin-top: 10px;
+  transition: background-color 0.3s ease, color 0.3s ease;
+
+  &.dark-mode {
+    background-color: var(--background-color);
+    color: var(--text-color);
+  }
+
+  &.light-mode {
+    background-color: @white;
+    color: @text-color;
+  }
+
+  & > div {
+    padding: 5px 0;
+  }
+
+  .title-with-tags {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    flex: 1 1;
+    margin: -5px 0;
+
+    & > div {
+      padding: 5px 0;
+    }
+
+    .page-title {
+      h3 {
+        background-color: var(--background-color);
+        color: var(--text-color);
+        margin: 0 10px 0 0 !important;
+
+        @media (max-width: 767px) {
+          font-size: 18px;
+        }
+      }
+    }
+  }
+
+  .predictions-tags {
+    display: inline-block;
+    vertical-align: middle;
+  }
+
+  .predictions-control > .label-tag {
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+  }
+
+  &:hover,
+  &:focus,
+  &:active,
+  &:focus-within {
+    .tags-control > .label-tag {
+      opacity: 1;
+    }
+  }
+
+  .header-actions {
+    display: flex;
+    flex-wrap: nowrap;
+
+    @media (max-width: 515px) {
+      flex-basis: 100%;
+    }
+  }
+}
+
+.dark-mode {
+  .predictions-header {
+    color: var(--text-color);
+    .ant-input {
+      background-color: var(--background-color);
+      color: var(--text-color);
+      border-color: var(--border-color);
+
+      &:hover,
+      &:focus {
+        border-color: var(--primary-color);
+      }
+    }
+  }
+  .header-actions {
+    button,
+    .ant-btn,
+    .ant-btn-default {
+      color: var(--text-color);
+      background-color: var(--navbar-background-color);
+      border-color: var(--border-color);
+
+      &:hover {
+        background-color: var(--navbar-submenu-hover-color);
+      }
+    }
+  }
+  .page-title {
+    h3 {
+      background-color: var(--background-color);
+      color: var(--text-color);
+      margin: 0 10px 0 0 !important;
+
+      @media (max-width: 767px) {
+        font-size: 18px;
+      }
+    }
+  }
+}
+
+.h3 {
+  color: var(--text-color);
+  &.dark-mode {
+    color: var(--text-color);
+  }
+  
+}

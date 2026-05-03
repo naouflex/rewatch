@@ -1,0 +1,32 @@
+@import (reference, less) "~@/assets/less/inc/variables";
+
+.ml-model-metrics-header {
+  transition: background-color 0.3s ease, color 0.3s ease;
+
+  h3 {
+    color: var(--text-color);
+    background-color: var(--background-color);
+    &.dark-mode {
+      color: var(--text-color);
+      background-color: var(--background-color);
+    }
+  }
+
+  .ant-card {
+    background-color: var(--navbar-background-color);
+    border-color: var(--border-color);
+
+    .ant-card-body {
+      color: var(--text-color);
+      background-color: var(--navbar-background-color);
+    }
+  }
+
+  .ant-statistic-title {
+    color: var(--text-color);
+  }
+
+  .ant-statistic-content {
+    color: var(--text-color);
+  }
+}

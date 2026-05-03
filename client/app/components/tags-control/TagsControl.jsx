@@ -119,3 +119,15 @@ export const AlertTagsControl = modelTagsControl({
 export const IndexerTagsControl = modelTagsControl({
   archivedTooltip: "This indexer is archived and won't run for new query results nor appear in search results.",
 });
+
+export const MLModelTagsControl = modelTagsControl({
+  archivedTooltip: "This ML model is archived and won't run training/predictions nor appear in search results.",
+});
+
+export const MLModelsVersionsTagsControl = modelTagsControl({
+  archivedTooltip: "This ML model version is archived and won't appear in search results.",
+});
+
+export const PredictionsTagsControl = modelTagsControl({
+  archivedTooltip: "This prediction is archived and won't appear in search results.",
+});

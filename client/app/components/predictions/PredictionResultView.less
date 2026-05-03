@@ -1,0 +1,80 @@
+@import (reference, less) "~@/assets/less/inc/variables";
+
+.prediction-result-view {
+  transition: background-color 0.3s ease, color 0.3s ease;
+  background-color: var(--background-color);
+  color: var(--text-color);
+
+  h3 {
+    color: var(--text-color);
+  }
+
+  .bg-white {
+    background-color: var(--background-color);
+    color: var(--text-color);
+  }
+
+  .tiled {
+    border-radius: 3px;
+    box-shadow: rgba(102, 136, 153, 0.15) 0px 4px 9px -3px;
+    border-color: var(--border-color);
+  }
+
+  .ant-form {
+    .ant-form-item-label > label {
+      color: var(--text-color);
+    }
+  }
+
+  .ant-card {
+    background-color: var(--background-color);
+    border-color: var(--border-color);
+
+    .ant-card-body {
+      color: var(--text-color);
+    }
+  }
+
+  pre {
+    background-color: var(--code-bg-color);
+    color: var(--text-color);
+    border-color: var(--border-color);
+  }
+
+  .json-view-interactive {
+    background-color: var(--code-bg-color);
+    color: var(--text-color);
+    border-color: var(--border-color);
+  }
+
+  a {
+    color: var(--link-color);
+
+    &:hover {
+      color: var(--link-hover-color);
+    }
+  }
+
+  .ant-tooltip {
+    .ant-tooltip-inner {
+      background-color: var(--tooltip-bg-color);
+      color: var(--tooltip-text-color);
+    }
+  }
+
+  &.dark-mode {
+    background-color: var(--navbar-background-color);
+
+    .bg-white {
+      background-color: var(--navbar-background-color);
+    }
+
+    .ant-card {
+      background-color: var(--navbar-background-color);
+    }
+
+    pre, .json-view-interactive {
+      background-color: var(--navbar-submenu-hover-color);
+    }
+  }
+}

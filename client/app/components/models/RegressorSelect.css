@@ -1,0 +1,33 @@
+.regressor-select {
+  display: flex;
+  flex-direction: column;
+  gap: 10px; /* Adds spacing between Select and options */
+}
+
+.regressor-options {
+  margin-top: 10px; /* Adds some space between the dropdown and the options */
+  display: flex;
+  flex-wrap: wrap; /* Ensures options wrap to new lines as needed */
+}
+
+.regressor-option {
+  flex: 1 1 45%; /* Allows each option to take up roughly half the container width */
+  margin-bottom: 16px; /* Space below each option */
+  max-width: 100%;
+}
+
+.regressor-option label {
+  display: block;
+  margin-bottom: 5px; /* Consistent spacing below labels */
+  font-weight: 600; /* Makes labels slightly bolder for better visibility */
+}
+
+.ant-input, .ant-select-selector, .ant-checkbox-wrapper {
+  width: 100%; /* Ensures all input elements take the full width of their container */
+}
+
+@media (max-width: 768px) {
+  .regressor-option {
+    flex: 1 1 100%; /* For smaller screens, make each option full width */
+  }
+}

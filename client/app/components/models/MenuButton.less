@@ -1,0 +1,128 @@
+@import (reference, less) "~@/assets/less/inc/variables";
+
+.menu-button {
+
+  background-color: var(--navbar-brand-color) !important;
+
+  .ant-btn,
+  .ant-btn-link {
+    border-color: var(--border-color);
+    color: var(--text-color);
+    background-color: var(--navbar-brand-color);
+    transition: all 0.3s ease;
+
+    &:hover,
+    &:focus {
+      background-color: var(--navbar-submenu-hover-color);
+    }
+  }
+
+  .ant-dropdown-trigger {
+    color: var(--text-color);
+    background-color: var(--navbar-brand-color);
+
+    &:hover {
+      color: var(--navbar-brand-color);
+    }
+  }
+
+
+
+  &.dark-mode {
+    background-color: var(--navbar-background-color) !important;
+
+    background-color: var(--navbar-brand-color) !important;
+
+    .ant-btn,
+    .ant-btn-link {
+      border-color: var(--border-color);
+      color: var(--text-color);
+      background-color: var(--navbar-brand-color);
+      transition: all 0.3s ease;
+
+      &:hover,
+      &:focus {
+        background-color: var(--navbar-submenu-hover-color);
+      }
+    }
+
+    .ant-dropdown-trigger {
+      color: var(--text-color);
+      background-color: var(--navbar-brand-color);
+
+      &:hover {
+        color: var(--navbar-brand-color);
+      }
+    }
+
+
+  }
+}
+
+.ant-dropdown {
+  background-color: var(--navbar-background-color) !important;
+}
+
+.ant-dropdown-placement-bottomRight {
+  background-color: var(--navbar-background-color) !important;
+
+}
+
+
+.ant-dropdown-menu {
+  background-color: var(--navbar-background-color) !important;
+
+  .ant-dropdown-menu-item {
+    background-color: var(--navbar-background-color) !important;
+    color: var(--text-color) !important;
+
+    &:hover {
+      background-color: var(--navbar-submenu-hover-color) !important;
+    }
+
+    .plain-button {
+      color: var(--text-color) !important;
+      background-color: transparent;
+      border: none;
+      transition: all 0.3s;
+
+      &:hover {
+        background-color: var(--navbar-submenu-hover-color) !important;
+      }
+
+      &.dark-mode {
+        color: var(--text-color) !important;
+        background-color: var(--navbar-background-color) !important;
+
+        &:hover {
+          background-color: var(--navbar-brand-color) !important;
+        }
+      }
+    }
+  }
+}
+
+.ant-dropdown-menu.dark-mode {
+  background-color: var(--navbar-background-color) !important;
+
+  .ant-dropdown-menu-item {
+    background-color: var(--navbar-background-color) !important;
+
+    .plain-button {
+      color: var(--text-color) !important;
+      background-color: var(--navbar-background-color) !important;
+
+      &:hover {
+        background-color: var(--navbar-brand-color) !important;
+      }
+    }
+  }
+}
+
+&.ant-dropdown-menu-root {
+  background-color: var(--navbar-background-color) !important;
+}
+
+&.ant-dropdown-menu-vertical {
+  background-color: var(--navbar-background-color) !important;
+}

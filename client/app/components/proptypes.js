@@ -90,6 +90,51 @@ export const Alert = PropTypes.shape({
   }).isRequired,
 });
 
+export const ModelOptions = PropTypes.shape({
+  op_train: PropTypes.string,
+  op_predict: PropTypes.string,
+  column_train: PropTypes.string,
+  column_predict: PropTypes.string,
+  value_train: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  value_predict: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  regressor: PropTypes.string,
+  train_size: PropTypes.number,
+  test_size: PropTypes.number,
+  random_state: PropTypes.number,
+  features: PropTypes.arrayOf(PropTypes.string),
+  targets: PropTypes.arrayOf(PropTypes.string),
+  categories: PropTypes.arrayOf(PropTypes.string),
+  rearm_train: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  rearm_predict: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+});
+
+export const MLModel = PropTypes.shape({
+  id: PropTypes.any,
+  name: PropTypes.string,
+  description: PropTypes.string,
+  created_at: PropTypes.string,
+  updated_at: PropTypes.string,
+  state: PropTypes.string,
+  state_train: PropTypes.string,
+  state_predict: PropTypes.string,
+  user: UserProfile,
+  query: Query,
+  options: ModelOptions,
+  tags: PropTypes.arrayOf(PropTypes.string),
+});
+
+export const PredictionResult = PropTypes.shape({
+  id: PropTypes.any,
+  model_id: PropTypes.any,
+  query_id: PropTypes.any,
+  user: UserProfile,
+  query: Query,
+  model: MLModel,
+  content: PropTypes.string,
+  created_at: PropTypes.string,
+  tags: PropTypes.arrayOf(PropTypes.string),
+});
+
 function checkMoment(isRequired, props, propName, componentName) {
   const value = props[propName];
   const isRequiredValid = isRequired && value !== null && value !== undefined && moment.isMoment(value);

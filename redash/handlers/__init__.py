@@ -3,6 +3,7 @@ from flask_login import login_required
 
 from redash.handlers.api import api
 from redash.handlers.base import routes
+from redash.handlers.swagger import setup_swagger
 from redash.monitor import get_status
 from redash.permissions import require_super_admin
 from redash.security import talisman
@@ -35,3 +36,4 @@ def init_app(app):
 
     app.register_blueprint(routes)
     api.init_app(app)
+    setup_swagger(app)

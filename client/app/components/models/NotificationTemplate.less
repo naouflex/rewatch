@@ -1,0 +1,91 @@
+@import (reference, less) "~@/assets/less/inc/variables";
+
+.model-template {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--navbar-background-color);
+
+  input {
+    margin-bottom: 10px;
+  }
+
+  textarea {
+    margin-bottom: 0 !important;
+  }
+
+  input, textarea {
+    font-family: "Roboto Mono", monospace;
+    font-size: 12px;
+    letter-spacing: -0.4px;
+
+    &[disabled] {
+      color: inherit;
+      cursor: auto;
+    }
+  }
+
+  .model-custom-template {
+    margin-top: 10px;
+    padding: 4px 10px 2px;
+    background: var(--background-color);
+    border: 1px dashed var(--border-color);
+    border-radius: 3px;
+    max-width: 500px;
+
+    .d-flex.align-items-center {
+      h5.flex-fill {
+        color: var(--text-color);
+        // Add any other styles you want for this h5
+      }
+    }
+  }
+
+  .model-template-preview {
+    margin: 0 0 0 5px !important;
+  }
+
+  .ant-form-item-explain {
+    background-color: var(--navbar-background-color);
+  }
+}
+
+.dark-mode {
+  .model-template {
+    background-color: var(--navbar-background-color);
+
+    input, textarea {
+      background-color: var(--navbar-background-color);
+      color: var(--text-color);
+      border-color: var(--border-color);
+
+      &::placeholder {
+        color: var(--text-muted-color);
+      }
+
+      &[disabled] {
+        background-color: var(--navbar-submenu-hover-color);
+        color: var(--text-color);
+      }
+    }
+
+    .model-custom-template {
+      background: var(--background-color);
+      border-color: var(--border-color);
+
+      div.h5 {
+        color: var(--text-color);
+      }
+      .d-flex.align-items-center {
+        h5.flex-fill {
+          color: var(--text-color);
+          // Add any other styles you want for this h5 in dark mode
+        }
+      }
+    }
+
+    .ant-form-item-explain {
+      background-color: var(--navbar-background-color);
+      color: var(--text-color);
+    }
+  }
+}

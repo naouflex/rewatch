@@ -1,0 +1,102 @@
+.train-test-split-slider {
+  margin: 20px;
+  position: relative;
+  width: 100%; /* Ensure the container takes the full width */
+
+  .labels {
+    display: flex;
+    position: relative;
+    margin-bottom: 5px; /* Adjust spacing between labels and lines */
+    height: 20px;
+    z-index: 2; /* Ensure the labels appear above the brackets */
+  }
+
+  .train-label, .test-label {
+    display: flex;
+    justify-content: center; /* Center horizontally */
+    align-items: center; /* Center vertically */
+    font-weight: bold;
+    line-height: 20px;
+  }
+
+  .train-label {
+    width: 100%; /* Ensure it takes the full width of its container */
+    color: #003366; /* Color of the train data label */
+    text-align: center; /* Center the text */
+    min-width: 15%;
+  }
+
+  .test-label {
+    width: 100%; /* Ensure it takes the full width of its container */
+    color: #0267cc; /* Color of the test data label */
+    text-align: center; /* Center the text */
+    min-width: 15%;
+  }
+
+  .brackets {
+    display: flex;
+    margin-top: 5px;
+    margin-bottom: 10px; /* Adjust spacing between lines and slider */
+    height: 5px; /* Height of the lines */
+    position: relative;
+    z-index: 1; /* Ensure the brackets appear below the labels but above the slider */
+    width: 100%; /* Ensure the brackets take the full width */
+    box-sizing: border-box; /* Ensure padding or border doesn't affect width */
+  }
+
+  .train-bracket, .test-bracket {
+    height: 100%;
+  }
+
+  .train-bracket {
+    background-color: #003366; /* Color of the train data line */
+    margin-right: 0; /* Remove any potential right margin */
+  }
+
+  .test-bracket {
+    background-color: #0267cc; /* Color of the test data line */
+    margin-left: 0; /* Remove any potential left margin */
+  }
+
+  .ant-slider {
+    width: 100%; /* Ensure the slider takes the full width */
+    margin: 0; /* Remove any margin */
+    box-sizing: border-box; /* Consistent width calculation */
+  }
+
+  /* Date display styles */
+  .date-labels {
+    position: relative;
+    height: 20px;
+    margin-bottom: 10px;
+    font-size: 12px;
+    color: var(--text-color);
+  }
+
+  .date-first {
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+
+  .date-cutoff {
+    position: absolute;
+    transform: translateX(-50%);
+    top: 0;
+    padding: 2px 6px;
+    background-color: var(--navbar-background-color);
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+  }
+
+  .date-last {
+    position: absolute;
+    right: 0;
+    top: 0;
+  }
+
+  .ant-slider-mark-text {
+    color: var(--text-color);
+  }
+}

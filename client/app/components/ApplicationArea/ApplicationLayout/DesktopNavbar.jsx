@@ -14,6 +14,7 @@ import DesktopOutlinedIcon from "@ant-design/icons/DesktopOutlined";
 import CodeOutlinedIcon from "@ant-design/icons/CodeOutlined";
 import AlertOutlinedIcon from "@ant-design/icons/AlertOutlined";
 import DatabaseOutlinedIcon from "@ant-design/icons/DatabaseOutlined";
+import ExperimentOutlinedIcon from "@ant-design/icons/ExperimentOutlined";
 import PlusOutlinedIcon from "@ant-design/icons/PlusOutlined";
 import QuestionCircleOutlinedIcon from "@ant-design/icons/QuestionCircleOutlined";
 import SettingOutlinedIcon from "@ant-design/icons/SettingOutlined";
@@ -80,6 +81,35 @@ function useNavbarActiveState() {
         ],
         currentRoute.id
       ),
+      models: includes(
+        [
+          "MLModels.List",
+          "MLModels.My",
+          "MLModels.Favorites",
+          "MLModels.Archive",
+          "MLModels.New",
+          "MLModels.View",
+          "MLModels.Edit",
+          "MLModels.Stats",
+          "MLModels.Overview",
+          "MLModels.Predictions",
+          "MLModels.Versions",
+          "MLModels.Metrics",
+          "MLModels.MetricsHistory",
+          "MLModels.MetricsHistoryTrain",
+          "MLModelsVersions.List",
+          "MLModelsVersions.My",
+          "MLModelsVersions.Favorites",
+          "MLModelsVersions.Archive",
+          "MLModelsVersions.View",
+          "PredictionResults.List",
+          "PredictionResults.My",
+          "PredictionResults.Favorites",
+          "PredictionResults.Archive",
+          "PredictionResult.View",
+        ],
+        currentRoute.id
+      ),
     }),
     [currentRoute.id]
   );
@@ -94,6 +124,8 @@ export default function DesktopNavbar() {
   const canCreateDashboard = currentUser.hasPermission("create_dashboard");
   const canCreateAlert = currentUser.hasPermission("list_alerts");
   const canCreateIndexer = currentUser.hasPermission("create_indexer");
+  const canCreateModel = currentUser.hasPermission("create_model");
+  const canListModels = currentUser.hasPermission("list_models");
 
   return (
     <nav className="desktop-navbar">
@@ -149,10 +181,32 @@ export default function DesktopNavbar() {
             </Link>
           </Menu.Item>
         )}
+        {canListModels && (
+          <Menu.SubMenu
+            key="models"
+            popupClassName="desktop-navbar-submenu"
+            className={activeState.models ? "navbar-active-item" : null}
+            title={
+              <Link href="ml_models" className="navbar-submenu-title">
+                <ExperimentOutlinedIcon aria-label="Models navigation button" />
+                <span className="desktop-navbar-label">Models</span>
+              </Link>
+            }>
+            <Menu.Item key="models-list">
+              <Link href="ml_models">Models</Link>
+            </Menu.Item>
+            <Menu.Item key="models-versions">
+              <Link href="ml_models_versions">Versions</Link>
+            </Menu.Item>
+            <Menu.Item key="predictions-list">
+              <Link href="predictions">Predictions</Link>
+            </Menu.Item>
+          </Menu.SubMenu>
+        )}
       </NavbarSection>
 
       <NavbarSection className="desktop-navbar-spacer">
-        {(canCreateQuery || canCreateDashboard || canCreateAlert || canCreateIndexer) && (
+        {(canCreateQuery || canCreateDashboard || canCreateAlert || canCreateIndexer || canCreateModel) && (
           <Menu.SubMenu
             key="create"
             popupClassName="desktop-navbar-submenu"
@@ -189,6 +243,13 @@ export default function DesktopNavbar() {
               <Menu.Item key="new-indexer">
                 <Link data-test="CreateIndexerMenuItem" href="indexers/new">
                   New Indexer
+                </Link>
+              </Menu.Item>
+            )}
+            {canCreateModel && (
+              <Menu.Item key="new-model">
+                <Link data-test="CreateMLModelMenuItem" href="ml_models/new">
+                  New Model
                 </Link>
               </Menu.Item>
             )}

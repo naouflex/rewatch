@@ -11,6 +11,13 @@ import "./alert-events/AlertEventsList";
 import "./indexers/IndexersList";
 import "./indexers/Indexer";
 
+import "./ml-models/MLModelsList";
+import "./ml-model/MLModel";
+import "./ml-models-versions/MLModelsVersionsList";
+import "./ml-model-version/MLModelVersion";
+import "./predictions/PredictionResultsList";
+import "./prediction/PredictionResult";
+
 import "./dashboards/DashboardList";
 import "./dashboards/DashboardPage";
 import "./dashboards/PublicDashboardPage";

@@ -1,0 +1,252 @@
+// Graph visualization styles. The viz-lib is theme-agnostic so we map every
+// `var(--graph-*)` to a sensible static fallback here. If the host app exposes
+// dark-mode CSS variables of the same names, they will override these defaults.
+:root {
+  --graph-text-color: #1f1f1f;
+  --graph-text-muted-color: #6c757d;
+  --graph-background-color: #ffffff;
+  --graph-background-color-secondary: #f5f5f5;
+  --graph-border-color: #d9d9d9;
+  --graph-brand-color: #1890ff;
+  --graph-navbar-background-color: #fafafa;
+}
+
+.graph-and-parameters-container {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  height: auto;
+  width: 100%;
+}
+
+.graph-visualization-container {
+  min-height: 600px;
+  height: 100%;
+  width: auto;
+  flex-grow: 1;
+  overflow: hidden;
+  display: flex;
+  position: relative;
+  border: 1px solid var(--graph-border-color);
+  margin-left: 10px;
+  margin-right: 10px;
+
+  .graph-visualization-container {
+    border: none;
+  }
+}
+
+.graph-parameter-box {
+  position: absolute;
+  margin-top: 10px;
+  margin-left: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: start;
+  padding: 15px;
+  background-color: var(--graph-background-color);
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  z-index: 2;
+  max-height: calc(100% - 20px);
+  height: auto;
+  width: auto;
+  box-sizing: border-box;
+  overflow-y: auto;
+  overflow-x: auto;
+  transition: background-color 0.3s ease;
+}
+
+.graph-search-container {
+  position: relative;
+  width: calc(100% - 16px);
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.graph-search {
+  width: 100%;
+  margin-top: 5px;
+  padding: 8px;
+  padding-right: 30px;
+  border: 1px solid var(--graph-border-color);
+  border-radius: 4px;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+  background-color: var(--graph-background-color);
+  color: var(--graph-text-color);
+}
+
+.graph-clear-button {
+  position: absolute;
+  right: 5px;
+  background: transparent;
+  border: none;
+  color: var(--graph-text-muted-color);
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    color: var(--graph-text-color);
+  }
+}
+
+@keyframes graph-pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.node {
+  &.search-highlight circle {
+    animation: graph-pulse 1s infinite;
+    transform-origin: center;
+    transform-box: fill-box;
+  }
+}
+
+.link {
+  &.search-highlight {
+    stroke-width: 4px !important;
+    stroke: orange !important;
+  }
+}
+
+#nodeTooltip,
+#linkTooltip {
+  position: absolute;
+  background-color: var(--graph-background-color);
+  color: var(--graph-text-color);
+  border: 1px solid var(--graph-border-color);
+  border-radius: 4px;
+  padding: 10px;
+  font-size: 12px;
+  max-width: 300px;
+  max-height: 200px;
+  overflow-y: auto;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  z-index: 9000;
+  pointer-events: none;
+  transition: opacity 0.2s ease-out, visibility 0.2s ease-out;
+  opacity: 0;
+  visibility: hidden;
+
+  &.visible {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  &.sticky {
+    pointer-events: auto;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    border: 2px solid var(--graph-brand-color);
+    background-color: var(--graph-background-color);
+    color: var(--graph-text-color);
+    visibility: visible;
+  }
+
+  a {
+    color: var(--graph-brand-color);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  em {
+    font-style: italic;
+    color: var(--graph-text-color);
+  }
+
+  b {
+    font-weight: bold;
+  }
+}
+
+.context-menu {
+  background-color: var(--graph-background-color);
+  border: 1px solid var(--graph-border-color);
+  border-radius: 4px;
+  padding: 5px 0;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  z-index: 9999;
+
+  button {
+    display: block;
+    width: 100%;
+    padding: 5px 10px;
+    text-align: left;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--graph-text-color);
+
+    &:hover {
+      background-color: var(--graph-background-color-secondary);
+    }
+  }
+}
+
+.deleted-nodes-section {
+  margin-top: 10px;
+  width: 100%;
+  background-color: var(--graph-navbar-background-color);
+}
+
+.deleted-nodes-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 5px 0;
+  width: 100%;
+
+  li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+    padding-right: 5px;
+  }
+}
+
+.restore-node-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--graph-brand-color);
+  transition: color 0.3s, background-color 0.3s;
+  min-width: 30px;
+  min-height: 30px;
+  border-radius: 4px;
+
+  &:hover {
+    color: var(--graph-brand-color);
+    background-color: var(--graph-background-color);
+  }
+
+  .anticon {
+    font-size: 18px;
+  }
+}
+
+.deleted-nodes-title {
+  font-weight: bold;
+  margin-bottom: 10px;
+  font-size: 14px;
+}

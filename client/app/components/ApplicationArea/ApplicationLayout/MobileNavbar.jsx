@@ -55,6 +55,21 @@ export default function MobileNavbar({ getPopupContainer }) {
                   <Link href="indexers">Indexers</Link>
                 </Menu.Item>
               )}
+              {currentUser.hasPermission("list_models") && (
+                <Menu.Item key="ml-models">
+                  <Link href="ml_models">Models</Link>
+                </Menu.Item>
+              )}
+              {currentUser.hasPermission("list_models") && (
+                <Menu.Item key="ml-models-versions">
+                  <Link href="ml_models_versions">Versions</Link>
+                </Menu.Item>
+              )}
+              {currentUser.hasPermission("list_models") && (
+                <Menu.Item key="predictions">
+                  <Link href="predictions">Predictions</Link>
+                </Menu.Item>
+              )}
               <Menu.Item key="profile">
                 <Link href="users/me">Edit Profile</Link>
               </Menu.Item>

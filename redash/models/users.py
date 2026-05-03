@@ -261,6 +261,11 @@ class Group(db.Model, BelongsToOrgMixin):
         "create_indexer",
         "edit_indexer",
         "view_indexer",
+        "list_models",
+        "create_model",
+        "edit_model",
+        "view_model",
+        "use_model",
     ]
     ADMIN_PERMISSIONS = ["admin", "super_admin"]
 

@@ -4,6 +4,17 @@ from redash import rq_redis_connection
 from redash.tasks.alerts import check_alerts_for_query
 from redash.tasks.failure_report import send_aggregated_errors
 from redash.tasks.indexers import check_indexers_for_query, index_query_results
+from redash.tasks.ml_models import (
+    check_models_for_query_predict,
+    check_models_for_query_train,
+    enqueue_predict_model,
+    enqueue_train_model,
+    kill_model_predicting,
+    kill_model_training,
+    notify_subscriptions as notify_model_subscriptions,
+    predict_model,
+    train_model,
+)
 from redash.tasks.general import (
     record_event,
     send_mail,

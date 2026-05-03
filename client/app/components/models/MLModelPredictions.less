@@ -1,0 +1,200 @@
+@import (reference, less) "~@/assets/less/inc/variables";
+
+.model-predictions {
+  background-color: var(--background-color);
+  color: var(--text-color);
+
+  .model-predictions-title {
+    color: var(--text-color);
+  }
+
+  .bg-white {
+    background-color: var(--background-color);
+    color: var(--text-color);
+  }
+
+  .tiled {
+    border-radius: 3px;
+    box-shadow: rgba(102, 136, 153, 0.15) 0px 4px 9px -3px;
+    border-color: var(--border-color);
+  }
+
+  .search-input {
+    background-color: var(--background-color);
+    color: var(--text-color);
+    border-color: var(--border-color);
+
+    &::placeholder {
+      color: var(--text-muted-color);
+    }
+  }
+
+  .table-responsive {
+    overflow-x: auto;
+
+    .table-data {
+      overflow-x: auto;
+
+      .ant-spin-nested-loading,
+      .ant-spin-container,
+      .ant-table,
+      .ant-table-container,
+      .ant-table-content {
+        background-color: var(--background-color);
+        color: var(--text-color);
+      }
+
+      .ant-table-tbody {
+        background-color: var(--background-color);
+        color: var(--text-color);
+
+        > tr {
+          > th.ant-table-cell,
+          > td.ant-table-cell {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            border-bottom: 1px solid var(--border-color);
+          }
+
+          &:hover > td.ant-table-cell {
+            background-color: var(--navbar-submenu-hover-color);
+            color: var(--text-color);
+          }
+        }
+      }
+
+      .ant-table-thead {
+        background-color: var(--background-color);
+        color: var(--text-color);
+        > tr {
+          > th.ant-table-cell {
+            background-color: var(--navbar-submenu-hover-color);
+            color: var(--text-color);
+          }
+
+          > th.ant-table-cell.ant-table-column-has-sorters {
+            &:hover {
+              background-color: var(--navbar-submenu-hover-color);
+              color: var(--text-color);
+            }
+
+            > div.ant-table-column-sorters-with-tooltip {
+              background-color: var(--navbar-submenu-hover-color);
+              color: var(--text-color);
+            }
+          }
+        }
+
+        .ant-table-column-sorter-up,
+        .ant-table-column-sorter-down {
+          color: var(--text-color);
+        }
+      }
+
+      .ant-pagination,
+      .ant-pagination-prev,
+      .ant-pagination-next,
+      .ant-pagination-item {
+        background-color: var(--background-color);
+
+        a {
+          color: var(--text-color);
+
+          &:hover {
+            color: var(--navbar-brand-color);
+          }
+        }
+
+        &.ant-pagination-item-active {
+          border-color: var(--navbar-brand-color);
+
+          a {
+            color: var(--navbar-brand-color);
+          }
+        }
+      }
+    }
+  }
+
+  &.dark-mode {
+    background-color: var(--navbar-background-color);
+
+    .bg-white {
+      background-color: var(--navbar-background-color);
+    }
+
+    .search-input {
+      background-color: var(--navbar-submenu-hover-color);
+    }
+
+    .table-responsive {
+      .table-data {
+        .ant-spin-nested-loading,
+        .ant-spin-container,
+        .ant-table,
+        .ant-table-container,
+        .ant-table-content,
+        .ant-table-tbody {
+          background-color: var(--navbar-background-color);
+        }
+
+        .ant-table-thead {
+          background-color: var(--navbar-background-color);
+        }
+
+        .ant-pagination,
+        .ant-pagination-prev,
+        .ant-pagination-next,
+        .ant-pagination-item {
+          background-color: var(--navbar-background-color);
+        }
+      }
+    }
+  }
+
+  .ant-modal {
+    &.dark-mode {
+      .ant-modal-content {
+        background-color: var(--navbar-background-color);
+        color: var(--text-color);
+      }
+
+      .ant-modal-header {
+        background-color: var(--navbar-background-color);
+        border-bottom-color: var(--border-color);
+
+        .ant-modal-title {
+          color: var(--text-color);
+        }
+      }
+
+      .ant-modal-body {
+        color: var(--text-color);
+      }
+
+      .ant-modal-footer {
+        border-top-color: var(--border-color);
+
+        .ant-btn {
+          color: var(--text-color);
+          background-color: var(--navbar-background-color);
+          border-color: var(--border-color);
+
+          &:hover {
+            background-color: var(--navbar-submenu-hover-color);
+          }
+        }
+
+        .ant-btn-primary {
+          background-color: var(--primary-color);
+          border-color: var(--primary-color);
+
+          &:hover {
+            background-color: var(--primary-color-dark);
+            border-color: var(--primary-color-dark);
+          }
+        }
+      }
+    }
+  }
+}

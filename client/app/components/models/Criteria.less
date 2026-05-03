@@ -1,0 +1,240 @@
+@import (reference, less) "~@/assets/less/inc/variables";
+
+.model-criteria {
+  margin-top: 40px !important;
+
+  .input-title {
+    display: inline-block;
+    width: auto;
+    margin-right: 8px;
+    margin-bottom: 17px;
+    position: relative;
+    vertical-align: middle;
+
+    & > .input-label {
+      position: absolute;
+      top: -16px;
+      left: 0;
+      line-height: normal;
+      font-size: 10px;
+
+      & + * {
+        vertical-align: top;
+      }
+    }
+  }
+
+  .ant-form-item-explain {
+    margin-top: -17px;
+  }
+
+  .model-criteria-hint code {
+    overflow: hidden;
+    max-width: 100px;
+    display: inline-block;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: middle;
+  }
+}
+
+.criteria-disabled-input {
+  text-align: center;
+  line-height: 35px;
+  height: 35px;
+  max-width: 200px;
+  background: var(--navbar-submenu-hover-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-base);
+  margin-bottom: 5px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  padding: 0 8px;
+}
+
+.criteria {
+  transition: background-color 0.3s ease, color 0.3s ease;
+
+  .input-label {
+    color: var(--text-color);
+  }
+
+  .ant-select {
+    color: var(--text-color);
+    background-color: var(--navbar-submenu-hover-color);
+
+    &.ant-select-open {
+      .ant-select-selector {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb), 0.2);
+      }
+    }
+    .ant-select.model-query-selector {
+      color: var(--text-color);
+      background-color: var(--navbar-submenu-hover-color);
+
+      &.ant-select-open {
+        .ant-select-selector {
+          border-color: var(--primary-color);
+          box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb), 0.2);
+        }
+      }
+
+      // Additional styles for the select in dark mode
+      .ant-select-selector {
+        background-color: var(--navbar-submenu-hover-color);
+        border-color: var(--border-color);
+      }
+
+      .ant-select-arrow {
+        color: var(--text-color);
+      }
+
+      .ant-select-selection-placeholder {
+        color: var(--text-muted-color);
+      }
+    }
+  }
+
+  .ant-input {
+    color: var(--text-color);
+    background-color: var(--navbar-submenu-hover-color);
+    border-color: var(--border-color);
+  }
+
+  .ant-form-item-explain {
+    color: var(--text-color);
+    background-color: var(--navbar-background-color);
+  }
+
+  .model-criteria-hint code {
+    background-color: var(--code-bg);
+    color: var(--text-color);
+  }
+
+  &.dark-mode {
+    background-color: var(--navbar-background-color);
+    color: var(--text-color);
+
+    .input-label {
+      color: var(--text-color);
+    }
+
+    .ant-select.model-query-selector {
+      color: var(--text-color);
+      background-color: var(--navbar-submenu-hover-color);
+
+      &.ant-select-open {
+        .ant-select-selector {
+          background-color: var(--navbar-submenu-hover-color);
+          border-color: var(--primary-color);
+          box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb), 0.2);
+        }
+      }
+
+      // Additional styles for the select in dark mode
+      .ant-select-selector {
+        background-color: var(--navbar-submenu-hover-color);
+        border-color: var(--border-color);
+      }
+
+      .ant-select-arrow {
+        color: var(--text-color);
+      }
+
+      .ant-select-selection-placeholder {
+        color: var(--text-muted-color);
+      }
+    }
+
+    .ant-input {
+      color: var(--text-color);
+      background-color: var(--navbar-submenu-hover-color);
+      border-color: var(--border-color);
+    }
+
+    .ant-form-item-explain {
+      color: var(--text-color);
+    }
+
+    .model-criteria-hint code {
+      background-color: var(--navbar-submenu-hover-color);
+      color: var(--text-color);
+    }
+
+    .criteria-disabled-input {
+      background: var(--navbar-submenu-hover-color);
+      border-color: var(--border-color);
+      color: var(--text-color);
+    }
+
+    .ant-select-dropdown,
+    .ant-select-dropdown-dark {
+      background-color: var(--navbar-background-color);
+      
+      .ant-select-item,
+      .ant-select-item-option {
+        color: var(--text-color);
+        background-color: var(--navbar-background-color);
+
+        &:hover {
+          background-color: var(--navbar-submenu-hover-color);
+          color: var(--text-color);
+        }
+
+        &-option-selected {
+          background-color: var(--primary-color);
+          color: var(--text-color);
+        }
+      }
+
+      .ant-select-item-option-disabled {
+        color: var(--text-muted-color);
+      }
+
+      .select-option-divider {
+        border-color: var(--border-color);
+      }
+
+      // Target the specific class for query selector results
+      .query-selector-result {
+        background-color: var(--navbar-background-color);
+        
+        &:hover {
+          background-color: var(--navbar-submenu-hover-color);
+        }
+      }
+    }
+  }
+}
+
+// Add a global style for the dark dropdown
+.ant-select-dropdown-dark {
+  background-color: var(--navbar-background-color) !important;
+
+  .ant-select-item {
+    color: var(--text-color);
+
+    &:hover {
+      background-color: var(--navbar-submenu-hover-color);
+    }
+
+    &-option-selected {
+      background-color: var(--primary-color);
+      color: #fff;
+    }
+  }
+
+  .ant-select-item-option-disabled {
+    color: var(--text-muted-color);
+  }
+
+  .query-selector-result {
+    background-color: var(--navbar-background-color);
+    
+    &:hover {
+      background-color: var(--navbar-submenu-hover-color);
+    }
+  }
+}

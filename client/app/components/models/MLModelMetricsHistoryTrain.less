@@ -1,0 +1,179 @@
+@import (reference) "~@/assets/less/inc/variables";
+
+.ml-model-metrics-history {
+  transition: background-color 0.3s ease, color 0.3s ease;
+
+  h3 {
+    color: var(--text-color) !important;
+    background-color: var(--background-color) !important;
+    &.darkmode {
+      color: var(--text-color) !important;
+      background-color: var(--background-color) !important;
+    }
+  }
+
+  &.dark-mode {
+    background-color: var(--navbar-background-color) !important;
+    color: var(--text-color) !important;
+
+    .ml-model-metrics-history-card {
+      background-color: var(--navbar-background-color) !important;
+      border-color: var(--border-color) !important;
+      color: var(--text-color) !important;
+
+      .ant-table {
+        color: var(--text-color) !important;
+        background-color: var(--background-color) !important;
+        border-color: var(--border-color) !important;
+        .ant-table-thead {
+          color: var(--text-color) !important;
+          background-color: var(--background-color) !important;
+          border-color: var(--border-color) !important;
+          .ant-table-cell {
+            color: var(--text-color) !important;
+            background-color: var(--background-color) !important;
+            border-color: var(--border-color) !important;
+          }
+        }
+        .ant-table-tbody {
+          color: var(--text-color) !important;
+          background-color: var(--background-color) !important;
+          border-color: var(--border-color) !important;
+          .ant-table-cell {
+            color: var(--text-color) !important;
+            background-color: var(--background-color) !important;
+            border-color: var(--border-color) !important;
+            color: var(--text-color) !important;
+            background-color: var(--background-color) !important;
+            border-color: var(--border-color) !important;
+          }
+        }
+      }
+
+      .ant-card-body {
+        background-color: var(--navbar-background-color) !important;
+        color: var(--text-color) !important;
+        .ant-alert {
+          background-color: var(--background-color) !important;
+          color: var(--text-color) !important;
+          .ant-alert-message {
+            color: var(--text-color) !important;
+            background: var(--background-color) !important;
+          }
+          .ant-alert-description {
+            color: var(--text-color) !important;
+            background: var(--background-color) !important;
+          }
+        }
+      }
+    }
+  }
+
+  .ml-model-metrics-history-card {
+    background-color: var(--background-color) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-color) !important;
+
+    .ant-card-body {
+      background-color: var(--background-color) !important;
+      color: var(--text-color) !important;
+    }
+  }
+
+  .ant-select {
+    color: var(--text-color) !important;
+
+    .ant-select-selector {
+      background-color: var(--background-color) !important;
+      border-color: var(--border-color) !important;
+    }
+
+    .ant-select-arrow {
+      color: var(--text-color) !important;
+    }
+  }
+
+  .custom-tooltip {
+    background-color: var(--background-color) !important;
+    border: 1px solid var(--border-color) !important;
+    padding: 10px;
+    border-radius: 4px;
+
+    .label {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .intro {
+      margin-bottom: 0;
+    }
+  }
+
+  .recharts-cartesian-grid-horizontal line,
+  .recharts-cartesian-grid-vertical line {
+    stroke: var(--border-color) !important;
+  }
+
+  .recharts-xAxis .recharts-cartesian-axis-tick-value,
+  .recharts-yAxis .recharts-cartesian-axis-tick-value {
+    fill: var(--text-muted);
+  }
+
+  .recharts-tooltip-wrapper {
+    .recharts-default-tooltip {
+      background-color: var(--background-color) !important;
+      border-color: var(--border-color) !important;
+
+      .recharts-tooltip-label,
+      .recharts-tooltip-item {
+        color: var(--text-color) !important;
+      }
+    }
+  }
+
+  .recharts-cartesian-axis-line,
+  .recharts-cartesian-axis-tick-line {
+    stroke: var(--text-muted);
+  }
+
+  .recharts-text {
+    fill: var(--text-muted);
+  }
+
+  .recharts-line {
+    path {
+      stroke: var(--primary-color) !important;
+    }
+  }
+
+  .recharts-dot {
+    stroke: var(--primary-color) !important;
+    fill: var(--background-color) !important;
+  }
+
+  .recharts-brush-texts {
+    fill: var(--text-muted);
+  }
+
+  .recharts-brush-slide {
+    fill: var(--primary-color) !important;
+    fill-opacity: 0.3;
+  }
+
+  .recharts-brush-traveller {
+    fill: var(--background-color) !important;
+    stroke: var(--border-color) !important;
+  }
+
+  .recharts-legend-item-text {
+    color: var(--text-color) !important;
+  }
+
+  .recharts-reference-line line {
+    stroke: var(--border-color) !important;
+  }
+
+  .recharts-reference-line-label {
+    fill: var(--text-muted);
+  }
+}
