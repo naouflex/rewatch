@@ -3,6 +3,16 @@
   flex-wrap: nowrap;
   align-items: stretch;
   justify-content: stretch;
+  // Allow the toolbar to scroll horizontally when its children don't fit
+  // (e.g. on phones, where Save / Run would otherwise overflow off-screen
+  // and become unreachable). On wider viewports there's no overflow, so the
+  // scrollbar is simply not rendered.
+  overflow-x: auto;
+  // Hide the perpendicular axis: a stray vertical scrollbar would shift
+  // the toolbar buttons.
+  overflow-y: hidden;
+  // Smoother momentum scrolling on iOS Safari.
+  -webkit-overflow-scrolling: touch;
 
   // Styles for a wrapper that `Tooltip` adds for disabled `Button`s
   span.query-editor-controls-button {
@@ -30,5 +40,37 @@
   .query-editor-controls-spacer {
     flex: 1 1 auto;
     height: 35px; // same as Antd <Select>
+  }
+
+  // Mobile: keep every control at its natural width so they don't get
+  // squashed, and let the user swipe horizontally to reach Save / Run.
+  // The datasource selector is the one element that uses `flex-fill` on
+  // desktop — clamp it to a usable min/max here so it neither hogs nor
+  // collapses the row. Breakpoint matches Bootstrap's ``@screen-xs-max``
+  // (767px); hardcoded rather than referenced because component-scoped
+  // LESS files don't pull in the global bootstrap variables.
+  @media (max-width: 767px) {
+    > * {
+      flex-shrink: 0;
+    }
+
+    .ant-select.flex-fill {
+      // Override the desktop ``w-100 flex-fill`` so the select keeps a
+      // predictable width and the buttons after it stay accessible by
+      // scrolling rather than being squeezed.
+      flex: 0 0 auto !important;
+      width: auto !important;
+      min-width: 160px;
+      max-width: 220px;
+    }
+
+    // Slim, discreet horizontal scrollbar so it doesn't add visual height.
+    &::-webkit-scrollbar {
+      height: 4px;
+    }
+    &::-webkit-scrollbar-thumb {
+      background: var(--rd-color-border, rgba(0, 0, 0, 0.2));
+      border-radius: 2px;
+    }
   }
 }
