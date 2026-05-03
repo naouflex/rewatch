@@ -113,12 +113,11 @@ ARG POETRY_OPTIONS="--no-root --no-interaction --no-ansi"
 ARG install_groups="main,all_ds,dev"
 RUN /etc/poetry/bin/poetry install --only $install_groups $POETRY_OPTIONS
 
-# Flasgger (Swagger UI for Flask) powers the /api/docs/ endpoint. Installed
-# via pip rather than poetry because adding it to pyproject.toml would force
-# a poetry.lock regeneration that conflicts with the pinned
-# jsonschema 3.1.1 / web3 6.20.3 pair. Flasgger only needs jsonschema>=3.0.1
-# so it is happy with the version already installed by poetry.
-RUN pip install --no-cache-dir flasgger==0.9.7.1
+# The /api/docs/ Scalar UI and the OpenAPI spec at /api/spec are generated
+# by ``redash.handlers.swagger``. That module only needs PyYAML (already
+# installed by poetry) plus the vendored Scalar bundle in
+# ``redash/handlers/api_docs_static/``; no additional Python packages are
+# required.
 
 COPY --chown=redash . /app
 COPY --from=frontend-builder --chown=redash /frontend/client/dist /app/client/dist
