@@ -50,24 +50,42 @@ function readPreferenceFromStorage() {
   return "system";
 }
 
+// Tiny query-string parser; we avoid `URLSearchParams` here because
+// `eslint-plugin-compat` flags it against the project's browserslist
+// (Edge 15 lacks support).
+function getQueryParam(search, name) {
+  if (!search) return null;
+  const cleaned = search.charAt(0) === "?" ? search.substring(1) : search;
+  if (!cleaned) return null;
+  const pairs = cleaned.split("&");
+  for (let i = 0; i < pairs.length; i += 1) {
+    const eq = pairs[i].indexOf("=");
+    const key = eq === -1 ? pairs[i] : pairs[i].substring(0, eq);
+    if (decodeURIComponent(key) === name) {
+      const raw = eq === -1 ? "" : pairs[i].substring(eq + 1);
+      try {
+        return decodeURIComponent(raw.replace(/\+/g, " "));
+      } catch (e) {
+        return raw;
+      }
+    }
+  }
+  return null;
+}
+
 function readPreferenceFromUrl() {
   if (typeof window === "undefined" || !window.location) {
     return null;
   }
-  let params;
-  try {
-    params = new URLSearchParams(window.location.search);
-  } catch (e) {
-    return null;
-  }
+  const search = window.location.search;
 
-  const theme = params.get("theme");
+  const theme = getQueryParam(search, "theme");
   if (theme && PREFERENCES.includes(theme)) {
     return theme;
   }
 
   // Inverse-watch alias: `?dark=1` / `?dark=0` (also accepts true/false).
-  const dark = params.get("dark");
+  const dark = getQueryParam(search, "dark");
   if (dark !== null) {
     const normalized = dark.toLowerCase();
     if (normalized === "1" || normalized === "true") {

@@ -1,8 +1,8 @@
 {
-  "name": "redash-landing",
+  "name": "analytics-landing",
   "private": true,
   "version": "0.1.0",
-  "description": "Landing page and self-hosted help center that ships alongside the Redash app.",
+  "description": "Landing page and self-hosted help center that ships alongside the analytics app.",
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0 --port 5173",

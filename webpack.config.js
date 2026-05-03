@@ -142,6 +142,13 @@ const config = {
       // because the `util` package expects there to be a global variable named `process`.
       // Thanks to https://stackoverflow.com/a/65018686/14239942
       process: 'process/browser'
+    }),
+    // Expose a small allowlist of REDASH_* env vars to the frontend bundle.
+    // Defaults make sense for the dev compose stack:
+    //   - REDASH_HELP_BASE_URL: where the in-app help drawer loads pages from
+    //     (see client/app/components/HelpTrigger.jsx and ./landing/).
+    new webpack.EnvironmentPlugin({
+      REDASH_HELP_BASE_URL: process.env.REDASH_HELP_BASE_URL || "http://localhost:5002",
     })
   ].filter(Boolean),
   optimization: {

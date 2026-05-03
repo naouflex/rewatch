@@ -1,11 +1,11 @@
 // Edit this file to feature your own work on the landing page.
 export const PROJECTS = [
   {
-    id: "redash",
-    title: "Self-hosted Redash",
+    id: "analytics",
+    title: "Self-hosted analytics platform",
     tag: "Data",
     excerpt:
-      "A customised Redash deployment that powers internal analytics, with extra ML model and indexer surfaces.",
+      "A customised deployment that powers internal analytics, with extra ML model and indexer surfaces.",
     href: "/",
   },
   {
@@ -21,7 +21,7 @@ export const PROJECTS = [
     title: "In-app help center",
     tag: "Docs",
     excerpt:
-      "This site doubles as the help center the Redash app links to from the question-mark icon in the navbar.",
+      "This site doubles as the help center the analytics app links to from the question-mark icon in the navbar.",
     href: "/help",
   },
 ];

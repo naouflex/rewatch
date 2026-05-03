@@ -93,3 +93,14 @@ services:
       - "1080:1080"
       - "1025:1025"
     restart: unless-stopped
+  # Landing site + self-hosted help center (see ./landing/README.md). It is
+  # served as static files behind nginx and doubles as the documentation the
+  # Redash app loads inside its in-app help drawer (see
+  # client/app/components/HelpTrigger.jsx).
+  landing:
+    build:
+      context: ./landing
+      dockerfile: Dockerfile
+    ports:
+      - "5002:80"
+    restart: unless-stopped

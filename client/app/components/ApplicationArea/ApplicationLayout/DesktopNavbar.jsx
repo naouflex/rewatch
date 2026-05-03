@@ -137,7 +137,7 @@ export default function DesktopNavbar() {
         </div>
       </NavbarSection>
 
-      <NavbarSection>
+      <NavbarSection className="desktop-navbar-scroll">
         {currentUser.hasPermission("list_dashboards") && (
           <Menu.Item key="dashboards" className={activeState.dashboards ? "navbar-active-item" : null}>
             <Link href="dashboards">
@@ -205,7 +205,7 @@ export default function DesktopNavbar() {
         )}
       </NavbarSection>
 
-      <NavbarSection className="desktop-navbar-spacer">
+      <NavbarSection>
         {(canCreateQuery || canCreateDashboard || canCreateAlert || canCreateIndexer || canCreateModel) && (
           <Menu.SubMenu
             key="create"

@@ -12,8 +12,44 @@
     background-color var(--rd-duration-base) var(--rd-ease),
     border-color var(--rd-duration-base) var(--rd-ease);
 
+  // Section that holds the primary nav items (Dashboards through Models).
+  // It takes all remaining vertical space so the bottom group (Create,
+  // Help, Settings, theme toggle, profile) stays pinned to the bottom of
+  // the sidebar. When there are more items than fit, this section scrolls
+  // — Help/Settings/theme/profile remain visible.
+  &-scroll {
+    flex: 1 1 auto;
+    min-height: 0; // allow the flex item to shrink below its content size
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    // Thin, brand-neutral scrollbar that doesn't shout against the chrome.
+    scrollbar-width: thin;
+    scrollbar-color: var(--rd-color-border-strong) transparent;
+
+    &::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background-color: var(--rd-color-border-strong);
+      border-radius: 2px;
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+      background-color: var(--rd-color-text-muted);
+    }
+  }
+
+  // Older selector kept as an alias in case third-party customisations
+  // still reference it. Same semantics as &-scroll above.
   &-spacer {
     flex: 1 1 auto;
+    min-height: 0;
   }
 
   &-logo.ant-menu {

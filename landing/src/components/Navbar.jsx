@@ -1,4 +1,5 @@
 import { NavLink, Link } from "react-router-dom";
+import ThemeToggle from "./ThemeToggle.jsx";
 
 const NAV_LINKS = [
   { to: "/", label: "Home", end: true },
@@ -12,8 +13,13 @@ export default function Navbar() {
     <header className="navbar">
       <div className="container navbar__inner">
         <Link to="/" className="navbar__brand">
-          <span className="navbar__logo" aria-hidden="true">R</span>
-          <span>Redash · Landing</span>
+          <img
+            src="/logo.png"
+            alt=""
+            className="navbar__logo-img"
+            aria-hidden="true"
+          />
+          <span>Analytics · Landing</span>
         </Link>
         <nav className="navbar__links" aria-label="Primary">
           {NAV_LINKS.map((link) => (
@@ -28,6 +34,7 @@ export default function Navbar() {
               {link.label}
             </NavLink>
           ))}
+          <ThemeToggle />
         </nav>
       </div>
     </header>

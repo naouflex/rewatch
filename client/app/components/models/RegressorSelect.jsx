@@ -69,13 +69,9 @@ const REGRESSOR_OPTIONS = {
 
 const RegressorSelect = ({ value, onRegressorChange, onRegressorOptionsChange, modelOptions, editMode }) => {
   const [selectedOptions, setSelectedOptions] = useState(modelOptions.regressor_options || {});
-  const [isClassification, setIsClassification] = useState(false);
 
   useEffect(() => {
     setSelectedOptions(modelOptions.regressor_options || {});
-    // Determine if it's a classification task based on the target types
-    const targetTypes = JSON.parse(modelOptions.target_types || '{}');
-    setIsClassification(Object.values(targetTypes).every(type => type === 'categorical'));
   }, [modelOptions]);
 
   const handleOptionChange = (key, optionValue) => {
