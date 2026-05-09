@@ -60,7 +60,7 @@ SECRET_KEY = os.environ.get("REDASH_COOKIE_SECRET")
 
 if SECRET_KEY is None:
     raise Exception(
-        "You must set the REDASH_COOKIE_SECRET environment variable. Visit http://redash.io/help/open-source/admin-guide/secrets for more information."
+        "You must set the REDASH_COOKIE_SECRET environment variable. Visit http://naoufel.io/help/open-source/admin-guide/secrets for more information."
     )
 
 # The secret key to use when encrypting data source options
@@ -68,7 +68,7 @@ DATASOURCE_SECRET_KEY = os.environ.get("REDASH_SECRET_KEY", SECRET_KEY)
 
 # Whether and how to redirect non-HTTP requests to HTTPS. Disabled by default.
 ENFORCE_HTTPS = parse_boolean(os.environ.get("REDASH_ENFORCE_HTTPS", "false"))
-ENFORCE_HTTPS_PERMANENT = parse_boolean(os.environ.get("REDASH_ENFORCE_HTTPS_PERMANENT", "false"))
+ENFORCE_HTTPS_PERMANENT = parse_boolean(os.environ.get("REDASH_ENFORCE_HTTPS_PERMANENT", "true"))
 # Whether file downloads are enforced or not.
 ENFORCE_FILE_SAVE = parse_boolean(os.environ.get("REDASH_ENFORCE_FILE_SAVE", "true"))
 
@@ -115,7 +115,17 @@ HSTS_INCLUDE_SUBDOMAINS = parse_boolean(os.environ.get("REDASH_HSTS_INCLUDE_SUBD
 # for more information. E.g.:
 CONTENT_SECURITY_POLICY = os.environ.get(
     "REDASH_CONTENT_SECURITY_POLICY",
-    "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-eval'; font-src 'self' data:; img-src 'self' http: https: data: blob:; object-src 'none'; frame-ancestors 'none'; frame-src redash.io;",
+    # NOTE: Google Fonts (fonts.googleapis.com / fonts.gstatic.com) are
+    # whitelisted because the rebranded UI loads Inter + JetBrains Mono
+    # from there in client/app/index.html.
+    "default-src 'self'; "
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+    "script-src 'self' 'unsafe-eval'; "
+    "font-src 'self' data: https://fonts.gstatic.com; "
+    "img-src 'self' http: https: data: blob:; "
+    "object-src 'none'; "
+    "frame-ancestors 'none'; "
+    "frame-src naoufel.io;",
 )
 CONTENT_SECURITY_POLICY_REPORT_URI = os.environ.get("REDASH_CONTENT_SECURITY_POLICY_REPORT_URI", "")
 CONTENT_SECURITY_POLICY_REPORT_ONLY = parse_boolean(

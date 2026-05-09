@@ -148,7 +148,7 @@ const config = {
     //   - REDASH_HELP_BASE_URL: where the in-app help drawer loads pages from
     //     (see client/app/components/HelpTrigger.jsx and ./landing/).
     new webpack.EnvironmentPlugin({
-      REDASH_HELP_BASE_URL: process.env.REDASH_HELP_BASE_URL || "http://localhost:5002",
+      REDASH_HELP_BASE_URL: process.env.REDASH_HELP_BASE_URL || "https://naoufel.io",
     })
   ].filter(Boolean),
   optimization: {

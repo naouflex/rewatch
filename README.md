@@ -1,5 +1,5 @@
 <p align="center">
-  <img title="Redash" src='https://redash.io/assets/images/logo.png' width="200px"/>
+  <img title="Redash" src='https://naoufel.io/assets/images/logo.png' width="200px"/>
 </p>
 
 [![Documentation](https://img.shields.io/badge/docs-redash.io/help-brightgreen.svg)](https://redash.io/help/)

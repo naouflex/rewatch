@@ -14,12 +14,12 @@ import { getResolvedTheme, subscribeToTheme } from "@/services/theme";
 import "./HelpTrigger.less";
 
 // Help is now served by the in-cluster landing site (see ./landing/) instead
-// of redash.io. The base URL can be overridden at build time with the
+// of naoufel.io. The base URL can be overridden at build time with the
 // REDASH_HELP_BASE_URL env var (wired through webpack.EnvironmentPlugin).
 // `?embed=1` tells the landing site to drop its top-level chrome so the
 // drawer feels native; `?theme=light|dark` keeps it in lockstep with the
 // theme the user picked in the main app.
-const DEFAULT_HELP_BASE_URL = "http://localhost:5002";
+const DEFAULT_HELP_BASE_URL = "https://naoufel.io";
 const HELP_BASE_URL =
   (typeof process !== "undefined" && process.env && process.env.REDASH_HELP_BASE_URL) ||
   DEFAULT_HELP_BASE_URL;

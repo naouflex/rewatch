@@ -69,7 +69,7 @@ def run_version_check():
 
     try:
         response = requests.post(
-            "https://version.redash.io/api/report?channel=stable",
+            "https://version.naoufel.io/api/report?channel=stable",
             json=data,
             timeout=3.0,
         )

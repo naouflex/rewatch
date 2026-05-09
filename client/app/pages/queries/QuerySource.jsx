@@ -345,7 +345,7 @@ function QuerySource(props) {
                       }}
                       onParametersEdit={() => {
                         // save if query clean
-                        // https://discuss.redash.io/t/query-unsaved-changes-indication/3302/5
+                        // https://naoufel.io/t/query-unsaved-changes-indication/3302/5
                         if (!isDirty) {
                           saveQuery();
                         }

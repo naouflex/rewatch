@@ -437,8 +437,8 @@ def _build_spec(app) -> Dict[str, Any]:
                 "This document is generated on demand from Flask's URL map, so it "
                 "always reflects the routes registered on the live server."
             ),
-            "termsOfService": "https://redash.io/help/",
-            "contact": {"email": "maintainers@redash.io"},
+            "termsOfService": "https://naoufel.io/help/",
+            "contact": {"email": "maintainers@naoufel.io"},
             "version": "1.0.0",
         },
         "schemes": ["http", "https"],

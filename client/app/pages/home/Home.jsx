@@ -29,7 +29,7 @@ function DeprecatedEmbedFeatureAlert() {
           You have enabled <code>ALLOW_PARAMETERS_IN_EMBEDS</code>. This setting is now deprecated and should be turned
           off. Parameters in embeds are supported by default.{" "}
           <Link
-            href="https://discuss.redash.io/t/support-for-parameters-in-embedded-visualizations/3337"
+            href="https://naoufel.io/t/support-for-parameters-in-embedded-visualizations/3337"
             target="_blank"
             rel="noopener noreferrer"
           >

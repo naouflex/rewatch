@@ -1,5 +1,5 @@
-# This configuration file is for the **development** setup.
-# For a production example please refer to getredash/setup repository on GitHub.
+# Production setup, modeled after ~/inverse-watch/docker-compose.yml.
+# REDASH_DATABASE_URL / REDASH_HOST / mail credentials are loaded from .env.
 x-redash-service: &redash-service
   build:
     context: .
@@ -9,41 +9,39 @@ x-redash-service: &redash-service
     - .:/app
   env_file:
     - .env
+  restart: unless-stopped
 x-redash-environment: &redash-environment
-  REDASH_HOST: http://localhost:5001
   REDASH_LOG_LEVEL: "INFO"
   REDASH_REDIS_URL: "redis://redis:6379/0"
-  REDASH_DATABASE_URL: "postgresql://postgres@postgres/postgres"
+  REDASH_DATABASE_URL: ${REDASH_DATABASE_URL}
   REDASH_RATELIMIT_ENABLED: "false"
-  REDASH_MAIL_DEFAULT_SENDER: "redash@example.com"
-  REDASH_MAIL_SERVER: "email"
-  REDASH_MAIL_PORT: 1025
+  REDASH_MAIL_DEFAULT_SENDER: ${REDASH_MAIL_DEFAULT_SENDER}
+  REDASH_MAIL_SERVER: ${REDASH_MAIL_SERVER}
+  REDASH_MAIL_PORT: ${REDASH_MAIL_PORT}
   REDASH_ENFORCE_CSRF: "true"
   REDASH_GUNICORN_TIMEOUT: 60
   # Set secret keys in the .env file
 services:
   server:
     <<: *redash-service
-    command: dev_server
+    command: server
     depends_on:
-      - postgres
       - redis
     ports:
       - "5001:5000"
-      - "5678:5678"
     environment:
       <<: *redash-environment
       PYTHONUNBUFFERED: 0
   scheduler:
     <<: *redash-service
-    command: dev_scheduler
+    command: scheduler
     depends_on:
       - server
     environment:
       <<: *redash-environment
   worker:
     <<: *redash-service
-    command: dev_worker
+    command: worker
     depends_on:
       - server
     environment:
@@ -60,7 +58,7 @@ services:
       dockerfile: Dockerfile.ml
       args:
         BASE_IMAGE: redash-worker:latest
-    command: dev_worker
+    command: worker
     volumes:
       - .:/app
     env_file:
@@ -68,6 +66,7 @@ services:
     depends_on:
       - server
       - worker
+    restart: unless-stopped
     environment:
       <<: *redash-environment
       PYTHONUNBUFFERED: 0
@@ -76,25 +75,17 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
-  postgres:
-    image: postgres:18-alpine
-    ports:
-      - "15432:5432"
-    # The following turns the DB into less durable, but gains significant performance improvements for the tests run (x3
-    # improvement on my personal machine). We should consider moving this into a dedicated Docker Compose configuration for
-    # tests.
-    command: "postgres -c fsync=off -c full_page_writes=off -c synchronous_commit=OFF"
-    restart: unless-stopped
-    environment:
-      POSTGRES_HOST_AUTH_METHOD: "trust"
-  email:
-    image: maildev/maildev
-    ports:
-      - "1080:1080"
-      - "1025:1025"
-    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+  # NOTE: no local postgres service. REDASH_DATABASE_URL in .env points at the
+  # GCP Cloud SQL `watch-db-vm` instance over its public IP (sslmode=require). The
+  # client host's public IPv4 must be in that instance's Authorized Networks. To
+  # run a local Postgres instead, restore a `postgres` service here and set
+  # REDASH_DATABASE_URL=postgresql://redash:redash@postgres:5432/redash.
   # The landing site + in-app help center is now its own Docker stack so it
   # can be deployed on a separate VM. See ../landing/ for the project, and
   # build the frontend with REDASH_HELP_BASE_URL=https://<landing-host>
   # (consumed by client/app/components/HelpTrigger.jsx) so the question-mark
   # icon in the sidebar opens that host instead of localhost:5002.
+volumes:
+  redis_data:

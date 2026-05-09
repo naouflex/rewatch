@@ -87,7 +87,7 @@ export default function MobileNavbar({ getPopupContainer }) {
               {currentUser.hasPermission("super_admin") && <Menu.Divider />}
               <Menu.Item key="help">
                 {/* eslint-disable-next-line react/jsx-no-target-blank */}
-                <Link href="https://redash.io/help" target="_blank" rel="noopener">
+                <Link href="https://naoufel.io/help" target="_blank" rel="noopener">
                   Help
                 </Link>
               </Menu.Item>
