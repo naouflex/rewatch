@@ -17,7 +17,9 @@
 #   scripts/deploy.sh build            # docker compose build (ml-worker last)
 #   scripts/deploy.sh start            # docker compose up -d
 #   scripts/deploy.sh push             # re-upload + restart (no rebuild, fast)
-#   scripts/deploy.sh update           # re-upload, rebuild, restart
+#   scripts/deploy.sh update [--build-frontend]  # re-upload, rebuild, restart
+#                                      # (--build-frontend / -b also rebuilds client/dist on the VM)
+#   scripts/deploy.sh build-frontend   # build client/dist on the VM (node container)
 #   scripts/deploy.sh status           # docker compose ps
 #   scripts/deploy.sh logs [service]   # tail logs (default: server)
 #   scripts/deploy.sh https            # provision Caddy + Let's Encrypt
@@ -92,6 +94,19 @@ vm_compose() {
     files='-f compose.yaml'; \
     [ -f compose.https.yaml ] && files=\"\$files -f compose.https.yaml\"; \
     docker compose \$files $1"
+}
+
+# Build the frontend on the VM inside a throwaway container that matches the
+# Dockerfile's frontend-builder stage (node:24 + pnpm@10.30.3). It writes
+# ./client/dist on the VM via a bind mount, which the bind-mounted `server`
+# container then serves directly. node_modules is excluded from the upload
+# tarball, so a full `pnpm install` runs first. webpack is memory-hungry; on a
+# small VM this can OOM — prefer building locally and uploading when it does.
+vm_build_frontend() {
+  log "Building frontend on $INSTANCE in a node:24 container (pnpm install + build)..."
+  ssh_vm "cd ~/$REMOTE_DIR && docker run --rm -v \"\$PWD\":/app -w /app node:24-bookworm \
+    bash -lc 'npm i -g pnpm@10.30.3 && pnpm install --frozen-lockfile && pnpm run build'"
+  ok "Frontend built into ~/$REMOTE_DIR/client/dist."
 }
 
 vm_external_ip() {
@@ -337,13 +352,33 @@ cmd_logs()   {
 }
 
 cmd_update() {
+  local build_frontend=0
+  while (( $# )); do
+    case "$1" in
+      --build-frontend|-b) build_frontend=1 ;;
+      *) warn "update: ignoring unknown argument '$1'" ;;
+    esac
+    shift
+  done
+
   log "Re-uploading project and rebuilding..."
   cmd_upload
+  if (( build_frontend )); then
+    vm_build_frontend
+  fi
   log "Rebuilding base images then ml-worker..."
   vm_compose 'build server worker scheduler'
   vm_compose 'build ml-worker'
   vm_compose 'up -d'
   ok "Update applied."
+}
+
+# Build the frontend on the VM without re-uploading or rebuilding images.
+# Useful to refresh client/dist in place after an upload/push.
+cmd_build_frontend() {
+  require_cmd gcloud
+  instance_exists || die "VM $INSTANCE not found; run 'provision' first."
+  vm_build_frontend
 }
 
 # Fast iteration: re-upload code and restart the Python services without
@@ -524,7 +559,7 @@ cmd_all() {
 
 # ---------- usage / dispatch --------------------------------------------------
 usage() {
-  sed -n '2,35p' "$0" | sed 's/^# \{0,1\}//'
+  sed -n '2,37p' "$0" | sed 's/^# \{0,1\}//'
 }
 
 main() {
@@ -538,9 +573,10 @@ main() {
     authorize-db) cmd_authorize_db ;;
     init)       cmd_init ;;
     build)      cmd_build ;;
+    build-frontend) cmd_build_frontend ;;
     start)      cmd_start ;;
     push)       cmd_push ;;
-    update)     cmd_update ;;
+    update)     cmd_update "$@" ;;
     status)     cmd_status ;;
     logs)       cmd_logs "$@" ;;
     https)      cmd_https ;;
