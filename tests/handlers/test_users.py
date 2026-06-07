@@ -280,6 +280,53 @@ class TestUserResourcePost(BaseTestCase):
         )
         self.assertEqual(rv.status_code, 200)
 
+    def test_sets_uploaded_profile_image(self):
+        user = self.factory.user
+        data_uri = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
+
+        rv = self.make_request(
+            "post",
+            "/api/users/{}".format(user.id),
+            data={"profile_image_url": data_uri},
+        )
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(rv.json["profile_image_url"], data_uri)
+        self.assertEqual(user._profile_image_url, data_uri)
+
+    def test_clears_profile_image_when_empty(self):
+        user = self.factory.user
+        user._profile_image_url = "data:image/png;base64,AAAA"
+
+        rv = self.make_request(
+            "post",
+            "/api/users/{}".format(user.id),
+            data={"profile_image_url": ""},
+        )
+        self.assertEqual(rv.status_code, 200)
+        self.assertIsNone(user._profile_image_url)
+        self.assertIn("gravatar.com", rv.json["profile_image_url"])
+
+    def test_rejects_non_image_profile_image_url(self):
+        user = self.factory.user
+
+        rv = self.make_request(
+            "post",
+            "/api/users/{}".format(user.id),
+            data={"profile_image_url": "https://evil.example.com/avatar.png"},
+        )
+        self.assertEqual(rv.status_code, 400)
+
+    def test_rejects_oversized_profile_image(self):
+        user = self.factory.user
+        oversized = "data:image/png;base64," + ("A" * (256 * 1024))
+
+        rv = self.make_request(
+            "post",
+            "/api/users/{}".format(user.id),
+            data={"profile_image_url": oversized},
+        )
+        self.assertEqual(rv.status_code, 400)
+
     def test_fails_password_change_without_old_password(self):
         rv = self.make_request(
             "post",

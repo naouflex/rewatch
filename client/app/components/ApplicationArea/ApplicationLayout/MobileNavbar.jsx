@@ -40,6 +40,11 @@ export default function MobileNavbar({ getPopupContainer }) {
                   <Link href="queries">Queries</Link>
                 </Menu.Item>
               )}
+              {currentUser.hasPermission("list_query_snippets") && (
+                <Menu.Item key="query-snippets">
+                  <Link href="query_snippets">Query Snippets</Link>
+                </Menu.Item>
+              )}
               {currentUser.hasPermission("list_alerts") && (
                 <Menu.Item key="alerts">
                   <Link href="alerts">Alerts</Link>
@@ -48,6 +53,11 @@ export default function MobileNavbar({ getPopupContainer }) {
               {currentUser.hasPermission("list_alerts") && (
                 <Menu.Item key="alert-events">
                   <Link href="alert_events">Alerts History</Link>
+                </Menu.Item>
+              )}
+              {currentUser.hasPermission("list_destinations") && (
+                <Menu.Item key="alert-destinations">
+                  <Link href="destinations">Destinations</Link>
                 </Menu.Item>
               )}
               {currentUser.hasPermission("list_indexers") && (

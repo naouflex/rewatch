@@ -8,6 +8,63 @@
   margin: 8px 0 0 0;
 }
 
+.profile__image-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.profile__avatar-wrapper {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  border-radius: 100%;
+  overflow: hidden;
+  cursor: pointer;
+  outline: none;
+}
+
+.profile__image-large {
+  display: block;
+  width: 96px;
+  height: 96px;
+  border-radius: 100%;
+  object-fit: cover;
+}
+
+.profile__avatar-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  color: #fff;
+  font-size: 12px;
+  background: rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  transition: opacity 0.15s ease-in-out;
+}
+
+.profile__avatar-wrapper:hover .profile__avatar-overlay,
+.profile__avatar-wrapper:focus .profile__avatar-overlay {
+  opacity: 1;
+}
+
+.profile__image-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-top: 12px;
+}
+
 .profile__container {
   .well {
     .form-group:last-of-type {

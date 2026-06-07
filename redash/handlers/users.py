@@ -43,6 +43,30 @@ order_map = {
 
 order_results = partial(_order_results, default_order="-created_at", allowed_orders=order_map)
 
+# Profile pictures are stored inline as base64 data URIs inside the user's
+# `details` JSON column, so we cap their size to avoid bloating the database.
+# The client resizes images to a small square before uploading, so this is a
+# generous safety limit rather than the expected payload size.
+MAX_PROFILE_IMAGE_URL_LENGTH = 256 * 1024
+
+
+def validate_profile_image_url(value):
+    """Validate an uploaded profile image. Returns the stored value (or `None`
+    to clear the custom image and fall back to the default avatar)."""
+    if not value:
+        return None
+
+    if not isinstance(value, str):
+        abort(400, message="Invalid profile picture.")
+
+    if not value.startswith("data:image/") or ";base64," not in value:
+        abort(400, message="Profile picture must be an uploaded image.")
+
+    if len(value) > MAX_PROFILE_IMAGE_URL_LENGTH:
+        abort(400, message="Profile picture is too large.")
+
+    return value
+
 
 def invite_user(org, inviter, user, send_email=True):
     d = user.to_dict()
@@ -209,7 +233,13 @@ class UserResource(BaseResource):
 
         req = request.get_json(True)
 
-        params = project(req, ("email", "name", "password", "old_password", "group_ids"))
+        params = project(req, ("email", "name", "password", "old_password", "group_ids", "profile_image_url"))
+
+        if "profile_image_url" in params:
+            user._profile_image_url = validate_profile_image_url(params.pop("profile_image_url"))
+            updated_profile_image = True
+        else:
+            updated_profile_image = False
 
         if "password" in params and "old_password" not in params:
             abort(403, message="Must provide current password to update password.")
@@ -262,12 +292,16 @@ class UserResource(BaseResource):
 
             abort(400, message=message)
 
+        updated_fields = list(params.keys())
+        if updated_profile_image:
+            updated_fields.append("profile_image_url")
+
         self.record_event(
             {
                 "action": "edit",
                 "object_id": user.id,
                 "object_type": "user",
-                "updated_fields": list(params.keys()),
+                "updated_fields": updated_fields,
             }
         )
 

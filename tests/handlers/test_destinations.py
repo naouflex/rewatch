@@ -7,16 +7,27 @@ from redash.destinations.datadog import Datadog
 from redash.destinations.discord import Discord
 from redash.destinations.slack import Slack
 from redash.destinations.webex import Webex
-from redash.models import Alert, NotificationDestination
+from redash.models import Alert, NotificationDestination, db
 from tests import BaseTestCase
 
 
 class TestDestinationListResource(BaseTestCase):
-    def test_get_returns_all_destinations(self):
+    def test_get_returns_only_users_own_destinations(self):
+        d1 = self.factory.create_destination(user=self.factory.user)
+        d2 = self.factory.create_destination(user=self.factory.user)
+        other = self.factory.create_destination()
+
+        rv = self.make_request("get", "/api/destinations", user=self.factory.user)
+        ids = [d["id"] for d in rv.json]
+        self.assertIn(d1.id, ids)
+        self.assertIn(d2.id, ids)
+        self.assertNotIn(other.id, ids)
+
+    def test_admin_sees_all_destinations_in_org(self):
         self.factory.create_destination()
         self.factory.create_destination()
 
-        rv = self.make_request("get", "/api/destinations", user=self.factory.user)
+        rv = self.make_request("get", "/api/destinations", user=self.factory.create_admin())
         self.assertEqual(len(rv.json), 2)
 
     def test_get_returns_only_destinations_of_current_org(self):
@@ -24,29 +35,45 @@ class TestDestinationListResource(BaseTestCase):
         self.factory.create_destination()
         self.factory.create_destination(org=self.factory.create_org())
 
-        rv = self.make_request("get", "/api/destinations", user=self.factory.user)
+        rv = self.make_request("get", "/api/destinations", user=self.factory.create_admin())
         self.assertEqual(len(rv.json), 2)
 
-    def test_post_creates_new_destination(self):
-        data = {
-            "options": {"addresses": "test@example.com"},
-            "name": "Test",
-            "type": "email",
-        }
-        rv = self.make_request("post", "/api/destinations", user=self.factory.create_admin(), data=data)
-        self.assertEqual(rv.status_code, 200)
-        pass
-
-    def test_post_requires_admin(self):
+    def test_post_creates_destination_owned_by_current_user(self):
         data = {
             "options": {"addresses": "test@example.com"},
             "name": "Test",
             "type": "email",
         }
         rv = self.make_request("post", "/api/destinations", user=self.factory.user, data=data)
+        self.assertEqual(rv.status_code, 200)
+        destination = NotificationDestination.query.get(rv.json["id"])
+        self.assertEqual(destination.user_id, self.factory.user.id)
+
+    def test_post_forbidden_without_create_permission(self):
+        group = self.factory.create_group(permissions=["list_data_sources"])
+        db.session.add(group)
+        db.session.commit()
+        user = self.factory.create_user(group_ids=[group.id])
+        data = {
+            "options": {"addresses": "test@example.com"},
+            "name": "Test",
+            "type": "email",
+        }
+        rv = self.make_request("post", "/api/destinations", user=user, data=data)
         self.assertEqual(rv.status_code, 403)
 
-    def test_returns_400_when_name_already_exists(self):
+    def test_returns_400_when_name_already_exists_for_same_user(self):
+        d1 = self.factory.create_destination(user=self.factory.user)
+        data = {
+            "options": {"addresses": "test@example.com"},
+            "name": d1.name,
+            "type": "email",
+        }
+
+        rv = self.make_request("post", "/api/destinations", user=self.factory.user, data=data)
+        self.assertEqual(rv.status_code, 400)
+
+    def test_allows_same_name_for_different_users(self):
         d1 = self.factory.create_destination()
         data = {
             "options": {"addresses": "test@example.com"},
@@ -54,28 +81,48 @@ class TestDestinationListResource(BaseTestCase):
             "type": "email",
         }
 
-        rv = self.make_request("post", "/api/destinations", user=self.factory.create_admin(), data=data)
-        self.assertEqual(rv.status_code, 400)
+        rv = self.make_request("post", "/api/destinations", user=self.factory.user, data=data)
+        self.assertEqual(rv.status_code, 200)
 
 
 class TestDestinationResource(BaseTestCase):
-    def test_get(self):
+    def test_get_as_owner(self):
+        d = self.factory.create_destination(user=self.factory.user)
+        rv = self.make_request("get", "/api/destinations/{}".format(d.id), user=self.factory.user)
+        self.assertEqual(rv.status_code, 200)
+
+    def test_get_as_admin(self):
         d = self.factory.create_destination()
         rv = self.make_request("get", "/api/destinations/{}".format(d.id), user=self.factory.create_admin())
         self.assertEqual(rv.status_code, 200)
 
-    def test_delete(self):
+    def test_get_forbidden_for_non_owner(self):
         d = self.factory.create_destination()
+        rv = self.make_request("get", "/api/destinations/{}".format(d.id), user=self.factory.user)
+        self.assertEqual(rv.status_code, 403)
+
+    def test_delete_as_owner(self):
+        d = self.factory.create_destination(user=self.factory.user)
         rv = self.make_request(
             "delete",
             "/api/destinations/{}".format(d.id),
-            user=self.factory.create_admin(),
+            user=self.factory.user,
         )
         self.assertEqual(rv.status_code, 204)
         self.assertIsNone(NotificationDestination.query.get(d.id))
 
-    def test_post(self):
+    def test_delete_forbidden_for_non_owner(self):
         d = self.factory.create_destination()
+        rv = self.make_request(
+            "delete",
+            "/api/destinations/{}".format(d.id),
+            user=self.factory.user,
+        )
+        self.assertEqual(rv.status_code, 403)
+        self.assertIsNotNone(NotificationDestination.query.get(d.id))
+
+    def test_post_as_owner(self):
+        d = self.factory.create_destination(user=self.factory.user)
         data = {
             "name": "updated",
             "type": d.type,
@@ -86,7 +133,7 @@ class TestDestinationResource(BaseTestCase):
             rv = self.make_request(
                 "post",
                 "/api/destinations/{}".format(d.id),
-                user=self.factory.create_admin(),
+                user=self.factory.user,
                 data=data,
             )
 
@@ -95,6 +142,102 @@ class TestDestinationResource(BaseTestCase):
         d = NotificationDestination.query.get(d.id)
         self.assertEqual(d.name, data["name"])
         self.assertEqual(d.options["url"], data["options"]["url"])
+
+    def test_post_forbidden_for_non_owner(self):
+        d = self.factory.create_destination()
+        data = {
+            "name": "updated",
+            "type": d.type,
+            "options": {"url": "https://www.slack.com/updated"},
+        }
+        rv = self.make_request(
+            "post",
+            "/api/destinations/{}".format(d.id),
+            user=self.factory.user,
+            data=data,
+        )
+        self.assertEqual(rv.status_code, 403)
+
+
+class TestMyDestinationsResource(BaseTestCase):
+    def test_returns_only_current_users_destinations(self):
+        mine = self.factory.create_destination(user=self.factory.user)
+        self.factory.create_destination()
+
+        rv = self.make_request("get", "/api/destinations/my", user=self.factory.user)
+        ids = [d["id"] for d in rv.json]
+        self.assertEqual(ids, [mine.id])
+
+
+class TestDestinationFavoriteResource(BaseTestCase):
+    def test_list_includes_is_favorite(self):
+        self.factory.create_destination(user=self.factory.user)
+        rv = self.make_request("get", "/api/destinations", user=self.factory.user)
+        self.assertIn("is_favorite", rv.json[0])
+        self.assertFalse(rv.json[0]["is_favorite"])
+
+    def test_favorite_then_appears_in_favorites(self):
+        d = self.factory.create_destination(user=self.factory.user)
+        self.make_request("post", "/api/destinations/{}/favorite".format(d.id), user=self.factory.user)
+
+        rv = self.make_request("get", "/api/destinations/favorites", user=self.factory.user)
+        ids = [item["id"] for item in rv.json]
+        self.assertEqual(ids, [d.id])
+        self.assertTrue(rv.json[0]["is_favorite"])
+
+    def test_unfavorite_removes_from_favorites(self):
+        d = self.factory.create_destination(user=self.factory.user)
+        self.make_request("post", "/api/destinations/{}/favorite".format(d.id), user=self.factory.user)
+        self.make_request("delete", "/api/destinations/{}/favorite".format(d.id), user=self.factory.user)
+
+        rv = self.make_request("get", "/api/destinations/favorites", user=self.factory.user)
+        self.assertEqual(rv.json, [])
+
+    def test_favorite_forbidden_for_non_owner(self):
+        d = self.factory.create_destination()
+        rv = self.make_request("post", "/api/destinations/{}/favorite".format(d.id), user=self.factory.user)
+        self.assertEqual(rv.status_code, 403)
+
+
+class TestDestinationArchiveResource(BaseTestCase):
+    def test_archive_hides_from_default_list(self):
+        d = self.factory.create_destination(user=self.factory.user)
+        self.make_request("post", "/api/destinations/{}/archive".format(d.id), user=self.factory.user)
+
+        rv = self.make_request("get", "/api/destinations", user=self.factory.user)
+        self.assertEqual([item["id"] for item in rv.json], [])
+
+    def test_archived_appears_in_archive_list(self):
+        d = self.factory.create_destination(user=self.factory.user)
+        self.make_request("post", "/api/destinations/{}/archive".format(d.id), user=self.factory.user)
+
+        rv = self.make_request("get", "/api/destinations/archive", user=self.factory.user)
+        ids = [item["id"] for item in rv.json]
+        self.assertEqual(ids, [d.id])
+        self.assertTrue(rv.json[0]["is_archived"])
+
+    def test_archive_forbidden_for_non_owner(self):
+        d = self.factory.create_destination()
+        rv = self.make_request("post", "/api/destinations/{}/archive".format(d.id), user=self.factory.user)
+        self.assertEqual(rv.status_code, 403)
+
+
+class TestDestinationTagsResource(BaseTestCase):
+    def test_returns_tags_with_usage_count(self):
+        self.factory.create_destination(user=self.factory.user, tags=["prod", "slack"])
+        self.factory.create_destination(user=self.factory.user, tags=["prod"])
+
+        rv = self.make_request("get", "/api/destinations/tags", user=self.factory.user)
+        tags = {t["name"]: t["count"] for t in rv.json["tags"]}
+        self.assertEqual(tags, {"prod": 2, "slack": 1})
+
+    def test_update_tags_via_post(self):
+        d = self.factory.create_destination(user=self.factory.user)
+        self.make_request(
+            "post", "/api/destinations/{}".format(d.id), data={"tags": ["a", "b"]}, user=self.factory.user
+        )
+        db.session.refresh(d)
+        self.assertEqual(d.tags, ["a", "b"])
 
 
 def test_discord_notify_calls_requests_post():

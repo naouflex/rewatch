@@ -1501,6 +1501,7 @@ class ApiKey(TimestampMixin, GFKBase, db.Model):
         return k
 
 
+@gfk_type
 @generic_repr("id", "name", "type", "user_id", "org_id", "created_at")
 class NotificationDestination(BelongsToOrgMixin, db.Model):
     id = primary_key("NotificationDestination")
@@ -1516,10 +1517,16 @@ class NotificationDestination(BelongsToOrgMixin, db.Model):
             EncryptedConfiguration(db.Text, settings.DATASOURCE_SECRET_KEY, FernetEngine)
         ),
     )
+    tags = Column("tags", MutableList.as_mutable(ARRAY(db.Unicode)), nullable=True)
+    is_archived = Column(db.Boolean, default=False, index=True, nullable=False)
     created_at = Column(db.DateTime(True), default=db.func.now())
 
     __tablename__ = "notification_destinations"
-    __table_args__ = (db.Index("notification_destinations_org_id_name", "org_id", "name", unique=True),)
+    __table_args__ = (
+        db.Index(
+            "notification_destinations_org_id_user_id_name", "org_id", "user_id", "name", unique=True
+        ),
+    )
 
     def __str__(self):
         return str(self.name)
@@ -1530,6 +1537,11 @@ class NotificationDestination(BelongsToOrgMixin, db.Model):
             "name": self.name,
             "type": self.type,
             "icon": self.destination.icon(),
+            "user_id": self.user_id,
+            "user": self.user.to_dict() if self.user else None,
+            "tags": self.tags or [],
+            "is_archived": bool(self.is_archived),
+            "created_at": self.created_at,
         }
 
         if all:
@@ -1544,10 +1556,58 @@ class NotificationDestination(BelongsToOrgMixin, db.Model):
         return get_destination(self.type, self.options)
 
     @classmethod
-    def all(cls, org):
-        notification_destinations = cls.query.filter(cls.org == org).order_by(cls.id.asc())
+    def all(cls, org, include_archived=False):
+        q = cls.query.filter(cls.org == org).order_by(cls.id.asc())
+        if not include_archived:
+            q = q.filter(cls.is_archived.is_(False))
+        return q
 
-        return notification_destinations
+    @classmethod
+    def by_user(cls, user, include_archived=False):
+        q = cls.query.filter(cls.org_id == user.org_id, cls.user_id == user.id).order_by(cls.id.asc())
+        if not include_archived:
+            q = q.filter(cls.is_archived.is_(False))
+        return q
+
+    @classmethod
+    def favorites(cls, user):
+        return (
+            cls.query.filter(cls.org_id == user.org_id, cls.is_archived.is_(False))
+            .join(
+                (
+                    Favorite,
+                    and_(
+                        Favorite.object_type == "NotificationDestination",
+                        Favorite.object_id == cls.id,
+                    ),
+                )
+            )
+            .filter(Favorite.user_id == user.id)
+            .order_by(cls.id.asc())
+        )
+
+    @classmethod
+    def all_tags(cls, org, user):
+        if user.has_permission("admin"):
+            base = cls.query.filter(cls.org_id == org.id)
+        else:
+            base = cls.query.filter(cls.org_id == org.id, cls.user_id == user.id)
+        tag_column = func.unnest(cls.tags).label("tag")
+        usage_count = func.count(1).label("usage_count")
+        return (
+            db.session.query(tag_column, usage_count)
+            .group_by(tag_column)
+            .filter(cls.id.in_(base.options(load_only("id"))))
+            .order_by(usage_count.desc())
+        )
+
+    def archive(self):
+        db.session.add(self)
+        self.is_archived = True
+
+    def unarchive(self):
+        db.session.add(self)
+        self.is_archived = False
 
     def notify(self, alert, query, user, new_state, app, host, metadata):
         schema = get_configuration_schema_for_destination_type(self.type)
@@ -1813,22 +1873,79 @@ class Indexer(TimestampMixin, BelongsToOrgMixin, db.Model):
         self.is_archived = False
 
 
+@gfk_type
 @generic_repr("id", "trigger", "user_id", "org_id")
 class QuerySnippet(TimestampMixin, db.Model, BelongsToOrgMixin):
     id = primary_key("QuerySnippet")
     org_id = Column(key_type("Organization"), db.ForeignKey("organizations.id"))
     org = db.relationship(Organization, backref="query_snippets")
-    trigger = Column(db.String(255), unique=True)
+    trigger = Column(db.String(255))
     description = Column(db.Text)
     user_id = Column(key_type("User"), db.ForeignKey("users.id"))
     user = db.relationship(User, backref="query_snippets")
     snippet = Column(db.Text)
+    tags = Column("tags", MutableList.as_mutable(ARRAY(db.Unicode)), nullable=True)
+    is_archived = Column(db.Boolean, default=False, index=True, nullable=False)
 
     __tablename__ = "query_snippets"
+    __table_args__ = (
+        db.Index(
+            "query_snippets_org_id_user_id_trigger", "org_id", "user_id", "trigger", unique=True
+        ),
+    )
 
     @classmethod
-    def all(cls, org):
-        return cls.query.filter(cls.org == org)
+    def all(cls, org, include_archived=False):
+        q = cls.query.filter(cls.org == org)
+        if not include_archived:
+            q = q.filter(cls.is_archived.is_(False))
+        return q
+
+    @classmethod
+    def by_user(cls, user, include_archived=False):
+        q = cls.query.filter(cls.org_id == user.org_id, cls.user_id == user.id)
+        if not include_archived:
+            q = q.filter(cls.is_archived.is_(False))
+        return q
+
+    @classmethod
+    def favorites(cls, user):
+        return (
+            cls.query.filter(cls.org_id == user.org_id, cls.is_archived.is_(False))
+            .join(
+                (
+                    Favorite,
+                    and_(
+                        Favorite.object_type == "QuerySnippet",
+                        Favorite.object_id == cls.id,
+                    ),
+                )
+            )
+            .filter(Favorite.user_id == user.id)
+        )
+
+    @classmethod
+    def all_tags(cls, org, user):
+        if user.has_permission("admin"):
+            base = cls.query.filter(cls.org_id == org.id)
+        else:
+            base = cls.query.filter(cls.org_id == org.id, cls.user_id == user.id)
+        tag_column = func.unnest(cls.tags).label("tag")
+        usage_count = func.count(1).label("usage_count")
+        return (
+            db.session.query(tag_column, usage_count)
+            .group_by(tag_column)
+            .filter(cls.id.in_(base.options(load_only("id"))))
+            .order_by(usage_count.desc())
+        )
+
+    def archive(self):
+        db.session.add(self)
+        self.is_archived = True
+
+    def unarchive(self):
+        db.session.add(self)
+        self.is_archived = False
 
     def to_dict(self):
         d = {
@@ -1837,6 +1954,9 @@ class QuerySnippet(TimestampMixin, db.Model, BelongsToOrgMixin):
             "description": self.description,
             "snippet": self.snippet,
             "user": self.user.to_dict(),
+            "user_id": self.user_id,
+            "tags": self.tags or [],
+            "is_archived": bool(self.is_archived),
             "updated_at": self.updated_at,
             "created_at": self.created_at,
         }

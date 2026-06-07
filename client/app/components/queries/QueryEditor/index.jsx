@@ -122,7 +122,9 @@ const QueryEditor = React.forwardRef(function(
         snippetText: "",
       };
       m.snippets = snippetManager.parseSnippetFile(m.snippetText);
-      snippets.forEach(snippet => {
+      // Surface favorited snippets first (and marked with a star in getSnippet).
+      const sortedSnippets = [...snippets].sort((a, b) => (b.is_favorite ? 1 : 0) - (a.is_favorite ? 1 : 0));
+      sortedSnippets.forEach(snippet => {
         m.snippets.push(snippet.getSnippet());
       });
       snippetManager.register(m.snippets || [], m.scope);

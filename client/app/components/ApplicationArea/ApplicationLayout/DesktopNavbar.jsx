@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useReducer, useEffect } from "react";
 import { first, includes } from "lodash";
 import Menu from "antd/lib/menu";
 import Link from "@/components/Link";
@@ -6,7 +6,7 @@ import PlainButton from "@/components/PlainButton";
 import HelpTrigger from "@/components/HelpTrigger";
 import CreateDashboardDialog from "@/components/dashboards/CreateDashboardDialog";
 import { useCurrentRoute } from "@/components/ApplicationArea/Router";
-import { Auth, currentUser } from "@/services/auth";
+import { Auth, currentUser, subscribeToCurrentUser } from "@/services/auth";
 import settingsMenu from "@/services/settingsMenu";
 import logoUrl from "@/assets/images/icon_small.png";
 
@@ -55,6 +55,11 @@ function useNavbarActiveState() {
           "Queries.View",
           "Queries.New",
           "Queries.Edit",
+          "QuerySnippets.List",
+          "QuerySnippets.My",
+          "QuerySnippets.Favorites",
+          "QuerySnippets.Archived",
+          "QuerySnippets.NewOrEdit",
         ],
         currentRoute.id
       ),
@@ -66,6 +71,12 @@ function useNavbarActiveState() {
           "Alerts.View",
           "Alerts.Edit",
           "AlertEvents.List",
+          "AlertDestinations.List",
+          "AlertDestinations.My",
+          "AlertDestinations.Favorites",
+          "AlertDestinations.Archived",
+          "AlertDestinations.New",
+          "AlertDestinations.Edit",
         ],
         currentRoute.id
       ),
@@ -118,11 +129,15 @@ function useNavbarActiveState() {
 export default function DesktopNavbar() {
   const firstSettingsTab = first(settingsMenu.getAvailableItems());
 
+  const [, forceUpdate] = useReducer(x => x + 1, 0);
+  useEffect(() => subscribeToCurrentUser(forceUpdate), []);
+
   const activeState = useNavbarActiveState();
 
   const canCreateQuery = currentUser.hasPermission("create_query");
   const canCreateDashboard = currentUser.hasPermission("create_dashboard");
   const canCreateAlert = currentUser.hasPermission("list_alerts");
+  const canCreateDestination = currentUser.hasPermission("create_destination");
   const canCreateIndexer = currentUser.hasPermission("create_indexer");
   const canCreateModel = currentUser.hasPermission("create_model");
   const canListModels = currentUser.hasPermission("list_models");
@@ -147,12 +162,25 @@ export default function DesktopNavbar() {
           </Menu.Item>
         )}
         {currentUser.hasPermission("view_query") && (
-          <Menu.Item key="queries" className={activeState.queries ? "navbar-active-item" : null}>
-            <Link href="queries">
-              <CodeOutlinedIcon aria-label="Queries navigation button" />
-              <span className="desktop-navbar-label">Queries</span>
-            </Link>
-          </Menu.Item>
+          <Menu.SubMenu
+            key="queries"
+            popupClassName="desktop-navbar-submenu"
+            className={activeState.queries ? "navbar-active-item" : null}
+            title={
+              <Link href="queries" className="navbar-submenu-title">
+                <CodeOutlinedIcon aria-label="Queries navigation button" />
+                <span className="desktop-navbar-label">Queries</span>
+              </Link>
+            }>
+            <Menu.Item key="queries-list">
+              <Link href="queries">Queries</Link>
+            </Menu.Item>
+            {currentUser.hasPermission("list_query_snippets") && (
+              <Menu.Item key="query-snippets">
+                <Link href="query_snippets">Query Snippets</Link>
+              </Menu.Item>
+            )}
+          </Menu.SubMenu>
         )}
         {currentUser.hasPermission("list_alerts") && (
           <Menu.SubMenu
@@ -171,6 +199,11 @@ export default function DesktopNavbar() {
             <Menu.Item key="alerts-history">
               <Link href="alert_events">Alerts History</Link>
             </Menu.Item>
+            {currentUser.hasPermission("list_destinations") && (
+              <Menu.Item key="alert-destinations">
+                <Link href="destinations">Destinations</Link>
+              </Menu.Item>
+            )}
           </Menu.SubMenu>
         )}
         {currentUser.hasPermission("list_indexers") && (
@@ -206,7 +239,12 @@ export default function DesktopNavbar() {
       </NavbarSection>
 
       <NavbarSection>
-        {(canCreateQuery || canCreateDashboard || canCreateAlert || canCreateIndexer || canCreateModel) && (
+        {(canCreateQuery ||
+          canCreateDashboard ||
+          canCreateAlert ||
+          canCreateDestination ||
+          canCreateIndexer ||
+          canCreateModel) && (
           <Menu.SubMenu
             key="create"
             popupClassName="desktop-navbar-submenu"
@@ -236,6 +274,13 @@ export default function DesktopNavbar() {
               <Menu.Item key="new-alert">
                 <Link data-test="CreateAlertMenuItem" href="alerts/new">
                   New Alert
+                </Link>
+              </Menu.Item>
+            )}
+            {canCreateDestination && (
+              <Menu.Item key="new-destination">
+                <Link data-test="CreateDestinationMenuItem" href="destinations/new">
+                  New Alert Destination
                 </Link>
               </Menu.Item>
             )}

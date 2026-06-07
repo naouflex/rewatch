@@ -56,9 +56,15 @@ from redash.handlers.indexers import (
     MyIndexersResource,
 )
 from redash.handlers.destinations import (
+    DestinationArchiveResource,
+    DestinationArchivedListResource,
+    DestinationFavoriteListResource,
+    DestinationFavoriteResource,
     DestinationListResource,
     DestinationResource,
+    DestinationTagsResource,
     DestinationTypeListResource,
+    MyDestinationsResource,
 )
 from redash.handlers.events import EventsResource
 from redash.handlers.favorites import (
@@ -144,8 +150,14 @@ from redash.handlers.query_results import (
     QueryResultResource,
 )
 from redash.handlers.query_snippets import (
+    MyQuerySnippetsResource,
+    QuerySnippetArchiveResource,
+    QuerySnippetArchivedListResource,
+    QuerySnippetFavoriteListResource,
+    QuerySnippetFavoriteResource,
     QuerySnippetListResource,
     QuerySnippetResource,
+    QuerySnippetTagsResource,
 )
 from redash.handlers.settings import OrganizationSettings
 from redash.handlers.users import (
@@ -514,9 +526,45 @@ api.add_org_resource(WidgetListResource, "/api/widgets", endpoint="widgets")
 api.add_org_resource(WidgetResource, "/api/widgets/<int:widget_id>", endpoint="widget")
 
 api.add_org_resource(DestinationTypeListResource, "/api/destinations/types", endpoint="destination_types")
+api.add_org_resource(MyDestinationsResource, "/api/destinations/my", endpoint="my_destinations")
+api.add_org_resource(
+    DestinationFavoriteListResource, "/api/destinations/favorites", endpoint="destination_favorites"
+)
+api.add_org_resource(
+    DestinationArchivedListResource, "/api/destinations/archive", endpoint="destinations_archived"
+)
+api.add_org_resource(DestinationTagsResource, "/api/destinations/tags", endpoint="destination_tags")
+api.add_org_resource(
+    DestinationArchiveResource,
+    "/api/destinations/<destination_id>/archive",
+    endpoint="destination_archive",
+)
+api.add_org_resource(
+    DestinationFavoriteResource,
+    "/api/destinations/<destination_id>/favorite",
+    endpoint="destination_favorite",
+)
 api.add_org_resource(DestinationResource, "/api/destinations/<destination_id>", endpoint="destination")
 api.add_org_resource(DestinationListResource, "/api/destinations", endpoint="destinations")
 
+api.add_org_resource(MyQuerySnippetsResource, "/api/query_snippets/my", endpoint="my_query_snippets")
+api.add_org_resource(
+    QuerySnippetFavoriteListResource, "/api/query_snippets/favorites", endpoint="query_snippet_favorites"
+)
+api.add_org_resource(
+    QuerySnippetArchivedListResource, "/api/query_snippets/archive", endpoint="query_snippets_archived"
+)
+api.add_org_resource(QuerySnippetTagsResource, "/api/query_snippets/tags", endpoint="query_snippet_tags")
+api.add_org_resource(
+    QuerySnippetArchiveResource,
+    "/api/query_snippets/<snippet_id>/archive",
+    endpoint="query_snippet_archive",
+)
+api.add_org_resource(
+    QuerySnippetFavoriteResource,
+    "/api/query_snippets/<snippet_id>/favorite",
+    endpoint="query_snippet_favorite",
+)
 api.add_org_resource(QuerySnippetResource, "/api/query_snippets/<snippet_id>", endpoint="query_snippet")
 api.add_org_resource(QuerySnippetListResource, "/api/query_snippets", endpoint="query_snippets")
 

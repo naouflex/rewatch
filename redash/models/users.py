@@ -266,6 +266,14 @@ class Group(db.Model, BelongsToOrgMixin):
         "edit_model",
         "view_model",
         "use_model",
+        "list_destinations",
+        "create_destination",
+        "edit_destination",
+        "view_destination",
+        "list_query_snippets",
+        "create_query_snippet",
+        "edit_query_snippet",
+        "view_query_snippet",
     ]
     ADMIN_PERMISSIONS = ["admin", "super_admin"]
 

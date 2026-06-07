@@ -37,6 +37,21 @@ export const currentUser = {
 export const clientConfig = {};
 export const messages = [];
 
+const currentUserListeners = new Set();
+
+// Allows live updates to the in-memory `currentUser` (e.g. after the user
+// changes their own profile picture) so components like the navbar can refresh
+// without a full page reload.
+export function updateCurrentUser(updates) {
+  extend(currentUser, updates);
+  currentUserListeners.forEach(listener => listener(currentUser));
+}
+
+export function subscribeToCurrentUser(listener) {
+  currentUserListeners.add(listener);
+  return () => currentUserListeners.delete(listener);
+}
+
 const logger = debug("redash:auth");
 const session = { loaded: false };
 

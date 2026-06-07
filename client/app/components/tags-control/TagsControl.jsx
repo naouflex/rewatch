@@ -120,6 +120,14 @@ export const IndexerTagsControl = modelTagsControl({
   archivedTooltip: "This indexer is archived and won't run for new query results nor appear in search results.",
 });
 
+export const DestinationTagsControl = modelTagsControl({
+  archivedTooltip: "This alert destination is archived and won't appear in the default list nor search results.",
+});
+
+export const QuerySnippetTagsControl = modelTagsControl({
+  archivedTooltip: "This query snippet is archived and won't appear in the default list nor autocomplete.",
+});
+
 export const MLModelTagsControl = modelTagsControl({
   archivedTooltip: "This ML model is archived and won't run training/predictions nor appear in search results.",
 });

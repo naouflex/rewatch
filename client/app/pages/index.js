@@ -26,6 +26,7 @@ import "./data-sources/DataSourcesList";
 import "./data-sources/EditDataSource";
 
 import "./destinations/DestinationsList";
+import "./destinations/NewDestination";
 import "./destinations/EditDestination";
 
 import "./groups/GroupsList";

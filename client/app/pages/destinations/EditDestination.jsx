@@ -5,12 +5,12 @@ import PropTypes from "prop-types";
 import Modal from "antd/lib/modal";
 import routeWithUserSession from "@/components/ApplicationArea/routeWithUserSession";
 import navigateTo from "@/components/ApplicationArea/navigateTo";
+import Link from "@/components/Link";
 import LoadingState from "@/components/items-list/components/LoadingState";
 import DynamicForm from "@/components/dynamic-form/DynamicForm";
 import helper from "@/components/dynamic-form/dynamicFormHelper";
-import wrapSettingsTab from "@/components/SettingsWrapper";
 
-import Destination, { IMG_ROOT } from "@/services/destination";
+import DestinationService, { IMG_ROOT } from "@/services/destination";
 import notification from "@/services/notification";
 import routes from "@/services/routes";
 
@@ -31,11 +31,11 @@ class EditDestination extends React.Component {
   };
 
   componentDidMount() {
-    Destination.get({ id: this.props.destinationId })
+    DestinationService.get({ id: this.props.destinationId })
       .then(destination => {
         const { type } = destination;
         this.setState({ destination });
-        Destination.types().then(types => this.setState({ type: find(types, { type }), loading: false }));
+        DestinationService.types().then(types => this.setState({ type: find(types, { type }), loading: false }));
       })
       .catch(error => this.props.onError(error));
   }
@@ -43,7 +43,7 @@ class EditDestination extends React.Component {
   saveDestination = (values, successCallback, errorCallback) => {
     const { destination } = this.state;
     helper.updateTargetWithValues(destination, values);
-    Destination.save(destination)
+    DestinationService.save(destination)
       .then(() => successCallback("Saved."))
       .catch(error => {
         const message = get(error, "response.data.message", "Failed saving.");
@@ -55,7 +55,7 @@ class EditDestination extends React.Component {
     const { destination } = this.state;
 
     const doDelete = () => {
-      Destination.delete(destination)
+      DestinationService.delete(destination)
         .then(() => {
           notification.success("Alert destination deleted successfully.");
           navigateTo("destinations");
@@ -103,17 +103,27 @@ class EditDestination extends React.Component {
   }
 
   render() {
-    return this.state.loading ? <LoadingState className="" /> : this.renderForm();
+    return (
+      <div className="page-destination-edit">
+        <div className="container">
+          <div className="m-b-15">
+            <Link href="destinations">
+              <i className="fa fa-angle-left m-r-5" aria-hidden="true" />
+              Back to Alert Destinations
+            </Link>
+          </div>
+          {this.state.loading ? <LoadingState className="" /> : this.renderForm()}
+        </div>
+      </div>
+    );
   }
 }
-
-const EditDestinationPage = wrapSettingsTab("AlertDestinations.Edit", null, EditDestination);
 
 routes.register(
   "AlertDestinations.Edit",
   routeWithUserSession({
     path: "/destinations/:destinationId",
     title: "Alert Destinations",
-    render: pageProps => <EditDestinationPage {...pageProps} />,
+    render: pageProps => <EditDestination {...pageProps} />,
   })
 );
