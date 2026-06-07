@@ -13,6 +13,7 @@ type Palette = {
   border: string;
   divider: string;
   brand: string;
+  fontFamily: string;
 };
 
 const LIGHT_FALLBACK: Palette = {
@@ -24,6 +25,7 @@ const LIGHT_FALLBACK: Palette = {
   border: "#ece8e1",
   divider: "#f1eee8",
   brand: "#ff7230",
+  fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
 };
 
 function readVar(name: string, fallback: string): string {
@@ -50,5 +52,6 @@ export default function getThemePalette(): Palette {
     border: readVar("--rd-color-border", LIGHT_FALLBACK.border),
     divider: readVar("--rd-color-divider", LIGHT_FALLBACK.divider),
     brand: readVar("--rd-color-brand", LIGHT_FALLBACK.brand),
+    fontFamily: readVar("--rd-font", LIGHT_FALLBACK.fontFamily),
   };
 }

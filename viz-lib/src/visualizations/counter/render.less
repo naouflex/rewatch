@@ -4,12 +4,15 @@
   padding: 15px 10px;
   overflow: hidden;
   position: relative;
+  font-family: var(--rd-font, inherit);
 
   .counter-visualization-content {
     margin: 0;
     padding: 0;
     font-size: 80px;
-    line-height: normal;
+    line-height: 1.1;
+    font-weight: 600;
+    letter-spacing: -0.02em;
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -25,10 +28,14 @@
     .counter-visualization-label {
       font-size: 0.5em;
       display: block;
+      font-weight: 500;
+      letter-spacing: 0;
+      color: var(--rd-color-text-muted, #7a7068);
     }
 
     .counter-visualization-target {
       color: var(--rd-color-text-muted, #999);
+      font-weight: 500;
     }
 
     .counter-visualization-label {
@@ -38,10 +45,10 @@
   }
 
   &.trend-positive .counter-visualization-value {
-    color: #5cb85c;
+    color: var(--rd-color-success, #16a34a);
   }
 
   &.trend-negative .counter-visualization-value {
-    color: #d9534f;
+    color: var(--rd-color-danger, #dc2626);
   }
 }

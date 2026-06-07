@@ -2,13 +2,13 @@
 // `var(--graph-*)` to a sensible static fallback here. If the host app exposes
 // dark-mode CSS variables of the same names, they will override these defaults.
 :root {
-  --graph-text-color: #1f1f1f;
-  --graph-text-muted-color: #6c757d;
-  --graph-background-color: #ffffff;
-  --graph-background-color-secondary: #f5f5f5;
-  --graph-border-color: #d9d9d9;
-  --graph-brand-color: #1890ff;
-  --graph-navbar-background-color: #fafafa;
+  --graph-text-color: var(--rd-color-text, #1f1a16);
+  --graph-text-muted-color: var(--rd-color-text-muted, #7a7068);
+  --graph-background-color: var(--rd-color-surface, #ffffff);
+  --graph-background-color-secondary: var(--rd-color-surface-alt, #fbfaf7);
+  --graph-border-color: var(--rd-color-border, #ece8e1);
+  --graph-brand-color: var(--rd-color-brand, #ff7230);
+  --graph-navbar-background-color: var(--rd-color-surface-alt, #fafafa);
 }
 
 .graph-and-parameters-container {
@@ -120,7 +120,7 @@
 .link {
   &.search-highlight {
     stroke-width: 4px !important;
-    stroke: orange !important;
+    stroke: var(--graph-brand-color, #ff7230) !important;
   }
 }
 

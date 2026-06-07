@@ -1,6 +1,7 @@
 import { isObject, isUndefined, filter, map } from "lodash";
 import { getPieDimensions } from "./preparePieData";
 import getThemePalette from "./getThemePalette";
+import { ColorPaletteArray } from "../../ColorPalette";
 
 function getAxisTitle(axis: any) {
   return isObject(axis.title) ? axis.title.text : null;
@@ -18,15 +19,21 @@ function getAxisScaleType(axis: any) {
 }
 
 function applyThemeToAxis(axis: any, palette: ReturnType<typeof getThemePalette>) {
+  // Minimal, airy axes: keep faint horizontal/vertical guides, drop the heavy
+  // axis spines and zero lines for a cleaner, more modern look.
   axis.gridcolor = palette.divider;
-  axis.zerolinecolor = palette.border;
+  axis.gridwidth = 1;
+  axis.zeroline = false;
+  axis.showline = false;
   axis.linecolor = palette.border;
-  axis.tickcolor = palette.border;
-  axis.tickfont = { color: palette.textMuted };
+  axis.tickcolor = palette.divider;
+  axis.ticklen = 4;
+  axis.tickfont = { color: palette.textMuted, size: 11, family: palette.fontFamily };
+  const titleFont = { color: palette.text, size: 12, family: palette.fontFamily };
   if (axis.title && typeof axis.title === "string") {
-    axis.title = { text: axis.title, font: { color: palette.text } };
+    axis.title = { text: axis.title, font: titleFont };
   } else if (axis.title) {
-    axis.title.font = { ...(axis.title.font || {}), color: palette.text };
+    axis.title.font = { ...(axis.title.font || {}), ...titleFont };
   }
   return axis;
 }
@@ -125,7 +132,7 @@ function prepareBoxLayout(layout: any, options: any, data: any) {
 export default function prepareLayout(element: any, options: any, data: any) {
   const palette = getThemePalette();
   const layout: any = {
-    margin: { l: 10, r: 10, b: 5, t: 20, pad: 4 },
+    margin: { l: 16, r: 16, b: 8, t: 24, pad: 6 },
     // plot size should be at least 5x5px
     width: Math.max(5, Math.floor(element.offsetWidth)),
     height: Math.max(5, Math.floor(element.offsetHeight)),
@@ -133,16 +140,18 @@ export default function prepareLayout(element: any, options: any, data: any) {
     showlegend: options.legend.enabled,
     paper_bgcolor: "rgba(0,0,0,0)",
     plot_bgcolor: "rgba(0,0,0,0)",
-    font: { color: palette.text },
+    font: { color: palette.text, family: palette.fontFamily, size: 12 },
+    colorway: ColorPaletteArray,
     legend: {
       traceorder: options.legend.traceorder,
-      font: { color: palette.text },
+      font: { color: palette.text, family: palette.fontFamily, size: 12 },
       bgcolor: "rgba(0,0,0,0)",
     },
     hoverlabel: {
       namelength: -1,
+      bgcolor: palette.surface,
       bordercolor: palette.border,
-      font: { color: palette.text },
+      font: { color: palette.text, family: palette.fontFamily, size: 12 },
     },
   };
 
