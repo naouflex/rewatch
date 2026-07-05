@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import cx from "classnames";
 import moment from "moment";
-import HtmlContent from "@redash/viz/lib/components/HtmlContent";
+import HtmlContent from "@rewatch/viz/lib/components/HtmlContent";
 import { markdown } from "markdown";
 import Link from "@/components/Link";
 import PlainButton from "@/components/PlainButton";

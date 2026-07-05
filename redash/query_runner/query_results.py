@@ -10,16 +10,16 @@ import statistics
 import time
 from urllib.parse import parse_qs
 
-from redash import models
-from redash.permissions import has_access, view_only
-from redash.query_runner import (
+from rewatch import models
+from rewatch.permissions import has_access, view_only
+from rewatch.query_runner import (
     TYPE_STRING,
     BaseQueryRunner,
     JobTimeoutException,
     guess_type,
     register,
 )
-from redash.utils import json_dumps, json_loads
+from rewatch.utils import json_dumps, json_loads
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +52,7 @@ def _load_query(user, query_id):
     if user.org_id != query.org_id:
         raise PermissionError("Query id {} not found.".format(query.id))
 
-    # TODO: this duplicates some of the logic we already have in the redash.handlers.query_results.
+    # TODO: this duplicates some of the logic we already have in the rewatch.handlers.query_results.
     # We should merge it so it's consistent.
     if not has_access(query.data_source, user, view_only):
         raise PermissionError("You do not have access to query id {}.".format(query.id))

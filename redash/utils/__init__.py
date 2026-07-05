@@ -20,7 +20,7 @@ from flask import current_app
 from funcy import select_values
 from sqlalchemy.orm.query import Query
 
-from redash import settings
+from rewatch import settings
 
 from .human_time import parse_human_time
 
@@ -75,7 +75,7 @@ class JSONEncoder(json.JSONEncoder):
     """Adapter for `json.dumps`."""
 
     def __init__(self, **kwargs):
-        from redash.query_runner import query_runners
+        from rewatch.query_runner import query_runners
 
         self.encoders = [r.custom_json_encoder for r in query_runners.values() if hasattr(r, "custom_json_encoder")]
         super().__init__(**kwargs)

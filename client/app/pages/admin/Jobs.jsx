@@ -82,7 +82,7 @@ class Jobs extends React.Component {
     const { isLoading, error, queueCounters, startedJobs, overallCounters, workers, activeTab } = this.state;
     const [startedQueryJobs, otherStartedJobs] = partition(startedJobs, [
       "name",
-      "redash.tasks.queries.execution.execute_query",
+      "rewatch.tasks.queries.execution.execute_query",
     ]);
 
     const changeTab = newTab => {

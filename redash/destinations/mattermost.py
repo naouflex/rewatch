@@ -2,8 +2,8 @@ import logging
 
 import requests
 
-from redash.destinations import BaseDestination, register
-from redash.utils import json_dumps
+from rewatch.destinations import BaseDestination, register
+from rewatch.utils import json_dumps
 
 
 class Mattermost(BaseDestination):

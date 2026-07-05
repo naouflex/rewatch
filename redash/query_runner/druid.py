@@ -5,7 +5,7 @@ try:
 except ImportError:
     enabled = False
 
-from redash.query_runner import (
+from rewatch.query_runner import (
     TYPE_BOOLEAN,
     TYPE_INTEGER,
     TYPE_STRING,

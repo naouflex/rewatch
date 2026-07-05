@@ -9,7 +9,7 @@ export const query = `
     true AS bool,
     '[{"a": 3.14, "b": "test", "c": [], "d": {}}, false, [null, 123], "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."]' AS json,
     'ukr' AS img,
-    'redash' AS link
+    'rewatch' AS link
 `;
 
 export const config = {

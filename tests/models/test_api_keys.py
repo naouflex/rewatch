@@ -1,4 +1,4 @@
-from redash.models import ApiKey
+from rewatch.models import ApiKey
 from tests import BaseTestCase
 
 

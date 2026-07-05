@@ -6,7 +6,7 @@ import urllib.request
 import requests
 from requests.auth import HTTPBasicAuth
 
-from redash.query_runner import (
+from rewatch.query_runner import (
     TYPE_BOOLEAN,
     TYPE_DATE,
     TYPE_FLOAT,
@@ -16,7 +16,7 @@ from redash.query_runner import (
     JobTimeoutException,
     register,
 )
-from redash.utils import json_loads
+from rewatch.utils import json_loads
 
 try:
     import http.client as http_client
@@ -319,7 +319,7 @@ class BaseElasticSearch(BaseQueryRunner):
 
                 result_rows.append(row)
         else:
-            raise Exception("Redash failed to parse the results it got from Elasticsearch.")
+            raise Exception("Rewatch failed to parse the results it got from Elasticsearch.")
 
     def test_connection(self):
         try:

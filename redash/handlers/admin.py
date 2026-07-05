@@ -1,20 +1,20 @@
 from flask_login import current_user, login_required
 
-from redash import models, redis_connection
-from redash.authentication import current_org
-from redash.handlers import routes
-from redash.handlers.base import json_response, record_event
-from redash.monitor import rq_status
-from redash.permissions import require_super_admin
-from redash.serializers import QuerySerializer
-from redash.utils import json_loads
+from rewatch import models, redis_connection
+from rewatch.authentication import current_org
+from rewatch.handlers import routes
+from rewatch.handlers.base import json_response, record_event
+from rewatch.monitor import rq_status
+from rewatch.permissions import require_super_admin
+from rewatch.serializers import QuerySerializer
+from rewatch.utils import json_loads
 
 
 @routes.route("/api/admin/queries/outdated", methods=["GET"])
 @require_super_admin
 @login_required
 def outdated_queries():
-    manager_status = redis_connection.hgetall("redash:status")
+    manager_status = redis_connection.hgetall("rewatch:status")
     query_ids = json_loads(manager_status.get("query_ids", "[]"))
     if query_ids:
         outdated_queries = (

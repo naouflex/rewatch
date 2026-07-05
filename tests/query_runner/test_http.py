@@ -2,8 +2,8 @@ from unittest import TestCase
 
 import mock
 
-from redash.query_runner import BaseHTTPQueryRunner
-from redash.utils.requests_session import (
+from rewatch.query_runner import BaseHTTPQueryRunner
+from rewatch.utils.requests_session import (
     ConfiguredSession,
     requests_or_advocate,
 )

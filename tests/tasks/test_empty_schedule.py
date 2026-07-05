@@ -2,9 +2,9 @@ import datetime
 
 from mock import patch
 
-from redash.models import Query
-from redash.tasks import empty_schedules
-from redash.utils import utcnow
+from rewatch.models import Query
+from rewatch.tasks import empty_schedules
+from rewatch.utils import utcnow
 from tests import BaseTestCase
 
 

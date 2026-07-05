@@ -1,4 +1,4 @@
-from redash.models import Dashboard, db
+from rewatch.models import Dashboard, db
 from tests import BaseTestCase
 
 
@@ -52,7 +52,7 @@ class TestDashboardsByUser(BaseTestCase):
         self.assertFalse(d2 in dashboards)
 
     def test_returns_correct_number_of_dashboards(self):
-        # Solving https://github.com/getredash/redash/issues/5466
+        # Solving https://github.com/getrewatch/rewatch/issues/5466
 
         usr = self.factory.create_user()
 

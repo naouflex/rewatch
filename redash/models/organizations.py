@@ -2,7 +2,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm.attributes import flag_modified
 from sqlalchemy_utils.models import generic_repr
 
-from redash.settings.organization import settings as org_settings
+from rewatch.settings.organization import settings as org_settings
 
 from .base import Column, db, primary_key
 from .mixins import TimestampMixin

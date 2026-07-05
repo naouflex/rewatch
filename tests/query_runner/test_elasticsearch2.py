@@ -1,6 +1,6 @@
 from unittest import TestCase, mock
 
-from redash.query_runner.elasticsearch2 import (
+from rewatch.query_runner.elasticsearch2 import (
     ElasticSearch2,
     XPackSQLElasticSearch,
 )
@@ -140,7 +140,7 @@ class TestXPackSQL(TestCase):
 
 
 class TestElasticSearch2(TestCase):
-    @mock.patch("redash.query_runner.elasticsearch2.ElasticSearch2.__init__", return_value=None)
+    @mock.patch("rewatch.query_runner.elasticsearch2.ElasticSearch2.__init__", return_value=None)
     def test_build_query(self, mock_init):
         query_runner = ElasticSearch2()
         query_str = '{"index": "test_index", "result_fields": ["field1", "field2"]}'

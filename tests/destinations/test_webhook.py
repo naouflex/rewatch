@@ -1,8 +1,8 @@
 import json
 from unittest import mock
 
-from redash.destinations.webhook import Webhook
-from redash.models import Alert
+from rewatch.destinations.webhook import Webhook
+from rewatch.models import Alert
 
 
 def test_webhook_notify_handles_unicode():
@@ -26,13 +26,13 @@ def test_webhook_notify_handles_unicode():
     query = mock.Mock()
     user = mock.Mock()
     app = mock.Mock()
-    host = "http://redash.local"
+    host = "http://rewatch.local"
     options = {"url": "https://example.com/webhook", "username": "user", "password": "password"}
     metadata = {}
     new_state = Alert.TRIGGERED_STATE
     destination = Webhook(options)
 
-    with mock.patch("redash.destinations.webhook.requests.post") as mock_post:
+    with mock.patch("rewatch.destinations.webhook.requests.post") as mock_post:
         mock_response = mock.Mock()
         mock_response.status_code = 200
         mock_post.return_value = mock_response

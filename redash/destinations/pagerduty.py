@@ -1,6 +1,6 @@
 import logging
 
-from redash.destinations import BaseDestination, register
+from rewatch.destinations import BaseDestination, register
 
 enabled = True
 
@@ -56,7 +56,7 @@ class PagerDuty(BaseDestination):
             "payload": {
                 "summary": default_desc,
                 "severity": "error",
-                "source": "redash",
+                "source": "rewatch",
             },
         }
 

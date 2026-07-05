@@ -7,7 +7,7 @@ from html.parser import HTMLParser
 from typing import Any
 from urllib.parse import parse_qs, unquote, urlparse
 
-from redash.utils.requests_session import UnacceptableAddressException, requests_session
+from rewatch.utils.requests_session import UnacceptableAddressException, requests_session
 
 MAX_FETCH_BYTES = 500_000
 MAX_TEXT_CHARS = 14_000

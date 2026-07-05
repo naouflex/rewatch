@@ -2,12 +2,12 @@ from flask import make_response
 from flask_restful import Api
 from werkzeug.wrappers import Response
 
-from redash.handlers.alert_events import (
+from rewatch.handlers.alert_events import (
     AlertEventListResource,
     AlertEventResource,
     MyAlertEventsResource,
 )
-from redash.handlers.assistant import (
+from rewatch.handlers.assistant import (
     AssistantChatResource,
     AssistantChatStreamResource,
     AssistantDashboardPreviewResource,
@@ -19,7 +19,7 @@ from redash.handlers.assistant import (
     AssistantThreadResource,
     AssistantVisualizationPreviewResource,
 )
-from redash.handlers.alerts import (
+from rewatch.handlers.alerts import (
     AlertArchiveResource,
     AlertArchivedListResource,
     AlertEvaluateResource,
@@ -33,8 +33,8 @@ from redash.handlers.alerts import (
     AlertTagsResource,
     MyAlertsResource,
 )
-from redash.handlers.base import org_scoped_rule
-from redash.handlers.dashboards import (
+from rewatch.handlers.base import org_scoped_rule
+from rewatch.handlers.dashboards import (
     DashboardFavoriteListResource,
     DashboardForkResource,
     DashboardListResource,
@@ -44,7 +44,7 @@ from redash.handlers.dashboards import (
     MyDashboardsResource,
     PublicDashboardResource,
 )
-from redash.handlers.data_sources import (
+from rewatch.handlers.data_sources import (
     DataSourceListResource,
     DataSourcePauseResource,
     DataSourceResource,
@@ -52,12 +52,12 @@ from redash.handlers.data_sources import (
     DataSourceTestResource,
     DataSourceTypeListResource,
 )
-from redash.handlers.databricks import (
+from rewatch.handlers.databricks import (
     DatabricksDatabaseListResource,
     DatabricksSchemaResource,
     DatabricksTableColumnListResource,
 )
-from redash.handlers.indexers import (
+from rewatch.handlers.indexers import (
     IndexerArchiveResource,
     IndexerArchivedListResource,
     IndexerFavoriteListResource,
@@ -67,7 +67,7 @@ from redash.handlers.indexers import (
     IndexerTagsResource,
     MyIndexersResource,
 )
-from redash.handlers.destinations import (
+from rewatch.handlers.destinations import (
     DestinationArchiveResource,
     DestinationArchivedListResource,
     DestinationFavoriteListResource,
@@ -78,15 +78,15 @@ from redash.handlers.destinations import (
     DestinationTypeListResource,
     MyDestinationsResource,
 )
-from redash.handlers.events import EventsResource
-from redash.handlers.favorites import (
+from rewatch.handlers.events import EventsResource
+from rewatch.handlers.favorites import (
     DashboardFavoriteResource,
     MLModelFavoriteResource,
     MLModelVersionFavoriteResource,
     PredictionResultFavoriteResource,
     QueryFavoriteResource,
 )
-from redash.handlers.ml_models import (
+from rewatch.handlers.ml_models import (
     MLModelArchiveResource,
     MLModelCopyResource,
     MLModelCreateFromVersionResource,
@@ -106,7 +106,7 @@ from redash.handlers.ml_models import (
     MLModelVersionRevertResource,
     MyMLModelsResource,
 )
-from redash.handlers.ml_model_versions import (
+from rewatch.handlers.ml_model_versions import (
     MLModelVersionArchiveResource,
     MLModelVersionFavoriteListResource,
     MLModelVersionListResource,
@@ -117,7 +117,7 @@ from redash.handlers.ml_model_versions import (
     ModelVersionsResource,
     MyMLModelVersionsResource,
 )
-from redash.handlers.prediction_results import (
+from rewatch.handlers.prediction_results import (
     BasePredictionResultListResource,
     ModelPredictionsResource,
     MyPredictionResultsResource,
@@ -129,7 +129,7 @@ from redash.handlers.prediction_results import (
     PredictionResultSearchResource,
     PredictionResultTagsResource,
 )
-from redash.handlers.groups import (
+from rewatch.handlers.groups import (
     GroupDataSourceListResource,
     GroupDataSourceResource,
     GroupListResource,
@@ -137,11 +137,11 @@ from redash.handlers.groups import (
     GroupMemberResource,
     GroupResource,
 )
-from redash.handlers.permissions import (
+from rewatch.handlers.permissions import (
     CheckPermissionResource,
     ObjectPermissionsListResource,
 )
-from redash.handlers.queries import (
+from rewatch.handlers.queries import (
     MyQueriesResource,
     QueryArchiveResource,
     QueryFavoriteListResource,
@@ -154,14 +154,14 @@ from redash.handlers.queries import (
     QuerySearchResource,
     QueryTagsResource,
 )
-from redash.handlers.query_results import (
+from rewatch.handlers.query_results import (
     JobResource,
     QueryDropdownsResource,
     QueryResultDropdownResource,
     QueryResultListResource,
     QueryResultResource,
 )
-from redash.handlers.query_snippets import (
+from rewatch.handlers.query_snippets import (
     MyQuerySnippetsResource,
     QuerySnippetArchiveResource,
     QuerySnippetArchivedListResource,
@@ -171,8 +171,8 @@ from redash.handlers.query_snippets import (
     QuerySnippetResource,
     QuerySnippetTagsResource,
 )
-from redash.handlers.settings import OrganizationSettings
-from redash.handlers.users import (
+from rewatch.handlers.settings import OrganizationSettings
+from rewatch.handlers.users import (
     UserDisableResource,
     UserInviteResource,
     UserListResource,
@@ -180,12 +180,12 @@ from redash.handlers.users import (
     UserResetPasswordResource,
     UserResource,
 )
-from redash.handlers.visualizations import (
+from rewatch.handlers.visualizations import (
     VisualizationListResource,
     VisualizationResource,
 )
-from redash.handlers.widgets import WidgetListResource, WidgetResource
-from redash.utils import json_dumps
+from rewatch.handlers.widgets import WidgetListResource, WidgetResource
+from rewatch.utils import json_dumps
 
 
 class ApiExt(Api):

@@ -3,16 +3,16 @@ import time
 
 from rq.timeouts import JobTimeoutException
 
-from redash import models, redis_connection, settings, statsd_client
-from redash.models.parameterized_query import (
+from rewatch import models, redis_connection, settings, statsd_client
+from rewatch.models.parameterized_query import (
     InvalidParameterError,
     QueryDetachedFromDataSourceError,
 )
-from redash.monitor import rq_job_ids
-from redash.query_runner import NotSupported
-from redash.tasks.failure_report import track_failure
-from redash.utils import json_dumps, sentry
-from redash.worker import get_job_logger, job
+from rewatch.monitor import rq_job_ids
+from rewatch.query_runner import NotSupported
+from rewatch.tasks.failure_report import track_failure
+from rewatch.utils import json_dumps, sentry
+from rewatch.worker import get_job_logger, job
 
 from .execution import enqueue_query
 
@@ -113,7 +113,7 @@ def refresh_queries():
         "query_ids": json_dumps([q.id for q in enqueued]),
     }
 
-    redis_connection.hset("redash:status", mapping=status)
+    redis_connection.hset("rewatch:status", mapping=status)
     logger.info("Done refreshing queries: %s" % status)
 
 

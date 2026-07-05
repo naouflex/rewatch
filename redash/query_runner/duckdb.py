@@ -1,6 +1,6 @@
 import logging
 
-from redash.query_runner import (
+from rewatch.query_runner import (
     TYPE_BOOLEAN,
     TYPE_DATE,
     TYPE_DATETIME,
@@ -21,7 +21,7 @@ try:
 except ImportError:
     enabled = False
 
-# Map DuckDB types to Redash column types
+# Map DuckDB types to Rewatch column types
 TYPES_MAP = {
     "BOOLEAN": TYPE_BOOLEAN,
     "TINYINT": TYPE_INTEGER,

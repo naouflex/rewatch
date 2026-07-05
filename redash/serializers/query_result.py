@@ -5,8 +5,8 @@ import xlsxwriter
 from dateutil.parser import isoparse as parse_date
 from funcy import project, rpartial
 
-from redash.authentication.org_resolving import current_org
-from redash.query_runner import TYPE_BOOLEAN, TYPE_DATE, TYPE_DATETIME
+from rewatch.authentication.org_resolving import current_org
+from rewatch.query_runner import TYPE_BOOLEAN, TYPE_DATE, TYPE_DATETIME
 
 
 def _convert_format(fmt):

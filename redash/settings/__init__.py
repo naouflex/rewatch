@@ -5,7 +5,7 @@ import ssl
 from flask_talisman import talisman
 from funcy import distinct, remove
 
-from redash.settings.helpers import (
+from rewatch.settings.helpers import (
     add_decode_responses_to_redis_url,
     array_from_string,
     cast_int_or_default,
@@ -14,20 +14,20 @@ from redash.settings.helpers import (
     parse_boolean,
     set_from_string,
 )
-from redash.settings.organization import DATE_FORMAT, TIME_FORMAT  # noqa
+from rewatch.settings.organization import DATE_FORMAT, TIME_FORMAT  # noqa
 
 # _REDIS_URL is the unchanged REDIS_URL we get from env vars, to be used later with RQ
 _REDIS_URL = os.environ.get("REDASH_REDIS_URL", os.environ.get("REDIS_URL", "redis://localhost:6379/0"))
-# This is the one to use for Redash' own connection:
+# This is the one to use for Rewatch' own connection:
 REDIS_URL = add_decode_responses_to_redis_url(_REDIS_URL)
 PROXIES_COUNT = int(os.environ.get("REDASH_PROXIES_COUNT", "1"))
 
 STATSD_HOST = os.environ.get("REDASH_STATSD_HOST", "127.0.0.1")
 STATSD_PORT = int(os.environ.get("REDASH_STATSD_PORT", "8125"))
-STATSD_PREFIX = os.environ.get("REDASH_STATSD_PREFIX", "redash")
+STATSD_PREFIX = os.environ.get("REDASH_STATSD_PREFIX", "rewatch")
 STATSD_USE_TAGS = parse_boolean(os.environ.get("REDASH_STATSD_USE_TAGS", "false"))
 
-# Connection settings for Redash's own database (where we store the queries, results, etc)
+# Connection settings for Rewatch's own database (where we store the queries, results, etc)
 SQLALCHEMY_DATABASE_URI = os.environ.get(
     "REDASH_DATABASE_URL", os.environ.get("DATABASE_URL", "postgresql:///postgres")
 )
@@ -146,8 +146,8 @@ FEATURE_POLICY = os.environ.get("REDASH_FEATURE_POLICY", "")
 
 MULTI_ORG = parse_boolean(os.environ.get("REDASH_MULTI_ORG", "false"))
 
-# If Redash is behind a proxy it might sometimes receive a X-Forwarded-Proto of HTTP
-# even if your actual Redash URL scheme is HTTPS. This will cause Flask to build
+# If Rewatch is behind a proxy it might sometimes receive a X-Forwarded-Proto of HTTP
+# even if your actual Rewatch URL scheme is HTTPS. This will cause Flask to build
 # the OAuth redirect URL incorrectly thus failing auth. This is especially common if
 # you're behind a SSL/TCP configured AWS ELB or similar.
 # This setting will force the URL scheme.
@@ -157,8 +157,8 @@ GOOGLE_CLIENT_ID = os.environ.get("REDASH_GOOGLE_CLIENT_ID", "")
 GOOGLE_CLIENT_SECRET = os.environ.get("REDASH_GOOGLE_CLIENT_SECRET", "")
 GOOGLE_OAUTH_ENABLED = bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET)
 
-# If Redash is behind a proxy it might sometimes receive a X-Forwarded-Proto of HTTP
-# even if your actual Redash URL scheme is HTTPS. This will cause Flask to build
+# If Rewatch is behind a proxy it might sometimes receive a X-Forwarded-Proto of HTTP
+# even if your actual Rewatch URL scheme is HTTPS. This will cause Flask to build
 # the SAML redirect URL incorrect thus failing auth. This is especially common if
 # you're behind a SSL/TCP configured AWS ELB or similar.
 # This setting will force the URL scheme.
@@ -176,13 +176,13 @@ SAML_ENCRYPTION_ENABLED = SAML_ENCRYPTION_PEM_PATH != "" and SAML_ENCRYPTION_CER
 #
 # Enabling this authentication method is *potentially dangerous*, and it is
 # your responsibility to ensure that only a trusted frontend (usually on the
-# same server) can talk to the redash backend server, otherwise people will be
-# able to login as anyone they want by directly talking to the redash backend.
+# same server) can talk to the rewatch backend server, otherwise people will be
+# able to login as anyone they want by directly talking to the rewatch backend.
 # You must *also* ensure that any special header in the original request is
 # removed or always overwritten by your frontend, otherwise your frontend may
 # pass it through to the backend unchanged.
 #
-# Note that redash will only check the remote user once, upon the first need
+# Note that rewatch will only check the remote user once, upon the first need
 # for a login, and then set a cookie which keeps the user logged in.  Dropping
 # the remote user header after subsequent requests won't automatically log the
 # user out.  Doing so could be done with further work, but usually it's
@@ -195,7 +195,7 @@ REMOTE_USER_LOGIN_ENABLED = parse_boolean(os.environ.get("REDASH_REMOTE_USER_LOG
 REMOTE_USER_HEADER = os.environ.get("REDASH_REMOTE_USER_HEADER", "X-Forwarded-Remote-User")
 
 # If the organization setting auth_password_login_enabled is not false, then users will still be
-# able to login through Redash instead of the LDAP server
+# able to login through Rewatch instead of the LDAP server
 LDAP_LOGIN_ENABLED = parse_boolean(os.environ.get("REDASH_LDAP_LOGIN_ENABLED", "false"))
 # Bind LDAP using SSL. Default is False
 LDAP_SSL = parse_boolean(os.environ.get("REDASH_LDAP_USE_SSL", "false"))
@@ -310,80 +310,80 @@ ACCESS_CONTROL_ALLOW_HEADERS = os.environ.get("REDASH_CORS_ACCESS_CONTROL_ALLOW_
 
 # Query Runners
 default_query_runners = [
-    "redash.query_runner.athena",
-    "redash.query_runner.big_query",
-    "redash.query_runner.google_spreadsheets",
-    "redash.query_runner.graphite",
-    "redash.query_runner.mongodb",
-    "redash.query_runner.couchbase",
-    "redash.query_runner.mysql",
-    "redash.query_runner.pg",
-    "redash.query_runner.url",
-    "redash.query_runner.influx_db",
-    "redash.query_runner.influx_db_v2",
-    "redash.query_runner.elasticsearch",
-    "redash.query_runner.elasticsearch2",
-    "redash.query_runner.amazon_elasticsearch",
-    "redash.query_runner.trino",
-    "redash.query_runner.presto",
-    "redash.query_runner.pinot",
-    "redash.query_runner.databricks",
-    "redash.query_runner.hive_ds",
-    "redash.query_runner.impala_ds",
-    "redash.query_runner.vertica",
-    "redash.query_runner.clickhouse",
-    "redash.query_runner.tinybird",
-    "redash.query_runner.yandex_metrica",
-    "redash.query_runner.yandex_disk",
-    "redash.query_runner.rockset",
-    "redash.query_runner.treasuredata",
-    "redash.query_runner.sqlite",
-    "redash.query_runner.mssql",
-    "redash.query_runner.mssql_odbc",
-    "redash.query_runner.memsql_ds",
-    "redash.query_runner.jql",
-    "redash.query_runner.google_analytics",
-    "redash.query_runner.axibase_tsd",
-    "redash.query_runner.salesforce",
-    "redash.query_runner.query_results",
-    "redash.query_runner.prometheus",
-    "redash.query_runner.db2",
-    "redash.query_runner.druid",
-    "redash.query_runner.kylin",
-    "redash.query_runner.drill",
-    "redash.query_runner.uptycs",
-    "redash.query_runner.snowflake",
-    "redash.query_runner.phoenix",
-    "redash.query_runner.json_ds",
-    "redash.query_runner.cass",
-    "redash.query_runner.dgraph",
-    "redash.query_runner.azure_kusto",
-    "redash.query_runner.exasol",
-    "redash.query_runner.cloudwatch",
-    "redash.query_runner.cloudwatch_insights",
-    "redash.query_runner.corporate_memory",
-    "redash.query_runner.sparql_endpoint",
-    "redash.query_runner.excel",
-    "redash.query_runner.csv",
-    "redash.query_runner.databend",
-    "redash.query_runner.nz",
-    "redash.query_runner.arango",
-    "redash.query_runner.google_analytics4",
-    "redash.query_runner.google_search_console",
-    "redash.query_runner.ignite",
-    "redash.query_runner.oracle",
-    "redash.query_runner.e6data",
-    "redash.query_runner.risingwave",
-    "redash.query_runner.d1",
-    "redash.query_runner.duckdb",
-    "redash.query_runner.python",
-    "redash.query_runner.coingecko",
-    "redash.query_runner.dune",
-    "redash.query_runner.graphql",
-    "redash.query_runner.evm_logs",
-    "redash.query_runner.evm_state",
-    "redash.query_runner.evm_transactions",
-    "redash.query_runner.twitter",
+    "rewatch.query_runner.athena",
+    "rewatch.query_runner.big_query",
+    "rewatch.query_runner.google_spreadsheets",
+    "rewatch.query_runner.graphite",
+    "rewatch.query_runner.mongodb",
+    "rewatch.query_runner.couchbase",
+    "rewatch.query_runner.mysql",
+    "rewatch.query_runner.pg",
+    "rewatch.query_runner.url",
+    "rewatch.query_runner.influx_db",
+    "rewatch.query_runner.influx_db_v2",
+    "rewatch.query_runner.elasticsearch",
+    "rewatch.query_runner.elasticsearch2",
+    "rewatch.query_runner.amazon_elasticsearch",
+    "rewatch.query_runner.trino",
+    "rewatch.query_runner.presto",
+    "rewatch.query_runner.pinot",
+    "rewatch.query_runner.databricks",
+    "rewatch.query_runner.hive_ds",
+    "rewatch.query_runner.impala_ds",
+    "rewatch.query_runner.vertica",
+    "rewatch.query_runner.clickhouse",
+    "rewatch.query_runner.tinybird",
+    "rewatch.query_runner.yandex_metrica",
+    "rewatch.query_runner.yandex_disk",
+    "rewatch.query_runner.rockset",
+    "rewatch.query_runner.treasuredata",
+    "rewatch.query_runner.sqlite",
+    "rewatch.query_runner.mssql",
+    "rewatch.query_runner.mssql_odbc",
+    "rewatch.query_runner.memsql_ds",
+    "rewatch.query_runner.jql",
+    "rewatch.query_runner.google_analytics",
+    "rewatch.query_runner.axibase_tsd",
+    "rewatch.query_runner.salesforce",
+    "rewatch.query_runner.query_results",
+    "rewatch.query_runner.prometheus",
+    "rewatch.query_runner.db2",
+    "rewatch.query_runner.druid",
+    "rewatch.query_runner.kylin",
+    "rewatch.query_runner.drill",
+    "rewatch.query_runner.uptycs",
+    "rewatch.query_runner.snowflake",
+    "rewatch.query_runner.phoenix",
+    "rewatch.query_runner.json_ds",
+    "rewatch.query_runner.cass",
+    "rewatch.query_runner.dgraph",
+    "rewatch.query_runner.azure_kusto",
+    "rewatch.query_runner.exasol",
+    "rewatch.query_runner.cloudwatch",
+    "rewatch.query_runner.cloudwatch_insights",
+    "rewatch.query_runner.corporate_memory",
+    "rewatch.query_runner.sparql_endpoint",
+    "rewatch.query_runner.excel",
+    "rewatch.query_runner.csv",
+    "rewatch.query_runner.databend",
+    "rewatch.query_runner.nz",
+    "rewatch.query_runner.arango",
+    "rewatch.query_runner.google_analytics4",
+    "rewatch.query_runner.google_search_console",
+    "rewatch.query_runner.ignite",
+    "rewatch.query_runner.oracle",
+    "rewatch.query_runner.e6data",
+    "rewatch.query_runner.risingwave",
+    "rewatch.query_runner.d1",
+    "rewatch.query_runner.duckdb",
+    "rewatch.query_runner.python",
+    "rewatch.query_runner.coingecko",
+    "rewatch.query_runner.dune",
+    "rewatch.query_runner.graphql",
+    "rewatch.query_runner.evm_logs",
+    "rewatch.query_runner.evm_state",
+    "rewatch.query_runner.evm_transactions",
+    "rewatch.query_runner.twitter",
 ]
 
 enabled_query_runners = array_from_string(
@@ -398,27 +398,27 @@ QUERY_RUNNERS = remove(
 )
 
 dynamic_settings = importlib.import_module(
-    os.environ.get("REDASH_DYNAMIC_SETTINGS_MODULE", "redash.settings.dynamic_settings")
+    os.environ.get("REDASH_DYNAMIC_SETTINGS_MODULE", "rewatch.settings.dynamic_settings")
 )
 
 # Destinations
 default_destinations = [
-    "redash.destinations.email",
-    "redash.destinations.slack",
-    "redash.destinations.webhook",
-    "redash.destinations.discord",
-    "redash.destinations.discord_webhook",
-    "redash.destinations.mattermost",
-    "redash.destinations.chatwork",
-    "redash.destinations.pagerduty",
-    "redash.destinations.hangoutschat",
-    "redash.destinations.microsoft_teams_webhook",
-    "redash.destinations.asana",
-    "redash.destinations.webex",
-    "redash.destinations.datadog",
-    "redash.destinations.telegram",
-    "redash.destinations.twitter",
-    "redash.destinations.twitter_private",
+    "rewatch.destinations.email",
+    "rewatch.destinations.slack",
+    "rewatch.destinations.webhook",
+    "rewatch.destinations.discord",
+    "rewatch.destinations.discord_webhook",
+    "rewatch.destinations.mattermost",
+    "rewatch.destinations.chatwork",
+    "rewatch.destinations.pagerduty",
+    "rewatch.destinations.hangoutschat",
+    "rewatch.destinations.microsoft_teams_webhook",
+    "rewatch.destinations.asana",
+    "rewatch.destinations.webex",
+    "rewatch.destinations.datadog",
+    "rewatch.destinations.telegram",
+    "rewatch.destinations.twitter",
+    "rewatch.destinations.twitter_private",
 ]
 
 enabled_destinations = array_from_string(os.environ.get("REDASH_ENABLED_DESTINATIONS", ",".join(default_destinations)))
@@ -475,7 +475,7 @@ BIGQUERY_HTTP_TIMEOUT = int(os.environ.get("REDASH_BIGQUERY_HTTP_TIMEOUT", "600"
 
 # Allow Parameters in Embeds
 # WARNING: Deprecated!
-# See https://discuss.redash.io/t/support-for-parameters-in-embedded-visualizations/3337 for more details.
+# See https://discuss.rewatch.io/t/support-for-parameters-in-embedded-visualizations/3337 for more details.
 ALLOW_PARAMETERS_IN_EMBEDS = parse_boolean(os.environ.get("REDASH_ALLOW_PARAMETERS_IN_EMBEDS", "false"))
 
 # Enhance schema fetching

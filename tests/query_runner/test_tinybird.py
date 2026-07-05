@@ -2,8 +2,8 @@ import json
 from unittest import TestCase
 from unittest.mock import Mock, patch
 
-from redash.query_runner import TYPE_DATETIME, TYPE_INTEGER, TYPE_STRING
-from redash.query_runner.tinybird import Tinybird
+from rewatch.query_runner import TYPE_DATETIME, TYPE_INTEGER, TYPE_STRING
+from rewatch.query_runner.tinybird import Tinybird
 
 DATASOURCES_RESPONSE = {
     "datasources": [

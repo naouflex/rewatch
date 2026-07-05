@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from redash.query_runner import split_sql_statements
+from rewatch.query_runner import split_sql_statements
 
 
 class TestSplitMultipleSQLStatements(TestCase):

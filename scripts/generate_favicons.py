@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate Redash favicons (16x16, 32x32, 96x96) from a source image.
+"""Generate Rewatch favicons (16x16, 32x32, 96x96) from a source image.
 
 Usage:
     python scripts/generate_favicons.py [SOURCE] [OUTPUT_DIR]

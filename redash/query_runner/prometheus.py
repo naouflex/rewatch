@@ -8,7 +8,7 @@ from urllib.parse import parse_qs
 import requests
 from dateutil import parser
 
-from redash.query_runner import (
+from rewatch.query_runner import (
     TYPE_DATETIME,
     TYPE_STRING,
     BaseQueryRunner,

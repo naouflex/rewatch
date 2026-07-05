@@ -10,14 +10,14 @@ from sqlalchemy.orm import configure_mappers
 from supervisor_checks import check_runner
 from supervisor_checks.check_modules import base
 
-from redash import rq_redis_connection
-from redash.tasks import (
+from rewatch import rq_redis_connection
+from rewatch.tasks import (
     periodic_job_definitions,
     rq_scheduler,
     schedule_periodic_jobs,
 )
-from redash.tasks.worker import Worker
-from redash.worker import default_queues
+from rewatch.tasks.worker import Worker
+from rewatch.worker import default_queues
 
 manager = AppGroup(help="RQ management commands.")
 

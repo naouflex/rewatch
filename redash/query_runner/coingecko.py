@@ -9,7 +9,7 @@ Queries are written as YAML, e.g.
       days: 30
 
 The runner translates the YAML into a CoinGecko REST call and flattens the
-response into Redash-style ``{rows, columns}``. Ported from inverse-watch.
+response into Rewatch-style ``{rows, columns}``. Ported from inverse-watch.
 """
 import datetime
 import logging
@@ -17,7 +17,7 @@ import time
 
 import yaml
 
-from redash.query_runner import (
+from rewatch.query_runner import (
     TYPE_BOOLEAN,
     TYPE_DATETIME,
     TYPE_FLOAT,
@@ -26,7 +26,7 @@ from redash.query_runner import (
     BaseHTTPQueryRunner,
     register,
 )
-from redash.utils import json_dumps
+from rewatch.utils import json_dumps
 
 logger = logging.getLogger(__name__)
 
@@ -320,7 +320,7 @@ class CoinGecko(BaseHTTPQueryRunner):
     def _get_headers(self):
         headers = {
             "Accept": "application/json",
-            "User-Agent": "Redash-CoinGecko-QueryRunner/1.0",
+            "User-Agent": "Rewatch-CoinGecko-QueryRunner/1.0",
         }
         if self.api_key:
             headers["x-cg-pro-api-key"] = self.api_key

@@ -4,8 +4,8 @@ from importlib.util import find_spec
 import requests
 import yaml
 
-from redash.query_runner import BaseSQLQueryRunner, register
-from redash.utils.pandas import pandas_installed
+from rewatch.query_runner import BaseSQLQueryRunner, register
+from rewatch.utils.pandas import pandas_installed
 
 openpyxl_installed = find_spec("openpyxl")
 
@@ -13,7 +13,7 @@ if pandas_installed and openpyxl_installed:
     import openpyxl  # noqa: F401
     import pandas as pd
 
-    from redash.utils.pandas import pandas_to_result
+    from rewatch.utils.pandas import pandas_to_result
 
     enabled = True
 

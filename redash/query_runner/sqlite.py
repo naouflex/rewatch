@@ -1,7 +1,7 @@
 import logging
 import sqlite3
 
-from redash.query_runner import (
+from rewatch.query_runner import (
     BaseSQLQueryRunner,
     JobTimeoutException,
     register,

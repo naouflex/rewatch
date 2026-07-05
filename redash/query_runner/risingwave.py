@@ -1,5 +1,5 @@
-from redash.query_runner import register
-from redash.query_runner.pg import PostgreSQL
+from rewatch.query_runner import register
+from rewatch.query_runner.pg import PostgreSQL
 
 
 class RisingWave(PostgreSQL):

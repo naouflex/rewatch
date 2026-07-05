@@ -8,8 +8,8 @@ from dateutil import parser
 from rq.timeouts import JobTimeoutException
 from sshtunnel import open_tunnel
 
-from redash import settings, utils
-from redash.utils.requests_session import (
+from rewatch import settings, utils
+from rewatch.utils.requests_session import (
     UnacceptableAddressException,
     requests_or_advocate,
     requests_session,

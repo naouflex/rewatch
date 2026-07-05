@@ -52,7 +52,7 @@ export function subscribeToCurrentUser(listener) {
   return () => currentUserListeners.delete(listener);
 }
 
-const logger = debug("redash:auth");
+const logger = debug("rewatch:auth");
 const session = { loaded: false };
 
 const AuthUrls = {

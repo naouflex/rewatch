@@ -1,9 +1,9 @@
 from flask import request
 
-from redash.handlers.base import BaseResource
-from redash.models import Organization, db
-from redash.permissions import require_admin
-from redash.settings.organization import settings as org_settings
+from rewatch.handlers.base import BaseResource
+from rewatch.models import Organization, db
+from rewatch.permissions import require_admin
+from rewatch.settings.organization import settings as org_settings
 
 
 def get_settings_with_defaults(defaults, org):

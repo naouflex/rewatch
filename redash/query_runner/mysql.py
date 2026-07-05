@@ -2,7 +2,7 @@ import logging
 import os
 import threading
 
-from redash.query_runner import (
+from rewatch.query_runner import (
     TYPE_DATE,
     TYPE_DATETIME,
     TYPE_FLOAT,
@@ -13,7 +13,7 @@ from redash.query_runner import (
     JobTimeoutException,
     register,
 )
-from redash.settings import parse_boolean
+from rewatch.settings import parse_boolean
 
 try:
     import MySQLdb

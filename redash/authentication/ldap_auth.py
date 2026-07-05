@@ -4,7 +4,7 @@ import sys
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user
 
-from redash import settings
+from rewatch import settings
 
 try:
     from ldap3 import Connection, Server
@@ -15,13 +15,13 @@ except ImportError:
             "The ldap3 library was not found. This is required to use LDAP authentication. Rebuild the Docker image installing the `ldap3` poetry dependency group."
         )
 
-from redash.authentication import (
+from rewatch.authentication import (
     create_and_login_user,
     get_next_path,
     logout_and_redirect_to_index,
 )
-from redash.authentication.org_resolving import current_org
-from redash.handlers.base import org_scoped_rule
+from rewatch.authentication.org_resolving import current_org
+from rewatch.handlers.base import org_scoped_rule
 
 logger = logging.getLogger("ldap_auth")
 
@@ -31,13 +31,13 @@ blueprint = Blueprint("ldap_auth", __name__)
 
 @blueprint.route(org_scoped_rule("/ldap/login"), methods=["GET", "POST"])
 def login(org_slug=None):
-    index_url = url_for("redash.index", org_slug=org_slug)
+    index_url = url_for("rewatch.index", org_slug=org_slug)
     unsafe_next_path = request.args.get("next", index_url)
     next_path = get_next_path(unsafe_next_path)
 
     if not settings.LDAP_LOGIN_ENABLED:
         logger.error("Cannot use LDAP for login without being enabled in settings")
-        return redirect(url_for("redash.index", next=next_path))
+        return redirect(url_for("rewatch.index", next=next_path))
 
     if current_user.is_authenticated:
         return redirect(next_path)
@@ -54,7 +54,7 @@ def login(org_slug=None):
             if user is None:
                 return logout_and_redirect_to_index()
 
-            return redirect(next_path or url_for("redash.index"))
+            return redirect(next_path or url_for("rewatch.index"))
         else:
             flash("Incorrect credentials.")
 

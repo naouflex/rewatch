@@ -61,7 +61,7 @@ def _require_ml_deps():
         return
     raise RuntimeError(
         "MLModel training/prediction requires scikit-learn / numpy / pandas / joblib. "
-        "Install the `all_ds` poetry group or use the redash-ml-worker image. "
+        "Install the `all_ds` poetry group or use the rewatch-ml-worker image. "
         "Original import error: {0!r}".format(_ML_DEPS_ERROR)
     )
 
@@ -118,19 +118,19 @@ def _sklearn():
     }
 
 
-from redash import settings
-from redash.destinations import (
+from rewatch import settings
+from rewatch.destinations import (
     get_configuration_schema_for_destination_type,
     get_destination,
 )
-from redash.models.base import Column, db, key_type, primary_key
-from redash.models.changes import ChangeTrackingMixin
-from redash.models.mixins import BelongsToOrgMixin, TimestampMixin
-from redash.models.organizations import Organization
-from redash.models.types import MutableDict, MutableList
-from redash.models.users import User
-from redash.utils import json_dumps
-from redash.utils.configuration import ConfigurationContainer
+from rewatch.models.base import Column, db, key_type, primary_key
+from rewatch.models.changes import ChangeTrackingMixin
+from rewatch.models.mixins import BelongsToOrgMixin, TimestampMixin
+from rewatch.models.organizations import Organization
+from rewatch.models.types import MutableDict, MutableList
+from rewatch.models.users import User
+from rewatch.utils import json_dumps
+from rewatch.utils.configuration import ConfigurationContainer
 
 logger = logging.getLogger(__name__)
 
@@ -172,7 +172,7 @@ def _is_nan_like(value):
 
 
 class MLModel(TimestampMixin, BelongsToOrgMixin, db.Model):
-    """A trainable machine learning model bound to a Redash query.
+    """A trainable machine learning model bound to a Rewatch query.
 
     The query produces the input data (``query.latest_query_data``) which is
     cleaned, encoded, split into train/validation, then fed to the configured
@@ -228,7 +228,7 @@ class MLModel(TimestampMixin, BelongsToOrgMixin, db.Model):
 
     @classmethod
     def all(cls, group_ids):
-        from redash.models import DataSourceGroup, Query
+        from rewatch.models import DataSourceGroup, Query
 
         return (
             cls.query.options(joinedload(cls.user), joinedload(cls.query_rel))
@@ -243,7 +243,7 @@ class MLModel(TimestampMixin, BelongsToOrgMixin, db.Model):
 
     @classmethod
     def all_models(cls, group_ids, user_id=None, include_archived=False):
-        from redash.models import DataSourceGroup, Query
+        from rewatch.models import DataSourceGroup, Query
 
         models = (
             cls.query.options(
@@ -299,7 +299,7 @@ class MLModel(TimestampMixin, BelongsToOrgMixin, db.Model):
 
     @classmethod
     def favorites(cls, user, base_query=None):
-        from redash.models import Favorite
+        from rewatch.models import Favorite
 
         if base_query is None:
             base_query = cls.all_models(user.group_ids, user.id)
@@ -312,7 +312,7 @@ class MLModel(TimestampMixin, BelongsToOrgMixin, db.Model):
 
     @classmethod
     def get_by_id_and_org(cls, object_id, org):
-        from redash.models import Query
+        from rewatch.models import Query
 
         return super(MLModel, cls).get_by_id_and_org(object_id, org, Query)
 
@@ -1123,7 +1123,7 @@ class MLModelVersion(BelongsToOrgMixin, db.Model):
 
     @classmethod
     def all(cls, group_ids):
-        from redash.models import DataSourceGroup, Query
+        from rewatch.models import DataSourceGroup, Query
 
         return (
             cls.query.options(joinedload(cls.user), joinedload(cls.model), defer(cls.model_blob))
@@ -1180,7 +1180,7 @@ class MLModelVersion(BelongsToOrgMixin, db.Model):
 
     @classmethod
     def favorites(cls, user, base_query=None):
-        from redash.models import Favorite
+        from rewatch.models import Favorite
 
         if base_query is None:
             base_query = cls.all_models(user.group_ids, user.id)
@@ -1193,7 +1193,7 @@ class MLModelVersion(BelongsToOrgMixin, db.Model):
 
     @classmethod
     def get_by_id_and_org(cls, object_id, org):
-        from redash.models import Query
+        from rewatch.models import Query
 
         return super(MLModelVersion, cls).get_by_id_and_org(object_id, org, Query)
 
@@ -1273,7 +1273,7 @@ class PredictionResult(BelongsToOrgMixin, db.Model):
 
     @classmethod
     def all(cls, group_ids):
-        from redash.models import DataSourceGroup, Query
+        from rewatch.models import DataSourceGroup, Query
 
         return (
             cls.query.options(joinedload(cls.user), joinedload(cls.query_rel))
@@ -1334,7 +1334,7 @@ class PredictionResult(BelongsToOrgMixin, db.Model):
 
     @classmethod
     def favorites(cls, user, base_query=None):
-        from redash.models import Favorite
+        from rewatch.models import Favorite
 
         if base_query is None:
             base_query = cls.all_predictions(user.group_ids, user.id)
@@ -1347,7 +1347,7 @@ class PredictionResult(BelongsToOrgMixin, db.Model):
 
     @classmethod
     def get_by_id_and_org(cls, object_id, org):
-        from redash.models import Query
+        from rewatch.models import Query
 
         return super(PredictionResult, cls).get_by_id_and_org(object_id, org, Query)
 

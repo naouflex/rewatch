@@ -6,19 +6,19 @@ from sqlalchemy.orm import object_session
 from sqlalchemy.pool import NullPool
 from sqlalchemy_searchable import SearchQueryMixin, make_searchable, vectorizer
 
-from redash import settings
-from redash.utils import json_dumps, json_loads
+from rewatch import settings
+from rewatch.utils import json_dumps, json_loads
 
 
-class RedashSQLAlchemy(SQLAlchemy):
+class RewatchSQLAlchemy(SQLAlchemy):
     def apply_driver_hacks(self, app, info, options):
         options.update(json_serializer=json_dumps)
         if settings.SQLALCHEMY_ENABLE_POOL_PRE_PING:
             options.update(pool_pre_ping=True)
-        return super(RedashSQLAlchemy, self).apply_driver_hacks(app, info, options)
+        return super(RewatchSQLAlchemy, self).apply_driver_hacks(app, info, options)
 
     def apply_pool_defaults(self, app, options):
-        super(RedashSQLAlchemy, self).apply_pool_defaults(app, options)
+        super(RewatchSQLAlchemy, self).apply_pool_defaults(app, options)
         if settings.SQLALCHEMY_ENABLE_POOL_PRE_PING:
             options["pool_pre_ping"] = True
         if settings.SQLALCHEMY_DISABLE_POOL:
@@ -28,7 +28,7 @@ class RedashSQLAlchemy(SQLAlchemy):
         return options
 
 
-db = RedashSQLAlchemy(
+db = RewatchSQLAlchemy(
     session_options={"expire_on_commit": False},
     engine_options={"json_serializer": json_dumps, "json_deserializer": json_loads},
 )

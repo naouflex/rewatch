@@ -23,13 +23,13 @@ from sqlalchemy_utils.models import generic_repr
 from sqlalchemy_utils.types import TSVectorType
 from sqlalchemy_utils.types.encrypted.encrypted_type import FernetEngine
 
-from redash import redis_connection, settings, utils
-from redash.destinations import (
+from rewatch import redis_connection, settings, utils
+from rewatch.destinations import (
     get_configuration_schema_for_destination_type,
     get_destination,
 )
-from redash.metrics import database  # noqa: F401
-from redash.models.base import (
+from rewatch.metrics import database  # noqa: F401
+from rewatch.models.base import (
     Column,
     GFKBase,
     SearchBaseQuery,
@@ -38,15 +38,15 @@ from redash.models.base import (
     key_type,
     primary_key,
 )
-from redash.models.changes import Change, ChangeTrackingMixin  # noqa
-from redash.models.mixins import BelongsToOrgMixin, TimestampMixin
-from redash.models.organizations import Organization
-from redash.models.parameterized_query import (
+from rewatch.models.changes import Change, ChangeTrackingMixin  # noqa
+from rewatch.models.mixins import BelongsToOrgMixin, TimestampMixin
+from rewatch.models.organizations import Organization
+from rewatch.models.parameterized_query import (
     InvalidParameterError,
     ParameterizedQuery,
     QueryDetachedFromDataSourceError,
 )
-from redash.models.types import (
+from rewatch.models.types import (
     Configuration,
     EncryptedConfiguration,
     JSONText,
@@ -54,14 +54,14 @@ from redash.models.types import (
     MutableList,
     json_cast_property,
 )
-from redash.models.users import (  # noqa
+from rewatch.models.users import (  # noqa
     AccessPermission,
     AnonymousUser,
     ApiUser,
     Group,
     User,
 )
-from redash.query_runner import (
+from rewatch.query_runner import (
     TYPE_BOOLEAN,
     TYPE_DATE,
     TYPE_DATETIME,
@@ -70,7 +70,7 @@ from redash.query_runner import (
     get_query_runner,
     with_ssh_tunnel,
 )
-from redash.utils import (
+from rewatch.utils import (
     base_url,
     gen_query_hash,
     generate_token,
@@ -80,7 +80,7 @@ from redash.utils import (
     mustache_render_escape,
     sentry,
 )
-from redash.utils.configuration import ConfigurationContainer
+from rewatch.utils.configuration import ConfigurationContainer
 
 logger = logging.getLogger(__name__)
 
@@ -1964,14 +1964,14 @@ class QuerySnippet(TimestampMixin, db.Model, BelongsToOrgMixin):
         return d
 
 
-from redash.models.ml_models import (  # noqa: E402,F401
+from rewatch.models.ml_models import (  # noqa: E402,F401
     MLModel,
     MLModelSubscription,
     MLModelVersion,
     PredictionResult,
 )
 
-from redash.models.assistant import AssistantMessage, AssistantThread  # noqa: E402,F401
+from rewatch.models.assistant import AssistantMessage, AssistantThread  # noqa: E402,F401
 
 
 def init_db():

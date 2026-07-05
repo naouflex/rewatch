@@ -4,8 +4,8 @@ import os
 import requests
 from requests.auth import HTTPBasicAuth
 
-from redash import settings
-from redash.query_runner import (
+from rewatch import settings
+from rewatch.query_runner import (
     TYPE_BOOLEAN,
     TYPE_DATE,
     TYPE_DATETIME,

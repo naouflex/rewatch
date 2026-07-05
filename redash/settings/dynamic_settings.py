@@ -3,7 +3,7 @@ from collections import defaultdict
 
 # Replace this method with your own implementation in case you want to limit the time limit on certain queries or users.
 def query_time_limit(is_scheduled, user_id, org_id):
-    from redash import settings
+    from rewatch import settings
 
     if is_scheduled:
         return settings.SCHEDULED_QUERY_TIME_LIMIT
@@ -26,7 +26,7 @@ def periodic_jobs():
 
 
 # This provides the ability to override the way we store QueryResult's data column.
-# Reference implementation: redash.models.DBPersistence
+# Reference implementation: rewatch.models.DBPersistence
 QueryResultPersistence = None
 
 
@@ -44,7 +44,7 @@ def ssh_tunnel_auth():
 
 def database_key_definitions(default):
     """
-    All primary/foreign keys in Redash are of type `db.Integer` by default.
+    All primary/foreign keys in Rewatch are of type `db.Integer` by default.
     You may choose to use different column types for primary/foreign keys. To do so, add an entry below for each model you'd like to modify.
     For each model, add a tuple with the database type as the first item, and a dict including any kwargs for the column definition as the second item.
     """

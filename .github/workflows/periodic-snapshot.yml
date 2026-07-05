@@ -71,10 +71,10 @@ jobs:
 
           # Update version in files
           gawk -i inplace -F: -v q=\" -v tag=${TAG_NAME} '/^  "version": / { print $1 FS, q tag q ","; next} { print }' package.json
-          gawk -i inplace -F= -v q=\" -v tag=${TAG_NAME} '/^__version__ =/ { print $1 FS, q tag q; next} { print }' redash/__init__.py
+          gawk -i inplace -F= -v q=\" -v tag=${TAG_NAME} '/^__version__ =/ { print $1 FS, q tag q; next} { print }' rewatch/__init__.py
           gawk -i inplace -F= -v q=\" -v tag=${TAG_NAME} '/^version =/ { print $1 FS, q tag q; next} { print }' pyproject.toml
 
-          git add package.json redash/__init__.py pyproject.toml
+          git add package.json rewatch/__init__.py pyproject.toml
           git commit -m "Snapshot: ${TAG_NAME}"
           git tag ${TAG_NAME}
           git push --atomic origin master refs/tags/${TAG_NAME}

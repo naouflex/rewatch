@@ -1,7 +1,7 @@
 import datetime
 from unittest import TestCase
 
-from redash.query_runner.google_search_console import (
+from rewatch.query_runner.google_search_console import (
     get_formatted_value,
     parse_ga_response,
 )

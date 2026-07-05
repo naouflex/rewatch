@@ -23,7 +23,7 @@ import re
 
 from funcy import compact
 
-from redash.query_runner import (
+from rewatch.query_runner import (
     TYPE_BOOLEAN,
     TYPE_DATETIME,
     TYPE_FLOAT,
@@ -32,7 +32,7 @@ from redash.query_runner import (
     BaseHTTPQueryRunner,
     register,
 )
-from redash.utils import json_dumps
+from rewatch.utils import json_dumps
 
 try:
     from web3 import Web3

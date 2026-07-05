@@ -12,7 +12,7 @@ on:
         type: choice
         options:
           - preview
-          - redash
+          - rewatch
 
 env:
   NODE_VERSION: 24
@@ -101,7 +101,7 @@ jobs:
         if: ${{ github.event.inputs.dockerRepository == 'preview' || !github.event.workflow_run }}
         with:
           tags: |
-            ${{ vars.DOCKER_REPOSITORY }}/redash
+            ${{ vars.DOCKER_REPOSITORY }}/rewatch
             ${{ vars.DOCKER_REPOSITORY }}/preview
           context: .
           build-args: |
@@ -115,10 +115,10 @@ jobs:
       - name: Build and push release image to Docker Hub
         id: build-release
         uses: docker/build-push-action@v4
-        if: ${{ github.event.inputs.dockerRepository == 'redash' }}
+        if: ${{ github.event.inputs.dockerRepository == 'rewatch' }}
         with:
           tags: |
-            ${{ vars.DOCKER_REPOSITORY }}/redash:${{ steps.version.outputs.VERSION_TAG }}
+            ${{ vars.DOCKER_REPOSITORY }}/rewatch:${{ steps.version.outputs.VERSION_TAG }}
           context: .
           build-args: |
             test_all_deps=true
@@ -173,14 +173,14 @@ jobs:
         if: ${{ github.event.inputs.dockerRepository == 'preview' || !github.event.workflow_run }}
         working-directory: ${{ runner.temp }}/digests
         run: |
-          docker buildx imagetools create -t ${{ vars.DOCKER_REPOSITORY }}/redash:preview \
-            $(printf '${{ vars.DOCKER_REPOSITORY }}/redash:preview@sha256:%s ' *)
+          docker buildx imagetools create -t ${{ vars.DOCKER_REPOSITORY }}/rewatch:preview \
+            $(printf '${{ vars.DOCKER_REPOSITORY }}/rewatch:preview@sha256:%s ' *)
           docker buildx imagetools create -t ${{ vars.DOCKER_REPOSITORY }}/preview:${{ needs.build-docker-image.outputs.VERSION_TAG }} \
             $(printf '${{ vars.DOCKER_REPOSITORY }}/preview:${{ needs.build-docker-image.outputs.VERSION_TAG }}@sha256:%s ' *)
 
       - name: Create and push manifest for the release image
-        if: ${{ github.event.inputs.dockerRepository == 'redash' }}
+        if: ${{ github.event.inputs.dockerRepository == 'rewatch' }}
         working-directory: ${{ runner.temp }}/digests
         run: |
-          docker buildx imagetools create -t ${{ vars.DOCKER_REPOSITORY }}/redash:${{ needs.build-docker-image.outputs.VERSION_TAG }} \
-            $(printf '${{ vars.DOCKER_REPOSITORY }}/redash:${{ needs.build-docker-image.outputs.VERSION_TAG }}@sha256:%s ' *)
+          docker buildx imagetools create -t ${{ vars.DOCKER_REPOSITORY }}/rewatch:${{ needs.build-docker-image.outputs.VERSION_TAG }} \
+            $(printf '${{ vars.DOCKER_REPOSITORY }}/rewatch:${{ needs.build-docker-image.outputs.VERSION_TAG }}@sha256:%s ' *)

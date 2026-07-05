@@ -1,5 +1,5 @@
-from redash.models import AccessPermission
-from redash.permissions import ACCESS_TYPE_MODIFY, ACCESS_TYPE_VIEW
+from rewatch.models import AccessPermission
+from rewatch.permissions import ACCESS_TYPE_MODIFY, ACCESS_TYPE_VIEW
 from tests import BaseTestCase
 
 

@@ -6,26 +6,26 @@ from flask_restful import abort
 from funcy import project
 from sqlalchemy.exc import IntegrityError
 
-from redash import models
-from redash.handlers.base import (
+from rewatch import models
+from rewatch.handlers.base import (
     BaseResource,
     get_object_or_404,
     require_fields,
 )
-from redash.permissions import (
+from rewatch.permissions import (
     require_access,
     require_admin,
     require_permission,
     view_only,
 )
-from redash.query_runner import (
+from rewatch.query_runner import (
     get_configuration_schema_for_query_runner_type,
     query_runners,
 )
-from redash.serializers import serialize_job
-from redash.tasks.general import get_schema, test_connection
-from redash.utils import filter_none
-from redash.utils.configuration import ConfigurationContainer, ValidationError
+from rewatch.serializers import serialize_job
+from rewatch.tasks.general import get_schema, test_connection
+from rewatch.utils import filter_none
+from rewatch.utils.configuration import ConfigurationContainer, ValidationError
 
 
 class DataSourceTypeListResource(BaseResource):

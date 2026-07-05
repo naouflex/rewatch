@@ -6,7 +6,7 @@ from dateutil import parser
 from requests import Session
 from xlsxwriter.utility import xl_col_to_name
 
-from redash.query_runner import (
+from rewatch.query_runner import (
     TYPE_BOOLEAN,
     TYPE_DATETIME,
     TYPE_FLOAT,
@@ -16,7 +16,7 @@ from redash.query_runner import (
     guess_type,
     register,
 )
-from redash.utils import json_loads
+from rewatch.utils import json_loads
 
 logger = logging.getLogger(__name__)
 

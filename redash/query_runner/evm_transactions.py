@@ -14,14 +14,14 @@ import logging
 
 import yaml
 
-from redash.query_runner import (
+from rewatch.query_runner import (
     TYPE_FLOAT,
     TYPE_INTEGER,
     TYPE_STRING,
     BaseHTTPQueryRunner,
     register,
 )
-from redash.utils import json_dumps
+from rewatch.utils import json_dumps
 
 logger = logging.getLogger(__name__)
 

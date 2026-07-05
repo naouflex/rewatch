@@ -10,11 +10,11 @@ from flask_login import LoginManager, login_user, logout_user, user_logged_in
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.exceptions import Unauthorized
 
-from redash import models, settings
-from redash.authentication import jwt_auth
-from redash.authentication.org_resolving import current_org
-from redash.settings.organization import settings as org_settings
-from redash.tasks import record_event
+from rewatch import models, settings
+from rewatch.authentication import jwt_auth
+from rewatch.authentication.org_resolving import current_org
+from rewatch.settings.organization import settings as org_settings
+from rewatch.tasks import record_event
 
 login_manager = LoginManager()
 logger = logging.getLogger("authentication")
@@ -24,9 +24,9 @@ def get_login_url(external=False, next="/"):
     if settings.MULTI_ORG and current_org == None:  # noqa: E711
         login_url = "/"
     elif settings.MULTI_ORG:
-        login_url = url_for("redash.login", org_slug=current_org.slug, next=next, _external=external)
+        login_url = url_for("rewatch.login", org_slug=current_org.slug, next=next, _external=external)
     else:
-        login_url = url_for("redash.login", next=next, _external=external)
+        login_url = url_for("rewatch.login", next=next, _external=external)
 
     return login_url
 
@@ -204,7 +204,7 @@ def log_user_logged_in(app, user):
         "org_id": user.org_id,
         "user_id": user.id,
         "action": "login",
-        "object_type": "redash",
+        "object_type": "rewatch",
         "timestamp": int(time.time()),
         "user_agent": request.user_agent.string,
         "ip": request.remote_addr,
@@ -230,16 +230,16 @@ def logout_and_redirect_to_index():
     if settings.MULTI_ORG and current_org == None:  # noqa: E711
         index_url = "/"
     elif settings.MULTI_ORG:
-        index_url = url_for("redash.index", org_slug=current_org.slug, _external=False)
+        index_url = url_for("rewatch.index", org_slug=current_org.slug, _external=False)
     else:
-        index_url = url_for("redash.index", _external=False)
+        index_url = url_for("rewatch.index", _external=False)
 
     return redirect(index_url)
 
 
 def init_app(app):
-    from redash.authentication import ldap_auth, remote_user_auth, saml_auth
-    from redash.authentication.google_oauth import (
+    from rewatch.authentication import ldap_auth, remote_user_auth, saml_auth
+    from rewatch.authentication.google_oauth import (
         create_google_oauth_blueprint,
     )
 
@@ -252,7 +252,7 @@ def init_app(app):
         session.permanent = True
         app.permanent_session_lifetime = timedelta(seconds=settings.SESSION_EXPIRY_TIME)
 
-    from redash.security import csrf
+    from rewatch.security import csrf
 
     # Authlib's flask oauth client requires a Flask app to initialize
     for blueprint in [

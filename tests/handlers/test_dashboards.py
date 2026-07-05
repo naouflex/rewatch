@@ -1,7 +1,7 @@
-from redash.models import AccessPermission, ApiKey, Dashboard, db
-from redash.permissions import ACCESS_TYPE_MODIFY
-from redash.serializers import serialize_dashboard
-from redash.utils import json_loads
+from rewatch.models import AccessPermission, ApiKey, Dashboard, db
+from rewatch.permissions import ACCESS_TYPE_MODIFY
+from rewatch.serializers import serialize_dashboard
+from rewatch.utils import json_loads
 from tests import BaseTestCase
 
 

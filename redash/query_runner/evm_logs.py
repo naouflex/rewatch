@@ -21,7 +21,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 import yaml
 
-from redash.query_runner import (
+from rewatch.query_runner import (
     TYPE_BOOLEAN,
     TYPE_DATETIME,
     TYPE_FLOAT,
@@ -30,11 +30,11 @@ from redash.query_runner import (
     BaseHTTPQueryRunner,
     register,
 )
-from redash.query_runner._evm_abi import (
+from rewatch.query_runner._evm_abi import (
     fetch_abi_from_etherscan,
     fetch_contract_creation_block,
 )
-from redash.utils import json_dumps
+from rewatch.utils import json_dumps
 
 logger = logging.getLogger(__name__)
 

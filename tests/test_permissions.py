@@ -1,7 +1,7 @@
 from collections import namedtuple
 
-from redash import models
-from redash.permissions import has_access
+from rewatch import models
+from rewatch.permissions import has_access
 from tests import BaseTestCase
 
 MockUser = namedtuple("MockUser", ["permissions", "group_ids"])

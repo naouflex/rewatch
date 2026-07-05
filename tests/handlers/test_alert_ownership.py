@@ -5,7 +5,7 @@
 - Marking alerts as favorite (and listing them).
 - Listing the alerts owned by the current user (``/api/alerts/my``).
 """
-from redash.models import Alert, Favorite, db
+from rewatch.models import Alert, Favorite, db
 from tests import BaseTestCase
 
 

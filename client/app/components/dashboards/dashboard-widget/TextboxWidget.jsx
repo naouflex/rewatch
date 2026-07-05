@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
 import { markdown } from "markdown";
-import HtmlContent from "@redash/viz/lib/components/HtmlContent";
+import HtmlContent from "@rewatch/viz/lib/components/HtmlContent";
 import TextboxDialog from "@/components/dashboards/TextboxDialog";
 import Widget from "./Widget";
 

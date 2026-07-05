@@ -1,8 +1,8 @@
 import logging
 import os
 
-from redash.models.users import ApiUser, User
-from redash.query_runner import (
+from rewatch.models.users import ApiUser, User
+from rewatch.query_runner import (
     TYPE_BOOLEAN,
     TYPE_DATE,
     TYPE_DATETIME,
@@ -14,7 +14,7 @@ from redash.query_runner import (
     JobTimeoutException,
     register,
 )
-from redash.settings import parse_boolean
+from rewatch.settings import parse_boolean
 
 logger = logging.getLogger(__name__)
 ANNOTATE_QUERY = parse_boolean(os.environ.get("TRINO_ANNOTATE_QUERY", "true"))
@@ -76,7 +76,7 @@ class Trino(BaseQueryRunner):
                 "port": {"type": "number"},
                 "username": {"type": "string"},
                 "password": {"type": "string"},
-                "source": {"type": "string", "default": "redash"},
+                "source": {"type": "string", "default": "rewatch"},
                 "client_tags": {"type": "string", "title": "Client tags (comma separated)"},
                 "catalog": {"type": "string"},
                 "schema": {"type": "string"},
@@ -200,7 +200,7 @@ class Trino(BaseQueryRunner):
         connection = trino.dbapi.connect(
             http_scheme=self.configuration.get("protocol", "http"),
             host=self.configuration.get("host", ""),
-            source=self.configuration.get("source", "redash"),
+            source=self.configuration.get("source", "rewatch"),
             port=self.configuration.get("port", 8080),
             catalog=self.configuration.get("catalog", ""),
             schema=self.configuration.get("schema", ""),

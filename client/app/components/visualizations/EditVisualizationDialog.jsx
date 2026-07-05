@@ -16,7 +16,7 @@ import {
   getDefaultVisualization,
   newVisualization,
   VisualizationType,
-} from "@redash/viz/lib";
+} from "@rewatch/viz/lib";
 import { Renderer, Editor } from "@/components/visualizations/visualizationComponents";
 
 import "./EditVisualizationDialog.less";

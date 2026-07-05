@@ -1,5 +1,5 @@
 [project]
-name = "redash"
+name = "rewatch"
 version = "26.04.0-dev"
 requires-python = ">=3.13"
 description = "Rewatch — connect to any data source, visualize, dashboard, and share your data."

@@ -11,7 +11,7 @@ import sqlalchemy as sa
 from sqlalchemy.sql import table
 from sqlalchemy import select
 
-from redash.query_runner import BaseQueryRunner, get_query_runner
+from rewatch.query_runner import BaseQueryRunner, get_query_runner
 
 
 # revision identifiers, used by Alembic.

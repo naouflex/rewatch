@@ -1,7 +1,7 @@
 from unittest import TestCase
 from unittest.mock import patch
 
-from redash.query_runner.duckdb import DuckDB
+from rewatch.query_runner.duckdb import DuckDB
 
 
 class TestDuckDBSchema(TestCase):

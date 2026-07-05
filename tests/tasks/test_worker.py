@@ -2,10 +2,10 @@ from mock import call, patch
 from rq import Connection
 from rq.job import JobStatus
 
-from redash import rq_redis_connection
-from redash.tasks import Queue, Worker
-from redash.tasks.queries.execution import enqueue_query
-from redash.worker import default_queues, job
+from rewatch import rq_redis_connection
+from rewatch.tasks import Queue, Worker
+from rewatch.tasks.queries.execution import enqueue_query
+from rewatch.worker import default_queues, job
 from tests import BaseTestCase
 
 

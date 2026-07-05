@@ -2,8 +2,8 @@ import datetime
 
 from flask import current_app
 
-from redash import models, utils
-from redash.worker import get_job_logger, job
+from rewatch import models, utils
+from rewatch.worker import get_job_logger, job
 
 logger = get_job_logger(__name__)
 

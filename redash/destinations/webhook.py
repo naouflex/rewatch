@@ -3,9 +3,9 @@ import logging
 import requests
 from requests.auth import HTTPBasicAuth
 
-from redash.destinations import BaseDestination, register
-from redash.serializers import serialize_alert
-from redash.utils import json_dumps
+from rewatch.destinations import BaseDestination, register
+from rewatch.serializers import serialize_alert
+from rewatch.utils import json_dumps
 
 
 class Webhook(BaseDestination):

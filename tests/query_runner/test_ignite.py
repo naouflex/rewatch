@@ -1,7 +1,7 @@
 import datetime
 from unittest import TestCase
 
-from redash.query_runner.ignite import Ignite
+from rewatch.query_runner.ignite import Ignite
 
 
 class TestIgnite(TestCase):

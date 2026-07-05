@@ -1,7 +1,7 @@
 import unittest
 
-from redash.query_runner import BaseQueryRunner, BaseSQLQueryRunner
-from redash.utils import gen_query_hash
+from rewatch.query_runner import BaseQueryRunner, BaseSQLQueryRunner
+from rewatch.utils import gen_query_hash
 
 
 class TestBaseSQLQueryRunner(unittest.TestCase):

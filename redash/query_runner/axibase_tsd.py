@@ -2,7 +2,7 @@ import csv
 import logging
 import uuid
 
-from redash.query_runner import (
+from rewatch.query_runner import (
     TYPE_DATE,
     TYPE_DATETIME,
     TYPE_FLOAT,
@@ -13,7 +13,7 @@ from redash.query_runner import (
     JobTimeoutException,
     register,
 )
-from redash.utils import json_loads
+from rewatch.utils import json_loads
 
 logger = logging.getLogger(__name__)
 
@@ -40,22 +40,22 @@ types_map = {
 }
 
 
-def resolve_redash_type(type_in_atsd):
+def resolve_rewatch_type(type_in_atsd):
     """
-    Retrieve corresponding redash type
+    Retrieve corresponding rewatch type
     :param type_in_atsd: `str`
-    :return: redash type constant
+    :return: rewatch type constant
     """
     if isinstance(type_in_atsd, dict):
-        type_in_redash = types_map.get(type_in_atsd["base"])
+        type_in_rewatch = types_map.get(type_in_atsd["base"])
     else:
-        type_in_redash = types_map.get(type_in_atsd)
-    return type_in_redash
+        type_in_rewatch = types_map.get(type_in_atsd)
+    return type_in_rewatch
 
 
 def generate_rows_and_columns(csv_response):
     """
-    Prepare rows and columns in redash format from ATSD csv response
+    Prepare rows and columns in rewatch format from ATSD csv response
     :param csv_response: `str`
     :return: prepared rows and columns
     """
@@ -73,7 +73,7 @@ def generate_rows_and_columns(csv_response):
     columns = [
         {
             "friendly_name": i["titles"],
-            "type": resolve_redash_type(i["datatype"]),
+            "type": resolve_rewatch_type(i["datatype"]),
             "name": i["name"],
         }
         for i in meta_columns

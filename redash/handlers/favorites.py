@@ -1,8 +1,8 @@
 from sqlalchemy.exc import IntegrityError
 
-from redash import models
-from redash.handlers.base import BaseResource, get_object_or_404
-from redash.permissions import require_access, view_only
+from rewatch import models
+from rewatch.handlers.base import BaseResource, get_object_or_404
+from rewatch.permissions import require_access, view_only
 
 
 class QueryFavoriteResource(BaseResource):

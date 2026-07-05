@@ -13,7 +13,7 @@
 </p>
 <p class="intercom-align-left" style="line-height: 1.5; margin: 0 0 17px; text-align: left !important" align="left">
     Your sign-in email is: {{ invited.email }}<br>
-    Your Rewatch account is: <a href="{{ url_for('redash.index', org_slug=org.slug, _external=True) }}" target="_blank" style="border: none; color: #1251BA; outline: none !important">{{ url_for('redash.index', org_slug=org.slug, _external=True) }}</a>
+    Your Rewatch account is: <a href="{{ url_for('rewatch.index', org_slug=org.slug, _external=True) }}" target="_blank" style="border: none; color: #1251BA; outline: none !important">{{ url_for('rewatch.index', org_slug=org.slug, _external=True) }}</a>
 </p>
 
 {% endblock %}

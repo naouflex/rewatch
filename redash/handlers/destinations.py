@@ -2,14 +2,14 @@ from flask import make_response, request
 from flask_restful import abort
 from sqlalchemy.exc import IntegrityError
 
-from redash import models
-from redash.destinations import (
+from rewatch import models
+from rewatch.destinations import (
     destinations,
     get_configuration_schema_for_destination_type,
 )
-from redash.handlers.base import BaseResource, get_object_or_404, require_fields
-from redash.permissions import require_admin_or_owner, require_permission
-from redash.utils.configuration import ConfigurationContainer, ValidationError
+from rewatch.handlers.base import BaseResource, get_object_or_404, require_fields
+from rewatch.permissions import require_admin_or_owner, require_permission
+from rewatch.utils.configuration import ConfigurationContainer, ValidationError
 
 
 def serialize_destinations(current_user, destinations, all=False):

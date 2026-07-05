@@ -10,10 +10,10 @@ from sqlalchemy.exc import DatabaseError
 from sqlalchemy.sql import select
 from sqlalchemy_utils.types.encrypted.encrypted_type import FernetEngine
 
-from redash import settings
-from redash.models.base import Column, key_type
-from redash.models.types import EncryptedConfiguration
-from redash.utils.configuration import ConfigurationContainer
+from rewatch import settings
+from rewatch.models.base import Column, key_type
+from rewatch.models.types import EncryptedConfiguration
+from rewatch.utils.configuration import ConfigurationContainer
 
 manager = AppGroup(help="Manage the database (create/drop tables. reencrypt data.).")
 
@@ -31,7 +31,7 @@ def _wait_for_db_connection(db):
 
 
 def is_db_empty():
-    from redash.models import db
+    from rewatch.models import db
 
     table_names = sqlalchemy.inspect(db.get_engine()).get_table_names()
     return len(table_names) == 0
@@ -46,7 +46,7 @@ def load_extensions(db):
 @manager.command(name="create_tables")
 def create_tables():
     """Create the database tables."""
-    from redash.models import db
+    from rewatch.models import db
 
     _wait_for_db_connection(db)
 
@@ -66,7 +66,7 @@ def create_tables():
 @manager.command(name="drop_tables")
 def drop_tables():
     """Drop the database tables."""
-    from redash.models import db
+    from rewatch.models import db
 
     _wait_for_db_connection(db)
     db.drop_all()
@@ -78,7 +78,7 @@ def drop_tables():
 @option("--show-sql/--no-show-sql", default=False, help="show sql for debug")
 def reencrypt(old_secret, new_secret, show_sql):
     """Reencrypt data encrypted by OLD_SECRET with NEW_SECRET."""
-    from redash.models import db
+    from rewatch.models import db
 
     _wait_for_db_connection(db)
 

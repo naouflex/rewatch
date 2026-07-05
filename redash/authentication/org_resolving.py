@@ -3,7 +3,7 @@ import logging
 from flask import g, request
 from werkzeug.local import LocalProxy
 
-from redash.models import Organization
+from rewatch.models import Organization
 
 
 def _get_current_org():

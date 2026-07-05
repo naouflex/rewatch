@@ -3,7 +3,7 @@ from unittest import TestCase
 
 import mock
 
-from redash.query_runner.python import Python
+from rewatch.query_runner.python import Python
 
 
 class TestPythonQueryRunner(TestCase):

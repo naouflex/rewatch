@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-from redash.query_runner import query_runners
+from rewatch.query_runner import query_runners
 
 # --- Query syntax (shared across many data source types) ---
 

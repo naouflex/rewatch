@@ -9,17 +9,17 @@ from rq.exceptions import NoSuchJobError
 from rq.job import JobStatus
 from rq.timeouts import JobTimeoutException
 
-from redash import models, redis_connection, settings
-from redash.query_runner import InterruptException
-from redash.tasks.alerts import check_alerts_for_query
-from redash.tasks.indexers import check_indexers_for_query
-from redash.tasks.failure_report import track_failure
-from redash.tasks.worker import Job, Queue
-from redash.utils import gen_query_hash, utcnow
-from redash.worker import get_job_logger
+from rewatch import models, redis_connection, settings
+from rewatch.query_runner import InterruptException
+from rewatch.tasks.alerts import check_alerts_for_query
+from rewatch.tasks.indexers import check_indexers_for_query
+from rewatch.tasks.failure_report import track_failure
+from rewatch.tasks.worker import Job, Queue
+from rewatch.utils import gen_query_hash, utcnow
+from rewatch.worker import get_job_logger
 
 logger = get_job_logger(__name__)
-TIMEOUT_MESSAGE = "Query exceeded Redash query execution time limit."
+TIMEOUT_MESSAGE = "Query exceeded Rewatch query execution time limit."
 
 
 def _job_lock_id(query_hash, data_source_id):

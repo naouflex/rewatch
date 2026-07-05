@@ -1,5 +1,5 @@
 #!/bin/bash
-NAME=redash
+NAME=rewatch
 VERSION=$(jq -r .version package.json)
 FULL_VERSION=$VERSION+b$CIRCLE_BUILD_NUM
 FILENAME=$NAME.$FULL_VERSION.tar.gz

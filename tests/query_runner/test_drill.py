@@ -1,14 +1,14 @@
 import datetime
 from unittest import TestCase
 
-from redash.query_runner import (
+from rewatch.query_runner import (
     TYPE_BOOLEAN,
     TYPE_DATETIME,
     TYPE_FLOAT,
     TYPE_INTEGER,
     TYPE_STRING,
 )
-from redash.query_runner.drill import convert_type, parse_response
+from rewatch.query_runner.drill import convert_type, parse_response
 
 
 class TestConvertType(TestCase):
@@ -24,7 +24,7 @@ class TestConvertType(TestCase):
         self.assertEqual(convert_type("Текст", TYPE_STRING), "Текст")
         self.assertEqual(convert_type(None, TYPE_STRING), "")
         self.assertEqual(convert_type("", TYPE_STRING), "")
-        self.assertEqual(convert_type("redash", TYPE_STRING), "redash")
+        self.assertEqual(convert_type("rewatch", TYPE_STRING), "rewatch")
 
     def test_converts_integer(self):
         self.assertEqual(convert_type("42", TYPE_INTEGER), 42)

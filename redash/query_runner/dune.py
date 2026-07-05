@@ -8,7 +8,7 @@ Queries are written as YAML, e.g.
     performance: medium
 
 The runner POSTs an execution to the Dune API, polls until completion, and
-returns the rows / column metadata as Redash-style ``{rows, columns}``.
+returns the rows / column metadata as Rewatch-style ``{rows, columns}``.
 Ported from inverse-watch.
 """
 import logging
@@ -16,8 +16,8 @@ import time
 
 import yaml
 
-from redash.query_runner import BaseHTTPQueryRunner, register
-from redash.utils import json_dumps
+from rewatch.query_runner import BaseHTTPQueryRunner, register
+from rewatch.utils import json_dumps
 
 logger = logging.getLogger(__name__)
 

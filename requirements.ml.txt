@@ -1,5 +1,5 @@
 # MLModels feature — heavy ML stack installed only in the dedicated
-# `redash-ml-worker` image (see Dockerfile.ml). Pinned to versions compatible
+# `rewatch-ml-worker` image (see Dockerfile.ml). Pinned to versions compatible
 # with Python 3.13 and numpy 2.x. We intentionally do NOT depend on
 # tensorflow/keras: the MLModel runtime is scikit-learn-only.
 scikit-learn==1.7.2

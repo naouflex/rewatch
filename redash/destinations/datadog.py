@@ -3,8 +3,8 @@ import os
 
 import requests
 
-from redash.destinations import BaseDestination, register
-from redash.utils import json_dumps
+from rewatch.destinations import BaseDestination, register
+from rewatch.utils import json_dumps
 
 
 class Datadog(BaseDestination):
@@ -63,7 +63,7 @@ class Datadog(BaseDestination):
             "alert_type": alert_type,
             "priority": options.get("priority"),
             "source_type_name": options.get("source_type_name"),
-            "aggregation_key": f"redash:{alert_url}",
+            "aggregation_key": f"rewatch:{alert_url}",
             "tags": [],
         }
 
@@ -72,7 +72,7 @@ class Datadog(BaseDestination):
             body["tags"] = tags.split(",")
         body["tags"].extend(
             [
-                "redash",
+                "rewatch",
                 f"query_id:{query.id}",
                 f"alert_id:{alert.id}",
             ]

@@ -2,12 +2,12 @@ import json
 import textwrap
 from unittest import mock
 
-from redash.destinations.asana import Asana
-from redash.destinations.datadog import Datadog
-from redash.destinations.discord import Discord
-from redash.destinations.slack import Slack
-from redash.destinations.webex import Webex
-from redash.models import Alert, NotificationDestination, db
+from rewatch.destinations.asana import Asana
+from rewatch.destinations.datadog import Datadog
+from rewatch.destinations.discord import Discord
+from rewatch.destinations.slack import Slack
+from rewatch.destinations.webex import Webex
+from rewatch.models import Alert, NotificationDestination, db
 from tests import BaseTestCase
 
 
@@ -261,7 +261,7 @@ def test_discord_notify_calls_requests_post():
     new_state = Alert.TRIGGERED_STATE
     destination = Discord(options)
 
-    with mock.patch("redash.destinations.discord.requests.post") as mock_post:
+    with mock.patch("rewatch.destinations.discord.requests.post") as mock_post:
         mock_response = mock.Mock()
         mock_response.status_code = 204
         mock_post.return_value = mock_response
@@ -313,7 +313,7 @@ def test_asana_notify_calls_requests_post():
     new_state = Alert.TRIGGERED_STATE
     destination = Asana(options)
 
-    with mock.patch("redash.destinations.asana.requests.post") as mock_post:
+    with mock.patch("rewatch.destinations.asana.requests.post") as mock_post:
         mock_response = mock.Mock()
         mock_response.status_code = 204
         mock_post.return_value = mock_response
@@ -365,7 +365,7 @@ def test_slack_notify_calls_requests_post():
     new_state = Alert.TRIGGERED_STATE
     destination = Slack(options)
 
-    with mock.patch("redash.destinations.slack.requests.post") as mock_post:
+    with mock.patch("rewatch.destinations.slack.requests.post") as mock_post:
         mock_response = mock.Mock()
         mock_response.status_code = 204
         mock_post.return_value = mock_response
@@ -422,7 +422,7 @@ def test_webex_notify_calls_requests_post():
     new_state = Alert.TRIGGERED_STATE
     destination = Webex(options)
 
-    with mock.patch("redash.destinations.webex.requests.post") as mock_post:
+    with mock.patch("rewatch.destinations.webex.requests.post") as mock_post:
         mock_response = mock.Mock()
         mock_response.status_code = 200
         mock_post.return_value = mock_response
@@ -490,7 +490,7 @@ def test_webex_notify_handles_blank_entries():
     new_state = Alert.TRIGGERED_STATE
     destination = Webex(options)
 
-    with mock.patch("redash.destinations.webex.requests.post") as mock_post:
+    with mock.patch("rewatch.destinations.webex.requests.post") as mock_post:
         destination.notify(alert, query, user, new_state, app, host, metadata, options)
 
         # Ensure no API calls are made when destinations are blank
@@ -520,7 +520,7 @@ def test_webex_notify_handles_2d_array():
     new_state = Alert.TRIGGERED_STATE
     destination = Webex(options)
 
-    with mock.patch("redash.destinations.webex.requests.post") as mock_post:
+    with mock.patch("rewatch.destinations.webex.requests.post") as mock_post:
         mock_response = mock.Mock()
         mock_response.status_code = 200
         mock_post.return_value = mock_response
@@ -573,7 +573,7 @@ def test_webex_notify_handles_1d_array():
     new_state = Alert.TRIGGERED_STATE
     destination = Webex(options)
 
-    with mock.patch("redash.destinations.webex.requests.post") as mock_post:
+    with mock.patch("rewatch.destinations.webex.requests.post") as mock_post:
         mock_response = mock.Mock()
         mock_response.status_code = 200
         mock_post.return_value = mock_response
@@ -626,7 +626,7 @@ def test_datadog_notify_calls_requests_post():
     new_state = Alert.TRIGGERED_STATE
     destination = Datadog(options)
 
-    with mock.patch("redash.destinations.datadog.requests.post") as mock_post:
+    with mock.patch("rewatch.destinations.datadog.requests.post") as mock_post:
         mock_response = mock.Mock()
         mock_response.status_code = 202
         mock_post.return_value = mock_response
@@ -639,11 +639,11 @@ def test_datadog_notify_calls_requests_post():
             "alert_type": "error",
             "priority": "normal",
             "source_type_name": "postgres",
-            "aggregation_key": "redash:https://localhost:5000/alerts/1",
+            "aggregation_key": "rewatch:https://localhost:5000/alerts/1",
             "tags": [
                 "foo:bar",
                 "zoo:baz",
-                "redash",
+                "rewatch",
                 "query_id:1",
                 "alert_id:1",
             ],

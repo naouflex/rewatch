@@ -1,6 +1,6 @@
-from redash import models
-from redash.handlers.base import order_results
-from redash.models import db
+from rewatch import models
+from rewatch.handlers.base import order_results
+from rewatch.models import db
 from tests import BaseTestCase
 
 

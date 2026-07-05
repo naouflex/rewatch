@@ -18,14 +18,14 @@ import logging
 
 import yaml
 
-from redash.query_runner import (
+from rewatch.query_runner import (
     TYPE_INTEGER,
     TYPE_STRING,
     BaseHTTPQueryRunner,
     register,
 )
-from redash.query_runner._evm_abi import fetch_abi_from_etherscan
-from redash.utils import json_dumps
+from rewatch.query_runner._evm_abi import fetch_abi_from_etherscan
+from rewatch.utils import json_dumps
 
 logger = logging.getLogger(__name__)
 

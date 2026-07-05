@@ -1,6 +1,6 @@
 import warnings
 
-from redash import settings
+from rewatch import settings
 
 with warnings.catch_warnings():
     # Supress advocate warning below

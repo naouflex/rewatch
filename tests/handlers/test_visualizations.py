@@ -1,4 +1,4 @@
-from redash import models
+from rewatch import models
 from tests import BaseTestCase
 
 

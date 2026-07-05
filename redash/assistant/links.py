@@ -28,7 +28,7 @@ def app_link(base_url: str, path: str) -> str:
 
 
 def preview_image_url(base_url: str, resource: str, resource_id: int | str) -> str:
-    from redash.assistant.previews import preview_path
+    from rewatch.assistant.previews import preview_path
 
     return preview_path(base_url, resource, resource_id)
 

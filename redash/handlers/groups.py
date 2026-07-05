@@ -1,9 +1,9 @@
 from flask import request
 from flask_restful import abort
 
-from redash import models
-from redash.handlers.base import BaseResource, get_object_or_404
-from redash.permissions import require_admin, require_permission
+from rewatch import models
+from rewatch.handlers.base import BaseResource, get_object_or_404
+from rewatch.permissions import require_admin, require_permission
 
 
 class GroupListResource(BaseResource):

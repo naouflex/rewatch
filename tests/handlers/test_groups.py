@@ -1,6 +1,6 @@
 from funcy import project
 
-from redash.models import DataSource, Group, db
+from rewatch.models import DataSource, Group, db
 from tests import BaseTestCase
 
 

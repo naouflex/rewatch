@@ -1,7 +1,7 @@
 [project]
 name = "rewatch-mcp"
 version = "0.1.0"
-description = "MCP server exposing the Rewatch (Redash) REST API"
+description = "MCP server exposing the Rewatch (Rewatch) REST API"
 requires-python = ">=3.10"
 dependencies = [
     "mcp>=1.2.0",

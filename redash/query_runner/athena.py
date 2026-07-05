@@ -1,7 +1,7 @@
 import logging
 import os
 
-from redash.query_runner import (
+from rewatch.query_runner import (
     TYPE_BOOLEAN,
     TYPE_DATE,
     TYPE_DATETIME,
@@ -11,7 +11,7 @@ from redash.query_runner import (
     BaseQueryRunner,
     register,
 )
-from redash.settings import parse_boolean
+from rewatch.settings import parse_boolean
 
 logger = logging.getLogger(__name__)
 ANNOTATE_QUERY = parse_boolean(os.environ.get("ATHENA_ANNOTATE_QUERY", "true"))
@@ -167,7 +167,7 @@ class Athena(BaseQueryRunner):
 
     def _get_iam_credentials(self, user=None):
         if ASSUME_ROLE:
-            role_session_name = "redash" if user is None else user.email
+            role_session_name = "rewatch" if user is None else user.email
             sts = boto3.client("sts")
             creds = sts.assume_role(
                 RoleArn=self.configuration.get("iam_role"),

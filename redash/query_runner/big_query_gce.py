@@ -8,7 +8,7 @@ try:
 except ImportError:
     enabled = False
 
-from redash.query_runner import register
+from rewatch.query_runner import register
 
 from .big_query import BigQuery
 

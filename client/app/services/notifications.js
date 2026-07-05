@@ -1,9 +1,9 @@
 import { find } from "lodash";
 import debug from "debug";
 import recordEvent from "@/services/recordEvent";
-import redashIconUrl from "@/assets/images/icon_small.png";
+import rewatchIconUrl from "@/assets/images/icon_small.png";
 
-const logger = debug("redash:notifications");
+const logger = debug("rewatch:notifications");
 
 const Notification = window.Notification || null;
 if (!Notification) {
@@ -31,7 +31,7 @@ function showNotification(title, content) {
   const notification = new Notification(title, {
     tag: title + content,
     body: content,
-    icon: redashIconUrl,
+    icon: rewatchIconUrl,
   });
   notification.onclick = function onClick() {
     window.focus();

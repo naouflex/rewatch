@@ -1,7 +1,7 @@
 import logging
 import os
 
-from redash.query_runner import (
+from rewatch.query_runner import (
     TYPE_DATETIME,
     TYPE_FLOAT,
     TYPE_INTEGER,

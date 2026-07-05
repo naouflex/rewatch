@@ -1,4 +1,4 @@
-from redash.models import QuerySnippet, db
+from rewatch.models import QuerySnippet, db
 from tests import BaseTestCase
 
 

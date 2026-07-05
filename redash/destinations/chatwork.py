@@ -2,7 +2,7 @@ import logging
 
 import requests
 
-from redash.destinations import BaseDestination, register
+from rewatch.destinations import BaseDestination, register
 
 
 class ChatWork(BaseDestination):

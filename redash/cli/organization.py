@@ -1,7 +1,7 @@
 from click import argument, option
 from flask.cli import AppGroup
 
-from redash import models
+from rewatch import models
 
 manager = AppGroup(help="Organization management commands.")
 

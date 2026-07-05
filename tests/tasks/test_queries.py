@@ -2,10 +2,10 @@ from mock import Mock, patch
 from rq import Connection
 from rq.exceptions import NoSuchJobError
 
-from redash import models, rq_redis_connection
-from redash.query_runner.pg import PostgreSQL
-from redash.tasks import Job
-from redash.tasks.queries.execution import (
+from rewatch import models, rq_redis_connection
+from rewatch.query_runner.pg import PostgreSQL
+from rewatch.tasks import Job
+from rewatch.tasks.queries.execution import (
     QueryExecutionError,
     enqueue_query,
     execute_query,
@@ -30,8 +30,8 @@ def create_job(*args, **kwargs):
     return Job(connection=rq_redis_connection)
 
 
-@patch("redash.tasks.queries.execution.Job.fetch", side_effect=fetch_job)
-@patch("redash.tasks.queries.execution.Queue.enqueue", side_effect=create_job)
+@patch("rewatch.tasks.queries.execution.Job.fetch", side_effect=fetch_job)
+@patch("rewatch.tasks.queries.execution.Queue.enqueue", side_effect=create_job)
 class TestEnqueueTask(BaseTestCase):
     def test_multiple_enqueue_of_same_query(self, enqueue, _):
         query = self.factory.create_query()
@@ -123,7 +123,7 @@ class TestEnqueueTask(BaseTestCase):
 
         self.assertEqual(2, enqueue.call_count)
 
-    @patch("redash.settings.dynamic_settings.query_time_limit", return_value=60)
+    @patch("rewatch.settings.dynamic_settings.query_time_limit", return_value=60)
     def test_limits_query_time(self, _, enqueue, __):
         query = self.factory.create_query()
 
@@ -172,7 +172,7 @@ class TestEnqueueTask(BaseTestCase):
         self.assertEqual(3, enqueue.call_count)
 
 
-@patch("redash.tasks.queries.execution.get_current_job", side_effect=fetch_job)
+@patch("rewatch.tasks.queries.execution.get_current_job", side_effect=fetch_job)
 class QueryExecutorTests(BaseTestCase):
     def test_success(self, _):
         """

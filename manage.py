@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 """
-CLI to manage redash.
+CLI to manage rewatch.
 """
 
-from redash.cli import manager
+from rewatch.cli import manager
 
 if __name__ == "__main__":
     manager()

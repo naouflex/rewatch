@@ -2,7 +2,7 @@ import logging
 
 import requests
 
-from redash.destinations import BaseDestination, register
+from rewatch.destinations import BaseDestination, register
 
 DEFAULT_BODY_TEMPLATE = "Alert: {{ALERT_NAME}} is {{ALERT_STATUS}}.\n{{{ALERT_URL}}}"
 

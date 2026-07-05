@@ -2,8 +2,8 @@ import logging
 
 import requests
 
-from redash.query_runner import register
-from redash.query_runner.clickhouse import ClickHouse
+from rewatch.query_runner import register
+from rewatch.query_runner.clickhouse import ClickHouse
 
 logger = logging.getLogger(__name__)
 

@@ -8,15 +8,15 @@ import json
 from unittest import TestCase
 from unittest import mock
 
-from redash.query_runner.coingecko import (
+from rewatch.query_runner.coingecko import (
     CoinGecko,
     QueryParseError,
     flatten_dict,
     parse_coingecko_response,
     parse_query as parse_coingecko_query,
 )
-from redash.query_runner.dune import Dune
-from redash.query_runner.graphql import (
+from rewatch.query_runner.dune import Dune
+from rewatch.query_runner.graphql import (
     GraphQL,
     flatten_dict as graphql_flatten,
     parse_response as parse_graphql_response,

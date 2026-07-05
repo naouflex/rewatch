@@ -2,7 +2,7 @@
 
 import "@cypress/code-coverage/support";
 import "./commands";
-import "./redash-api/index.js";
+import "./rewatch-api/index.js";
 
 Cypress.env("dataSourceId", 1);
 

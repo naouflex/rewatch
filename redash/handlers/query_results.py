@@ -6,15 +6,15 @@ from flask import make_response, request
 from flask_login import current_user
 from flask_restful import abort
 
-from redash import models, settings
-from redash.handlers.base import BaseResource, get_object_or_404, record_event
-from redash.models.parameterized_query import (
+from rewatch import models, settings
+from rewatch.handlers.base import BaseResource, get_object_or_404, record_event
+from rewatch.models.parameterized_query import (
     InvalidParameterError,
     ParameterizedQuery,
     QueryDetachedFromDataSourceError,
     dropdown_values,
 )
-from redash.permissions import (
+from rewatch.permissions import (
     has_access,
     not_view_only,
     require_access,
@@ -22,15 +22,15 @@ from redash.permissions import (
     require_permission,
     view_only,
 )
-from redash.serializers import (
+from rewatch.serializers import (
     serialize_job,
     serialize_query_result,
     serialize_query_result_to_dsv,
     serialize_query_result_to_xlsx,
 )
-from redash.tasks import Job
-from redash.tasks.queries import enqueue_query
-from redash.utils import (
+from rewatch.tasks import Job
+from rewatch.tasks.queries import enqueue_query
+from rewatch.utils import (
     collect_parameters_from_request,
     json_dumps,
     to_filename,

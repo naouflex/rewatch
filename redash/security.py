@@ -5,7 +5,7 @@ from flask_login import current_user
 from flask_talisman import talisman
 from flask_wtf.csrf import CSRFProtect, generate_csrf
 
-from redash import settings
+from rewatch import settings
 
 talisman = talisman.Talisman()
 csrf = CSRFProtect()

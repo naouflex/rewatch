@@ -5,7 +5,7 @@ import backoff
 import requests
 import yaml
 
-from redash.query_runner import (
+from rewatch.query_runner import (
     TYPE_DATE,
     TYPE_DATETIME,
     TYPE_FLOAT,

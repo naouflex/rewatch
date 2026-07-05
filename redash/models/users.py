@@ -12,8 +12,8 @@ from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy_utils import EmailType
 from sqlalchemy_utils.models import generic_repr
 
-from redash import redis_connection
-from redash.utils import dt_from_timestamp, generate_token
+from rewatch import redis_connection
+from rewatch.utils import dt_from_timestamp, generate_token
 
 from .base import Column, GFKBase, db, key_type, primary_key
 from .mixins import BelongsToOrgMixin, TimestampMixin

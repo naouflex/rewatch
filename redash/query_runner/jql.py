@@ -1,8 +1,8 @@
 import re
 from collections import OrderedDict
 
-from redash.query_runner import TYPE_STRING, BaseHTTPQueryRunner, register
-from redash.utils import json_loads
+from rewatch.query_runner import TYPE_STRING, BaseHTTPQueryRunner, register
+from rewatch.utils import json_loads
 
 
 # TODO: make this more general and move into __init__.py

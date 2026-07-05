@@ -1,15 +1,15 @@
 # Dockerfile.ml — heavyweight worker image with the full ML stack pre-installed.
 #
-# This image is intentionally separate from the regular `redash-server` /
-# `redash-worker` image so that:
+# This image is intentionally separate from the regular `rewatch-server` /
+# `rewatch-worker` image so that:
 #   * the small/fast HTTP image does not have to ship gigabytes of scikit-learn
 #     / scipy / statsmodels wheels,
 #   * production deployments that don't use MLModels can simply skip building
 #     this image,
-#   * deploying a new MLModels feature only requires rebuilding `redash-ml-worker`.
+#   * deploying a new MLModels feature only requires rebuilding `rewatch-ml-worker`.
 #
-# It is built FROM the existing redash image (so it shares the entrypoint,
-# Poetry layout, working directory, and `redash` user). On top of that we install
+# It is built FROM the existing rewatch image (so it shares the entrypoint,
+# Poetry layout, working directory, and `rewatch` user). On top of that we install
 # the `all_ds` Poetry group which already includes scikit-learn / joblib /
 # scipy / statsmodels (added when the MLModels feature was ported), plus a
 # couple of extra system libraries that some sklearn wheels need at runtime.
@@ -26,7 +26,7 @@
 # QUEUES can be overridden to add the regular default/queries queues if you want
 # the same container to act as a generic worker as well.
 
-ARG BASE_IMAGE=redash-worker:latest
+ARG BASE_IMAGE=rewatch-worker:latest
 FROM ${BASE_IMAGE}
 
 USER root
@@ -56,7 +56,7 @@ ENV QUEUES="training,predicting" \
     REDASH_ML_MODEL_TRAINING_TIME_LIMIT=36000 \
     REDASH_ML_MODEL_PREDICTING_TIME_LIMIT=360
 
-USER redash
+USER rewatch
 
 ENTRYPOINT ["/app/bin/docker-entrypoint"]
 CMD ["worker"]

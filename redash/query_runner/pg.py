@@ -8,7 +8,7 @@ from uuid import uuid4
 import psycopg2
 from psycopg2.extras import Range
 
-from redash.query_runner import (
+from rewatch.query_runner import (
     TYPE_BOOLEAN,
     TYPE_DATE,
     TYPE_DATETIME,
@@ -160,7 +160,7 @@ class PostgreSQL(BaseSQLQueryRunner):
                 "host": {"type": "string", "default": "127.0.0.1"},
                 "port": {"type": "number", "default": 5432},
                 "dbname": {"type": "string", "title": "Database Name"},
-                "dsn": {"type": "string", "default": "application_name=redash", "title": "Parameters"},
+                "dsn": {"type": "string", "default": "application_name=rewatch", "title": "Parameters"},
                 "sslmode": {
                     "type": "string",
                     "title": "SSL Mode",
@@ -512,7 +512,7 @@ class RedshiftIAM(Redshift):
                 )
             else:
                 assume_client = client = boto3.client("sts", region_name=self.configuration.get("aws_region"))
-            role_session = f"redash_{uuid4().hex}"
+            role_session = f"rewatch_{uuid4().hex}"
             session_keys = assume_client.assume_role(
                 RoleArn=self.configuration.get("rolename"), RoleSessionName=role_session
             )["Credentials"]

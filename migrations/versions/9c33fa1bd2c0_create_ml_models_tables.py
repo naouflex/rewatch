@@ -8,7 +8,7 @@ Adds the four tables that back the MLModels feature:
 - ``ml_model_subscriptions``    - notification destinations per model
 
 The schema mirrors the inverse-watch port but drops the Keras-specific
-``autoencoder_model_blob`` / ``encoder_model_blob`` columns since the redash
+``autoencoder_model_blob`` / ``encoder_model_blob`` columns since the rewatch
 implementation is sklearn-only.
 
 Revision ID: 9c33fa1bd2c0

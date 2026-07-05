@@ -10,7 +10,7 @@ import logging
 import requests
 from requests.auth import HTTPBasicAuth
 
-from redash.query_runner import (
+from rewatch.query_runner import (
     TYPE_BOOLEAN,
     TYPE_DATETIME,
     TYPE_FLOAT,

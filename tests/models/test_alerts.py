@@ -1,8 +1,8 @@
 import textwrap
 from unittest import TestCase
 
-from redash import settings
-from redash.models import OPERATORS, Alert, db, next_state
+from rewatch import settings
+from rewatch.models import OPERATORS, Alert, db, next_state
 from tests import BaseTestCase
 
 

@@ -1,7 +1,7 @@
 import datetime
 
-from redash import models
-from redash.utils import utcnow
+from rewatch import models
+from rewatch.utils import utcnow
 from tests import BaseTestCase
 
 

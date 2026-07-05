@@ -5,17 +5,17 @@ from freezegun import freeze_time
 from mock import patch
 from pytz import utc
 
-from redash.query_runner import TYPE_INTEGER, TYPE_STRING
-from redash.query_runner.mongodb import (
+from rewatch.query_runner import TYPE_INTEGER, TYPE_STRING
+from rewatch.query_runner.mongodb import (
     MongoDB,
     _get_column_by_name,
     parse_query_json,
     parse_results,
 )
-from redash.utils import json_dumps, parse_human_time
+from rewatch.utils import json_dumps, parse_human_time
 
 
-@patch("redash.query_runner.mongodb.pymongo.MongoClient")
+@patch("rewatch.query_runner.mongodb.pymongo.MongoClient")
 class TestMongoDB(TestCase):
     def test_username_password_present_overrides_username_from_uri(self, mongo_client):
         config = {
@@ -139,7 +139,7 @@ class TestParseQueryJson(TestCase):
         self.assertEqual(query_data["test_dict"]["b"]["date"], datetime.datetime(2014, 10, 4, 0, 0))
 
     def test_handles_nested_fields(self):
-        # https://github.com/getredash/redash/issues/597
+        # https://github.com/getrewatch/rewatch/issues/597
         query = {
             "collection": "bus",
             "aggregate": [

@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from typing import Any, Optional
 
-from redash.models import AssistantMessage, AssistantThread, db
+from rewatch.models import AssistantMessage, AssistantThread, db
 
 MAX_THREADS = 30
 # gpt-5.4-mini has a 400K-token window; allow much longer thread recall while
@@ -106,7 +106,7 @@ def add_message(thread_id: str, role: str, content: str) -> AssistantMessage:
 def touch_thread(thread: AssistantThread, user_message: Optional[str] = None) -> None:
     if thread.title == DEFAULT_TITLE and user_message:
         thread.title = _title_from_message(user_message)
-    from redash.utils import utcnow
+    from rewatch.utils import utcnow
 
     thread.updated_at = utcnow()
     db.session.add(thread)

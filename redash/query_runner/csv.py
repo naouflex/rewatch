@@ -3,8 +3,8 @@ import logging
 
 import yaml
 
-from redash.query_runner import BaseQueryRunner, NotSupported, register
-from redash.utils.requests_session import (
+from rewatch.query_runner import BaseQueryRunner, NotSupported, register
+from rewatch.utils.requests_session import (
     UnacceptableAddressException,
     requests_or_advocate,
 )
@@ -67,29 +67,29 @@ class CSV(BaseQueryRunner):
             conversions = [
                 {
                     "pandas_type": np.integer,
-                    "redash_type": "integer",
+                    "rewatch_type": "integer",
                 },
                 {
                     "pandas_type": np.inexact,
-                    "redash_type": "float",
+                    "rewatch_type": "float",
                 },
                 {
                     "pandas_type": np.datetime64,
-                    "redash_type": "datetime",
-                    "to_redash": lambda x: x.strftime("%Y-%m-%d %H:%M:%S"),
+                    "rewatch_type": "datetime",
+                    "to_rewatch": lambda x: x.strftime("%Y-%m-%d %H:%M:%S"),
                 },
-                {"pandas_type": np.bool_, "redash_type": "boolean"},
-                {"pandas_type": np.object_, "redash_type": "string"},
+                {"pandas_type": np.bool_, "rewatch_type": "boolean"},
+                {"pandas_type": np.object_, "rewatch_type": "string"},
             ]
             labels = []
             for dtype, label in zip(df.dtypes, df.columns):
                 for conversion in conversions:
                     if issubclass(dtype.type, conversion["pandas_type"]):
                         data["columns"].append(
-                            {"name": label, "friendly_name": label, "type": conversion["redash_type"]}
+                            {"name": label, "friendly_name": label, "type": conversion["rewatch_type"]}
                         )
                         labels.append(label)
-                        func = conversion.get("to_redash")
+                        func = conversion.get("to_rewatch")
                         if func:
                             df[label] = df[label].apply(func)
                         break

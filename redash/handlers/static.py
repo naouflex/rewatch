@@ -2,11 +2,11 @@ from flask import render_template, send_file
 from flask_login import login_required
 from werkzeug.utils import safe_join
 
-from redash import settings
-from redash.handlers import routes
-from redash.handlers.authentication import base_href
-from redash.handlers.base import org_scoped_rule
-from redash.security import csp_allows_embeding
+from rewatch import settings
+from rewatch.handlers import routes
+from rewatch.handlers.authentication import base_href
+from rewatch.handlers.base import org_scoped_rule
+from rewatch.security import csp_allows_embeding
 
 
 def render_index():

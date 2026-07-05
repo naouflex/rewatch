@@ -11,10 +11,10 @@ from sqlalchemy.dialects.postgresql import BYTEA
 from sqlalchemy.sql import table
 from sqlalchemy_utils.types.encrypted.encrypted_type import FernetEngine
 
-from redash import settings
-from redash.utils.configuration import ConfigurationContainer
-from redash.models.base import key_type
-from redash.models.types import (
+from rewatch import settings
+from rewatch.utils.configuration import ConfigurationContainer
+from rewatch.models.base import key_type
+from rewatch.models.types import (
     EncryptedConfiguration,
     Configuration,
 )

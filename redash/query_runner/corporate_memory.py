@@ -8,7 +8,7 @@ import json
 import logging
 from os import environ
 
-from redash.query_runner import BaseQueryRunner
+from rewatch.query_runner import BaseQueryRunner
 
 from . import register
 
@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 
 class CorporateMemoryQueryRunner(BaseQueryRunner):
-    """Use eccenca Corporate Memory as redash data source"""
+    """Use eccenca Corporate Memory as rewatch data source"""
 
     # These environment keys are used by cmempy
     KNOWN_CONFIG_KEYS = (
@@ -61,7 +61,7 @@ class CorporateMemoryQueryRunner(BaseQueryRunner):
         """init the class and configuration"""
         super(CorporateMemoryQueryRunner, self).__init__(configuration)
         """
-        FEATURE?: activate SPARQL support in the redash query editor
+        FEATURE?: activate SPARQL support in the rewatch query editor
             Currently SPARQL syntax seems not to be available for react-ace
             component. However, the ace editor itself supports sparql mode:
             https://github.com/ajaxorg/ace/blob/master/lib/ace/mode/sparql.js
@@ -92,14 +92,14 @@ class CorporateMemoryQueryRunner(BaseQueryRunner):
 
     @staticmethod
     def _transform_sparql_results(results):
-        """transforms a SPARQL query result to a redash query result
+        """transforms a SPARQL query result to a rewatch query result
 
         source structure: SPARQL 1.1 Query Results JSON Format
             - seeAlso: https://www.w3.org/TR/sparql11-results-json/
 
-        target structure: redash result set
+        target structure: rewatch result set
             there is no good documentation available
-            so here an example result set as needed for redash:
+            so here an example result set as needed for rewatch:
             data = {
                 "columns": [ {"name": "name", "type": "string", "friendly_name": "friendly name"}],
                 "rows": [
@@ -115,7 +115,7 @@ class CorporateMemoryQueryRunner(BaseQueryRunner):
         # Not sure why we do not use the json package here but all other
         # query runner do it the same way :-)
         sparql_results = results
-        # transform all bindings to redash rows
+        # transform all bindings to rewatch rows
         rows = []
         for sparql_row in sparql_results["results"]["bindings"]:
             row = {}
@@ -126,7 +126,7 @@ class CorporateMemoryQueryRunner(BaseQueryRunner):
                     # not bound SPARQL variables are set as empty strings
                     row[var] = ""
             rows.append(row)
-        # transform all vars to redash columns
+        # transform all vars to rewatch columns
         columns = []
         for var in sparql_results["head"]["vars"]:
             columns.append({"name": var, "friendly_name": var, "type": "string"})
@@ -155,7 +155,7 @@ class CorporateMemoryQueryRunner(BaseQueryRunner):
         # type of None means, there is an error in the query
         # so execution is at least tried on endpoint
         if query_type not in ["SELECT", None]:
-            raise ValueError("Queries of type {} can not be processed by redash.".format(query_type))
+            raise ValueError("Queries of type {} can not be processed by rewatch.".format(query_type))
 
         self._setup_environment()
         try:

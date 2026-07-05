@@ -3,8 +3,8 @@ from string import Template
 
 import requests
 
-from redash.destinations import BaseDestination, register
-from redash.utils import json_dumps
+from rewatch.destinations import BaseDestination, register
+from rewatch.utils import json_dumps
 
 
 def json_string_substitute(j, substitutions):
@@ -31,10 +31,10 @@ class MicrosoftTeamsWebhook(BaseDestination):
             "@type": "MessageCard",
             "@context": "http://schema.org/extensions",
             "themeColor": "0076D7",
-            "summary": "A Redash Alert was Triggered",
+            "summary": "A Rewatch Alert was Triggered",
             "sections": [
                 {
-                    "activityTitle": "A Redash Alert was Triggered",
+                    "activityTitle": "A Rewatch Alert was Triggered",
                     "facts": [
                         {"name": "Alert Name", "value": "{alert_name}"},
                         {"name": "Alert URL", "value": "{alert_url}"},
@@ -76,7 +76,7 @@ class MicrosoftTeamsWebhook(BaseDestination):
 
     def notify(self, alert, query, user, new_state, app, host, metadata, options):
         """
-        :type app: redash.Redash
+        :type app: rewatch.Rewatch
         """
         try:
             alert_url = "{host}/alerts/{alert_id}".format(host=host, alert_id=alert.id)

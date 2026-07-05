@@ -11,8 +11,8 @@ from flask import request
 from mock import Mock, patch
 from sqlalchemy.orm.exc import NoResultFound
 
-from redash import models, settings
-from redash.authentication import (
+from rewatch import models, settings
+from rewatch.authentication import (
     api_key_load_user_from_request,
     get_login_url,
     hmac_load_user_from_request,
@@ -20,7 +20,7 @@ from redash.authentication import (
     org_settings,
     sign,
 )
-from redash.authentication.google_oauth import (
+from rewatch.authentication.google_oauth import (
     create_and_login_user,
     verify_profile,
 )
@@ -181,7 +181,7 @@ class TestCreateAndLoginUser(BaseTestCase):
     def test_logins_valid_user(self):
         user = self.factory.create_user(email="test@example.com")
 
-        with patch("redash.authentication.login_user") as login_user_mock:
+        with patch("rewatch.authentication.login_user") as login_user_mock:
             create_and_login_user(self.factory.org, user.name, user.email)
             login_user_mock.assert_called_once_with(user, remember=True)
 
@@ -189,7 +189,7 @@ class TestCreateAndLoginUser(BaseTestCase):
         email = "test@example.com"
         name = "Test User"
 
-        with patch("redash.authentication.login_user") as login_user_mock:
+        with patch("rewatch.authentication.login_user") as login_user_mock:
             create_and_login_user(self.factory.org, name, email)
 
             self.assertTrue(login_user_mock.called)
@@ -199,7 +199,7 @@ class TestCreateAndLoginUser(BaseTestCase):
     def test_updates_user_name(self):
         user = self.factory.create_user(email="test@example.com")
 
-        with patch("redash.authentication.login_user") as login_user_mock:
+        with patch("rewatch.authentication.login_user") as login_user_mock:
             create_and_login_user(self.factory.org, "New Name", user.email)
             login_user_mock.assert_called_once_with(user, remember=True)
 
@@ -392,7 +392,7 @@ class TestUserForgotPassword(BaseTestCase):
     def test_user_should_receive_password_reset_link(self):
         user = self.factory.create_user()
 
-        with patch("redash.handlers.authentication.send_password_reset_email") as send_password_reset_email_mock:
+        with patch("rewatch.handlers.authentication.send_password_reset_email") as send_password_reset_email_mock:
             response = self.post_request("/forgot", org=user.org, data={"email": user.email})
             self.assertEqual(response.status_code, 200)
             send_password_reset_email_mock.assert_called_with(user)
@@ -404,9 +404,9 @@ class TestUserForgotPassword(BaseTestCase):
         self.db.session.commit()
 
         with patch(
-            "redash.handlers.authentication.send_password_reset_email"
+            "rewatch.handlers.authentication.send_password_reset_email"
         ) as send_password_reset_email_mock, patch(
-            "redash.handlers.authentication.send_user_disabled_email"
+            "rewatch.handlers.authentication.send_user_disabled_email"
         ) as send_user_disabled_email_mock:
             response = self.post_request("/forgot", org=user.org, data={"email": user.email})
             self.assertEqual(response.status_code, 200)

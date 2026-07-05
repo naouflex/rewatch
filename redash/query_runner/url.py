@@ -1,5 +1,5 @@
-from redash.query_runner import BaseHTTPQueryRunner, register
-from redash.utils import deprecated
+from rewatch.query_runner import BaseHTTPQueryRunner, register
+from rewatch.utils import deprecated
 
 
 @deprecated()

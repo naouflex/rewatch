@@ -1,4 +1,4 @@
-from redash.query_runner import (
+from rewatch.query_runner import (
     TYPE_BOOLEAN,
     TYPE_DATE,
     TYPE_DATETIME,
@@ -8,7 +8,7 @@ from redash.query_runner import (
     BaseQueryRunner,
     register,
 )
-from redash.utils import json_loads
+from rewatch.utils import json_loads
 
 try:
     from azure.kusto.data import (
@@ -152,7 +152,7 @@ class AzureKusto(BaseQueryRunner):
         client = KustoClient(kcsb)
 
         request_properties = ClientRequestProperties()
-        request_properties.application = "redash"
+        request_properties.application = "rewatch"
 
         if user:
             request_properties.user = user.email

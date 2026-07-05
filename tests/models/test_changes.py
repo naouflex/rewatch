@@ -1,4 +1,4 @@
-from redash.models import Change, ChangeTrackingMixin, Query, db
+from rewatch.models import Change, ChangeTrackingMixin, Query, db
 from tests import BaseTestCase
 
 
@@ -65,7 +65,7 @@ class TestLogChange(BaseTestCase):
         change = Change.last_change(obj)
 
         self.assertIsNotNone(change)
-        # TODO: https://github.com/getredash/redash/issues/1550
+        # TODO: https://github.com/getrewatch/rewatch/issues/1550
         # self.assertEqual(change.object_version, 2)
         self.assertEqual(change.object_version, obj.version)
         self.assertIn("name", change.change)

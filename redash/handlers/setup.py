@@ -3,11 +3,11 @@ from flask_login import login_user
 from wtforms import BooleanField, Form, PasswordField, StringField, validators
 from wtforms.fields.html5 import EmailField
 
-from redash import settings
-from redash.authentication.org_resolving import current_org
-from redash.handlers.base import routes
-from redash.models import Group, Organization, User, db
-from redash.tasks.general import subscribe
+from rewatch import settings
+from rewatch.authentication.org_resolving import current_org
+from rewatch.handlers.base import routes
+from rewatch.models import Group, Organization, User, db
+from rewatch.tasks.general import subscribe
 
 
 class SetupForm(Form):
@@ -70,6 +70,6 @@ def setup():
         if form.newsletter.data or form.security_notifications:
             subscribe.delay(form.data)
 
-        return redirect(url_for("redash.index", org_slug=None))
+        return redirect(url_for("rewatch.index", org_slug=None))
 
     return render_template("setup.html", form=form)

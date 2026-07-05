@@ -4,9 +4,9 @@ from unittest import TestCase
 
 from dateutil.parser import parse as date_parse
 
-from redash import models
-from redash.models import db
-from redash.utils import gen_query_hash, utcnow
+from rewatch import models
+from rewatch.models import db
+from rewatch.utils import gen_query_hash, utcnow
 from tests import BaseTestCase
 
 

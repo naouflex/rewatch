@@ -1,5 +1,5 @@
 /**
- * Resolves Redash theme design tokens (CSS custom properties) into plain
+ * Resolves Rewatch theme design tokens (CSS custom properties) into plain
  * color strings that Plotly can consume. Falls back to sensible light-theme
  * defaults when running outside the host app or before tokens are defined.
  */

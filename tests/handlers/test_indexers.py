@@ -1,7 +1,7 @@
 """Tests for the Indexer feature: model, handlers, and worker task."""
 from unittest import mock
 
-from redash.models import Favorite, Indexer, db
+from rewatch.models import Favorite, Indexer, db
 from tests import BaseTestCase
 
 
@@ -153,7 +153,7 @@ class TestIndexerTagsAndMy(BaseTestCase):
 
 class TestIndexQueryResultsTask(BaseTestCase):
     def test_index_query_results_runs_runner_with_create_and_inserts(self):
-        from redash.tasks.indexers import index_query_results
+        from rewatch.tasks.indexers import index_query_results
 
         indexer = self.factory.create_indexer(
             options={"target_table": "demo_idx", "insert_strategy": "append"}
@@ -170,7 +170,7 @@ class TestIndexQueryResultsTask(BaseTestCase):
 
         runner = mock.Mock()
         runner.run_query.return_value = (None, None)
-        with mock.patch("redash.tasks.indexers.get_query_runner", return_value=runner):
+        with mock.patch("rewatch.tasks.indexers.get_query_runner", return_value=runner):
             ok = index_query_results(indexer, query_result)
 
         self.assertTrue(ok)
@@ -183,7 +183,7 @@ class TestIndexQueryResultsTask(BaseTestCase):
         self.assertIsNotNone(Indexer.query.get(indexer.id).last_triggered_at)
 
     def test_index_query_results_overwrite_strategy_truncates(self):
-        from redash.tasks.indexers import index_query_results
+        from rewatch.tasks.indexers import index_query_results
 
         indexer = self.factory.create_indexer(options={"insert_strategy": "overwrite"})
         query_result = self.factory.create_query_result(
@@ -191,20 +191,20 @@ class TestIndexQueryResultsTask(BaseTestCase):
         )
         runner = mock.Mock()
         runner.run_query.return_value = (None, None)
-        with mock.patch("redash.tasks.indexers.get_query_runner", return_value=runner):
+        with mock.patch("rewatch.tasks.indexers.get_query_runner", return_value=runner):
             self.assertTrue(index_query_results(indexer, query_result))
 
         sqls = [call[0][0] for call in runner.run_query.call_args_list]
         self.assertTrue(any(s.startswith("DELETE FROM ") for s in sqls))
 
     def test_index_query_results_handles_empty_rows(self):
-        from redash.tasks.indexers import index_query_results
+        from rewatch.tasks.indexers import index_query_results
 
         indexer = self.factory.create_indexer()
         query_result = self.factory.create_query_result(
             data={"columns": [{"name": "x"}], "rows": []}
         )
         runner = mock.Mock()
-        with mock.patch("redash.tasks.indexers.get_query_runner", return_value=runner):
+        with mock.patch("rewatch.tasks.indexers.get_query_runner", return_value=runner):
             self.assertTrue(index_query_results(indexer, query_result))
         runner.run_query.assert_not_called()

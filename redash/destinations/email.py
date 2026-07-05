@@ -2,8 +2,8 @@ import logging
 
 from flask_mail import Message
 
-from redash import mail, settings
-from redash.destinations import BaseDestination, register
+from rewatch import mail, settings
+from rewatch.destinations import BaseDestination, register
 
 
 class Email(BaseDestination):

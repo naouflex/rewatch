@@ -1,10 +1,10 @@
 from passlib.apps import custom_app_context as pwd_context
 
-import redash.models
-from redash.models import db
-from redash.permissions import ACCESS_TYPE_MODIFY
-from redash.utils import gen_query_hash, utcnow
-from redash.utils.configuration import ConfigurationContainer
+import rewatch.models
+from rewatch.models import db
+from rewatch.permissions import ACCESS_TYPE_MODIFY
+from rewatch.utils import gen_query_hash, utcnow
+from rewatch.utils.configuration import ConfigurationContainer
 
 
 class ModelFactory:
@@ -42,7 +42,7 @@ class Sequence:
 
 
 user_factory = ModelFactory(
-    redash.models.User,
+    rewatch.models.User,
     name="John Doe",
     email=Sequence("test{}@example.com"),
     password_hash=pwd_context.hash("test1234"),
@@ -51,14 +51,14 @@ user_factory = ModelFactory(
 )
 
 org_factory = ModelFactory(
-    redash.models.Organization,
+    rewatch.models.Organization,
     name=Sequence("Org {}"),
     slug=Sequence("org{}.example.com"),
     settings={},
 )
 
 data_source_factory = ModelFactory(
-    redash.models.DataSource,
+    rewatch.models.DataSource,
     name=Sequence("Test {}"),
     type="pg",
     # If we don't use lambda here it will reuse the same options between tests:
@@ -67,7 +67,7 @@ data_source_factory = ModelFactory(
 )
 
 dashboard_factory = ModelFactory(
-    redash.models.Dashboard,
+    rewatch.models.Dashboard,
     name="test",
     user=user_factory.create,
     layout=[],
@@ -75,10 +75,10 @@ dashboard_factory = ModelFactory(
     org=1,
 )
 
-api_key_factory = ModelFactory(redash.models.ApiKey, object=dashboard_factory.create)
+api_key_factory = ModelFactory(rewatch.models.ApiKey, object=dashboard_factory.create)
 
 query_factory = ModelFactory(
-    redash.models.Query,
+    rewatch.models.Query,
     name="Query",
     description="",
     query_text="SELECT 1",
@@ -91,7 +91,7 @@ query_factory = ModelFactory(
 )
 
 query_with_params_factory = ModelFactory(
-    redash.models.Query,
+    rewatch.models.Query,
     name="New Query with Params",
     description="",
     query_text="SELECT {{param1}}",
@@ -104,16 +104,16 @@ query_with_params_factory = ModelFactory(
 )
 
 access_permission_factory = ModelFactory(
-    redash.models.AccessPermission,
+    rewatch.models.AccessPermission,
     object_id=query_factory.create,
-    object_type=redash.models.Query.__name__,
+    object_type=rewatch.models.Query.__name__,
     access_type=ACCESS_TYPE_MODIFY,
     grantor=user_factory.create,
     grantee=user_factory.create,
 )
 
 alert_factory = ModelFactory(
-    redash.models.Alert,
+    rewatch.models.Alert,
     name=Sequence("Alert {}"),
     query_rel=query_factory.create,
     user=user_factory.create,
@@ -121,7 +121,7 @@ alert_factory = ModelFactory(
 )
 
 query_result_factory = ModelFactory(
-    redash.models.QueryResult,
+    rewatch.models.QueryResult,
     data={"columns": {}, "rows": []},
     runtime=1,
     retrieved_at=utcnow,
@@ -132,7 +132,7 @@ query_result_factory = ModelFactory(
 )
 
 visualization_factory = ModelFactory(
-    redash.models.Visualization,
+    rewatch.models.Visualization,
     type="CHART",
     query_rel=query_factory.create,
     name="Chart",
@@ -141,7 +141,7 @@ visualization_factory = ModelFactory(
 )
 
 widget_factory = ModelFactory(
-    redash.models.Widget,
+    rewatch.models.Widget,
     width=1,
     options={},
     dashboard=dashboard_factory.create,
@@ -149,7 +149,7 @@ widget_factory = ModelFactory(
 )
 
 destination_factory = ModelFactory(
-    redash.models.NotificationDestination,
+    rewatch.models.NotificationDestination,
     org_id=1,
     user=user_factory.create,
     name=Sequence("Destination {}"),
@@ -158,19 +158,19 @@ destination_factory = ModelFactory(
 )
 
 alert_subscription_factory = ModelFactory(
-    redash.models.AlertSubscription,
+    rewatch.models.AlertSubscription,
     user=user_factory.create,
     destination=destination_factory.create,
     alert=alert_factory.create,
 )
 
 alert_event_factory = ModelFactory(
-    redash.models.AlertEvent,
+    rewatch.models.AlertEvent,
     alert=alert_factory.create,
 )
 
 indexer_factory = ModelFactory(
-    redash.models.Indexer,
+    rewatch.models.Indexer,
     name=Sequence("Indexer {}"),
     query_rel=query_factory.create,
     user=user_factory.create,
@@ -179,7 +179,7 @@ indexer_factory = ModelFactory(
 )
 
 query_snippet_factory = ModelFactory(
-    redash.models.QuerySnippet,
+    rewatch.models.QuerySnippet,
     trigger=Sequence("trigger {}"),
     description="description",
     snippet="snippet",
@@ -188,7 +188,7 @@ query_snippet_factory = ModelFactory(
 
 class Factory:
     def __init__(self):
-        self.org, self.admin_group, self.default_group = redash.models.init_db()
+        self.org, self.admin_group, self.default_group = rewatch.models.init_db()
         self._data_source = None
         self._user = None
 
@@ -205,16 +205,16 @@ class Factory:
     def data_source(self):
         if self._data_source is None:
             self._data_source = data_source_factory.create(org=self.org)
-            db.session.add(redash.models.DataSourceGroup(group=self.default_group, data_source=self._data_source))
+            db.session.add(rewatch.models.DataSourceGroup(group=self.default_group, data_source=self._data_source))
 
         return self._data_source
 
     def create_org(self, **kwargs):
         org = org_factory.create(**kwargs)
-        self.create_group(org=org, type=redash.models.Group.BUILTIN_GROUP, name="default")
+        self.create_group(org=org, type=rewatch.models.Group.BUILTIN_GROUP, name="default")
         self.create_group(
             org=org,
-            type=redash.models.Group.BUILTIN_GROUP,
+            type=rewatch.models.Group.BUILTIN_GROUP,
             name="admin",
             permissions=["admin"],
         )
@@ -250,7 +250,7 @@ class Factory:
 
         args.update(kwargs)
 
-        g = redash.models.Group(**args)
+        g = rewatch.models.Group(**args)
         return g
 
     def create_alert(self, **kwargs):
@@ -282,8 +282,8 @@ class Factory:
             "query_id": alert.query_id,
             "destination_id": kwargs.pop("destination_id", None),
             "alert_type": kwargs.pop("alert_type", "email"),
-            "state": kwargs.pop("state", redash.models.Alert.TRIGGERED_STATE),
-            "status": kwargs.pop("status", redash.models.AlertEvent.STATUS_OK),
+            "state": kwargs.pop("state", rewatch.models.Alert.TRIGGERED_STATE),
+            "status": kwargs.pop("status", rewatch.models.AlertEvent.STATUS_OK),
             "content": kwargs.pop("content", "test content"),
             "additional_properties": kwargs.pop("additional_properties", {}),
             "row_index": kwargs.pop("row_index", None),
@@ -311,7 +311,7 @@ class Factory:
         data_source = data_source_factory.create(**args)
 
         if group:
-            db.session.add(redash.models.DataSourceGroup(group=group, data_source=data_source, view_only=view_only))
+            db.session.add(rewatch.models.DataSourceGroup(group=group, data_source=data_source, view_only=view_only))
 
         return data_source
 

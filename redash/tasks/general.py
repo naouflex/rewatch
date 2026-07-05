@@ -1,12 +1,12 @@
 import requests
 from flask_mail import Message
 
-from redash import mail, models, settings
-from redash.models import users
-from redash.query_runner import NotSupported
-from redash.tasks.worker import Queue
-from redash.version_check import run_version_check
-from redash.worker import get_job_logger, job
+from rewatch import mail, models, settings
+from rewatch.models import users
+from rewatch.query_runner import NotSupported
+from rewatch.tasks.worker import Queue
+from rewatch.version_check import run_version_check
+from rewatch.worker import get_job_logger, job
 
 logger = get_job_logger(__name__)
 
@@ -20,7 +20,7 @@ def record_event(raw_event):
         logger.debug("Forwarding event to: %s", hook)
         try:
             data = {
-                "schema": "iglu:io.redash.webhooks/event/jsonschema/1-0-0",
+                "schema": "iglu:io.rewatch.webhooks/event/jsonschema/1-0-0",
                 "data": event.to_dict(),
             }
             response = requests.post(hook, json=data)

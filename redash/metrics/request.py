@@ -4,7 +4,7 @@ from collections import namedtuple
 
 from flask import g, request
 
-from redash import statsd_client
+from rewatch import statsd_client
 
 metrics_logger = logging.getLogger("metrics")
 

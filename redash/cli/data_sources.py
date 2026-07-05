@@ -5,13 +5,13 @@ from click.types import convert_type
 from flask.cli import AppGroup
 from sqlalchemy.orm.exc import NoResultFound
 
-from redash import models
-from redash.query_runner import (
+from rewatch import models
+from rewatch.query_runner import (
     get_configuration_schema_for_query_runner_type,
     query_runners,
 )
-from redash.utils import json_loads
-from redash.utils.configuration import ConfigurationContainer
+from rewatch.utils import json_loads
+from rewatch.utils.configuration import ConfigurationContainer
 
 manager = AppGroup(help="Data sources management commands.")
 

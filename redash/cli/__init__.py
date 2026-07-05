@@ -5,8 +5,8 @@ from flask import current_app
 from flask.cli import FlaskGroup, run_command, with_appcontext
 from rq import Connection
 
-from redash import __version__, create_app, rq_redis_connection, settings
-from redash.cli import (
+from rewatch import __version__, create_app, rq_redis_connection, settings
+from rewatch.cli import (
     data_sources,
     database,
     groups,
@@ -15,7 +15,7 @@ from redash.cli import (
     rq,
     users,
 )
-from redash.monitor import get_status
+from rewatch.monitor import get_status
 
 
 def create():
@@ -23,7 +23,7 @@ def create():
 
     @app.shell_context_processor
     def shell_context():
-        from redash import models, settings
+        from rewatch import models, settings
 
         return {"models": models, "settings": settings}
 
@@ -32,7 +32,7 @@ def create():
 
 @click.group(cls=FlaskGroup, create_app=create)
 def manager():
-    """Management script for Redash"""
+    """Management script for Rewatch"""
 
 
 manager.add_command(database.manager, "database")
@@ -47,7 +47,7 @@ manager.add_command(run_command, "runserver")
 
 @manager.command()
 def version():
-    """Displays Redash version."""
+    """Displays Rewatch version."""
     print(__version__)
 
 
@@ -59,7 +59,7 @@ def status():
 
 @manager.command()
 def check_settings():
-    """Show the settings as Redash sees them (useful for debugging)."""
+    """Show the settings as Rewatch sees them (useful for debugging)."""
     for name, item in current_app.config.items():
         print("{} = {}".format(name, item))
 
@@ -72,12 +72,12 @@ def send_test_mail(email=None):
     """
     from flask_mail import Message
 
-    from redash import mail
+    from rewatch import mail
 
     if email is None:
         email = settings.MAIL_DEFAULT_SENDER
 
-    mail.send(Message(subject="Test Message from Redash", recipients=[email], body="Test message."))
+    mail.send(Message(subject="Test Message from Rewatch", recipients=[email], body="Test message."))
 
 
 @manager.command("shell")

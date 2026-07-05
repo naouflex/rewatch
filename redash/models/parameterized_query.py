@@ -6,7 +6,7 @@ import pystache
 from dateutil.parser import parse
 from funcy import distinct
 
-from redash.utils import mustache_render
+from rewatch.utils import mustache_render
 
 
 def _pluck_name_and_value(default_column, row):
@@ -18,7 +18,7 @@ def _pluck_name_and_value(default_column, row):
 
 
 def _load_result(query_id, org):
-    from redash import models
+    from rewatch import models
 
     query = models.Query.get_by_id_and_org(query_id, org)
 

@@ -1,5 +1,5 @@
-from redash.handlers.query_results import error_messages, run_query
-from redash.models import db
+from rewatch.handlers.query_results import error_messages, run_query
+from rewatch.models import db
 from tests import BaseTestCase
 
 

@@ -1,7 +1,7 @@
-from redash import models, redis_connection
-from redash.tasks.worker import Queue
-from redash.utils import json_dumps
-from redash.worker import job
+from rewatch import models, redis_connection
+from rewatch.tasks.worker import Queue
+from rewatch.utils import json_dumps
+from rewatch.worker import job
 
 DATABRICKS_REDIS_EXPIRATION_TIME = 3600
 

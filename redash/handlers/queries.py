@@ -5,9 +5,9 @@ from flask_restful import abort
 from funcy import partial
 from sqlalchemy.orm.exc import StaleDataError
 
-from redash import models, settings
-from redash.authentication.org_resolving import current_org
-from redash.handlers.base import (
+from rewatch import models, settings
+from rewatch.authentication.org_resolving import current_org
+from rewatch.handlers.base import (
     BaseResource,
     filter_by_tags,
     get_object_or_404,
@@ -15,10 +15,10 @@ from redash.handlers.base import (
     paginate,
     routes,
 )
-from redash.handlers.base import order_results as _order_results
-from redash.handlers.query_results import run_query
-from redash.models.parameterized_query import ParameterizedQuery
-from redash.permissions import (
+from rewatch.handlers.base import order_results as _order_results
+from rewatch.handlers.query_results import run_query
+from rewatch.models.parameterized_query import ParameterizedQuery
+from rewatch.permissions import (
     can_modify,
     not_view_only,
     require_access,
@@ -27,8 +27,8 @@ from redash.permissions import (
     require_permission,
     view_only,
 )
-from redash.serializers import QuerySerializer
-from redash.utils import collect_parameters_from_request
+from rewatch.serializers import QuerySerializer
+from rewatch.utils import collect_parameters_from_request
 
 # Ordering map for relationships
 order_map = {

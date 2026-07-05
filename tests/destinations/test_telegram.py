@@ -1,7 +1,7 @@
 from unittest import mock
 
-from redash.destinations.telegram import Telegram
-from redash.models import Alert
+from rewatch.destinations.telegram import Telegram
+from rewatch.models import Alert
 
 
 def _make_alert(custom_body=None):
@@ -15,7 +15,7 @@ def _make_alert(custom_body=None):
 
 
 def test_telegram_registered():
-    from redash.destinations import destinations
+    from rewatch.destinations import destinations
 
     assert destinations.get("telegram") is Telegram
 
@@ -25,7 +25,7 @@ def test_telegram_notify_uses_default_template_when_no_custom_body():
     alert = _make_alert(custom_body=None)
 
     destination = Telegram(options)
-    with mock.patch("redash.destinations.telegram.requests.post") as mock_post:
+    with mock.patch("rewatch.destinations.telegram.requests.post") as mock_post:
         mock_post.return_value = mock.Mock(status_code=200, text="ok")
         destination.notify(alert, mock.Mock(), mock.Mock(), Alert.TRIGGERED_STATE, mock.Mock(), "http://h", {}, options)
 
@@ -42,7 +42,7 @@ def test_telegram_notify_passes_row_metadata_for_per_row():
     alert.render_custom_body = mock.Mock(return_value="Row 1")
 
     destination = Telegram(options)
-    with mock.patch("redash.destinations.telegram.requests.post") as mock_post:
+    with mock.patch("rewatch.destinations.telegram.requests.post") as mock_post:
         mock_post.return_value = mock.Mock(status_code=200, text="ok")
         destination.notify(
             alert,

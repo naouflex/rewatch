@@ -5,7 +5,7 @@ from uuid import uuid4
 
 import requests
 
-from redash.query_runner import (
+from rewatch.query_runner import (
     TYPE_DATE,
     TYPE_DATETIME,
     TYPE_FLOAT,
@@ -216,7 +216,7 @@ class ClickHouse(BaseSQLQueryRunner):
             else:
                 # If more than one query was given, a session is needed. Parameter session_check must be false
                 # for the first query
-                session_id = "redash_{}".format(uuid4().hex)
+                session_id = "rewatch_{}".format(uuid4().hex)
 
                 data = self._clickhouse_query(queries[0], session_id, session_check=False)
 

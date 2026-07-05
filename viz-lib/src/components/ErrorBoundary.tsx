@@ -3,7 +3,7 @@ import React from "react";
 import debug from "debug";
 import Alert from "antd/lib/alert";
 
-const logger = debug("redash:errors");
+const logger = debug("rewatch:errors");
 
 export const ErrorBoundaryContext = React.createContext({
   handleError: (error: any) => {

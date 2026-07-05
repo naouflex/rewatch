@@ -4,7 +4,7 @@ import jsonschema
 from jsonschema import ValidationError
 from sqlalchemy.ext.mutable import Mutable
 
-from redash.utils import json_dumps, json_loads
+from rewatch.utils import json_dumps, json_loads
 
 SECRET_PLACEHOLDER = "--------"
 

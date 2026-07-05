@@ -9,10 +9,10 @@ from funcy import project
 from rq.job import JobStatus
 from rq.timeouts import JobTimeoutException
 
-from redash import models
-from redash.models.parameterized_query import ParameterizedQuery
-from redash.permissions import has_access, view_only
-from redash.serializers.query_result import (
+from rewatch import models
+from rewatch.models.parameterized_query import ParameterizedQuery
+from rewatch.permissions import has_access, view_only
+from rewatch.serializers.query_result import (
     serialize_query_result,
     serialize_query_result_to_dsv,
     serialize_query_result_to_xlsx,
@@ -463,7 +463,7 @@ class MLModelVersionSerializer(Serializer):
 
 
 def serialize_prediction_result(prediction, with_nested_objects=True, include_input_data=False):
-    from redash.utils import json_loads
+    from rewatch.utils import json_loads
 
     content = None
     if prediction.content:

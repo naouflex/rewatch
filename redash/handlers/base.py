@@ -8,14 +8,14 @@ from sqlalchemy import cast
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm.exc import NoResultFound
 
-from redash import settings
-from redash.authentication import current_org
-from redash.models import db
-from redash.tasks import record_event as record_event_task
-from redash.utils import json_dumps
-from redash.utils.query_order import sort_query
+from rewatch import settings
+from rewatch.authentication import current_org
+from rewatch.models import db
+from rewatch.tasks import record_event as record_event_task
+from rewatch.utils import json_dumps
+from rewatch.utils.query_order import sort_query
 
-routes = Blueprint("redash", __name__, template_folder=settings.fix_assets_path("templates"))
+routes = Blueprint("rewatch", __name__, template_folder=settings.fix_assets_path("templates"))
 
 
 class BaseResource(Resource):

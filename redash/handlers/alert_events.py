@@ -1,13 +1,13 @@
 from flask import request
 
-from redash import models
-from redash.handlers.base import BaseResource, get_object_or_404
-from redash.permissions import (
+from rewatch import models
+from rewatch.handlers.base import BaseResource, get_object_or_404
+from rewatch.permissions import (
     require_access,
     require_admin_or_owner,
     view_only,
 )
-from redash.serializers import serialize_alert_event
+from rewatch.serializers import serialize_alert_event
 
 
 def _bool_arg(value, default=False):

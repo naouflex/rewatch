@@ -30,9 +30,9 @@ from flask_restful import abort
 from funcy import partial
 from sqlalchemy.orm.exc import StaleDataError
 
-from redash import models
-from redash.authentication.org_resolving import current_org
-from redash.handlers.base import (
+from rewatch import models
+from rewatch.authentication.org_resolving import current_org
+from rewatch.handlers.base import (
     BaseResource,
     filter_by_tags,
     get_object_or_404,
@@ -40,7 +40,7 @@ from redash.handlers.base import (
     paginate,
     require_fields,
 )
-from redash.permissions import (
+from rewatch.permissions import (
     can_modify,
     not_view_only,
     require_access,
@@ -49,8 +49,8 @@ from redash.permissions import (
     require_permission,
     view_only,
 )
-from redash.serializers import MLModelSerializer
-from redash.tasks import (
+from rewatch.serializers import MLModelSerializer
+from rewatch.tasks import (
     enqueue_predict_model,
     enqueue_train_model,
     kill_model_predicting,
@@ -185,7 +185,7 @@ class BaseMLModelListResource(BaseResource):
 class MLModelListResource(BaseMLModelListResource):
     @require_permission("view_model")
     def post(self):
-        """Create a new ML model bound to a Redash query.
+        """Create a new ML model bound to a Rewatch query.
 
         ---
         tags:
@@ -206,7 +206,7 @@ class MLModelListResource(BaseMLModelListResource):
                   type: string
                 query_id:
                   type: integer
-                  description: Redash query whose latest result feeds the model.
+                  description: Rewatch query whose latest result feeds the model.
                 options:
                   type: object
                   description: |

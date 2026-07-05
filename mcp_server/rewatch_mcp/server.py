@@ -1,4 +1,4 @@
-"""FastMCP stdio server exposing the Rewatch (Redash) REST API.
+"""FastMCP stdio server exposing the Rewatch (Rewatch) REST API.
 
 Design: three *meta* tools (``list_endpoints`` / ``describe_endpoint`` /
 ``call_api``) give full coverage of every route in the live OpenAPI spec
@@ -33,7 +33,7 @@ BASE_URL = os.environ.get("REWATCH_BASE_URL", "http://localhost:5001").rstrip("/
 API_KEY = os.environ.get("REWATCH_API_KEY", "")
 READ_ONLY = os.environ.get("REWATCH_MCP_READ_ONLY", "").lower() in ("1", "true", "yes")
 
-# Job statuses from redash.serializers.serialize_job
+# Job statuses from rewatch.serializers.serialize_job
 JOB_FINISHED = 3
 JOB_FAILED = 4
 JOB_CANCELED = 5
@@ -41,7 +41,7 @@ JOB_CANCELED = 5
 mcp = FastMCP(
     "rewatch",
     instructions=(
-        "Tools for the Rewatch (Redash) data platform: run SQL queries, create and "
+        "Tools for the Rewatch (Rewatch) data platform: run SQL queries, create and "
         "update queries/alerts/dashboards/ML models, browse data sources and schemas, "
         "and call any REST API endpoint. Use list_endpoints/describe_endpoint to "
         "discover the full API surface, then call_api for anything not covered by a "

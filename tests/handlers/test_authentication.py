@@ -2,9 +2,9 @@ import time
 
 import mock
 
-from redash import limiter, settings
-from redash.authentication.account import invite_token
-from redash.models import User
+from rewatch import limiter, settings
+from rewatch.authentication.account import invite_token
+from rewatch.models import User
 from tests import BaseTestCase
 
 

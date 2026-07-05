@@ -7,7 +7,7 @@ manager = AppGroup(help="Queries management commands.")
 
 @manager.command(name="rehash")
 def rehash():
-    from redash import models
+    from rewatch import models
 
     for q in models.Query.query.all():
         old_hash = q.query_hash
@@ -25,7 +25,7 @@ def rehash():
 @argument("query_id")
 @argument("tag")
 def add_tag(query_id, tag):
-    from redash import models
+    from rewatch import models
 
     query_id = int(query_id)
 
@@ -51,7 +51,7 @@ def add_tag(query_id, tag):
 @argument("query_id")
 @argument("tag")
 def remove_tag(query_id, tag):
-    from redash import models
+    from rewatch import models
 
     query_id = int(query_id)
 

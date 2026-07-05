@@ -3,22 +3,22 @@ from flask_restful import abort
 from funcy import partial, project
 from sqlalchemy.orm.exc import StaleDataError
 
-from redash import models
-from redash.handlers.base import (
+from rewatch import models
+from rewatch.handlers.base import (
     BaseResource,
     filter_by_tags,
     get_object_or_404,
     paginate,
 )
-from redash.handlers.base import order_results as _order_results
-from redash.permissions import (
+from rewatch.handlers.base import order_results as _order_results
+from rewatch.permissions import (
     can_modify,
     require_admin_or_owner,
     require_object_modify_permission,
     require_permission,
 )
-from redash.security import csp_allows_embeding
-from redash.serializers import DashboardSerializer, public_dashboard
+from rewatch.security import csp_allows_embeding
+from rewatch.serializers import DashboardSerializer, public_dashboard
 
 # Ordering map for relationships
 order_map = {
@@ -185,7 +185,7 @@ class DashboardResource(BaseResource):
         api_key = models.ApiKey.get_by_object(dashboard)
         if api_key:
             response["public_url"] = url_for(
-                "redash.public_dashboard",
+                "rewatch.public_dashboard",
                 token=api_key.api_key,
                 org_slug=self.current_org.slug,
                 _external=True,
@@ -310,7 +310,7 @@ class DashboardShareResource(BaseResource):
         models.db.session.commit()
 
         public_url = url_for(
-            "redash.public_dashboard",
+            "rewatch.public_dashboard",
             token=api_key.api_key,
             org_slug=self.current_org.slug,
             _external=True,

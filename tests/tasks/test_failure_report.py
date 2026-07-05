@@ -2,8 +2,8 @@ import dateutil
 import mock
 from freezegun import freeze_time
 
-from redash import redis_connection, settings
-from redash.tasks.failure_report import (
+from rewatch import redis_connection, settings
+from rewatch.tasks.failure_report import (
     key,
     notify_of_failure,
     send_failure_report,
@@ -24,7 +24,7 @@ class TestSendAggregatedErrorsTask(BaseTestCase):
         notify_of_failure(message, query)
         return key(query.user.id)
 
-    @mock.patch("redash.tasks.failure_report.render_template", return_value="")
+    @mock.patch("rewatch.tasks.failure_report.render_template", return_value="")
     def send_email(self, user, render_template):
         send_failure_report(user.id)
 

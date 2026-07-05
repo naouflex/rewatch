@@ -3,8 +3,8 @@ import maxminddb
 from flask import request
 from user_agents import parse as parse_ua
 
-from redash.handlers.base import BaseResource, paginate
-from redash.permissions import require_admin
+from rewatch.handlers.base import BaseResource, paginate
+from rewatch.permissions import require_admin
 
 
 def get_location(ip):

@@ -3,8 +3,8 @@ import json
 import pytest
 import requests
 
-from redash.query_runner import TYPE_FLOAT, TYPE_STRING
-from redash.query_runner.yandex_metrica import YandexMetrica
+from rewatch.query_runner import TYPE_FLOAT, TYPE_STRING
+from rewatch.query_runner.yandex_metrica import YandexMetrica
 
 example_query = """id: 1234567
 date1: '2018-07-01'

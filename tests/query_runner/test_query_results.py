@@ -8,7 +8,7 @@ from unittest import TestCase
 import mock
 import pytest
 
-from redash.query_runner.query_results import (
+from rewatch.query_runner.query_results import (
     CreateTableError,
     PermissionError,
     Results,
@@ -26,7 +26,7 @@ from redash.query_runner.query_results import (
     register_sql_helpers,
     replace_query_parameters,
 )
-from redash.utils import json_dumps
+from rewatch.utils import json_dumps
 from tests import BaseTestCase
 
 
@@ -301,7 +301,7 @@ class TestGetQueryResult(BaseTestCase):
         query_result = self.factory.create_query_result()
         query = self.factory.create_query(latest_query_data=query_result)
 
-        from redash.query_runner.pg import PostgreSQL
+        from rewatch.query_runner.pg import PostgreSQL
 
         with mock.patch.object(PostgreSQL, "run_query") as qr:
             query_result_data = {"columns": [], "rows": []}
@@ -315,7 +315,7 @@ class TestGetQueryResult(BaseTestCase):
         query_result = self.factory.create_query_result()
         query = self.factory.create_query(latest_query_data=query_result)
 
-        from redash.query_runner.pg import PostgreSQL
+        from rewatch.query_runner.pg import PostgreSQL
 
         with mock.patch.object(PostgreSQL, "run_query") as qr:
             payload = {"columns": [{"name": "x"}], "rows": [{"x": 1}]}
@@ -326,7 +326,7 @@ class TestGetQueryResult(BaseTestCase):
         query_result = self.factory.create_query_result()
         query = self.factory.create_query(latest_query_data=query_result)
 
-        from redash.query_runner.pg import PostgreSQL
+        from rewatch.query_runner.pg import PostgreSQL
 
         good_payload = {"columns": [], "rows": []}
         with mock.patch.object(PostgreSQL, "run_query") as qr:
@@ -491,7 +491,7 @@ class TestCreateTablesFromQueryIds(BaseTestCase):
         query_result = self.factory.create_query_result(data=cached_payload)
         query = self.factory.create_query(latest_query_data=query_result)
 
-        from redash.query_runner.pg import PostgreSQL
+        from rewatch.query_runner.pg import PostgreSQL
 
         connection = sqlite3.connect(":memory:")
         with mock.patch.object(PostgreSQL, "run_query") as qr:

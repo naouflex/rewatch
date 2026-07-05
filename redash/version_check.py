@@ -3,8 +3,8 @@ import logging
 import requests
 import semver
 
-from redash import __version__ as current_version
-from redash import redis_connection
+from rewatch import __version__ as current_version
+from rewatch import redis_connection
 
 REDIS_KEY = "new_version_available"
 

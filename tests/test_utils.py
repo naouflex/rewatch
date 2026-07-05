@@ -3,8 +3,8 @@ from unittest import TestCase
 
 import pytest
 
-from redash import create_app
-from redash.query_runner import (
+from rewatch import create_app
+from rewatch.query_runner import (
     TYPE_BOOLEAN,
     TYPE_DATE,
     TYPE_DATETIME,
@@ -12,7 +12,7 @@ from redash.query_runner import (
     TYPE_INTEGER,
     TYPE_STRING,
 )
-from redash.utils import (
+from rewatch.utils import (
     build_url,
     collect_parameters_from_request,
     filter_none,
@@ -20,7 +20,7 @@ from redash.utils import (
     json_dumps,
     render_template,
 )
-from redash.utils.pandas import pandas_installed
+from rewatch.utils.pandas import pandas_installed
 
 DummyRequest = namedtuple("DummyRequest", ["host", "scheme"])
 
@@ -30,7 +30,7 @@ if pandas_installed:
     import numpy as np
     import pandas as pd
 
-    from redash.utils.pandas import get_column_types_from_dataframe, pandas_to_result
+    from rewatch.utils.pandas import get_column_types_from_dataframe, pandas_to_result
 
 
 class TestBuildUrl(TestCase):

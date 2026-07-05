@@ -10,7 +10,7 @@ from funcy import flatten, compact
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.sql import text
-from redash import models
+from rewatch import models
 
 
 # revision identifiers, used by Alembic.

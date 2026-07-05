@@ -27,7 +27,7 @@ clean:
 	docker compose --project-name cypress rm --stop --force
 	docker image rm --force \
 		cypress-server:latest cypress-worker:latest cypress-scheduler:latest \
-		redash-server:latest redash-worker:latest redash-scheduler:latest
+		rewatch-server:latest rewatch-worker:latest rewatch-scheduler:latest
 	docker container prune --force
 	docker image prune --force
 	docker volume prune --force

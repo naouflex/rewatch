@@ -10,7 +10,7 @@ import json
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.sql import table
-from redash.models import MutableDict
+from rewatch.models import MutableDict
 
 
 # revision identifiers, used by Alembic.

@@ -5,7 +5,7 @@ Some test cases for JSON api runner
 from unittest import TestCase
 from urllib.parse import urlencode, urljoin
 
-from redash.query_runner.json_ds import JSON
+from rewatch.query_runner.json_ds import JSON
 
 
 def mock_api(url, method, **request_options):

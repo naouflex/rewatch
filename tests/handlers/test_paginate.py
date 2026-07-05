@@ -3,7 +3,7 @@ from unittest import TestCase
 from mock import MagicMock
 from werkzeug.exceptions import BadRequest
 
-from redash.handlers.base import paginate
+from rewatch.handlers.base import paginate
 
 
 class DummyResults:

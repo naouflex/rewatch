@@ -1,17 +1,17 @@
 from flask import request
 from flask_restful import abort
 
-from redash import models, redis_connection
-from redash.handlers.base import BaseResource, get_object_or_404
-from redash.permissions import require_access, view_only
-from redash.serializers import serialize_job
-from redash.tasks.databricks import (
+from rewatch import models, redis_connection
+from rewatch.handlers.base import BaseResource, get_object_or_404
+from rewatch.permissions import require_access, view_only
+from rewatch.serializers import serialize_job
+from rewatch.tasks.databricks import (
     get_database_tables_with_columns,
     get_databricks_databases,
     get_databricks_table_columns,
     get_databricks_tables,
 )
-from redash.utils import json_loads
+from rewatch.utils import json_loads
 
 
 def _get_databricks_data_source(data_source_id, user, org):

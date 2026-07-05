@@ -1,11 +1,11 @@
 from flask import Flask
 from werkzeug.middleware.proxy_fix import ProxyFix
 
-from redash import settings
+from rewatch import settings
 
 
-class Redash(Flask):
-    """A custom Flask app for Redash"""
+class Rewatch(Flask):
+    """A custom Flask app for Rewatch"""
 
     def __init__(self, *args, **kwargs):
         kwargs.update(
@@ -15,11 +15,11 @@ class Redash(Flask):
                 "static_url_path": "/static",
             }
         )
-        super(Redash, self).__init__(__name__, *args, **kwargs)
+        super(Rewatch, self).__init__(__name__, *args, **kwargs)
         # Make sure we get the right referral address even behind proxies like nginx.
         self.wsgi_app = ProxyFix(self.wsgi_app, x_for=settings.PROXIES_COUNT, x_host=1)
-        # Configure Redash using our settings
-        self.config.from_object("redash.settings")
+        # Configure Rewatch using our settings
+        self.config.from_object("rewatch.settings")
 
 
 def create_app():
@@ -39,7 +39,7 @@ def create_app():
     from .version_check import reset_new_version_status
 
     sentry.init()
-    app = Redash()
+    app = Rewatch()
 
     # Check and update the cached version for use by the client
     reset_new_version_status()

@@ -21,16 +21,16 @@ from flask_restful import abort
 from funcy import partial
 from sqlalchemy.orm.exc import StaleDataError
 
-from redash import models
-from redash.authentication.org_resolving import current_org
-from redash.handlers.base import (
+from rewatch import models
+from rewatch.authentication.org_resolving import current_org
+from rewatch.handlers.base import (
     BaseResource,
     filter_by_tags,
     get_object_or_404,
     order_results as _order_results,
     paginate,
 )
-from redash.permissions import (
+from rewatch.permissions import (
     can_modify,
     require_access,
     require_admin_or_owner,
@@ -38,7 +38,7 @@ from redash.permissions import (
     require_permission,
     view_only,
 )
-from redash.serializers import MLModelVersionSerializer
+from rewatch.serializers import MLModelVersionSerializer
 
 logger = logging.getLogger(__name__)
 

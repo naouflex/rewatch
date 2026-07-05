@@ -15,8 +15,8 @@ no inline scripts, no external CDN fetches.
 SCALAR_VERSION=1.55.1   # bump as needed
 curl -sSL \
   "https://cdn.jsdelivr.net/npm/@scalar/api-reference@${SCALAR_VERSION}/dist/browser/standalone.js" \
-  -o redash/handlers/api_docs_static/scalar.standalone.js
-sha256sum redash/handlers/api_docs_static/scalar.standalone.js
+  -o rewatch/handlers/api_docs_static/scalar.standalone.js
+sha256sum rewatch/handlers/api_docs_static/scalar.standalone.js
 ```
 
 Then update the `Vendored Scalar version` table below.

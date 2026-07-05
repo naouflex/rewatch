@@ -6,8 +6,8 @@ import uuid
 
 from sqlalchemy.orm import backref
 
-from redash.models.base import Column, db, key_type
-from redash.models.mixins import BelongsToOrgMixin, TimestampMixin
+from rewatch.models.base import Column, db, key_type
+from rewatch.models.mixins import BelongsToOrgMixin, TimestampMixin
 
 
 class AssistantThread(TimestampMixin, BelongsToOrgMixin, db.Model):

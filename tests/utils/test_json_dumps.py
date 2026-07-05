@@ -1,4 +1,4 @@
-from redash.utils import json_dumps, json_loads
+from rewatch.utils import json_dumps, json_loads
 from tests import BaseTestCase
 
 

@@ -1,7 +1,7 @@
 import datetime
 from unittest import TestCase
 
-from redash.query_runner.google_analytics4 import (
+from rewatch.query_runner.google_analytics4 import (
     format_column_value,
     get_formatted_column_json,
     parse_ga_response,

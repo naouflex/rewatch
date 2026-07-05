@@ -1,6 +1,6 @@
 # Production setup, modeled after ~/inverse-watch/docker-compose.yml.
 # REDASH_DATABASE_URL / REDASH_HOST / mail credentials are loaded from .env.
-x-redash-service: &redash-service
+x-rewatch-service: &rewatch-service
   build:
     context: .
     args:
@@ -10,7 +10,7 @@ x-redash-service: &redash-service
   env_file:
     - .env
   restart: unless-stopped
-x-redash-environment: &redash-environment
+x-rewatch-environment: &rewatch-environment
   REDASH_LOG_LEVEL: "INFO"
   REDASH_REDIS_URL: "redis://redis:6379/0"
   REDASH_DATABASE_URL: ${REDASH_DATABASE_URL}
@@ -23,33 +23,33 @@ x-redash-environment: &redash-environment
   # Set secret keys in the .env file
 services:
   server:
-    <<: *redash-service
+    <<: *rewatch-service
     command: server
     depends_on:
       - redis
     ports:
       - "5001:5000"
     environment:
-      <<: *redash-environment
+      <<: *rewatch-environment
       PYTHONUNBUFFERED: 0
   scheduler:
-    <<: *redash-service
+    <<: *rewatch-service
     command: scheduler
     depends_on:
       - server
     environment:
-      <<: *redash-environment
+      <<: *rewatch-environment
   worker:
-    <<: *redash-service
+    <<: *rewatch-service
     command: worker
     depends_on:
       - server
     environment:
-      <<: *redash-environment
+      <<: *rewatch-environment
       PYTHONUNBUFFERED: 0
   # Dedicated worker for MLModels training/prediction. Built from
   # Dockerfile.ml which layers the scikit-learn / scipy / statsmodels stack
-  # (plus libgomp1 / libopenblas) on top of the regular redash-worker image.
+  # (plus libgomp1 / libopenblas) on top of the regular rewatch-worker image.
   # It listens only on the `training` and `predicting` RQ queues so heavy ML
   # jobs don't starve the standard query workers.
   ml-worker:
@@ -57,7 +57,7 @@ services:
       context: .
       dockerfile: Dockerfile.ml
       args:
-        BASE_IMAGE: redash-worker:latest
+        BASE_IMAGE: rewatch-worker:latest
     command: worker
     volumes:
       - .:/app
@@ -68,7 +68,7 @@ services:
       - worker
     restart: unless-stopped
     environment:
-      <<: *redash-environment
+      <<: *rewatch-environment
       PYTHONUNBUFFERED: 0
       QUEUES: "training,predicting"
       WORKERS_COUNT: 1
@@ -81,7 +81,7 @@ services:
   # GCP Cloud SQL `watch-db-vm` instance over its public IP (sslmode=require). The
   # client host's public IPv4 must be in that instance's Authorized Networks. To
   # run a local Postgres instead, restore a `postgres` service here and set
-  # REDASH_DATABASE_URL=postgresql://redash:redash@postgres:5432/redash.
+  # REDASH_DATABASE_URL=postgresql://rewatch:rewatch@postgres:5432/rewatch.
   # The landing site + in-app help center is now its own Docker stack so it
   # can be deployed on a separate VM. See ../landing/ for the project, and
   # build the frontend with REDASH_HELP_BASE_URL=https://<landing-host>

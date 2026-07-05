@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-from redash.assistant.catalog import get_query_runner_type, summarize_runner_for_type
+from rewatch.assistant.catalog import get_query_runner_type, summarize_runner_for_type
 
 
 def _base_url(options: Any) -> Optional[str]:

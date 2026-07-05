@@ -2,8 +2,8 @@ import json
 from unittest import TestCase
 from unittest.mock import Mock, patch
 
-from redash.query_runner import TYPE_INTEGER
-from redash.query_runner.clickhouse import ClickHouse, split_multi_query
+from rewatch.query_runner import TYPE_INTEGER
+from rewatch.query_runner.clickhouse import ClickHouse, split_multi_query
 
 split_multi_query_samples = [
     # Regular query
@@ -178,7 +178,7 @@ FORMAT JSON""",
         self.assertEqual(kwargs["params"]["session_timeout"], expected_timeout)
 
         session_id = kwargs["params"]["session_id"]
-        self.assertRegex(session_id, r"redash_[a-f0-9]+")
+        self.assertRegex(session_id, r"rewatch_[a-f0-9]+")
 
         if expected_id:
             self.assertEqual(kwargs["params"]["session_id"], session_id)

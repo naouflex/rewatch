@@ -4,9 +4,9 @@ from flask import request
 from flask_restful import abort
 from sqlalchemy.orm.exc import NoResultFound
 
-from redash.handlers.base import BaseResource, get_object_or_404
-from redash.models import AccessPermission, Dashboard, Query, User, db
-from redash.permissions import ACCESS_TYPES, require_admin_or_owner
+from rewatch.handlers.base import BaseResource, get_object_or_404
+from rewatch.models import AccessPermission, Dashboard, Query, User, db
+from rewatch.permissions import ACCESS_TYPES, require_admin_or_owner
 
 model_to_types = {"queries": Query, "dashboards": Dashboard}
 

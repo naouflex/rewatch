@@ -7,7 +7,7 @@ try:
 except ImportError:
     enabled = False
 
-from redash.query_runner import BaseQueryRunner, register
+from rewatch.query_runner import BaseQueryRunner, register
 
 
 def reduce_item(reduced_item, key, value):

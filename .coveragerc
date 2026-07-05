@@ -1,6 +1,6 @@
 [run]
 branch = True
-source = redash
+source = rewatch
 
 [report]
 omit =

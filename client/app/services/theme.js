@@ -25,7 +25,7 @@
  * mounts) to prevent a flash of unstyled content (FOUC).
  */
 
-const STORAGE_KEY = "redash.theme";
+const STORAGE_KEY = "rewatch.theme";
 const ROOT_ATTRIBUTE = "data-theme";
 const BODY_DARK_CLASS = "dark-mode";
 

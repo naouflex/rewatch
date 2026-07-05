@@ -7,14 +7,14 @@ from saml2.config import Config as Saml2Config
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
 from saml2.sigver import get_xmlsec_binary
 
-from redash import settings
-from redash.authentication import (
+from rewatch import settings
+from rewatch.authentication import (
     create_and_login_user,
     logout_and_redirect_to_index,
 )
-from redash.authentication.org_resolving import current_org
-from redash.handlers.base import org_scoped_rule
-from redash.utils import mustache_render
+from rewatch.authentication.org_resolving import current_org
+from rewatch.handlers.base import org_scoped_rule
+from rewatch.utils import mustache_render
 
 logger = logging.getLogger("saml_auth")
 blueprint = Blueprint("saml_auth", __name__)
@@ -110,7 +110,7 @@ def get_saml_client(org):
 def idp_initiated(org_slug=None):
     if not current_org.get_setting("auth_saml_enabled"):
         logger.error("SAML Login is not enabled")
-        return redirect(url_for("redash.index", org_slug=org_slug))
+        return redirect(url_for("rewatch.index", org_slug=org_slug))
 
     saml_client = get_saml_client(current_org)
     try:
@@ -120,7 +120,7 @@ def idp_initiated(org_slug=None):
     except Exception:
         logger.error("Failed to parse SAML response", exc_info=True)
         flash("SAML login failed. Please try again later.")
-        return redirect(url_for("redash.login", org_slug=org_slug))
+        return redirect(url_for("rewatch.login", org_slug=org_slug))
 
     authn_response.get_identity()
     user_info = authn_response.get_subject()
@@ -137,11 +137,11 @@ def idp_initiated(org_slug=None):
     if user is None:
         return logout_and_redirect_to_index()
 
-    if "RedashGroups" in authn_response.ava:
-        group_names = authn_response.ava.get("RedashGroups")
+    if "RewatchGroups" in authn_response.ava:
+        group_names = authn_response.ava.get("RewatchGroups")
         user.update_group_assignments(group_names)
 
-    url = url_for("redash.index", org_slug=org_slug)
+    url = url_for("rewatch.index", org_slug=org_slug)
 
     return redirect(url)
 
@@ -150,7 +150,7 @@ def idp_initiated(org_slug=None):
 def sp_initiated(org_slug=None):
     if not current_org.get_setting("auth_saml_enabled"):
         logger.error("SAML Login is not enabled")
-        return redirect(url_for("redash.index", org_slug=org_slug))
+        return redirect(url_for("rewatch.index", org_slug=org_slug))
 
     saml_client = get_saml_client(current_org)
     nameid_format = current_org.get_setting("auth_saml_nameid_format")

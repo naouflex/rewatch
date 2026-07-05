@@ -4,9 +4,9 @@ import pytest
 
 tweepy = pytest.importorskip("tweepy")
 
-from redash.destinations.twitter import Twitter  # noqa: E402
-from redash.destinations.twitter_private import TwitterPrivate  # noqa: E402
-from redash.models import Alert  # noqa: E402
+from rewatch.destinations.twitter import Twitter  # noqa: E402
+from rewatch.destinations.twitter_private import TwitterPrivate  # noqa: E402
+from rewatch.models import Alert  # noqa: E402
 
 
 def _alert(custom_body=""):
@@ -21,7 +21,7 @@ def _alert(custom_body=""):
 
 def _twitter_options():
     return {
-        "account_handle": "redash",
+        "account_handle": "rewatch",
         "consumer_key": "ck",
         "consumer_secret": "cs",
         "access_token": "at",
@@ -31,7 +31,7 @@ def _twitter_options():
 
 
 def test_twitter_registered_and_enabled():
-    from redash.destinations import destinations
+    from rewatch.destinations import destinations
 
     assert destinations.get("twitter") is Twitter
     assert destinations.get("twitter_private") is TwitterPrivate
@@ -45,7 +45,7 @@ def test_twitter_notify_creates_tweet():
     fake_client = mock.Mock()
     fake_client.create_tweet.return_value = fake_tweet
 
-    with mock.patch("redash.destinations.twitter.tweepy.Client", return_value=fake_client) as mock_client_cls:
+    with mock.patch("rewatch.destinations.twitter.tweepy.Client", return_value=fake_client) as mock_client_cls:
         Twitter(options).notify(alert, mock.Mock(), mock.Mock(), Alert.TRIGGERED_STATE, mock.Mock(), "http://h", {}, options)
 
     mock_client_cls.assert_called_once()
@@ -60,7 +60,7 @@ def test_twitter_truncates_long_tweets():
     fake_client = mock.Mock()
     fake_client.create_tweet.return_value = mock.Mock(data={"id": 1})
 
-    with mock.patch("redash.destinations.twitter.tweepy.Client", return_value=fake_client):
+    with mock.patch("rewatch.destinations.twitter.tweepy.Client", return_value=fake_client):
         Twitter(options).notify(alert, mock.Mock(), mock.Mock(), Alert.TRIGGERED_STATE, mock.Mock(), "http://h", {}, options)
 
     sent = fake_client.create_tweet.call_args.kwargs["text"]
@@ -75,7 +75,7 @@ def test_twitter_private_dm_uses_explicit_recipient():
     fake_client = mock.Mock()
     fake_client.create_direct_message.return_value = mock.Mock()
 
-    with mock.patch("redash.destinations.twitter_private.tweepy.Client", return_value=fake_client):
+    with mock.patch("rewatch.destinations.twitter_private.tweepy.Client", return_value=fake_client):
         TwitterPrivate(options).notify(
             alert, mock.Mock(), mock.Mock(), Alert.TRIGGERED_STATE, mock.Mock(), "http://h", {}, options
         )
@@ -94,7 +94,7 @@ def test_twitter_private_dm_falls_back_to_authenticated_user():
     fake_client.get_me.return_value = mock.Mock(data=mock.Mock(id="55"))
     fake_client.create_direct_message.return_value = mock.Mock()
 
-    with mock.patch("redash.destinations.twitter_private.tweepy.Client", return_value=fake_client):
+    with mock.patch("rewatch.destinations.twitter_private.tweepy.Client", return_value=fake_client):
         TwitterPrivate(options).notify(
             alert, mock.Mock(), mock.Mock(), Alert.TRIGGERED_STATE, mock.Mock(), "http://h", {}, options
         )

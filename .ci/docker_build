@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# This script only needs to run on the main Redash repo
+# This script only needs to run on the main Rewatch repo
 
-if [ "${GITHUB_REPOSITORY}" != "getredash/redash" ]; then
-	echo "Skipping image build for Docker Hub, as this isn't the main Redash repository"
+if [ "${GITHUB_REPOSITORY}" != "getrewatch/rewatch" ]; then
+	echo "Skipping image build for Docker Hub, as this isn't the main Rewatch repository"
 	exit 0
 fi
 
@@ -26,14 +26,14 @@ export COMPOSE_DOCKER_CLI_BUILD=1
 
 docker login -u "${DOCKER_USER}" -p "${DOCKER_PASS}"
 
-DOCKERHUB_REPO="redash/redash"
-DOCKER_TAGS="-t redash/redash:preview -t redash/preview:${VERSION_TAG}"
+DOCKERHUB_REPO="rewatch/rewatch"
+DOCKER_TAGS="-t rewatch/rewatch:preview -t rewatch/preview:${VERSION_TAG}"
 
 # Build the docker container
 docker build --build-arg install_groups="main,all_ds,dev" ${DOCKER_TAGS} .
 
 # Push the container to the preview build locations
 docker push "${DOCKERHUB_REPO}:preview"
-docker push "redash/preview:${VERSION_TAG}"
+docker push "rewatch/preview:${VERSION_TAG}"
 
 echo "Built: ${VERSION_TAG}"

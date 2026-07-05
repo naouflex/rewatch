@@ -92,7 +92,7 @@ class DynamicDatePicker extends React.Component {
         <DateComponent
           {...dateOptions}
           ref={this.dateComponentRef}
-          className={classNames("redash-datepicker", type, { "dynamic-value": hasDynamicValue })}
+          className={classNames("rewatch-datepicker", type, { "dynamic-value": hasDynamicValue })}
           onSelect={onSelect}
           suffixIcon={null}
           {...additionalAttributes}

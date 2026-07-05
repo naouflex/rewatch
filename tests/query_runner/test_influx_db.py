@@ -1,11 +1,11 @@
 from influxdb.resultset import ResultSet
 
-from redash.query_runner import (
+from rewatch.query_runner import (
     TYPE_FLOAT,
     TYPE_INTEGER,
     TYPE_STRING,
 )
-from redash.query_runner.influx_db import _transform_result
+from rewatch.query_runner.influx_db import _transform_result
 
 raw = {
     "series": [

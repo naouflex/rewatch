@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from jsonschema import ValidationError
 
-from redash.utils.configuration import ConfigurationContainer
+from rewatch.utils.configuration import ConfigurationContainer
 
 configuration_schema = {
     "type": "object",

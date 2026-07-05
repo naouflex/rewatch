@@ -7,7 +7,7 @@ import json
 import logging
 from os import environ
 
-from redash.query_runner import BaseQueryRunner
+from rewatch.query_runner import BaseQueryRunner
 
 from . import register
 
@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 class SPARQLEndpointQueryRunner(BaseQueryRunner):
-    """Use SPARQL Endpoint as redash data source"""
+    """Use SPARQL Endpoint as rewatch data source"""
 
     # These environment keys are used by cmempy
     KNOWN_CONFIG_KEYS = ("SPARQL_BASE_URI", "SSL_VERIFY")
@@ -60,14 +60,14 @@ class SPARQLEndpointQueryRunner(BaseQueryRunner):
 
     @staticmethod
     def _transform_sparql_results(results):
-        """transforms a SPARQL query result to a redash query result
+        """transforms a SPARQL query result to a rewatch query result
 
         source structure: SPARQL 1.1 Query Results JSON Format
             - seeAlso: https://www.w3.org/TR/sparql11-results-json/
 
-        target structure: redash result set
+        target structure: rewatch result set
             there is no good documentation available
-            so here an example result set as needed for redash:
+            so here an example result set as needed for rewatch:
             data = {
                 "columns": [ {"name": "name", "type": "string", "friendly_name": "friendly name"}],
                 "rows": [
@@ -83,7 +83,7 @@ class SPARQLEndpointQueryRunner(BaseQueryRunner):
         # Not sure why we do not use the json package here but all other
         # query runner do it the same way :-)
         sparql_results = results
-        # transform all bindings to redash rows
+        # transform all bindings to rewatch rows
         rows = []
         for sparql_row in sparql_results["results"]["bindings"]:
             row = {}
@@ -94,7 +94,7 @@ class SPARQLEndpointQueryRunner(BaseQueryRunner):
                     # not bound SPARQL variables are set as empty strings
                     row[var] = ""
             rows.append(row)
-        # transform all vars to redash columns
+        # transform all vars to rewatch columns
         columns = []
         for var in sparql_results["head"]["vars"]:
             columns.append({"name": var, "friendly_name": var, "type": "string"})
@@ -124,7 +124,7 @@ class SPARQLEndpointQueryRunner(BaseQueryRunner):
         query = SparqlQuery(query_text)
         query_type = query.get_query_type()
         if query_type not in ["SELECT", None]:
-            raise ValueError("Queries of type {} can not be processed by redash.".format(query_type))
+            raise ValueError("Queries of type {} can not be processed by rewatch.".format(query_type))
 
         self._setup_environment()
         try:

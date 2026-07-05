@@ -1,7 +1,7 @@
-from redash import redis_connection
-from redash.models import ApiUser, User, db
-from redash.models.users import LAST_ACTIVE_KEY, sync_last_active_at
-from redash.utils import dt_from_timestamp
+from rewatch import redis_connection
+from rewatch.models import ApiUser, User, db
+from rewatch.models.users import LAST_ACTIVE_KEY, sync_last_active_at
+from rewatch.utils import dt_from_timestamp
 from tests import BaseTestCase, authenticated_user
 
 

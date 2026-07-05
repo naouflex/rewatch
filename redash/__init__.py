@@ -9,10 +9,10 @@ from flask_mail import Mail
 from flask_migrate import Migrate
 from statsd import StatsClient
 
-from redash import settings
-from redash.app import create_app  # noqa
-from redash.destinations import import_destinations
-from redash.query_runner import import_query_runners
+from rewatch import settings
+from rewatch.app import create_app  # noqa
+from rewatch.destinations import import_destinations
+from rewatch.query_runner import import_query_runners
 
 __version__ = "26.04.0-dev"
 

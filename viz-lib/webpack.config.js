@@ -8,7 +8,7 @@ module.exports = {
   entry: "./src/index.ts",
   output: {
     path: path.resolve(__dirname, "dist"),
-    filename: "redash-visualizations.js",
+    filename: "rewatch-visualizations.js",
     libraryTarget: "umd",
     assetModuleFilename: 'images/[name][ext]'
   },

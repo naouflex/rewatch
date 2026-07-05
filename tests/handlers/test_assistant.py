@@ -21,7 +21,7 @@ class TestAssistantGenerateQueryResource(BaseTestCase):
         )
         self.assertEqual(rv.status_code, 400)
 
-    @patch("redash.handlers.assistant.generate_query")
+    @patch("rewatch.handlers.assistant.generate_query")
     def test_generate_query_returns_query_text(self, generate_query_mock):
         generate_query_mock.return_value = "SELECT * FROM users"
         data_source = self.factory.create_data_source()

@@ -1,6 +1,6 @@
 import unittest
 
-from redash.query_runner.big_query import BigQuery
+from rewatch.query_runner.big_query import BigQuery
 
 
 class TestBigQueryQueryRunner(unittest.TestCase):

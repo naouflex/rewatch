@@ -1,10 +1,10 @@
 from mock import ANY, call, patch
 
-from redash.models import Query
-from redash.tasks.queries.maintenance import refresh_queries
+from rewatch.models import Query
+from rewatch.tasks.queries.maintenance import refresh_queries
 from tests import BaseTestCase
 
-ENQUEUE_QUERY = "redash.tasks.queries.maintenance.enqueue_query"
+ENQUEUE_QUERY = "rewatch.tasks.queries.maintenance.enqueue_query"
 
 
 class TestRefreshQuery(BaseTestCase):

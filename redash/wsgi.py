@@ -1,3 +1,3 @@
-from redash import create_app
+from rewatch import create_app
 
 app = create_app()

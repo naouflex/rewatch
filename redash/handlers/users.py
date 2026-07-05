@@ -6,28 +6,28 @@ from funcy import partial, project
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 
-from redash import limiter, models, settings
-from redash.authentication.account import (
+from rewatch import limiter, models, settings
+from rewatch.authentication.account import (
     invite_link_for_user,
     send_invite_email,
     send_password_reset_email,
     send_verify_email,
 )
-from redash.handlers.base import (
+from rewatch.handlers.base import (
     BaseResource,
     get_object_or_404,
     paginate,
     require_fields,
 )
-from redash.handlers.base import order_results as _order_results
-from redash.permissions import (
+from rewatch.handlers.base import order_results as _order_results
+from rewatch.permissions import (
     is_admin_or_owner,
     require_admin,
     require_admin_or_owner,
     require_permission,
     require_permission_or_owner,
 )
-from redash.settings import parse_boolean
+from rewatch.settings import parse_boolean
 
 # Ordering map for relationships
 order_map = {

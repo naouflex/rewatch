@@ -6,8 +6,8 @@ from flask.cli import AppGroup
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 
-from redash import models
-from redash.handlers.users import invite_user
+from rewatch import models
+from rewatch.handlers.users import invite_user
 
 manager = AppGroup(help="Users management commands.")
 

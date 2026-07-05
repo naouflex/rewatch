@@ -35,7 +35,7 @@ const isDevelopment = !isProduction;
 const isHotReloadingEnabled =
   isDevelopment && process.env.HOT_RELOAD === "true";
 
-const redashBackend = process.env.REDASH_BACKEND || "http://localhost:5001";
+const rewatchBackend = process.env.REDASH_BACKEND || "http://localhost:5001";
 const baseHref = CONFIG.baseHref || "/";
 const staticPath = CONFIG.staticPath || "/static/";
 const htmlTitle = CONFIG.title || "Rewatch";
@@ -318,7 +318,7 @@ const config = {
           "/api",
           "/oauth"
         ],
-        target: redashBackend + "/",
+        target: rewatchBackend + "/",
         changeOrigin: false,
         secure: false
       },
@@ -327,7 +327,7 @@ const config = {
           // CSS/JS for server-rendered pages should be served from backend
           return /^\/static\/[a-z]+\.[0-9a-fA-F]+\.(css|js)$/.test(path);
         },
-        target: redashBackend + "/",
+        target: rewatchBackend + "/",
         changeOrigin: true,
         secure: false
       }

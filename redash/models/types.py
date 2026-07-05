@@ -3,8 +3,8 @@ from sqlalchemy.ext.mutable import Mutable
 from sqlalchemy.types import TypeDecorator
 from sqlalchemy_utils import EncryptedType
 
-from redash.utils import json_dumps, json_loads
-from redash.utils.configuration import ConfigurationContainer
+from rewatch.utils import json_dumps, json_loads
+from rewatch.utils.configuration import ConfigurationContainer
 
 from .base import db
 

@@ -7,7 +7,7 @@ from sqlalchemy.event import listens_for
 from sqlalchemy.orm.util import _ORMJoin
 from sqlalchemy.sql.selectable import Alias, Join
 
-from redash import statsd_client
+from rewatch import statsd_client
 
 metrics_logger = logging.getLogger("metrics")
 

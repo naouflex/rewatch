@@ -54,7 +54,7 @@ restylers:
   - name: black
     image: restyled/restyler-black:v24.4.2
     include:
-      - redash
+      - rewatch
       - tests
       - migrations/versions
   - name: prettier

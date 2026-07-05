@@ -1,6 +1,6 @@
 import unittest
 
-from redash.query_runner.oracle import Oracle
+from rewatch.query_runner.oracle import Oracle
 
 
 class TestOracle(unittest.TestCase):

@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from redash.query_runner import (
+from rewatch.query_runner import (
     TYPE_BOOLEAN,
     TYPE_DATETIME,
     TYPE_FLOAT,
@@ -26,7 +26,7 @@ class TestGuessType(TestCase):
     def test_detects_strings(self):
         self.assertEqual(guess_type(None), TYPE_STRING)
         self.assertEqual(guess_type(""), TYPE_STRING)
-        self.assertEqual(guess_type("redash"), TYPE_STRING)
+        self.assertEqual(guess_type("rewatch"), TYPE_STRING)
 
     def test_detects_integer(self):
         self.assertEqual(guess_type("42"), TYPE_INTEGER)

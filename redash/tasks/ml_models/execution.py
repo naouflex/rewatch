@@ -1,7 +1,7 @@
 """RQ jobs and helpers for ML model training, prediction and notification.
 
-These mirror the inverse-watch ``redash/tasks/queries/maintenance.py`` and
-``redash/tasks/ml_models/execution.py`` modules. Two dedicated RQ queues are
+These mirror the inverse-watch ``rewatch/tasks/queries/maintenance.py`` and
+``rewatch/tasks/ml_models/execution.py`` modules. Two dedicated RQ queues are
 used so heavy ML workloads don't starve the normal query workers:
 
 - ``training``    - long-running ``train_model`` jobs
@@ -19,9 +19,9 @@ import logging
 from flask import current_app
 from rq.job import JobStatus
 
-from redash import models, redis_connection, settings, utils
-from redash.tasks.worker import Queue as RedashQueue
-from redash.worker import get_job_logger, job
+from rewatch import models, redis_connection, settings, utils
+from rewatch.tasks.worker import Queue as RewatchQueue
+from rewatch.worker import get_job_logger, job
 
 try:  # rq.get_current_job is not always importable from a single path
     from rq import get_current_job
@@ -100,7 +100,7 @@ def _cancel_job_for_model(model_id, queue_name, label):
                 redis_connection.hset(job_key, "status", JobStatus.FAILED)
                 redis_connection.hset(job_key, "exc_info", "Job cancelled by user")
             elif status == JobStatus.QUEUED:
-                queue = RedashQueue(queue_name, connection=redis_connection)
+                queue = RewatchQueue(queue_name, connection=redis_connection)
                 queue.remove(job_id)
                 redis_connection.hset(job_key, "status", JobStatus.FAILED)
                 redis_connection.hset(job_key, "exc_info", "Job cancelled by user")
@@ -143,7 +143,7 @@ def _existing_job_running(model_id):
 
 
 def _enqueue(model_id, user_id, queue_name, target, time_limit):
-    queue = RedashQueue(queue_name, connection=redis_connection)
+    queue = RewatchQueue(queue_name, connection=redis_connection)
     existing = _existing_job_running(model_id)
     if existing:
         logger.info("Model %s already has a running %s job: %s", model_id, queue_name, existing)

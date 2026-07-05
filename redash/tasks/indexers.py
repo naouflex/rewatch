@@ -1,9 +1,9 @@
 import datetime
 import json
 
-from redash import models, utils
-from redash.query_runner import get_query_runner
-from redash.worker import get_job_logger, job
+from rewatch import models, utils
+from rewatch.query_runner import get_query_runner
+from rewatch.worker import get_job_logger, job
 
 logger = get_job_logger(__name__)
 

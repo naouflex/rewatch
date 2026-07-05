@@ -1,6 +1,6 @@
 import datetime
 
-from redash.query_runner import (
+from rewatch.query_runner import (
     TYPE_DATE,
     TYPE_DATETIME,
     TYPE_FLOAT,

@@ -1,14 +1,14 @@
 from flask import request
 
-from redash import models
-from redash.handlers.base import BaseResource
-from redash.permissions import (
+from rewatch import models
+from rewatch.handlers.base import BaseResource
+from rewatch.permissions import (
     require_access,
     require_object_modify_permission,
     require_permission,
     view_only,
 )
-from redash.serializers import serialize_widget
+from rewatch.serializers import serialize_widget
 
 
 class WidgetListResource(BaseResource):

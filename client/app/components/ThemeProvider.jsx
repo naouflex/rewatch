@@ -10,7 +10,7 @@ import {
 // `useTheme` was a custom hook in inverse-watch's ThemeProvider. Rewatch exposes
 // the same primitives through the imperative `services/theme` module instead.
 // To minimise diffs in the ported MLModel components, we re-expose the same
-// hook here on top of redash's existing service.
+// hook here on top of rewatch's existing service.
 //
 // Returns:
 //   - `isDarkMode`: boolean, true when the resolved theme is "dark"

@@ -9,8 +9,8 @@ except ImportError:
 
 from base64 import b64decode
 
-from redash import __version__
-from redash.query_runner import (
+from rewatch import __version__
+from rewatch.query_runner import (
     TYPE_BOOLEAN,
     TYPE_DATE,
     TYPE_DATETIME,
@@ -108,7 +108,7 @@ class Snowflake(BaseSQLQueryRunner):
             "account": account,
             "region": region,
             "host": host,
-            "application": "Redash/{} (Snowflake)".format(__version__.split("-")[0]),
+            "application": "Rewatch/{} (Snowflake)".format(__version__.split("-")[0]),
         }
 
         if self.configuration.get("password"):

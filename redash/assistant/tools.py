@@ -9,11 +9,11 @@ from typing import Any, Callable, Optional
 
 import requests
 
-from redash.assistant import catalog as platform_catalog
-from redash.assistant import docs as docs_catalog
-from redash.assistant import web as web_tools
-from redash.assistant.datasources import enrich_data_source, enrich_data_sources
-from redash.assistant.links import enrich_tool_payload
+from rewatch.assistant import catalog as platform_catalog
+from rewatch.assistant import docs as docs_catalog
+from rewatch.assistant import web as web_tools
+from rewatch.assistant.datasources import enrich_data_source, enrich_data_sources
+from rewatch.assistant.links import enrich_tool_payload
 
 logger = logging.getLogger(__name__)
 

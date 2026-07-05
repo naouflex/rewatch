@@ -8,7 +8,7 @@ import json
 from unittest import TestCase
 from unittest import mock
 
-from redash.query_runner.twitter import Twitter, enabled as twitter_enabled
+from rewatch.query_runner.twitter import Twitter, enabled as twitter_enabled
 
 
 CONFIG_V2 = {"bearer_token": "test-bearer"}

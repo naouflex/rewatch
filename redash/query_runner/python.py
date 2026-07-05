@@ -11,8 +11,8 @@ from RestrictedPython.Guards import (
 )
 from RestrictedPython.transformer import IOPERATOR_TO_STR
 
-from redash import models
-from redash.query_runner import (
+from rewatch import models
+from rewatch.query_runner import (
     SUPPORTED_COLUMN_TYPES,
     TYPE_BOOLEAN,
     TYPE_DATE,
@@ -23,12 +23,12 @@ from redash.query_runner import (
     BaseQueryRunner,
     register,
 )
-from redash.utils.pandas import pandas_installed
+from rewatch.utils.pandas import pandas_installed
 
 if pandas_installed:
     import pandas as pd
 
-    from redash.utils.pandas import pandas_to_result
+    from rewatch.utils.pandas import pandas_to_result
 
     enabled = True
 else:
@@ -176,7 +176,7 @@ class Python(BaseQueryRunner):
 
     @staticmethod
     def add_result_column(result, column_name, friendly_name, column_type):
-        """Helper function to add columns inside a Python script running in Redash in an easier way
+        """Helper function to add columns inside a Python script running in Rewatch in an easier way
 
         Parameters:
         :result dict: The result dict

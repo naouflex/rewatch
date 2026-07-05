@@ -1,8 +1,8 @@
-# @redash/viz
+# @rewatch/viz
 
-![Version](https://img.shields.io/npm/v/@redash/viz)
+![Version](https://img.shields.io/npm/v/@rewatch/viz)
 
-`@redash/viz` is the visualization library used by Rewatch.
+`@rewatch/viz` is the visualization library used by Rewatch.
 
 ## Installation
 
@@ -15,24 +15,24 @@ Required libraries:
 Using npm:
 
 ```bash
-npm install @redash/viz
+npm install @rewatch/viz
 ```
 
 Using pnpm:
 
 ```bash
-pnpm add @redash/viz
+pnpm add @rewatch/viz
 ```
 
 ## Usage
 
 ### Basic Usage
 
-You can check [our live example](https://codesandbox.io/s/redashviz-v9odv) or follow the code below:
+You can check [our live example](https://codesandbox.io/s/rewatchviz-v9odv) or follow the code below:
 
 ```jsx
 import React, { useState } from "react";
-import { Renderer, Editor } from "@redash/viz";
+import { Renderer, Editor } from "@rewatch/viz";
 
 const exampleData = {
   columns: [
@@ -125,16 +125,16 @@ Available types:
 | allowCustomJSVisualization | Whether to allow the `Custom` chart type                                                        | `boolean`                                                      | `false`                                                                                                                                                                        |
 | hidePlotlyModeBar          | Whether to hide the Plotly Mode Bar on charts                                                   | `boolean`                                                      | `false`                                                                                                                                                                        |
 | choroplethAvailableMaps    | Configure the JSONs used for Choropleth maps (Note: Choropleth won't work without this setting) | `Object` (see example below)                                   | `{}`                                                                                                                                                                           |
-| HelpTriggerComponent       | Component used to render helper links on the Editor                                             | React component with `title` and `href` props                  | Renders a [tooltip with a link](https://github.com/getredash/redash/blob/fc246aafc445bdfc3ad2b82560141ef51f8753a9/viz-lib/src/visualizations/visualizationsSettings.js#L6-L33) |
+| HelpTriggerComponent       | Component used to render helper links on the Editor                                             | React component with `title` and `href` props                  | Renders a [tooltip with a link](https://github.com/getrewatch/rewatch/blob/fc246aafc445bdfc3ad2b82560141ef51f8753a9/viz-lib/src/visualizations/visualizationsSettings.js#L6-L33) |
 
 Example:
 
 ```jsx
 import React from "react";
-import { Renderer, Editor, updateVisualizationsSettings } from "@redash/viz";
+import { Renderer, Editor, updateVisualizationsSettings } from "@rewatch/viz";
 
-import countriesDataUrl from "@redash/viz/lib/visualizations/choropleth/maps/countries.geo.json";
-import subdivJapanDataUrl from "@redash/viz/lib/visualizations/choropleth/maps/japan.prefectures.geo.json";
+import countriesDataUrl from "@rewatch/viz/lib/visualizations/choropleth/maps/countries.geo.json";
+import subdivJapanDataUrl from "@rewatch/viz/lib/visualizations/choropleth/maps/japan.prefectures.geo.json";
 
 function wrapComponentWithSettings(WrappedComponent) {
   return function VisualizationComponent(props) {
@@ -172,7 +172,7 @@ Usage:
 
 ```jsx
 import React from "react";
-import JsonViewInteractive from "@redash/viz/lib/components/json-view-interactive/JsonViewInteractive";
+import JsonViewInteractive from "@rewatch/viz/lib/components/json-view-interactive/JsonViewInteractive";
 
 const example = { list: ["value1", "value2", "value3"], obj: { prop: "value" } };
 

@@ -1,6 +1,6 @@
 import logging
 
-from redash.destinations import BaseDestination, register
+from rewatch.destinations import BaseDestination, register
 
 try:
     import tweepy

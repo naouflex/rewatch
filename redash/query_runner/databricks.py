@@ -2,8 +2,8 @@ import datetime
 import logging
 import os
 
-from redash import __version__, statsd_client
-from redash.query_runner import (
+from rewatch import __version__, statsd_client
+from rewatch.query_runner import (
     TYPE_BOOLEAN,
     TYPE_DATE,
     TYPE_DATETIME,
@@ -15,7 +15,7 @@ from redash.query_runner import (
     register,
     split_sql_statements,
 )
-from redash.settings import cast_int_or_default
+from rewatch.settings import cast_int_or_default
 
 try:
     import pyodbc
@@ -112,7 +112,7 @@ class Databricks(BaseSQLQueryRunner):
 
                 if len(result_set) >= ROW_LIMIT and cursor.fetchone() is not None:
                     logger.warning("Truncated result set.")
-                    statsd_client.incr("redash.query_runner.databricks.truncated")
+                    statsd_client.incr("rewatch.query_runner.databricks.truncated")
                     data["truncated"] = True
                 error = None
             else:

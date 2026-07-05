@@ -105,7 +105,7 @@ Rewatch supports more than 35 SQL and NoSQL [data sources](). It can also be ext
 ## Reporting Bugs and Contributing Code
 
 * Want to report a bug or request a feature? Please open [an issue](https://github.com/naouflex/rewatch/issues/new).
-* Want to help us build **_Redash_**? Fork the project, edit in a [dev environment](DEPLOY.md) and make a pull request. We need all the help we can get!
+* Want to help us build **_Rewatch_**? Fork the project, edit in a [dev environment](DEPLOY.md) and make a pull request. We need all the help we can get!
 
 ## Security
 

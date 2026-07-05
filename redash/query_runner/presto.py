@@ -1,6 +1,6 @@
 import logging
 
-from redash.query_runner import (
+from rewatch.query_runner import (
     TYPE_BOOLEAN,
     TYPE_DATE,
     TYPE_FLOAT,
@@ -103,7 +103,7 @@ class Presto(BaseQueryRunner):
             host=self.configuration.get("host", ""),
             port=self.configuration.get("port", 8080),
             protocol=self.configuration.get("protocol", "http"),
-            username=self.configuration.get("username", "redash"),
+            username=self.configuration.get("username", "rewatch"),
             password=(self.configuration.get("password") or None),
             catalog=self.configuration.get("catalog", "hive"),
             schema=self.configuration.get("schema", "default"),

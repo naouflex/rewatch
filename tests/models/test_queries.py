@@ -3,8 +3,8 @@ import datetime
 import mock
 import pytest
 
-from redash.models import Event, Group, Query, QueryResult, db
-from redash.utils import gen_query_hash, utcnow
+from rewatch.models import Event, Group, Query, QueryResult, db
+from rewatch.utils import gen_query_hash, utcnow
 from tests import BaseTestCase
 
 

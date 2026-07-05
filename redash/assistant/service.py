@@ -15,10 +15,10 @@ from openai import (
     RateLimitError,
 )
 
-from redash import settings
-from redash.assistant.activity import tool_start_label
-from redash.assistant.links import append_preview_markdown, collect_previews, normalize_reply_links
-from redash.assistant.tools import TOOL_DEFINITIONS, ToolContext, execute_tool
+from rewatch import settings
+from rewatch.assistant.activity import tool_start_label
+from rewatch.assistant.links import append_preview_markdown, collect_previews, normalize_reply_links
+from rewatch.assistant.tools import TOOL_DEFINITIONS, ToolContext, execute_tool
 
 logger = logging.getLogger(__name__)
 

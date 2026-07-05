@@ -1,11 +1,11 @@
 import logging
 
-from redash.query_runner import (
+from rewatch.query_runner import (
     BaseSQLQueryRunner,
     JobTimeoutException,
     register,
 )
-from redash.query_runner.mssql import types_map
+from rewatch.query_runner.mssql import types_map
 
 logger = logging.getLogger(__name__)
 

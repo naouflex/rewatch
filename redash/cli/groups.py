@@ -4,7 +4,7 @@ from click import argument, option
 from flask.cli import AppGroup
 from sqlalchemy.orm.exc import NoResultFound
 
-from redash import models
+from rewatch import models
 
 manager = AppGroup(help="Groups management commands.")
 

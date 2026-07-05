@@ -5,17 +5,17 @@ from flask_login import current_user, login_required, login_user, logout_user
 from itsdangerous import BadSignature, SignatureExpired
 from sqlalchemy.orm.exc import NoResultFound
 
-from redash import __version__, limiter, models, settings
-from redash.authentication import current_org, get_login_url, get_next_path
-from redash.authentication.account import (
+from rewatch import __version__, limiter, models, settings
+from rewatch.authentication import current_org, get_login_url, get_next_path
+from rewatch.authentication.account import (
     send_password_reset_email,
     send_user_disabled_email,
     send_verify_email,
     validate_token,
 )
-from redash.handlers import routes
-from redash.handlers.base import json_response, org_scoped_rule
-from redash.version_check import get_latest_version
+from rewatch.handlers import routes
+from rewatch.handlers.base import json_response, org_scoped_rule
+from rewatch.version_check import get_latest_version
 
 logger = logging.getLogger(__name__)
 
@@ -87,9 +87,9 @@ def render_token_login_page(template, org_slug, token, invite):
             models.db.session.add(user)
             login_user(user)
             models.db.session.commit()
-            return redirect(url_for("redash.index", org_slug=org_slug))
+            return redirect(url_for("rewatch.index", org_slug=org_slug))
 
-    google_auth_url = get_google_auth_url(url_for("redash.index", org_slug=org_slug))
+    google_auth_url = get_google_auth_url(url_for("rewatch.index", org_slug=org_slug))
 
     return (
         render_template(
@@ -137,7 +137,7 @@ def verify(token, org_slug=None):
     models.db.session.commit()
 
     template_context = {"org_slug": org_slug} if settings.MULTI_ORG else {}
-    next_url = url_for("redash.index", **template_context)
+    next_url = url_for("rewatch.index", **template_context)
 
     return render_template("verify.html", next_url=next_url)
 
@@ -183,7 +183,7 @@ def login(org_slug=None):
     elif current_org == None:  # noqa: E711
         return redirect("/")
 
-    index_url = url_for("redash.index", org_slug=org_slug)
+    index_url = url_for("rewatch.index", org_slug=org_slug)
     unsafe_next_path = request.args.get("next", index_url)
     next_path = get_next_path(unsafe_next_path)
     if current_user.is_authenticated:
@@ -228,9 +228,9 @@ def logout(org_slug=None):
 
 def base_href():
     if settings.MULTI_ORG:
-        base_href = url_for("redash.index", _external=True, org_slug=current_org.slug)
+        base_href = url_for("rewatch.index", _external=True, org_slug=current_org.slug)
     else:
-        base_href = url_for("redash.index", _external=True)
+        base_href = url_for("rewatch.index", _external=True)
 
     return base_href
 

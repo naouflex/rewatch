@@ -1,12 +1,12 @@
 from flask import jsonify
 from flask_login import login_required
 
-from redash.handlers.api import api
-from redash.handlers.base import routes
-from redash.handlers.swagger import setup_swagger
-from redash.monitor import get_status
-from redash.permissions import require_super_admin
-from redash.security import talisman
+from rewatch.handlers.api import api
+from rewatch.handlers.base import routes
+from rewatch.handlers.swagger import setup_swagger
+from rewatch.monitor import get_status
+from rewatch.permissions import require_super_admin
+from rewatch.security import talisman
 
 
 @routes.route("/ping", methods=["GET"])
@@ -24,7 +24,7 @@ def status_api():
 
 
 def init_app(app):
-    from redash.handlers import (
+    from rewatch.handlers import (
         admin,
         authentication,
         embed,

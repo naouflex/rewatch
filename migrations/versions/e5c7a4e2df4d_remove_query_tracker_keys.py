@@ -8,7 +8,7 @@ Create Date: 2019-02-27 11:30:15.375318
 from alembic import op
 import sqlalchemy as sa
 
-from redash import redis_connection
+from rewatch import redis_connection
 
 
 # revision identifiers, used by Alembic.

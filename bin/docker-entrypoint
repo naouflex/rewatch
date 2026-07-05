@@ -10,7 +10,7 @@ scheduler() {
 dev_scheduler() {
   echo "Starting dev RQ scheduler..."
 
-  exec watchmedo auto-restart --directory=./redash/ --pattern=*.py --recursive -- ./manage.py rq scheduler
+  exec watchmedo auto-restart --directory=./rewatch/ --pattern=*.py --recursive -- ./manage.py rq scheduler
 }
 
 worker() {
@@ -38,7 +38,7 @@ workers_healthcheck() {
 dev_worker() {
   echo "Starting dev RQ worker..."
 
-  exec watchmedo auto-restart --directory=./redash/ --pattern=*.py --recursive -- ./manage.py rq worker $QUEUES
+  exec watchmedo auto-restart --directory=./rewatch/ --pattern=*.py --recursive -- ./manage.py rq worker $QUEUES
 }
 
 server() {
@@ -47,7 +47,7 @@ server() {
   MAX_REQUESTS_JITTER=${MAX_REQUESTS_JITTER:-100}
   TIMEOUT=${REDASH_GUNICORN_TIMEOUT:-60}
   BIND_ADDRESS=${REDASH_GUNICORN_BIND:-[::]:5000}
-  exec /usr/local/bin/gunicorn -b "$BIND_ADDRESS" --name redash -w${REDASH_WEB_WORKERS:-4} redash.wsgi:app --max-requests $MAX_REQUESTS --max-requests-jitter $MAX_REQUESTS_JITTER --timeout $TIMEOUT --limit-request-line ${REDASH_GUNICORN_LIMIT_REQUEST_LINE:-0}
+  exec /usr/local/bin/gunicorn -b "$BIND_ADDRESS" --name rewatch -w${REDASH_WEB_WORKERS:-4} rewatch.wsgi:app --max-requests $MAX_REQUESTS --max-requests-jitter $MAX_REQUESTS_JITTER --timeout $TIMEOUT --limit-request-line ${REDASH_GUNICORN_LIMIT_REQUEST_LINE:-0}
 }
 
 create_db() {
@@ -55,12 +55,12 @@ create_db() {
 }
 
 help() {
-  echo "Redash Docker."
+  echo "Rewatch Docker."
   echo ""
   echo "Usage:"
   echo ""
 
-  echo "server -- start Redash server (with gunicorn)"
+  echo "server -- start Rewatch server (with gunicorn)"
   echo "worker -- start a single RQ worker"
   echo "dev_worker -- start a single RQ worker with code reloading"
   echo "scheduler -- start an rq-scheduler instance"
@@ -70,7 +70,7 @@ help() {
   echo "dev_server -- start Flask development server with debugger and auto reload"
   echo "debug -- start Flask development server with remote debugger via debugpy"
   echo "create_db -- create database tables"
-  echo "manage -- CLI to manage redash"
+  echo "manage -- CLI to manage rewatch"
   echo "tests -- run tests"
 }
 

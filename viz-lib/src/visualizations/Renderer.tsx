@@ -32,7 +32,7 @@ export default function Renderer({
   // Avoid unnecessary updates (which may be expensive or cause issues with
   // internal state of some visualizations like Table) - compare options deeply
   // and use saved reference if nothing changed
-  // More details: https://github.com/getredash/redash/pull/3963#discussion_r306935810
+  // More details: https://github.com/getrewatch/rewatch/pull/3963#discussion_r306935810
   let options = getOptions(optionsProp, data);
   if (isEqual(lastOptions.current, options)) {
     options = lastOptions.current;

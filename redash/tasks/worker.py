@@ -13,9 +13,9 @@ from rq.worker import (
     Worker,
 )
 
-from redash import statsd_client
+from rewatch import statsd_client
 
-# HerokuWorker does not work in OSX https://github.com/getredash/redash/issues/5413
+# HerokuWorker does not work in OSX https://github.com/getrewatch/rewatch/issues/5413
 if sys.platform == "darwin":
     BaseWorker = Worker
 else:
@@ -49,7 +49,7 @@ class CancellableQueue(BaseQueue):
     job_class = CancellableJob
 
 
-class RedashQueue(StatsdRecordingQueue, CancellableQueue):
+class RewatchQueue(StatsdRecordingQueue, CancellableQueue):
     pass
 
 
@@ -76,7 +76,7 @@ class HardLimitingWorker(BaseWorker):
     RQ's work horses enforce time limits by setting a timed alarm and stopping jobs
     when they reach their time limits. However, the work horse may be entirely blocked
     and may not respond to the alarm interrupt. Since respecting timeouts is critical
-    in Redash (if we don't respect them, workers may be infinitely stuck and as a result,
+    in Rewatch (if we don't respect them, workers may be infinitely stuck and as a result,
     service may be denied for other queries), we enforce two time limits:
     1. A soft time limit, enforced by the work horse
     2. A hard time limit, enforced by the parent worker
@@ -87,7 +87,7 @@ class HardLimitingWorker(BaseWorker):
     """
 
     grace_period = 15
-    queue_class = RedashQueue
+    queue_class = RewatchQueue
     job_class = CancellableJob
 
     def stop_executing_job(self, job):
@@ -191,10 +191,10 @@ class HardLimitingWorker(BaseWorker):
             self.handle_job_failure(job, queue=queue, exc_string=exc_string)
 
 
-class RedashWorker(StatsdRecordingWorker, HardLimitingWorker):
-    queue_class = RedashQueue
+class RewatchWorker(StatsdRecordingWorker, HardLimitingWorker):
+    queue_class = RewatchQueue
 
 
 Job = CancellableJob
-Queue = RedashQueue
-Worker = RedashWorker
+Queue = RewatchQueue
+Worker = RewatchWorker

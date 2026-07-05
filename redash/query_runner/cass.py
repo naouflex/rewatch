@@ -4,7 +4,7 @@ import ssl
 from base64 import b64decode
 from tempfile import NamedTemporaryFile
 
-from redash.query_runner import BaseQueryRunner, register
+from rewatch.query_runner import BaseQueryRunner, register
 
 logger = logging.getLogger(__name__)
 

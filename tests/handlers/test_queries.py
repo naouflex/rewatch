@@ -1,7 +1,7 @@
-from redash import models
-from redash.models import db
-from redash.permissions import ACCESS_TYPE_MODIFY
-from redash.serializers import serialize_query
+from rewatch import models
+from rewatch.models import db
+from rewatch.permissions import ACCESS_TYPE_MODIFY
+from rewatch.serializers import serialize_query
 from tests import BaseTestCase
 
 

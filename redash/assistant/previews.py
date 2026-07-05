@@ -6,7 +6,7 @@ import html
 import math
 from typing import Any, Optional
 
-from redash import models
+from rewatch import models
 
 WIDTH = 520
 HEIGHT = 300

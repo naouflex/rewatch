@@ -4,13 +4,13 @@ import requests
 from authlib.integrations.flask_client import OAuth
 from flask import Blueprint, flash, redirect, request, session, url_for
 
-from redash import models, settings
-from redash.authentication import (
+from rewatch import models, settings
+from rewatch.authentication import (
     create_and_login_user,
     get_next_path,
     logout_and_redirect_to_index,
 )
-from redash.authentication.org_resolving import current_org
+from rewatch.authentication.org_resolving import current_org
 
 
 def verify_profile(org, profile):
@@ -56,7 +56,7 @@ def build_next_path(org_slug=None):
             scheme = settings.GOOGLE_OAUTH_SCHEME_OVERRIDE
 
         next_path = url_for(
-            "redash.index",
+            "rewatch.index",
             org_slug=org_slug,
             _external=True,
             _scheme=scheme,
@@ -108,12 +108,12 @@ def create_google_oauth_blueprint(app):
         if access_token is None:
             logger.warning("Access token missing in call back request.")
             flash("Validation error. Please retry.")
-            return redirect(url_for("redash.login"))
+            return redirect(url_for("rewatch.login"))
 
         profile = get_user_profile(access_token, logger)
         if profile is None:
             flash("Validation error. Please retry.")
-            return redirect(url_for("redash.login"))
+            return redirect(url_for("rewatch.login"))
 
         if "org_slug" in session:
             org = models.Organization.get_by_slug(session.pop("org_slug"))
@@ -127,7 +127,7 @@ def create_google_oauth_blueprint(app):
                 org,
             )
             flash("Your Google Apps account ({}) isn't allowed.".format(profile["email"]))
-            return redirect(url_for("redash.login", org_slug=org.slug))
+            return redirect(url_for("rewatch.login", org_slug=org.slug))
 
         picture_url = "%s?sz=40" % profile["picture"]
         user = create_and_login_user(org, profile["name"], profile["email"], picture_url)

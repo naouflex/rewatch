@@ -4,7 +4,7 @@ import re
 
 from dateutil.parser import parse
 
-from redash.query_runner import (
+from rewatch.query_runner import (
     TYPE_BOOLEAN,
     TYPE_DATETIME,
     TYPE_FLOAT,
@@ -13,7 +13,7 @@ from redash.query_runner import (
     BaseQueryRunner,
     register,
 )
-from redash.utils import json_loads, parse_human_time
+from rewatch.utils import json_loads, parse_human_time
 
 logger = logging.getLogger(__name__)
 

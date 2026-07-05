@@ -7,12 +7,12 @@ import json
 from unittest import TestCase
 from unittest import mock
 
-from redash.query_runner import evm_logs as evm_logs_module
-from redash.query_runner import evm_state as evm_state_module
-from redash.query_runner import evm_transactions as evm_tx_module
-from redash.query_runner.evm_logs import EVMLogs
-from redash.query_runner.evm_state import EVMState
-from redash.query_runner.evm_transactions import EVMTransactions
+from rewatch.query_runner import evm_logs as evm_logs_module
+from rewatch.query_runner import evm_state as evm_state_module
+from rewatch.query_runner import evm_transactions as evm_tx_module
+from rewatch.query_runner.evm_logs import EVMLogs
+from rewatch.query_runner.evm_state import EVMState
+from rewatch.query_runner.evm_transactions import EVMTransactions
 
 
 CONFIG = {
@@ -89,7 +89,7 @@ class TestEVMTransactionsFiltering(TestCase):
     def test_filters_by_either_from_or_to(self):
         if not evm_tx_module.web3_installed:
             self.skipTest("web3 not installed")
-        from redash.query_runner.evm_transactions import EVMTransactions, Web3
+        from rewatch.query_runner.evm_transactions import EVMTransactions, Web3
 
         target = "0x0000000000000000000000000000000000000001"
         other = "0x0000000000000000000000000000000000000002"

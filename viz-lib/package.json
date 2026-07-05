@@ -1,8 +1,8 @@
 {
-  "name": "@redash/viz",
+  "name": "@rewatch/viz",
   "version": "1.0.0",
   "description": "Rewatch visualizations",
-  "main": "dist/redash-visualizations.js",
+  "main": "dist/rewatch-visualizations.js",
   "scripts": {
     "clean": "rm -rf lib dist",
     "type-check": "tsc --noEmit",

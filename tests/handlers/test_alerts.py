@@ -2,8 +2,8 @@ import datetime
 
 from mock import patch
 
-from redash.models import Alert, AlertSubscription, db
-from redash.utils import utcnow
+from rewatch.models import Alert, AlertSubscription, db
+from rewatch.utils import utcnow
 from tests import BaseTestCase
 
 
@@ -45,7 +45,7 @@ class TestAlertResourcePost(BaseTestCase):
 
 
 class TestAlertEvaluateResource(BaseTestCase):
-    @patch("redash.handlers.alerts.notify_subscriptions")
+    @patch("rewatch.handlers.alerts.notify_subscriptions")
     def test_evaluates_alert_and_notifies(self, mock_notify_subscriptions):
         query = self.factory.create_query(
             data_source=self.factory.create_data_source(group=self.factory.create_group())

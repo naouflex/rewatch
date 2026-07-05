@@ -5,14 +5,14 @@ import threading
 from flask import Response, request, stream_with_context
 from flask_restful import abort
 
-from redash import models, settings
-from redash.assistant import storage
-from redash.assistant.previews import render_dashboard_svg, render_query_svg, render_visualization_svg
-from redash.assistant.service import chat
-from redash.assistant.query_generation import generate_query
-from redash.handlers.base import BaseResource, get_object_or_404
-from redash.models import db
-from redash.permissions import require_access, view_only
+from rewatch import models, settings
+from rewatch.assistant import storage
+from rewatch.assistant.previews import render_dashboard_svg, render_query_svg, render_visualization_svg
+from rewatch.assistant.service import chat
+from rewatch.assistant.query_generation import generate_query
+from rewatch.handlers.base import BaseResource, get_object_or_404
+from rewatch.models import db
+from rewatch.permissions import require_access, view_only
 
 
 def _assistant_base_url():

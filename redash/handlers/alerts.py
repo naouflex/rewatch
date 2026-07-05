@@ -2,20 +2,20 @@ from flask import request
 from funcy import project
 from sqlalchemy.exc import IntegrityError
 
-from redash import models, utils
-from redash.handlers.base import (
+from rewatch import models, utils
+from rewatch.handlers.base import (
     BaseResource,
     get_object_or_404,
     require_fields,
 )
-from redash.permissions import (
+from rewatch.permissions import (
     require_access,
     require_admin_or_owner,
     require_permission,
     view_only,
 )
-from redash.serializers import serialize_alert
-from redash.tasks.alerts import (
+from rewatch.serializers import serialize_alert
+from rewatch.tasks.alerts import (
     notify_subscriptions,
     should_notify,
 )

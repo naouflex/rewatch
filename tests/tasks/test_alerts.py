@@ -1,38 +1,38 @@
 from mock import ANY, MagicMock
 
-import redash.tasks.alerts
-from redash.models import Alert
-from redash.tasks.alerts import check_alerts_for_query, notify_subscriptions
+import rewatch.tasks.alerts
+from rewatch.models import Alert
+from rewatch.tasks.alerts import check_alerts_for_query, notify_subscriptions
 from tests import BaseTestCase
 
 
 class TestCheckAlertsForQuery(BaseTestCase):
     def test_notifies_subscribers_when_should(self):
-        redash.tasks.alerts.notify_subscriptions = MagicMock()
+        rewatch.tasks.alerts.notify_subscriptions = MagicMock()
         Alert.evaluate = MagicMock(return_value=Alert.TRIGGERED_STATE)
 
         alert = self.factory.create_alert()
         check_alerts_for_query(alert.query_id, metadata={"Scheduled": False})
 
-        self.assertTrue(redash.tasks.alerts.notify_subscriptions.called)
+        self.assertTrue(rewatch.tasks.alerts.notify_subscriptions.called)
 
     def test_doesnt_notify_when_nothing_changed(self):
-        redash.tasks.alerts.notify_subscriptions = MagicMock()
+        rewatch.tasks.alerts.notify_subscriptions = MagicMock()
         Alert.evaluate = MagicMock(return_value=Alert.OK_STATE)
 
         alert = self.factory.create_alert()
         check_alerts_for_query(alert.query_id, metadata={"Scheduled": False})
 
-        self.assertFalse(redash.tasks.alerts.notify_subscriptions.called)
+        self.assertFalse(rewatch.tasks.alerts.notify_subscriptions.called)
 
     def test_doesnt_notify_when_muted(self):
-        redash.tasks.alerts.notify_subscriptions = MagicMock()
+        rewatch.tasks.alerts.notify_subscriptions = MagicMock()
         Alert.evaluate = MagicMock(return_value=Alert.TRIGGERED_STATE)
 
         alert = self.factory.create_alert(options={"muted": True})
         check_alerts_for_query(alert.query_id, metadata={"Scheduled": False})
 
-        self.assertFalse(redash.tasks.alerts.notify_subscriptions.called)
+        self.assertFalse(rewatch.tasks.alerts.notify_subscriptions.called)
 
 
 class TestNotifySubscriptions(BaseTestCase):

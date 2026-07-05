@@ -1,6 +1,6 @@
 import logging
 
-from redash.query_runner import (
+from rewatch.query_runner import (
     TYPE_BOOLEAN,
     TYPE_DATE,
     TYPE_DATETIME,
@@ -139,8 +139,8 @@ class e6data(BaseQueryRunner):
             columns_with_type = []
 
             for column in columns:
-                redash_type = E6DATA_TYPES_MAPPING.get(column["fieldType"], None)
-                columns_with_type.append({"name": column["fieldName"], "type": redash_type})
+                rewatch_type = E6DATA_TYPES_MAPPING.get(column["fieldType"], None)
+                columns_with_type.append({"name": column["fieldName"], "type": rewatch_type})
 
             table_schema = {"name": table_name, "columns": columns_with_type}
 

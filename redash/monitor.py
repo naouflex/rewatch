@@ -3,8 +3,8 @@ from rq import Queue, Worker
 from rq.job import Job
 from rq.registry import StartedJobRegistry
 
-from redash import __version__, redis_connection, rq_redis_connection, settings
-from redash.models import Dashboard, Query, QueryResult, Widget, db
+from rewatch import __version__, redis_connection, rq_redis_connection, settings
+from rewatch.models import Dashboard, Query, QueryResult, Widget, db
 
 
 def get_redis_status():
@@ -37,7 +37,7 @@ def get_db_sizes():
             "Query Results Size",
             "select pg_total_relation_size('query_results') as size from (select 1) as a",
         ],
-        ["Redash DB Size", "select pg_database_size(current_database()) as size"],
+        ["Rewatch DB Size", "select pg_database_size(current_database()) as size"],
     ]
     for query_name, query in queries:
         result = db.session.execute(query).first()
@@ -50,7 +50,7 @@ def get_status():
     status = {"version": __version__, "workers": []}
     status.update(get_redis_status())
     status.update(get_object_counts())
-    status["manager"] = redis_connection.hgetall("redash:status")
+    status["manager"] = redis_connection.hgetall("rewatch:status")
     status["manager"]["queues"] = get_queues_status()
     status["database_metrics"] = {}
     status["database_metrics"]["metrics"] = get_db_sizes()

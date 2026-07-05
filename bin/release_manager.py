@@ -10,7 +10,7 @@ import simplejson
 
 github_token = os.environ["GITHUB_TOKEN"]
 auth = (github_token, "x-oauth-basic")
-repo = "getredash/redash"
+repo = "getrewatch/rewatch"
 
 
 def _github_request(method, path, params=None, headers={}):

@@ -5,7 +5,7 @@ from urllib.parse import urljoin
 import yaml
 from funcy import compact, project
 
-from redash.query_runner import (
+from rewatch.query_runner import (
     TYPE_BOOLEAN,
     TYPE_DATETIME,
     TYPE_FLOAT,

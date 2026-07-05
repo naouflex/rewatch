@@ -4,7 +4,7 @@ from base64 import b64decode
 from tempfile import NamedTemporaryFile
 from typing import Any, Dict, Optional, Tuple, Type, TypeVar
 
-from redash.query_runner import (
+from rewatch.query_runner import (
     TYPE_BOOLEAN,
     TYPE_DATETIME,
     TYPE_FLOAT,
@@ -153,7 +153,7 @@ class InfluxDBv2(BaseQueryRunner):
     def _get_data_from_tables(self, tables: Any) -> Dict:
         """
         Determines the data of the given tables in an appropriate schema for
-        redash ui to render it. It retrieves all available columns and records
+        rewatch ui to render it. It retrieves all available columns and records
         from the tables.
         :param tables: A list of FluxTable instances.
         :return: An object with columns and rows list.
@@ -182,7 +182,7 @@ class InfluxDBv2(BaseQueryRunner):
         :param query: The query, this runner is executed.
         :param user: The user who runs the query.
         :return: A 2-tuple:
-            1. element: The queried result in an appropriate format for redash
+            1. element: The queried result in an appropriate format for rewatch
                 ui. If an error occurred, it returns None.
             2. element: An error message, if an error occured. None, if no
                 error occurred.

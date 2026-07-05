@@ -2,7 +2,7 @@ import json
 import logging
 from typing import Optional, Tuple
 
-from redash.query_runner import (
+from rewatch.query_runner import (
     TYPE_BOOLEAN,
     TYPE_DATE,
     TYPE_FLOAT,
@@ -233,7 +233,7 @@ class ElasticSearch2(BaseHTTPQueryRunner):
 
                 result_rows.append(row)
         else:
-            raise Exception("Redash failed to parse the results it got from Elasticsearch.")
+            raise Exception("Rewatch failed to parse the results it got from Elasticsearch.")
 
         return {"columns": result_columns, "rows": result_rows}
 

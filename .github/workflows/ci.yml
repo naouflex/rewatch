@@ -32,7 +32,7 @@ jobs:
     needs: backend-lint
     env:
       COMPOSE_FILE: .ci/compose.ci.yaml
-      COMPOSE_PROJECT_NAME: redash
+      COMPOSE_PROJECT_NAME: rewatch
       COMPOSE_DOCKER_CLI_BUILD: 1
       DOCKER_BUILDKIT: 1
     steps:
@@ -50,11 +50,11 @@ jobs:
           docker compose up -d
           sleep 10
       - name: Create Test Database
-        run: docker compose -p redash run --rm postgres psql -h postgres -U postgres -c "create database tests;"
+        run: docker compose -p rewatch run --rm postgres psql -h postgres -U postgres -c "create database tests;"
       - name: List Enabled Query Runners
-        run: docker compose -p redash run --rm redash manage ds list_types
+        run: docker compose -p rewatch run --rm rewatch manage ds list_types
       - name: Run Tests
-        run: docker compose -p redash run --name tests redash tests --junitxml=junit.xml --cov-report=xml --cov=redash --cov-config=.coveragerc tests/
+        run: docker compose -p rewatch run --name tests rewatch tests --junitxml=junit.xml --cov-report=xml --cov=rewatch --cov-config=.coveragerc tests/
       - name: Copy Test Results
         run: |
           mkdir -p /tmp/test-results/unit-tests
@@ -125,7 +125,7 @@ jobs:
       - name: Run App Tests
         run: pnpm run test
       - name: Run Visualizations Tests
-        run: pnpm --filter @redash/viz test
+        run: pnpm --filter @rewatch/viz test
       - run: pnpm run lint
 
   frontend-e2e-tests:
@@ -160,7 +160,7 @@ jobs:
           echo "CODE_COVERAGE=true" >> "$GITHUB_ENV"
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
-      - name: Setup Redash Server
+      - name: Setup Rewatch Server
         run: |
           set -x
           pnpm run cypress build

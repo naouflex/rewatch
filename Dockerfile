@@ -8,13 +8,13 @@ ARG skip_frontend_build
 ENV CYPRESS_INSTALL_BINARY=0
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1
 
-RUN useradd -m -d /frontend redash
-USER redash
+RUN useradd -m -d /frontend rewatch
+USER rewatch
 
 WORKDIR /frontend
-COPY --chown=redash package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc /frontend/
-COPY --chown=redash viz-lib /frontend/viz-lib
-COPY --chown=redash scripts /frontend/scripts
+COPY --chown=rewatch package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc /frontend/
+COPY --chown=rewatch viz-lib /frontend/viz-lib
+COPY --chown=rewatch scripts /frontend/scripts
 
 # Controls whether to instrument code for coverage information
 ARG code_coverage
@@ -25,8 +25,8 @@ RUN --mount=type=cache,id=pnpm-store,target=/frontend/.cache/pnpm,uid=1001,gid=1
   pnpm config set store-dir /frontend/.cache/pnpm && \
   if [ "x$skip_frontend_build" = "x" ] ; then pnpm install --frozen-lockfile; fi
 
-COPY --chown=redash client /frontend/client
-COPY --chown=redash webpack.config.js /frontend/
+COPY --chown=rewatch client /frontend/client
+COPY --chown=rewatch webpack.config.js /frontend/
 
 # Use the same cache mount for the build step
 RUN --mount=type=cache,id=pnpm-store,target=/frontend/.cache/pnpm,uid=1001,gid=1001 <<EOF
@@ -43,7 +43,7 @@ FROM python:3.13-slim-bookworm
 
 EXPOSE 5000
 
-RUN useradd --create-home redash
+RUN useradd --create-home rewatch
 
 # Ubuntu packages
 RUN apt-get update && \
@@ -114,15 +114,15 @@ ARG install_groups="main,all_ds,dev"
 RUN /etc/poetry/bin/poetry install --only $install_groups $POETRY_OPTIONS
 
 # The /api/docs/ Scalar UI and the OpenAPI spec at /api/spec are generated
-# by ``redash.handlers.swagger``. That module only needs PyYAML (already
+# by ``rewatch.handlers.swagger``. That module only needs PyYAML (already
 # installed by poetry) plus the vendored Scalar bundle in
-# ``redash/handlers/api_docs_static/``; no additional Python packages are
+# ``rewatch/handlers/api_docs_static/``; no additional Python packages are
 # required.
 
-COPY --chown=redash . /app
-COPY --from=frontend-builder --chown=redash /frontend/client/dist /app/client/dist
-RUN chown redash /app
-USER redash
+COPY --chown=rewatch . /app
+COPY --from=frontend-builder --chown=rewatch /frontend/client/dist /app/client/dist
+RUN chown rewatch /app
+USER rewatch
 
 ENTRYPOINT ["/app/bin/docker-entrypoint"]
 CMD ["server"]

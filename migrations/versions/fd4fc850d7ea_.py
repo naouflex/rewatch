@@ -9,7 +9,7 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import JSON, JSONB
 
-from redash.models import db
+from rewatch.models import db
 
 # revision identifiers, used by Alembic.
 revision = 'fd4fc850d7ea'

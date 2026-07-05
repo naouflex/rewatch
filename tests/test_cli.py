@@ -3,10 +3,10 @@ import textwrap
 import mock
 from click.testing import CliRunner
 
-from redash.cli import manager
-from redash.models import DataSource, Group, Organization, User, db
-from redash.query_runner import query_runners
-from redash.utils.configuration import ConfigurationContainer
+from rewatch.cli import manager
+from rewatch.models import DataSource, Group, Organization, User, db
+from rewatch.query_runner import query_runners
+from rewatch.utils.configuration import ConfigurationContainer
 from tests import BaseTestCase
 
 
@@ -496,9 +496,9 @@ class UserCommandTests(BaseTestCase):
         self.assertIn("not found", result.output)
 
     def test_invite(self):
-        admin = self.factory.create_user(email="redash-admin@example.com")
+        admin = self.factory.create_user(email="rewatch-admin@example.com")
         runner = CliRunner()
-        with mock.patch("redash.cli.users.invite_user") as iu:
+        with mock.patch("rewatch.cli.users.invite_user") as iu:
             result = runner.invoke(
                 manager,
                 [
@@ -506,7 +506,7 @@ class UserCommandTests(BaseTestCase):
                     "invite",
                     "foobar@example.com",
                     "Fred Foobar",
-                    "redash-admin@example.com",
+                    "rewatch-admin@example.com",
                 ],
             )
             self.assertFalse(result.exception)

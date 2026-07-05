@@ -14,8 +14,8 @@ from openai import (
     RateLimitError,
 )
 
-from redash import settings
-from redash.assistant.catalog import get_query_runner_type, summarize_runner_for_type
+from rewatch import settings
+from rewatch.assistant.catalog import get_query_runner_type, summarize_runner_for_type
 
 logger = logging.getLogger(__name__)
 

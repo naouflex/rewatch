@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from redash.query_runner.jql import FieldMapping, parse_issue
+from rewatch.query_runner.jql import FieldMapping, parse_issue
 
 
 class TestFieldMapping(TestCase):

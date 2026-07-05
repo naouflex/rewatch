@@ -1,6 +1,6 @@
 from funcy import pairwise
 
-from redash.models import DataSource
+from rewatch.models import DataSource
 from tests import BaseTestCase
 
 
@@ -160,7 +160,7 @@ class TestDataSourceListResourcePost(BaseTestCase):
         rv = self.make_request(
             "post",
             "/api/data_sources",
-            data={"name": "DS 1", "type": "pg", "options": {"dbname": "redash"}},
+            data={"name": "DS 1", "type": "pg", "options": {"dbname": "rewatch"}},
             user=admin,
         )
 

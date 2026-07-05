@@ -36,7 +36,7 @@ From your laptop:
 ```bash
 gcloud compute scp --recurse --compress \
   --zone=europe-west1-b \
-  ./ rewatch-prod:~/redash
+  ./ rewatch-prod:~/rewatch
 ```
 
 `.env` is in `.gitignore` but `scp --recurse` copies it; double-check it landed
@@ -46,7 +46,7 @@ on the VM and that secrets inside are the production values (`REDASH_HOST`,
 
 ## 4. First-run database setup
 
-SSH back in and from `~/redash`:
+SSH back in and from `~/rewatch`:
 
 ```bash
 docker compose build

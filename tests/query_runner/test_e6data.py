@@ -1,7 +1,7 @@
 from unittest.mock import patch
 
-from redash.query_runner import TYPE_INTEGER, TYPE_STRING
-from redash.query_runner.e6data import e6data
+from rewatch.query_runner import TYPE_INTEGER, TYPE_STRING
+from rewatch.query_runner.e6data import e6data
 
 runner = e6data(
     {

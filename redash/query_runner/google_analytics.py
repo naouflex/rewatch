@@ -3,7 +3,7 @@ from base64 import b64decode
 from datetime import datetime
 from urllib.parse import parse_qs, urlparse
 
-from redash.query_runner import (
+from rewatch.query_runner import (
     TYPE_DATE,
     TYPE_DATETIME,
     TYPE_FLOAT,
@@ -12,7 +12,7 @@ from redash.query_runner import (
     BaseSQLQueryRunner,
     register,
 )
-from redash.utils import json_loads
+from rewatch.utils import json_loads
 
 logger = logging.getLogger(__name__)
 

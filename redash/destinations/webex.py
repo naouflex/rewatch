@@ -5,8 +5,8 @@ from copy import deepcopy
 
 import requests
 
-from redash.destinations import BaseDestination, register
-from redash.models import Alert
+from rewatch.destinations import BaseDestination, register
+from rewatch.models import Alert
 
 
 class Webex(BaseDestination):

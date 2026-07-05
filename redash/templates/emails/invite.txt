@@ -7,4 +7,4 @@ Use the following link to setup your account:
 {{ invite_url }}
 
 Your sign-in email: {{invited.email}}
-Your Rewatch account: {{ url_for('redash.index', org_slug=org.slug, _external=True) }}
+Your Rewatch account: {{ url_for('rewatch.index', org_slug=org.slug, _external=True) }}

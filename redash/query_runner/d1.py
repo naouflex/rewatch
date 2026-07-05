@@ -1,7 +1,7 @@
 import json
 import re
 
-from redash.query_runner import (
+from rewatch.query_runner import (
     TYPE_BOOLEAN,
     TYPE_DATETIME,
     TYPE_FLOAT,
@@ -10,9 +10,9 @@ from redash.query_runner import (
     BaseQueryRunner,
     register,
 )
-from redash.utils.requests_session import requests_session as session
+from rewatch.utils.requests_session import requests_session as session
 
-# Map Python types to Redash types
+# Map Python types to Rewatch types
 TYPES_MAP = {
     "str": TYPE_STRING,
     "int": TYPE_INTEGER,
@@ -98,15 +98,15 @@ class D1QueryRunner(BaseQueryRunner):
             first_row = rows[0]
             columns = []
             for k, v in first_row.items():
-                # Get the Python type name and map it to Redash type
+                # Get the Python type name and map it to Rewatch type
                 python_type = type(v).__name__
-                redash_type = TYPES_MAP.get(python_type, TYPE_STRING)
+                rewatch_type = TYPES_MAP.get(python_type, TYPE_STRING)
 
                 # Special handling for strings that look like datetimes
                 if python_type == "str" and detect_datetime_string(v):
-                    redash_type = TYPE_DATETIME
+                    rewatch_type = TYPE_DATETIME
 
-                columns.append({"name": k, "friendly_name": k, "type": redash_type})
+                columns.append({"name": k, "friendly_name": k, "type": rewatch_type})
 
             result = {"columns": columns, "rows": rows}
             # Debug: Log the result structure

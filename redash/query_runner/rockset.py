@@ -1,6 +1,6 @@
 import requests
 
-from redash.query_runner import (
+from rewatch.query_runner import (
     TYPE_BOOLEAN,
     TYPE_FLOAT,
     TYPE_INTEGER,
@@ -31,7 +31,7 @@ class RocksetAPI:
         self.vi_id = vi_id
 
     def _request(self, endpoint, method="GET", body=None):
-        headers = {"Authorization": "ApiKey {}".format(self.api_key), "User-Agent": "rest:redash/1.0"}
+        headers = {"Authorization": "ApiKey {}".format(self.api_key), "User-Agent": "rest:rewatch/1.0"}
         url = "{}/v1/orgs/self/{}".format(self.api_server, endpoint)
 
         if method == "GET":

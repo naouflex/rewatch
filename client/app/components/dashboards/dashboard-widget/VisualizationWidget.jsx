@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import { isEmpty, invoke, map } from "lodash";
 import { markdown } from "markdown";
 import cx from "classnames";
-import HtmlContent from "@redash/viz/lib/components/HtmlContent";
+import HtmlContent from "@rewatch/viz/lib/components/HtmlContent";
 import { currentUser } from "@/services/auth";
 import recordEvent from "@/services/recordEvent";
 import { formatDateTime } from "@/lib/utils";

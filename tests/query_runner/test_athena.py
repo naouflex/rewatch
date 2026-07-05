@@ -8,7 +8,7 @@ import botocore
 import mock
 from botocore.stub import Stubber
 
-from redash.query_runner.athena import Athena
+from rewatch.query_runner.athena import Athena
 
 
 class TestGlueSchema(TestCase):

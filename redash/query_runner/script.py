@@ -1,7 +1,7 @@
 import os
 import subprocess
 
-from redash.query_runner import BaseQueryRunner, register
+from rewatch.query_runner import BaseQueryRunner, register
 
 
 def query_to_script_path(path, query):

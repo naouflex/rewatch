@@ -2,13 +2,13 @@ from flask import request
 from funcy import project
 from sqlalchemy.exc import IntegrityError
 
-from redash import models
-from redash.handlers.base import (
+from rewatch import models
+from rewatch.handlers.base import (
     BaseResource,
     get_object_or_404,
     require_fields,
 )
-from redash.permissions import require_admin_or_owner, require_permission
+from rewatch.permissions import require_admin_or_owner, require_permission
 
 
 def serialize_query_snippets(current_user, snippets):

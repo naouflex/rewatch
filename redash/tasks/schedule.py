@@ -6,24 +6,24 @@ from datetime import datetime, timedelta
 from rq.job import Job
 from rq_scheduler import Scheduler
 
-from redash import rq_redis_connection, settings
-from redash.tasks.failure_report import send_aggregated_errors
-from redash.tasks.general import sync_user_details, version_check
-from redash.tasks.queries import (
+from rewatch import rq_redis_connection, settings
+from rewatch.tasks.failure_report import send_aggregated_errors
+from rewatch.tasks.general import sync_user_details, version_check
+from rewatch.tasks.queries import (
     cleanup_query_results,
     empty_schedules,
     refresh_queries,
     refresh_schemas,
     remove_ghost_locks,
 )
-from redash.tasks.worker import Queue
+from rewatch.tasks.worker import Queue
 
 logger = logging.getLogger(__name__)
 
 
 class StatsdRecordingScheduler(Scheduler):
     """
-    RQ Scheduler Mixin that uses Redash's custom RQ Queue class to increment/modify metrics via Statsd
+    RQ Scheduler Mixin that uses Rewatch's custom RQ Queue class to increment/modify metrics via Statsd
     """
 
     queue_class = Queue

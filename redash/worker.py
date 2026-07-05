@@ -4,8 +4,8 @@ from functools import partial
 from rq import get_current_job
 from rq.decorators import job as rq_job
 
-from redash import rq_redis_connection, settings
-from redash.tasks.worker import Queue as RedashQueue
+from rewatch import rq_redis_connection, settings
+from rewatch.tasks.worker import Queue as RewatchQueue
 
 default_operational_queues = ["periodic", "emails", "default"]
 default_query_queues = ["scheduled_queries", "queries", "schemas"]
@@ -17,7 +17,7 @@ class StatsdRecordingJobDecorator(rq_job):  # noqa
     RQ Job Decorator mixin that uses our Queue class to ensure metrics are accurately incremented in Statsd
     """
 
-    queue_class = RedashQueue
+    queue_class = RewatchQueue
 
 
 job = partial(

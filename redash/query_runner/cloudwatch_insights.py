@@ -3,8 +3,8 @@ import time
 
 import yaml
 
-from redash.query_runner import BaseQueryRunner, register
-from redash.utils import parse_human_time
+from rewatch.query_runner import BaseQueryRunner, register
+from rewatch.utils import parse_human_time
 
 try:
     import boto3

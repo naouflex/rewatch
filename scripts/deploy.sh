@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# scripts/deploy.sh — provision and operate redash on a Google Cloud VM.
+# scripts/deploy.sh — provision and operate rewatch on a Google Cloud VM.
 #
 # Mirrors every step in DEPLOY.md and adds an optional HTTPS phase that puts
-# Caddy in front of the redash `server` container with an automatically
+# Caddy in front of the rewatch `server` container with an automatically
 # renewing Let's Encrypt certificate for $REDASH_HOST (read from .env).
 #
 # All phases are idempotent. Run a single phase at a time, or `all` for the
@@ -26,18 +26,18 @@
 #   scripts/deploy.sh https-logs       # tail Caddy logs (cert progress)
 #   scripts/deploy.sh ip               # print the VM's external IP
 #   scripts/deploy.sh ssh              # open an SSH shell on the VM
-#   scripts/deploy.sh ssh-config       # add 'redash-prod' to ~/.ssh/config (Cursor Remote-SSH)
+#   scripts/deploy.sh ssh-config       # add 'rewatch-prod' to ~/.ssh/config (Cursor Remote-SSH)
 #   scripts/deploy.sh all              # provision + install + upload + init
 #
 # Environment overrides:
-#   INSTANCE          GCE instance name (default: redash-prod)
+#   INSTANCE          GCE instance name (default: rewatch-prod)
 #   ZONE              GCE zone          (default: europe-west1-b)
 #   MACHINE_TYPE      VM machine type   (default: e2-standard-2)
 #   IMAGE_FAMILY      OS image family   (default: debian-12)
 #   IMAGE_PROJECT     OS image project  (default: debian-cloud)
 #   BOOT_DISK_SIZE                      (default: 50GB)
-#   APP_PORT          Redash host port  (default: 5001)
-#   REMOTE_DIR        Remote directory  (default: redash)
+#   APP_PORT          Rewatch host port  (default: 5001)
+#   REMOTE_DIR        Remote directory  (default: rewatch)
 #   CLOUD_SQL_INSTANCE Cloud SQL name to whitelist VM IP on (default: watch-db)
 #   LETSENCRYPT_EMAIL Override the cert registration email
 #                     (defaults to REDASH_MAIL_DEFAULT_SENDER from .env)
@@ -47,7 +47,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-INSTANCE="${INSTANCE:-redash-prod}"
+INSTANCE="${INSTANCE:-rewatch-prod}"
 ZONE="${ZONE:-europe-west1-b}"
 MACHINE_TYPE="${MACHINE_TYPE:-e2-standard-2}"
 IMAGE_FAMILY="${IMAGE_FAMILY:-debian-12}"
@@ -55,7 +55,7 @@ IMAGE_PROJECT="${IMAGE_PROJECT:-debian-cloud}"
 BOOT_DISK_SIZE="${BOOT_DISK_SIZE:-50GB}"
 TAGS="${TAGS:-http-server,https-server}"
 APP_PORT="${APP_PORT:-5001}"
-REMOTE_DIR="${REMOTE_DIR:-redash}"
+REMOTE_DIR="${REMOTE_DIR:-rewatch}"
 ENV_FILE="${ENV_FILE:-$PROJECT_ROOT/.env}"
 CLOUD_SQL_INSTANCE="${CLOUD_SQL_INSTANCE:-watch-db}"
 
@@ -180,20 +180,20 @@ cmd_provision() {
     ok "VM created."
   fi
 
-  log "Ensuring firewall rule allow-redash (tcp:$APP_PORT)..."
-  if firewall_exists allow-redash; then
-    ok "allow-redash already exists."
+  log "Ensuring firewall rule allow-rewatch (tcp:$APP_PORT)..."
+  if firewall_exists allow-rewatch; then
+    ok "allow-rewatch already exists."
   else
-    gcloud compute firewall-rules create allow-redash \
+    gcloud compute firewall-rules create allow-rewatch \
       --allow="tcp:$APP_PORT" \
       --target-tags=http-server
   fi
 
-  log "Ensuring firewall rule allow-https-redash (tcp:80,443) for Let's Encrypt..."
-  if firewall_exists allow-https-redash; then
-    ok "allow-https-redash already exists."
+  log "Ensuring firewall rule allow-https-rewatch (tcp:80,443) for Let's Encrypt..."
+  if firewall_exists allow-https-rewatch; then
+    ok "allow-https-rewatch already exists."
   else
-    gcloud compute firewall-rules create allow-https-redash \
+    gcloud compute firewall-rules create allow-https-rewatch \
       --allow=tcp:80,tcp:443 \
       --target-tags=http-server
   fi
@@ -326,10 +326,10 @@ cmd_authorize_db() {
 }
 
 # ---------- phase: init -------------------------------------------------------
-# Build ordering matters: ml-worker's Dockerfile.ml is `FROM redash-worker:latest`,
+# Build ordering matters: ml-worker's Dockerfile.ml is `FROM rewatch-worker:latest`,
 # so the worker image must exist locally before ml-worker is built. `docker
 # compose build` runs services in parallel by default and ignores depends_on,
-# which makes ml-worker race ahead and try to pull redash-worker:latest from
+# which makes ml-worker race ahead and try to pull rewatch-worker:latest from
 # Docker Hub (where it doesn't exist). We do it in two passes instead.
 cmd_build() {
   vm_compose 'build server worker scheduler'
@@ -339,7 +339,7 @@ cmd_build() {
 cmd_init() {
   log "Building base images (server, worker, scheduler)..."
   vm_compose 'build server worker scheduler'
-  log "Building ml-worker (depends on redash-worker:latest)..."
+  log "Building ml-worker (depends on rewatch-worker:latest)..."
   vm_compose 'build ml-worker'
   log "Running first-time database setup..."
   vm_compose 'run --rm server create_db'
@@ -396,14 +396,14 @@ cmd_push() {
   log "Pushing code (no rebuild)..."
   cmd_upload
   log "Restarting Python services..."
-  vm_compose 'restart server worker scheduler ml-worker'
+  vm_compose 'up -d --remove-orphans server worker scheduler ml-worker'
   ok "Push complete. Tail logs with: $0 logs server"
 }
 
 cmd_ip()  { vm_external_ip; }
 cmd_ssh() { gcloud compute ssh "$INSTANCE" --zone="$ZONE"; }
 
-# Populate ~/.ssh/config so plain `ssh redash-prod`, scp, rsync and editors
+# Populate ~/.ssh/config so plain `ssh rewatch-prod`, scp, rsync and editors
 # like Cursor/VS Code Remote-SSH can reach the VM without going through gcloud.
 # This is the same key gcloud uses (~/.ssh/google_compute_engine), but exposed
 # under a short, stable alias matching $INSTANCE.
@@ -485,9 +485,9 @@ cmd_https() {
   warn "Make sure '$domain' has an A record pointing to $ip BEFORE running this phase,"
   warn "otherwise Let's Encrypt's HTTP-01 challenge will fail."
 
-  if ! firewall_exists allow-https-redash; then
-    log "Creating firewall rule allow-https-redash..."
-    gcloud compute firewall-rules create allow-https-redash \
+  if ! firewall_exists allow-https-rewatch; then
+    log "Creating firewall rule allow-https-rewatch..."
+    gcloud compute firewall-rules create allow-https-rewatch \
       --allow=tcp:80,tcp:443 --target-tags=http-server
   fi
 
@@ -535,7 +535,7 @@ EOF
   gcloud compute scp --zone="$ZONE" --quiet \
     "$tmpdir/compose.https.yaml" "$INSTANCE:$REMOTE_DIR/compose.https.yaml"
 
-  log "Bringing up Caddy + redash stack with HTTPS overlay..."
+  log "Bringing up Caddy + rewatch stack with HTTPS overlay..."
   vm_compose 'up -d'
 
   ok "Caddy launched. Watch certificate provisioning with:"

@@ -1,1 +1,1 @@
-"""MCP server for the Rewatch (Redash) REST API."""
+"""MCP server for the Rewatch (Rewatch) REST API."""

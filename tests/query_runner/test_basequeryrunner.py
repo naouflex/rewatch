@@ -1,6 +1,6 @@
 import unittest
 
-from redash.query_runner import BaseQueryRunner
+from rewatch.query_runner import BaseQueryRunner
 
 
 class TestBaseQueryRunner(unittest.TestCase):

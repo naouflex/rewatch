@@ -2,9 +2,9 @@ import logging
 
 import requests
 
-from redash.destinations import BaseDestination, register
-from redash.models import Alert
-from redash.utils import json_dumps
+from rewatch.destinations import BaseDestination, register
+from rewatch.models import Alert
+from rewatch.utils import json_dumps
 
 colors = {
     # Colors are in a Decimal format as Discord requires them to be Decimals for embeds

@@ -10,7 +10,7 @@ import json
 from alembic import op
 import sqlalchemy as sa
 
-from redash.models import Dashboard, Widget, db
+from rewatch.models import Dashboard, Widget, db
 
 
 # revision identifiers, used by Alembic.

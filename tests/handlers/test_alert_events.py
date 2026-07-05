@@ -2,8 +2,8 @@
 records an AlertEvent for every notification fired."""
 from unittest.mock import MagicMock, patch
 
-from redash.models import Alert, AlertEvent, db
-from redash.tasks.alerts import notify_subscriptions
+from rewatch.models import Alert, AlertEvent, db
+from rewatch.tasks.alerts import notify_subscriptions
 from tests import BaseTestCase
 
 

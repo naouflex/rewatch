@@ -4,8 +4,8 @@ import socket
 import time
 from base64 import b64decode
 
-from redash import settings
-from redash.query_runner import (
+from rewatch import settings
+from rewatch.query_runner import (
     TYPE_BOOLEAN,
     TYPE_DATE,
     TYPE_DATETIME,
@@ -17,7 +17,7 @@ from redash.query_runner import (
     JobTimeoutException,
     register,
 )
-from redash.utils import json_loads
+from rewatch.utils import json_loads
 
 logger = logging.getLogger(__name__)
 
