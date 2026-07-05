@@ -10,6 +10,27 @@ import Assistant from "@/services/assistant";
 
 import "./QueryPromptLine.less";
 
+const PROMPT_PLACEHOLDERS = {
+  yaml: "Describe the API data you want (e.g. Ethereum price history for 30 days)",
+  json: "Describe the query in plain language (JSON query structure will be generated)",
+  graphql: "Describe the GraphQL data you need (e.g. list users with id and name)",
+  python: "Describe what the Python script should fetch or compute",
+  sql: "Describe what you want in plain language, then press Enter",
+};
+
+function promptPlaceholder(syntax, dataSourceType) {
+  if (dataSourceType === "coingecko") {
+    return "e.g. Bitcoin price chart for the last 30 days";
+  }
+  if (dataSourceType === "defillama") {
+    return "e.g. TVL history for Aave, or DEX volume overview";
+  }
+  if (dataSourceType === "dune") {
+    return "Describe the Dune query you want (requires a query_id)";
+  }
+  return PROMPT_PLACEHOLDERS[syntax] || PROMPT_PLACEHOLDERS.sql;
+}
+
 export default function QueryPromptLine({
   className,
   dataSourceId,
@@ -85,7 +106,7 @@ export default function QueryPromptLine({
         type="text"
         value={prompt}
         disabled={disabled || generating}
-        placeholder="Describe what you want in plain language, then press Enter"
+        placeholder={promptPlaceholder(syntax, dataSourceType)}
         onChange={event => setPrompt(event.target.value)}
         onKeyDown={handleKeyDown}
       />

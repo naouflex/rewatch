@@ -24,15 +24,19 @@ def enrich_data_source(data_source: dict[str, Any]) -> dict[str, Any]:
     if runner_summary:
         data_source["query_runner"] = runner_summary
 
+    type_docs = get_query_runner_type(ds_type)
+    if isinstance(type_docs, dict) and not type_docs.get("error"):
+        notes = type_docs.get("type_notes") or {}
+        if notes.get("example_query"):
+            data_source["example_query"] = notes["example_query"]
+        if notes.get("query_keys"):
+            data_source["query_keys"] = notes["query_keys"]
+        if type_docs.get("endpoint_catalog"):
+            data_source["endpoint_catalog"] = type_docs["endpoint_catalog"]
+
     if ds_type == "json":
         base = _base_url(data_source.get("options"))
         data_source["json_base_url"] = base or ""
-        # Full type docs including example_query when present
-        type_docs = get_query_runner_type("json")
-        if isinstance(type_docs, dict) and not type_docs.get("error"):
-            notes = type_docs.get("type_notes") or {}
-            if notes.get("example_query"):
-                data_source["example_query"] = notes["example_query"]
 
     return data_source
 
@@ -47,8 +51,9 @@ def enrich_data_sources(payload: Any) -> Any:
             "data_sources": enriched,
             "available_types": types,
             "assistant_note": (
-                "Each data source includes query_runner (syntax + summary). "
-                "For full query format details call get_query_runner_type with the data source `type`. "
+                "Each data source includes query_runner (syntax, summary, query_keys, example_query). "
+                "For YAML API sources (coingecko, defillama) also check endpoint_catalog. "
+                "Call get_query_runner_type with the data source `type` for full docs. "
                 "Pick a data source by id before create_query."
             ),
         }

@@ -18,16 +18,30 @@ QUERY_SYNTAX_GUIDES: dict[str, dict[str, Any]] = {
             "Multiple statements are supported; only the last SELECT result is shown.",
             "Auto LIMIT may be applied on SELECT queries without LIMIT.",
         ],
+        "generation_rules": [
+            "Output valid SQL for the connected database dialect.",
+            "Use only table and column names from the provided schema.",
+            "Prefer explicit column lists over SELECT * when schema is available.",
+        ],
     },
     "yaml": {
         "label": "YAML",
-        "summary": "Structured YAML describing HTTP requests, paths, and field selection.",
+        "summary": "Structured YAML describing API requests or HTTP calls.",
         "tips": [
             "Query text must be valid YAML (not SQL).",
-            "Most YAML runners require a `url` key; it can be absolute or relative to the data source base URL.",
-            "Common keys: url, method (get/post), path (dot path to rows array), fields (column whitelist), params, headers.",
-            "Nested JSON objects become dotted column names (e.g. geo.lat, address.city).",
+            "Runner-specific keys — call get_query_runner_type; do not assume SQL or generic JSON.",
+            "Vendor API runners (CoinGecko, DefiLlama, Dune) use an `endpoint:` key plus path params as top-level keys.",
+            "Generic JSON/HTTP runners use `url`, `method`, `path`, `fields`, `params`, `headers`.",
+            "Query-string parameters usually go under `params:` unless documented as top-level keys.",
+            "Use get_data_source_schema to browse available endpoints; prefer schema templates over inventing URLs.",
             "Always run_query with ad-hoc query_text first to inspect columns before create_query.",
+        ],
+        "generation_rules": [
+            "Output valid YAML only — never SQL, JSON, or markdown fences.",
+            "Match the exact key names documented for this data source type (e.g. endpoint, coingeckoID, protocol).",
+            "Copy structure from schema templates when an endpoint or coin is listed in the schema.",
+            "Path parameters are top-level YAML keys; optional query-string params go under params:.",
+            "For CoinGecko, DefiLlama, and Dune: use `endpoint:` syntax — never `url`, `method`, `path`, or `fields` (those belong to the JSON data source type only).",
         ],
     },
     "json": {
@@ -38,6 +52,10 @@ QUERY_SYNTAX_GUIDES: dict[str, dict[str, Any]] = {
             "Structure is runner-specific — call get_query_runner_type for the exact data source type.",
             "Validate with run_query before create_query.",
         ],
+        "generation_rules": [
+            "Output valid JSON only — no markdown fences or comments unless the runner allows them.",
+            "Follow the runner's documented query object shape exactly.",
+        ],
     },
     "graphql": {
         "label": "GraphQL",
@@ -46,6 +64,10 @@ QUERY_SYNTAX_GUIDES: dict[str, dict[str, Any]] = {
             "Write a standard GraphQL query/mutation string.",
             "Variables may be supported depending on the runner — check get_query_runner_type.",
         ],
+        "generation_rules": [
+            "Output a GraphQL query or mutation string only — not SQL or YAML.",
+            "Use field names from get_data_source_schema when available.",
+        ],
     },
     "python": {
         "label": "Python",
@@ -53,6 +75,10 @@ QUERY_SYNTAX_GUIDES: dict[str, dict[str, Any]] = {
         "tips": [
             "Write Python that returns tabular data compatible with the runner.",
             "Check get_query_runner_type for allowed imports and result format.",
+        ],
+        "generation_rules": [
+            "Output executable Python script text only.",
+            "Must return rows/columns in the format expected by the runner.",
         ],
     },
     "custom": {
@@ -116,6 +142,55 @@ QUERY_RUNNER_NOTES: dict[str, dict[str, Any]] = {
     "graphql": {
         "summary": "GraphQL HTTP endpoint.",
         "example_query": "query {\n  users {\n    id\n    name\n  }\n}",
+    },
+    "defillama": {
+        "summary": "DefiLlama DeFi analytics REST API (TVL, yields, DEX volumes, stablecoins, etc.).",
+        "query_keys": ["endpoint", "params", "protocol", "chain", "coins", "pool", "symbol", "asset", "timestamp"],
+        "config_notes": "Free API needs no key (https://api.llama.fi). Pro API key unlocks exclusive endpoints and higher rate limits.",
+        "example_query": "endpoint: protocols\n",
+        "example_queries": [
+            "endpoint: protocols\n",
+            "endpoint: protocol\nprotocol: aave\n",
+            "endpoint: overview-fees\n",
+            "endpoint: prices-current\ncoins: coingecko:ethereum\n",
+            "endpoint: historical-chain-tvl-chain\nchain: Ethereum\n",
+        ],
+        "tips": [
+            "Query syntax is YAML with `endpoint:` set to a kebab-case slug (e.g. protocols, overview-fees, prices-current).",
+            "Path parameters (protocol, chain, coins, pool, symbol, asset, timestamp) are top-level YAML keys.",
+            "Optional query-string parameters go under `params:`.",
+            "Schema browser lists endpoints by category (tvl.*, dex.*, coins.*, fees.*, ...); use insert templates from schema.",
+            "Do not invent API URLs — pick endpoint slugs from schema or get_query_runner_type endpoint_catalog.",
+        ],
+    },
+    "coingecko": {
+        "summary": "CoinGecko cryptocurrency market data REST API.",
+        "query_keys": ["endpoint", "coingeckoID", "coinId", "params"],
+        "example_query": "endpoint: simple-price\ncoingeckoID: ethereum\nparams:\n  vs_currencies: usd\n",
+        "example_queries": [
+            "endpoint: simple-price\ncoingeckoID: ethereum\nparams:\n  vs_currencies: usd\n",
+            "endpoint: market-chart\ncoingeckoID: bitcoin\nparams:\n  vs_currency: usd\n  days: 30\n",
+            "endpoint: coins-markets\nparams:\n  vs_currency: usd\n  ids: inverse-finance\n",
+            "endpoint: coin-detail\ncoingeckoID: inverse-finance\nparams:\n  localization: false\n  tickers: false\n  market_data: true\n",
+        ],
+        "tips": [
+            "Query syntax is YAML with `endpoint:` set to a kebab-case slug (e.g. simple-price, market-chart, coin-detail).",
+            "Coin-specific endpoints require `coingeckoID:` (or `coinId:`) with the CoinGecko coin id (e.g. ethereum, inverse-finance).",
+            "Optional API params go under `params:` (e.g. vs_currency, days, ids, per_page).",
+            "Do NOT use `url`, `method`, `path`, or `fields` — that is JSON data source syntax, not CoinGecko.",
+            "For a single coin's market cap, prefer `endpoint: coins-markets` with `params.ids` or `endpoint: coin-detail` with `coingeckoID`.",
+            "Schema browser includes endpoint categories (market.*, reference.*, detail.*) and popular coins (coins.*) with insertValue templates.",
+            "Use coingeckoID values from schema coins.* entries — do not invent coin ids.",
+        ],
+    },
+    "dune": {
+        "summary": "Dune Analytics SQL query execution via API.",
+        "query_keys": ["query_id", "query_parameters", "performance"],
+        "example_query": "query_id: 1234567\nquery_parameters:\n  chain: ethereum\nperformance: medium\n",
+        "tips": [
+            "Query syntax is YAML — not raw SQL. You execute a saved Dune query by `query_id`.",
+            "Pass Dune query parameters under `query_parameters:`; set `performance` to medium or large.",
+        ],
     },
     "elasticsearch": {
         "summary": "Elasticsearch query DSL as JSON.",
@@ -273,6 +348,83 @@ def _match_filter(text: str, query: str) -> bool:
     return q in text.lower()
 
 
+def _endpoint_catalog_for_runner(runner_type: str) -> list[dict[str, Any]]:
+    """Compact endpoint list for API-style YAML runners."""
+    runner_type = (runner_type or "").lower()
+    if runner_type == "defillama":
+        from rewatch.query_runner.defillama import DEFILLAMA_ENDPOINTS, _schema_for_endpoint
+
+        return [
+            {
+                "category": entry["category"],
+                "endpoint": entry["slug"],
+                "description": entry.get("description"),
+                "path_params": [p["name"] for p in entry.get("path_params", [])],
+                "pro_only": bool(entry.get("pro_only")),
+                "example_query": _schema_for_endpoint(entry)["insertValue"].strip(),
+            }
+            for entry in DEFILLAMA_ENDPOINTS
+        ]
+    if runner_type == "coingecko":
+        from rewatch.query_runner.coingecko import COINGECKO_ENDPOINT_CATALOG, _coingecko_schema_for_endpoint
+
+        return [
+            {
+                "category": entry["category"],
+                "endpoint": entry["slug"],
+                "description": entry.get("description"),
+                "path_params": [p["name"] for p in entry.get("params", [])],
+                "example_query": _coingecko_schema_for_endpoint(entry)["insertValue"].strip(),
+            }
+            for entry in COINGECKO_ENDPOINT_CATALOG
+        ]
+    return []
+
+
+def build_query_generation_context(runner_type: str, syntax: Optional[str] = None) -> dict[str, Any]:
+    """Rich, syntax-aware context for LLM query generation."""
+    runner_type = (runner_type or "").strip().lower()
+    runner_cls = _runner_class(runner_type)
+    if runner_cls is None:
+        syntax = syntax or "sql"
+        syntax_guide = QUERY_SYNTAX_GUIDES.get(syntax, QUERY_SYNTAX_GUIDES["custom"])
+        return {
+            "syntax": syntax,
+            "syntax_label": syntax_guide.get("label", syntax),
+            "generation_rules": syntax_guide.get("generation_rules", []),
+        }
+
+    resolved_syntax = syntax or _runner_syntax(runner_cls)
+    syntax_guide = QUERY_SYNTAX_GUIDES.get(resolved_syntax, QUERY_SYNTAX_GUIDES["custom"])
+    notes = dict(QUERY_RUNNER_NOTES.get(runner_type, {}))
+
+    examples: list[str] = []
+    if notes.get("example_query"):
+        examples.append(str(notes["example_query"]))
+    examples.extend(notes.get("example_queries") or [])
+
+    endpoint_catalog = _endpoint_catalog_for_runner(runner_type)
+
+    return {
+        "type": runner_cls.type(),
+        "name": runner_cls.name(),
+        "syntax": resolved_syntax,
+        "syntax_label": syntax_guide.get("label", resolved_syntax),
+        "summary": notes.get("summary") or syntax_guide.get("summary"),
+        "query_keys": notes.get("query_keys") or [],
+        "config_notes": notes.get("config_notes"),
+        "tips": (notes.get("tips") or []) + (syntax_guide.get("tips") or [])[:4],
+        "generation_rules": syntax_guide.get("generation_rules") or [],
+        "example_queries": examples[:6],
+        "endpoint_catalog": endpoint_catalog[:40],
+        "schema_hint": (
+            "Schema entries may include YAML templates under insertValue — prefer those over inventing queries."
+            if resolved_syntax == "yaml"
+            else "Use table and column names from schema exactly."
+        ),
+    }
+
+
 def summarize_runner_for_type(runner_type: str) -> Optional[dict[str, Any]]:
     """Compact catalog entry for embedding in data source payloads."""
     runner_cls = _runner_class(runner_type)
@@ -286,7 +438,7 @@ def summarize_runner_for_type(runner_type: str) -> Optional[dict[str, Any]]:
     summary = notes.get("summary") or syntax_guide.get("summary")
     tips = list(notes.get("tips") or []) + list(syntax_guide.get("tips") or [])
 
-    return {
+    result: dict[str, Any] = {
         "type": runner_cls.type(),
         "name": runner_cls.name(),
         "syntax": syntax,
@@ -296,6 +448,11 @@ def summarize_runner_for_type(runner_type: str) -> Optional[dict[str, Any]]:
         "schema_fields": _summarize_config_schema(runner_cls.configuration_schema()),
         "deprecated": bool(getattr(runner_cls, "deprecated", False)),
     }
+    if notes.get("example_query"):
+        result["example_query"] = notes["example_query"]
+    if notes.get("query_keys"):
+        result["query_keys"] = notes["query_keys"]
+    return result
 
 
 def list_query_runner_types(query: Optional[str] = None) -> dict[str, Any]:
@@ -351,8 +508,21 @@ def get_query_runner_type(runner_type: str) -> dict[str, Any]:
     base["schema_tool"] = (
         "Use get_data_source_schema with a connected data source of this type to list tables/columns."
         if syntax == "sql"
-        else "Use run_query with ad-hoc query_text to discover result columns."
+        else "Use get_data_source_schema to browse endpoints/templates, then run_query to discover result columns."
     )
+    endpoint_catalog = _endpoint_catalog_for_runner(runner_type)
+    if endpoint_catalog:
+        base["endpoint_catalog"] = endpoint_catalog
+    if runner_type == "coingecko":
+        base["query_syntax"] = (
+            "YAML with `endpoint:` (kebab-case slug) and, for coin-specific calls, `coingeckoID:`. "
+            "Do not use `url`, `method`, `path`, or `fields` — those keys are for the JSON data source type only."
+        )
+    elif runner_type == "defillama":
+        base["query_syntax"] = (
+            "YAML with `endpoint:` (kebab-case slug) and path params as top-level keys "
+            "(e.g. protocol, chain, coins). Optional query-string params go under `params:`."
+        )
     return base
 
 

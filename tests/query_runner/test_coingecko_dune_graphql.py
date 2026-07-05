@@ -71,6 +71,28 @@ class TestCoinGeckoRunner(TestCase):
         runner = CoinGecko({"base_url": "https://custom.example/api"})
         self.assertEqual(runner._build_url("ping"), "https://custom.example/api/ping")
 
+    def test_get_schema_includes_endpoints_and_categories(self):
+        schema = self.runner.get_schema()
+        names = [item["name"] for item in schema]
+        self.assertIn("market.simple-price", names)
+        self.assertIn("reference.coins-list", names)
+        self.assertIn("detail.coin-detail", names)
+
+    def test_get_schema_includes_top_coins(self):
+        response = mock.Mock(status_code=200)
+        response.json.return_value = [
+            {"id": "bitcoin", "name": "Bitcoin", "symbol": "btc", "market_cap_rank": 1},
+            {"id": "ethereum", "name": "Ethereum", "symbol": "eth", "market_cap_rank": 2},
+        ]
+        with mock.patch.object(self.runner, "get_response", return_value=(response, None)):
+            schema = self.runner.get_schema()
+        coin_names = [item["name"] for item in schema if item["name"].startswith("coins.")]
+        self.assertIn("coins.bitcoin", coin_names)
+        self.assertIn("coins.ethereum", coin_names)
+        bitcoin = next(item for item in schema if item["name"] == "coins.bitcoin")
+        self.assertEqual(bitcoin["displayName"], "Bitcoin (BTC)")
+        self.assertIn("coingeckoID: bitcoin", bitcoin["insertValue"])
+
     def test_run_query_simple_price(self):
         response = mock.Mock(status_code=200)
         response.json.return_value = {"bitcoin": {"usd": 60000}}

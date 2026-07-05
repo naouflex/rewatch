@@ -251,6 +251,135 @@ def parse_coingecko_response(data, endpoint_type="simple_price"):
     return {"rows": rows, "columns": columns}
 
 
+COINGECKO_ENDPOINT_CATALOG = [
+    {
+        "category": "market",
+        "slug": "simple-price",
+        "description": "Current price for a coin",
+        "params": [{"name": "coingeckoID", "example": "ethereum"}],
+        "params_hint": "params:\n  vs_currencies: usd\n",
+    },
+    {
+        "category": "market",
+        "slug": "market-chart",
+        "description": "Price, market cap, and volume history",
+        "params": [{"name": "coingeckoID", "example": "ethereum"}],
+        "params_hint": "params:\n  vs_currency: usd\n  days: 30\n",
+    },
+    {
+        "category": "market",
+        "slug": "market-chart-range",
+        "description": "Price history for a custom date range",
+        "params": [{"name": "coingeckoID", "example": "ethereum"}],
+        "params_hint": "params:\n  vs_currency: usd\n  from: 1700000000\n  to: 1703000000\n",
+    },
+    {
+        "category": "market",
+        "slug": "ohlc",
+        "description": "OHLC candlestick data",
+        "params": [{"name": "coingeckoID", "example": "ethereum"}],
+        "params_hint": "params:\n  vs_currency: usd\n  days: 30\n",
+    },
+    {
+        "category": "market",
+        "slug": "coins-markets",
+        "description": "Market data for many coins",
+        "params": [],
+        "params_hint": "params:\n  vs_currency: usd\n  order: market_cap_desc\n  per_page: 100\n",
+    },
+    {
+        "category": "market",
+        "slug": "new-listings",
+        "description": "Newly listed coins with market data",
+        "params": [],
+        "params_hint": "params:\n  chain: ethereum\n",
+    },
+    {
+        "category": "market",
+        "slug": "trending",
+        "description": "Trending coins in the last 24 hours",
+        "params": [],
+    },
+    {
+        "category": "market",
+        "slug": "global",
+        "description": "Global crypto market statistics",
+        "params": [],
+    },
+    {
+        "category": "reference",
+        "slug": "coins-list",
+        "description": "All supported coins (id, name, symbol)",
+        "params": [],
+        "params_hint": "params:\n  include_platform: false\n",
+    },
+    {
+        "category": "reference",
+        "slug": "coins-list-platforms",
+        "description": "All coins with platform contract addresses",
+        "params": [],
+        "params_hint": "params:\n  include_platform: true\n",
+    },
+    {
+        "category": "reference",
+        "slug": "categories",
+        "description": "Coin categories with market data",
+        "params": [],
+    },
+    {
+        "category": "reference",
+        "slug": "exchanges",
+        "description": "Exchange list with trust scores",
+        "params": [],
+        "params_hint": "params:\n  per_page: 100\n",
+    },
+    {
+        "category": "reference",
+        "slug": "exchange-rates",
+        "description": "BTC exchange rates",
+        "params": [],
+    },
+    {
+        "category": "detail",
+        "slug": "coin-detail",
+        "description": "Full metadata for a single coin",
+        "params": [{"name": "coingeckoID", "example": "ethereum"}],
+        "params_hint": "params:\n  localization: false\n  tickers: false\n  market_data: true\n",
+    },
+]
+
+
+def _coingecko_schema_for_endpoint(entry):
+    lines = ["endpoint: {0}".format(entry["slug"])]
+    columns = []
+    for param in entry.get("params", []):
+        example = param.get("example", "")
+        lines.append("{0}: {1}".format(param["name"], example))
+        columns.append(
+            {
+                "name": param["name"],
+                "type": TYPE_STRING,
+                "insertValue": "{0}: {1}\n".format(param["name"], example) if example else "{0}: \n".format(param["name"]),
+            }
+        )
+    if entry.get("params_hint"):
+        columns.append(
+            {
+                "name": "params",
+                "type": TYPE_STRING,
+                "description": "Optional query parameters",
+                "insertValue": entry["params_hint"],
+            }
+        )
+    return {
+        "name": "{0}.{1}".format(entry["category"], entry["slug"]),
+        "displayName": entry["slug"],
+        "description": entry["description"],
+        "insertValue": "\n".join(lines) + "\n",
+        "columns": columns,
+    }
+
+
 class CoinGecko(BaseHTTPQueryRunner):
     """CoinGecko REST query runner. YAML-based query syntax."""
 
@@ -393,6 +522,75 @@ class CoinGecko(BaseHTTPQueryRunner):
                 ).isoformat()
 
         return json_dumps(parse_coingecko_response(all_market_data, "coins_markets")), None
+
+    def _fetch_top_coins_schema(self):
+        """Return schema entries for top coins by market cap (for schema browser)."""
+        url = self._build_url("coins/markets")
+        params = {
+            "vs_currency": "usd",
+            "order": "market_cap_desc",
+            "per_page": "100",
+            "page": "1",
+            "sparkline": "false",
+        }
+        response, error = self.get_response(url, params=params, headers=self._get_headers(), timeout=self.timeout)
+        if error or response.status_code != 200:
+            logger.warning("Could not fetch top coins for schema: %s", error or response.status_code)
+            return []
+
+        try:
+            coins = response.json()
+        except ValueError:
+            return []
+
+        schema = []
+        for coin in coins:
+            coin_id = coin.get("id")
+            if not coin_id:
+                continue
+            name = coin.get("name", coin_id)
+            symbol = (coin.get("symbol") or "").upper()
+            rank = coin.get("market_cap_rank")
+            schema.append(
+                {
+                    "name": "coins.{0}".format(coin_id),
+                    "displayName": "{0} ({1})".format(name, symbol),
+                    "description": "Market cap rank #{0}".format(rank) if rank else None,
+                    "insertValue": (
+                        "endpoint: simple-price\ncoingeckoID: {0}\nparams:\n  vs_currencies: usd\n".format(coin_id)
+                    ),
+                    "columns": [
+                        {
+                            "name": "market-chart",
+                            "type": "endpoint",
+                            "description": "Price history (30 days)",
+                            "insertValue": (
+                                "endpoint: market-chart\ncoingeckoID: {0}\nparams:\n  vs_currency: usd\n  days: 30\n"
+                            ).format(coin_id),
+                        },
+                        {
+                            "name": "coin-detail",
+                            "type": "endpoint",
+                            "description": "Full coin metadata",
+                            "insertValue": "endpoint: coin-detail\ncoingeckoID: {0}\n".format(coin_id),
+                        },
+                        {
+                            "name": "ohlc",
+                            "type": "endpoint",
+                            "description": "OHLC candles (30 days)",
+                            "insertValue": (
+                                "endpoint: ohlc\ncoingeckoID: {0}\nparams:\n  vs_currency: usd\n  days: 30\n"
+                            ).format(coin_id),
+                        },
+                    ],
+                }
+            )
+        return schema
+
+    def get_schema(self, get_stats=False):
+        schema = [_coingecko_schema_for_endpoint(entry) for entry in COINGECKO_ENDPOINT_CATALOG]
+        schema.extend(self._fetch_top_coins_schema())
+        return schema
 
     def run_query(self, query, user):
         try:

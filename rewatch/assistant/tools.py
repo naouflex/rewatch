@@ -249,8 +249,10 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
         "function": {
             "name": "get_query_runner_type",
             "description": (
-                "Get full documentation for a query runner type: syntax, config schema, examples, tips. "
-                "Call with the data source `type` from list_data_sources (e.g. json, pg, mongodb)."
+                "Describe a query runner type: syntax, config schema, example queries, and per-endpoint "
+                "templates (endpoint_catalog.example_query). Call with the data source `type` from "
+                "list_data_sources (e.g. coingecko, defillama, json, pg). For CoinGecko/DefiLlama use "
+                "endpoint/coingeckoID YAML — not url/path/fields."
             ),
             "parameters": {
                 "type": "object",

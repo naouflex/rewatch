@@ -5,6 +5,7 @@ import PropTypes from "prop-types";
 import { useDebouncedCallback } from "use-debounce";
 import Input from "antd/lib/input";
 import Button from "antd/lib/button";
+import Select from "antd/lib/select";
 import AutoSizer from "react-virtualized/dist/commonjs/AutoSizer";
 import List from "react-virtualized/dist/commonjs/List";
 import PlainButton from "@/components/PlainButton";
@@ -16,10 +17,15 @@ import LoadingState from "../items-list/components/LoadingState";
 const SchemaItemColumnType = PropTypes.shape({
   name: PropTypes.string.isRequired,
   type: PropTypes.string,
+  description: PropTypes.string,
+  insertValue: PropTypes.string,
 });
 
 export const SchemaItemType = PropTypes.shape({
   name: PropTypes.string.isRequired,
+  displayName: PropTypes.string,
+  description: PropTypes.string,
+  insertValue: PropTypes.string,
   size: PropTypes.number,
   loading: PropTypes.bool,
   columns: PropTypes.arrayOf(SchemaItemColumnType).isRequired,
@@ -70,7 +76,7 @@ function SchemaItem({ item, expanded, onToggle, onSelect, ...props }) {
           placement="topRight"
           arrow={{ pointAtCenter: true }}
         >
-          <PlainButton className="copy-to-editor" onClick={(e) => handleSelect(e, item.name)}>
+          <PlainButton className="copy-to-editor" onClick={(e) => handleSelect(e, item.insertValue || item.name)}>
             <i className="fa fa-angle-double-right" aria-hidden="true" />
           </PlainButton>
         </Tooltip>
@@ -95,7 +101,7 @@ function SchemaItem({ item, expanded, onToggle, onSelect, ...props }) {
                   <PlainButton
                     key={columnName}
                     className="table-open-item"
-                    onClick={(e) => handleSelect(e, columnName)}
+                    onClick={(e) => handleSelect(e, column.insertValue || columnName)}
                   >
                     <div>
                       {columnName} {columnType && <span className="column-type">{columnType}</span>}
@@ -184,6 +190,40 @@ export function SchemaList({ loading, schema, expandedFlags, onTableExpand, onIt
   );
 }
 
+export function extractSchemaCategories(schema) {
+  const categories = new Set();
+  let hasUncategorized = false;
+
+  schema.forEach((item) => {
+    const dotIndex = item.name.indexOf(".");
+    if (dotIndex > 0) {
+      categories.add(item.name.slice(0, dotIndex));
+    } else {
+      hasUncategorized = true;
+    }
+  });
+
+  if (categories.size <= 1) {
+    return [];
+  }
+
+  const sorted = Array.from(categories).sort();
+  return hasUncategorized ? ["all", ...sorted, "other"] : ["all", ...sorted];
+}
+
+export function filterSchemaByCategory(schema, category) {
+  if (!category || category === "all") {
+    return schema;
+  }
+
+  if (category === "other") {
+    return filter(schema, (item) => item.name.indexOf(".") === -1);
+  }
+
+  const prefix = category + ".";
+  return filter(schema, (item) => item.name.startsWith(prefix));
+}
+
 export function applyFilterOnSchema(schema, filterString) {
   const filters = filter(filterString.toLowerCase().split(/\s+/), (s) => s.length > 0);
 
@@ -198,9 +238,16 @@ export function applyFilterOnSchema(schema, filterString) {
     const columnFilter = filters[0];
     return filter(
       schema,
-      (item) =>
-        includes(item.name.toLowerCase(), nameFilter) ||
-        some(item.columns, (column) => includes(get(column, "name").toLowerCase(), columnFilter))
+      (item) => {
+        const displayName = (item.displayName || "").toLowerCase();
+        const description = (item.description || "").toLowerCase();
+        return (
+          includes(item.name.toLowerCase(), nameFilter) ||
+          includes(displayName, nameFilter) ||
+          includes(description, nameFilter) ||
+          some(item.columns, (column) => includes(get(column, "name").toLowerCase(), columnFilter))
+        );
+      }
     );
   }
 
@@ -230,16 +277,30 @@ export default function SchemaBrowser({
 }) {
   const [schema, isLoading, refreshSchema] = useDataSourceSchema(dataSource);
   const [filterString, setFilterString] = useState("");
-  const filteredSchema = useMemo(() => applyFilterOnSchema(schema, filterString), [schema, filterString]);
+  const categories = useMemo(() => extractSchemaCategories(schema), [schema]);
+  const selectedCategory = get(options, "selectedCategory", "all");
+  const categoryFilteredSchema = useMemo(
+    () => filterSchemaByCategory(schema, categories.length > 0 ? selectedCategory : "all"),
+    [schema, categories, selectedCategory]
+  );
+  const filteredSchema = useMemo(
+    () => applyFilterOnSchema(categoryFilteredSchema, filterString),
+    [categoryFilteredSchema, filterString]
+  );
   const [handleFilterChange] = useDebouncedCallback(setFilterString, 500);
   const [expandedFlags, setExpandedFlags] = useState({});
 
   const handleSchemaUpdate = useImmutableCallback(onSchemaUpdate);
+  const handleOptionsUpdate = useImmutableCallback(onOptionsUpdate);
 
   useEffect(() => {
     setExpandedFlags({});
     handleSchemaUpdate(schema);
   }, [schema, handleSchemaUpdate]);
+
+  useEffect(() => {
+    setExpandedFlags({});
+  }, [selectedCategory]);
 
   if (schema.length === 0 && !isLoading) {
     return null;
@@ -252,9 +313,33 @@ export default function SchemaBrowser({
     });
   }
 
+  function handleCategoryChange(category) {
+    if (handleOptionsUpdate) {
+      handleOptionsUpdate({
+        ...(options || {}),
+        selectedCategory: category,
+      });
+    }
+  }
+
   return (
     <div className="schema-container" {...props}>
       <div className="schema-control">
+        {categories.length > 0 && (
+          <Select
+            className="schema-category-select m-r-5"
+            value={selectedCategory}
+            onChange={handleCategoryChange}
+            disabled={schema.length === 0}
+            aria-label="Filter schema by category"
+            dropdownMatchSelectWidth={false}>
+            {categories.map((category) => (
+              <Select.Option key={category} value={category}>
+                {category === "all" ? "All categories" : category === "other" ? "Other" : category}
+              </Select.Option>
+            ))}
+          </Select>
+        )}
         <Input
           className="m-r-5"
           placeholder="Search schema..."

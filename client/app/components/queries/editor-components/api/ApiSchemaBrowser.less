@@ -1,0 +1,66 @@
+@import (reference, less) "~@/assets/less/ant";
+
+.api-schema-browser {
+  .schema-control {
+    .category-select-open .ant-input-group-addon {
+      background-color: var(--rd-color-surface);
+
+      .ant-select-selection-item {
+        visibility: hidden;
+      }
+    }
+
+    .ant-input-wrapper {
+      table-layout: fixed;
+
+      .ant-input-group-addon {
+        width: 42%;
+        padding: 0;
+        border-bottom-left-radius: 0;
+
+        .ant-select {
+          width: 100%;
+
+          .ant-select-selection-item {
+            text-align: left;
+          }
+
+          &.ant-select-focused .ant-select-selector {
+            color: inherit;
+          }
+        }
+      }
+
+      .ant-input {
+        border-bottom-right-radius: 0;
+      }
+    }
+  }
+
+  .schema-list-wrapper {
+    position: relative;
+    height: 100%;
+    border: 1px solid var(--rd-color-divider);
+    border-top: 0;
+    border-radius: 0 0 var(--rd-radius-sm) var(--rd-radius-sm);
+    margin-bottom: 20px;
+    padding-bottom: 32px;
+
+    .load-button {
+      display: flex;
+      justify-content: center;
+      position: absolute;
+      width: 100%;
+      bottom: 0;
+
+      .ant-btn {
+        color: @text-color;
+        padding: 0 10px;
+      }
+    }
+  }
+}
+
+.api-schema-browser-category-dropdown {
+  min-width: 180px !important;
+}

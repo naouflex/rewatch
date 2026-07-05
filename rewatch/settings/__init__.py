@@ -378,6 +378,7 @@ default_query_runners = [
     "rewatch.query_runner.duckdb",
     "rewatch.query_runner.python",
     "rewatch.query_runner.coingecko",
+    "rewatch.query_runner.defillama",
     "rewatch.query_runner.dune",
     "rewatch.query_runner.graphql",
     "rewatch.query_runner.evm_logs",

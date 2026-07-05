@@ -1,7 +1,6 @@
 import { capitalize, isNil, map, get } from "lodash";
 import AceEditor from "react-ace";
 import ace from "ace-builds";
-
 import "ace-builds/src-noconflict/ext-language_tools";
 import "ace-builds/src-noconflict/mode-graphqlschema";
 import "ace-builds/src-noconflict/mode-json";
@@ -11,6 +10,11 @@ import "ace-builds/src-noconflict/mode-yaml";
 import "ace-builds/src-noconflict/theme-textmate";
 import "ace-builds/src-noconflict/theme-tomorrow_night";
 import "ace-builds/src-noconflict/ext-searchbox";
+
+// Ace tries to load mode workers from /static/worker-*.js, but the dev server's
+// SPA fallback serves index.html for those paths. Disable workers so syntax
+// highlighting runs on the main thread instead.
+ace.config.set("useWorker", false);
 
 ace.define("ace/mode/graphql", ["require", "exports", "module", "ace/mode/graphqlschema"], (require, exports) => {
   exports.Mode = require("ace/mode/graphqlschema").Mode;
@@ -44,10 +48,10 @@ function buildTableColumnKeywords(table) {
   table.columns.forEach(column => {
     const columnName = get(column, "name");
     keywords.push({
-      name: `${table.name}.${columnName}`,
-      value: `${table.name}.${columnName}`,
+      name: columnName,
+      value: get(column, "insertValue") || `${table.name}.${columnName}`,
       score: 100,
-      meta: capitalize(get(column, "type", "Column")),
+      meta: get(column, "description") || capitalize(get(column, "type", "Column")),
     });
   });
   return keywords;
@@ -59,16 +63,17 @@ function buildKeywordsFromSchema(schema) {
   const tableColumnKeywords = {};
 
   schema.forEach(table => {
+    const displayName = get(table, "displayName") || table.name;
     tableKeywords.push({
-      name: table.name,
-      value: table.name,
+      name: displayName,
+      value: get(table, "insertValue") || table.name,
       score: 100,
-      meta: "Table",
+      meta: get(table, "description") || "Endpoint",
     });
     tableColumnKeywords[table.name] = buildTableColumnKeywords(table);
     table.columns.forEach(c => {
       const columnName = get(c, "name", c);
-      columnKeywords[columnName] = capitalize(get(c, "type", "Column"));
+      columnKeywords[columnName] = get(c, "description") || capitalize(get(c, "type", "Column"));
     });
   });
 
