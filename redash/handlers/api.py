@@ -10,10 +10,13 @@ from redash.handlers.alert_events import (
 from redash.handlers.assistant import (
     AssistantChatResource,
     AssistantChatStreamResource,
+    AssistantDashboardPreviewResource,
+    AssistantQueryPreviewResource,
     AssistantStatusResource,
     AssistantThreadListResource,
     AssistantThreadMessagesResource,
     AssistantThreadResource,
+    AssistantVisualizationPreviewResource,
 )
 from redash.handlers.alerts import (
     AlertArchiveResource,
@@ -595,4 +598,19 @@ api.add_org_resource(
     AssistantChatStreamResource,
     "/api/assistant/chat/stream",
     endpoint="assistant_chat_stream",
+)
+api.add_org_resource(
+    AssistantVisualizationPreviewResource,
+    "/api/assistant/previews/visualizations/<int:visualization_id>",
+    endpoint="assistant_preview_visualization",
+)
+api.add_org_resource(
+    AssistantQueryPreviewResource,
+    "/api/assistant/previews/queries/<int:query_id>",
+    endpoint="assistant_preview_query",
+)
+api.add_org_resource(
+    AssistantDashboardPreviewResource,
+    "/api/assistant/previews/dashboards/<int:dashboard_id>",
+    endpoint="assistant_preview_dashboard",
 )

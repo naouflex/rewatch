@@ -54,7 +54,7 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
         "type": "function",
         "function": {
             "name": "run_query",
-            "description": "Execute a saved query or ad-hoc SQL and return result rows.",
+            "description": "Execute a saved query or ad-hoc SQL and return result rows. Use this to explore data and test SQL before saving.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -76,7 +76,7 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
         "type": "function",
         "function": {
             "name": "create_query",
-            "description": "Create a new saved query (starts as draft). A default Table visualization is added automatically.",
+            "description": "Create a new saved query (starts as draft). SQL is executed automatically before and after save; the response includes validation with sample rows or an error. Fix SQL and retry if validation fails.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -95,7 +95,7 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
         "type": "function",
         "function": {
             "name": "update_query",
-            "description": "Update an existing saved query.",
+            "description": "Update an existing saved query. When SQL changes, it is executed automatically before and after save; the response includes validation results.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -726,16 +726,113 @@ class ToolContext:
             "note": f"Showing first {max_rows} rows" if len(rows) > max_rows else None,
         }
 
+    def _execute_saved_query_validation(self, query_id: int, parameters: Optional[dict] = None) -> dict[str, Any]:
+        try:
+            result = self.run_query_tool(
+                {
+                    "query_id": query_id,
+                    "max_age": 0,
+                    "max_rows": 10,
+                    "parameters": parameters or {},
+                }
+            )
+            return {
+                "status": "ok",
+                "message": f"Query ran successfully ({result.get('row_count', 0)} rows returned).",
+                **result,
+            }
+        except RuntimeError as exc:
+            message = str(exc)
+            if "Missing parameter" in message:
+                return {
+                    "status": "needs_parameters",
+                    "message": message,
+                }
+            return {
+                "status": "error",
+                "message": message,
+            }
+
+    def _test_sql_before_save(self, sql: str, data_source_id: int, parameters: Optional[dict] = None) -> dict[str, Any]:
+        try:
+            result = self.run_query_tool(
+                {
+                    "query_text": sql,
+                    "data_source_id": data_source_id,
+                    "max_age": 0,
+                    "max_rows": 10,
+                    "parameters": parameters or {},
+                }
+            )
+            return {
+                "status": "ok",
+                "phase": "pre_save",
+                "message": f"SQL test passed ({result.get('row_count', 0)} rows returned).",
+                **result,
+            }
+        except RuntimeError as exc:
+            message = str(exc)
+            if "Missing parameter" in message:
+                return {
+                    "status": "needs_parameters",
+                    "phase": "pre_save",
+                    "message": message,
+                }
+            return {
+                "status": "error",
+                "phase": "pre_save",
+                "message": message,
+            }
+
+    def _validate_saved_query(self, query: dict[str, Any]) -> dict[str, Any]:
+        query_id = query.get("id")
+        if not query_id:
+            return query
+        query["validation"] = self._execute_saved_query_validation(query_id)
+        return query
+
     def create_query_tool(self, args: dict) -> Any:
-        return self.request("POST", "/api/queries", body=_merge_body(**args))
+        pre_validation = self._test_sql_before_save(args["query"], args["data_source_id"])
+        if pre_validation.get("status") == "error":
+            raise RuntimeError(f"Query failed validation before save: {pre_validation['message']}")
+
+        query = self.request("POST", "/api/queries", body=_merge_body(**args))
+        query = self._validate_saved_query(query)
+        query["validation"] = {
+            "pre_save": pre_validation,
+            "post_save": query.get("validation"),
+        }
+        post_save = query["validation"].get("post_save") or {}
+        if post_save.get("status") == "error":
+            query["validation"]["action_required"] = (
+                f"Query #{query.get('id')} was saved but failed to run. Fix the SQL with update_query."
+            )
+        return query
 
     def update_query_tool(self, args: dict) -> Any:
         args = dict(args)
         query_id = args.pop("query_id")
         current = self.request("GET", f"/api/queries/{query_id}")
+        pre_validation = None
+        if "query" in args:
+            data_source_id = args.get("data_source_id") or current.get("data_source_id")
+            pre_validation = self._test_sql_before_save(args["query"], data_source_id)
+            if pre_validation.get("status") == "error":
+                raise RuntimeError(f"Query failed validation before save: {pre_validation['message']}")
+
         body = _merge_body(**args)
         body.setdefault("version", current.get("version"))
-        return self.request("POST", f"/api/queries/{query_id}", body=body)
+        query = self.request("POST", f"/api/queries/{query_id}", body=body)
+        post_validation = self._execute_saved_query_validation(query_id)
+        validation: dict[str, Any] = {"post_save": post_validation}
+        if pre_validation is not None:
+            validation["pre_save"] = pre_validation
+        query["validation"] = validation
+        if post_validation.get("status") == "error":
+            query["validation"]["action_required"] = (
+                f"Query #{query_id} was updated but failed to run. Fix the SQL with update_query."
+            )
+        return query
 
     def update_dashboard_tool(self, args: dict) -> Any:
         args = dict(args)
@@ -765,6 +862,13 @@ class ToolContext:
         return self.request("POST", "/api/alerts", body=body)
 
     def create_visualization_tool(self, args: dict) -> Any:
+        query_validation = self._execute_saved_query_validation(args["query_id"])
+        if query_validation.get("status") == "error":
+            raise RuntimeError(
+                "Cannot create visualization because the query failed to run: "
+                f"{query_validation['message']}"
+            )
+
         body = _merge_body(
             query_id=args["query_id"],
             type=args["type"],
@@ -772,7 +876,9 @@ class ToolContext:
             options=args.get("options") or {},
             description=args.get("description"),
         )
-        return self.request("POST", "/api/visualizations", body=body)
+        visualization = self.request("POST", "/api/visualizations", body=body)
+        visualization["query_validation"] = query_validation
+        return visualization
 
     def update_visualization_tool(self, args: dict) -> Any:
         args = dict(args)

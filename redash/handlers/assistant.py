@@ -5,11 +5,13 @@ import threading
 from flask import Response, request, stream_with_context
 from flask_restful import abort
 
-from redash import settings
+from redash import models, settings
 from redash.assistant import storage
+from redash.assistant.previews import render_dashboard_svg, render_query_svg, render_visualization_svg
 from redash.assistant.service import chat
-from redash.handlers.base import BaseResource
+from redash.handlers.base import BaseResource, get_object_or_404
 from redash.models import db
+from redash.permissions import require_access, view_only
 
 
 def _assistant_base_url():
@@ -212,3 +214,35 @@ class AssistantChatStreamResource(BaseResource):
                 "X-Accel-Buffering": "no",
             },
         )
+
+
+class AssistantVisualizationPreviewResource(BaseResource):
+    def get(self, visualization_id):
+        _ensure_assistant_enabled(self.current_user)
+        visualization = get_object_or_404(
+            models.Visualization.get_by_id_and_org,
+            visualization_id,
+            self.current_org,
+        )
+        query = visualization.query_rel
+        require_access(query, self.current_user, view_only)
+        svg = render_visualization_svg(visualization, query)
+        return Response(svg, mimetype="image/svg+xml", headers={"Cache-Control": "private, max-age=120"})
+
+
+class AssistantQueryPreviewResource(BaseResource):
+    def get(self, query_id):
+        _ensure_assistant_enabled(self.current_user)
+        query = get_object_or_404(models.Query.get_by_id_and_org, query_id, self.current_org)
+        require_access(query, self.current_user, view_only)
+        svg = render_query_svg(query)
+        return Response(svg, mimetype="image/svg+xml", headers={"Cache-Control": "private, max-age=120"})
+
+
+class AssistantDashboardPreviewResource(BaseResource):
+    def get(self, dashboard_id):
+        _ensure_assistant_enabled(self.current_user)
+        dashboard = get_object_or_404(models.Dashboard.get_by_id_and_org, dashboard_id, self.current_org)
+        require_access(dashboard, self.current_user, view_only)
+        svg = render_dashboard_svg(dashboard)
+        return Response(svg, mimetype="image/svg+xml", headers={"Cache-Control": "private, max-age=120"})
