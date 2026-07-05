@@ -1,10 +1,12 @@
 import { first } from "lodash";
-import React, { useMemo } from "react";
-import PropTypes from "prop-types";
+import React, { useMemo, useState, useCallback } from "react";
 import Button from "antd/lib/button";
+import Drawer from "antd/lib/drawer";
 import MenuOutlinedIcon from "@ant-design/icons/MenuOutlined";
-import Dropdown from "antd/lib/dropdown";
+import Menu from "antd/lib/menu";
 import Link from "@/components/Link";
+import HelpTrigger from "@/components/HelpTrigger";
+import CreateDashboardDialog from "@/components/dashboards/CreateDashboardDialog";
 import ThemeToggle from "@/components/ThemeToggle";
 import { Auth, clientConfig, currentUser } from "@/services/auth";
 import settingsMenu from "@/services/settingsMenu";
@@ -13,99 +15,125 @@ import logoUrl from "@/assets/images/icon_small.png";
 
 import "./MobileNavbar.less";
 
-export default function MobileNavbar({ getPopupContainer }) {
+const SUBMENU_KEYS = new Set(["dashboards", "queries", "alerts", "indexers", "models", "account"]);
+
+function submenuItem(key, label, children) {
+  return { key, label, children };
+}
+
+function linkItem(key, href, label, props = {}) {
+  return {
+    key,
+    label: (
+      <Link href={href} {...props}>
+        {label}
+      </Link>
+    ),
+  };
+}
+
+export default function MobileNavbar() {
   const firstSettingsTab = first(settingsMenu.getAvailableItems());
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const canCreateQuery = currentUser.hasPermission("create_query");
+  const canCreateDashboard = currentUser.hasPermission("create_dashboard");
+  const canCreateAlert = currentUser.hasPermission("list_alerts");
+  const canCreateDestination = currentUser.hasPermission("create_destination");
+  const canCreateIndexer = currentUser.hasPermission("create_indexer");
+  const canCreateModel = currentUser.hasPermission("create_model");
 
   const menuItems = useMemo(() => {
     const items = [];
 
     if (currentUser.hasPermission("list_dashboards")) {
-      items.push({
-        key: "dashboards",
-        label: <Link href="dashboards">Dashboards</Link>,
-      });
+      if (canCreateDashboard) {
+        items.push(
+          submenuItem("dashboards", "Dashboards", [
+            { key: "new-dashboard", label: "Create Dashboard", "data-test": "CreateDashboardMenuItem" },
+            { type: "divider" },
+            linkItem("dashboards-list", "dashboards", "Dashboards"),
+          ])
+        );
+      } else {
+        items.push(linkItem("dashboards", "dashboards", "Dashboards"));
+      }
     }
+
     if (currentUser.hasPermission("view_query")) {
-      items.push({
-        key: "queries",
-        label: <Link href="queries">Queries</Link>,
-      });
+      items.push(
+        submenuItem("queries", "Queries", [
+          ...(canCreateQuery
+            ? [
+                linkItem("new-query", "queries/new", "Create Query", { "data-test": "CreateQueryMenuItem" }),
+                { type: "divider" },
+              ]
+            : []),
+          linkItem("queries-list", "queries", "Queries"),
+          ...(currentUser.hasPermission("list_query_snippets")
+            ? [linkItem("query-snippets", "query_snippets", "Query Snippets")]
+            : []),
+        ])
+      );
     }
-    if (currentUser.hasPermission("list_query_snippets")) {
-      items.push({
-        key: "query-snippets",
-        label: <Link href="query_snippets">Query Snippets</Link>,
-      });
-    }
+
     if (currentUser.hasPermission("list_alerts")) {
-      items.push({
-        key: "alerts",
-        label: <Link href="alerts">Alerts</Link>,
-      });
+      items.push(
+        submenuItem("alerts", "Alerts", [
+          ...(canCreateAlert
+            ? [
+                linkItem("new-alert", "alerts/new", "Create Alert", { "data-test": "CreateAlertMenuItem" }),
+                { type: "divider" },
+              ]
+            : []),
+          linkItem("alerts-list", "alerts", "Alerts"),
+          linkItem("alerts-history", "alert_events", "Alerts History"),
+          ...(currentUser.hasPermission("list_destinations")
+            ? [linkItem("alert-destinations", "destinations", "Destinations")]
+            : []),
+          ...(canCreateDestination
+            ? [
+                linkItem("new-destination", "destinations/new", "Create Destination", {
+                  "data-test": "CreateDestinationMenuItem",
+                }),
+              ]
+            : []),
+        ])
+      );
     }
-    if (currentUser.hasPermission("list_alerts")) {
-      items.push({
-        key: "alert-events",
-        label: <Link href="alert_events">Alerts History</Link>,
-      });
-    }
-    if (currentUser.hasPermission("list_destinations")) {
-      items.push({
-        key: "alert-destinations",
-        label: <Link href="destinations">Destinations</Link>,
-      });
-    }
+
     if (currentUser.hasPermission("list_indexers")) {
-      items.push({
-        key: "indexers",
-        label: <Link href="indexers">Indexers</Link>,
-      });
+      if (canCreateIndexer) {
+        items.push(
+          submenuItem("indexers", "Indexers", [
+            linkItem("new-indexer", "indexers/new", "Create Indexer", { "data-test": "CreateIndexerMenuItem" }),
+            { type: "divider" },
+            linkItem("indexers-list", "indexers", "Indexers"),
+          ])
+        );
+      } else {
+        items.push(linkItem("indexers", "indexers", "Indexers"));
+      }
     }
+
     if (currentUser.hasPermission("list_models")) {
-      items.push({
-        key: "ml-models",
-        label: <Link href="ml_models">Models</Link>,
-      });
+      items.push(
+        submenuItem("models", "Models", [
+          ...(canCreateModel
+            ? [
+                linkItem("new-model", "ml_models/new", "Create Model", { "data-test": "CreateMLModelMenuItem" }),
+                { type: "divider" },
+              ]
+            : []),
+          linkItem("models-list", "ml_models", "Models"),
+          linkItem("models-versions", "ml_models_versions", "Versions"),
+          linkItem("predictions-list", "predictions", "Predictions"),
+        ])
+      );
     }
-    if (currentUser.hasPermission("list_models")) {
-      items.push({
-        key: "ml-models-versions",
-        label: <Link href="ml_models_versions">Versions</Link>,
-      });
-    }
-    if (currentUser.hasPermission("list_models")) {
-      items.push({
-        key: "predictions",
-        label: <Link href="predictions">Predictions</Link>,
-      });
-    }
+
     if (clientConfig.assistantEnabled) {
-      items.push({
-        key: "assistant",
-        label: <Link href="assistant">Assistant</Link>,
-      });
-    }
-
-    items.push({
-      key: "profile",
-      label: <Link href="users/me">Edit Profile</Link>,
-    });
-    items.push({ type: "divider" });
-
-    if (firstSettingsTab) {
-      items.push({
-        key: "settings",
-        label: <Link href={firstSettingsTab.path}>Settings</Link>,
-      });
-    }
-    if (currentUser.hasPermission("super_admin")) {
-      items.push({
-        key: "status",
-        label: <Link href="admin/status">System Status</Link>,
-      });
-    }
-    if (currentUser.hasPermission("super_admin")) {
-      items.push({ type: "divider" });
+      items.push(linkItem("assistant", "assistant", "Assistant"));
     }
 
     items.push({
@@ -113,32 +141,82 @@ export default function MobileNavbar({ getPopupContainer }) {
       label: (
         /* eslint-disable-next-line react/jsx-no-target-blank */
         <a href={getApiDocsUrl(clientConfig.basePath)} target="_blank" rel="noopener noreferrer">
-          API Docs
+          API
         </a>
       ),
     });
-    items.push({
-      key: "help",
-      label: (
-        /* eslint-disable-next-line react/jsx-no-target-blank */
-        <Link href="https://naoufel.io/help" target="_blank" rel="noopener">
-          Help
-        </Link>
-      ),
-    });
+
+    items.push({ type: "divider" });
+
+    const accountChildren = [
+      linkItem("profile", "users/me", "Profile"),
+      {
+        key: "help",
+        className: "mobile-navbar-help-item",
+        label: (
+          <HelpTrigger showTooltip={false} type="HOME" tabIndex={0}>
+            Help
+          </HelpTrigger>
+        ),
+      },
+      ...(firstSettingsTab
+        ? [
+            {
+              key: "settings",
+              label: (
+                <Link href={firstSettingsTab.path} data-test="SettingsLink">
+                  Settings
+                </Link>
+              ),
+            },
+          ]
+        : []),
+      ...(currentUser.hasPermission("super_admin")
+        ? [linkItem("status", "admin/status", "System Status")]
+        : []),
+    ];
+
+    items.push(submenuItem("account", "Account", accountChildren));
+
     items.push({
       key: "theme",
       className: "mobile-navbar-theme-item",
       label: <ThemeToggle variant="menu-item" />,
     });
+
     items.push({
       key: "logout",
       label: "Log out",
-      onClick: () => Auth.logout(),
     });
 
     return items;
-  }, [firstSettingsTab]);
+  }, [
+    canCreateAlert,
+    canCreateDashboard,
+    canCreateDestination,
+    canCreateIndexer,
+    canCreateModel,
+    canCreateQuery,
+    firstSettingsTab,
+  ]);
+
+  const handleMenuClick = useCallback(({ key }) => {
+    if (SUBMENU_KEYS.has(key)) {
+      return;
+    }
+
+    if (key === "logout") {
+      Auth.logout();
+    }
+
+    if (key === "new-dashboard") {
+      CreateDashboardDialog.showModal();
+    }
+
+    if (key !== "theme") {
+      setMenuOpen(false);
+    }
+  }, []);
 
   return (
     <div className="mobile-navbar">
@@ -148,29 +226,23 @@ export default function MobileNavbar({ getPopupContainer }) {
           <span className="mobile-navbar-logo-title">{APPLICATION_TITLE}</span>
         </Link>
       </div>
-      <div>
-        <Dropdown
-          overlayStyle={{ minWidth: 200 }}
-          trigger={["click"]}
-          getPopupContainer={getPopupContainer} // so the overlay menu stays with the fixed header when page scrolls
-          menu={{
-            items: menuItems,
-            selectable: false,
-            className: "mobile-navbar-menu",
-          }}>
-          <Button className="mobile-navbar-toggle-button">
-            <MenuOutlinedIcon />
-          </Button>
-        </Dropdown>
-      </div>
+      <Button
+        className="mobile-navbar-toggle-button"
+        aria-label="Open navigation menu"
+        aria-expanded={menuOpen}
+        onClick={() => setMenuOpen(true)}>
+        <MenuOutlinedIcon />
+      </Button>
+      <Drawer
+        title="Menu"
+        placement="right"
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        width="min(100vw - 24px, 320px)"
+        rootClassName="mobile-navbar-drawer"
+        destroyOnHidden>
+        <Menu mode="inline" selectable={false} items={menuItems} onClick={handleMenuClick} />
+      </Drawer>
     </div>
   );
 }
-
-MobileNavbar.propTypes = {
-  getPopupContainer: PropTypes.func,
-};
-
-MobileNavbar.defaultProps = {
-  getPopupContainer: null,
-};

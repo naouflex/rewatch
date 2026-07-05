@@ -4,8 +4,8 @@
 .desktop-navbar {
   background: var(--rd-sidebar-bg);
   border-bottom: 1px solid var(--rd-sidebar-border);
-  display: flex;
-  flex-direction: row;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
   height: @navbarHeight;
   width: 100%;
@@ -20,6 +20,7 @@
     align-items: center;
     margin-right: 12px;
     min-width: 0;
+    justify-self: start;
 
     &-link {
       display: inline-flex;
@@ -51,23 +52,23 @@
     }
   }
 
-  // Primary nav links. Takes the remaining horizontal space; when items
-  // don't fit, antd's horizontal menu collapses the extras into a "..."
-  // overflow submenu.
+  // Primary nav links, centered in the navbar without overlapping side controls.
   &-main {
-    flex: 1 1 auto;
+    justify-self: center;
+    max-width: 100%;
     min-width: 0;
+
+    .ant-menu {
+      justify-content: center;
+    }
   }
 
-  // Pushes the utilities group to the right edge when the main menu is
-  // narrower than the available space.
-  &-spacer {
-    flex: 0 0 auto;
-  }
-
-  // Create / Help / Settings / theme toggle / profile, pinned right.
+  // Theme toggle and profile, pinned right.
   &-utilities {
-    flex: 0 0 auto;
+    justify-self: end;
+    display: flex;
+    justify-content: flex-end;
+    min-width: 0;
   }
 
   .help-trigger {
@@ -166,6 +167,14 @@
       span,
       .anticon {
         color: inherit;
+      }
+
+      &.desktop-navbar-profile-menu-item .help-trigger {
+        display: block;
+        width: 100%;
+        height: auto;
+        padding: 0;
+        text-align: left;
       }
     }
 

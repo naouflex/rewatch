@@ -1,4 +1,4 @@
-import React, { useRef, useCallback } from "react";
+import React from "react";
 import PropTypes from "prop-types";
 import DynamicComponent from "@/components/DynamicComponent";
 import AssistantBubble from "@/components/AssistantBubble";
@@ -8,22 +8,18 @@ import MobileNavbar from "./MobileNavbar";
 import "./index.less";
 
 export default function ApplicationLayout({ children }) {
-  const navbarContainerRef = useRef();
-
-  const getNavbarPopupContainer = useCallback(() => navbarContainerRef.current, []);
-
   return (
     <React.Fragment>
       <DynamicComponent name="ApplicationWrapper">
-        <nav className="application-layout-top-menu" ref={navbarContainerRef}>
+        <nav className="application-layout-top-menu">
           <div className="application-layout-desktop-nav">
             <DynamicComponent name="ApplicationDesktopNavbar">
               <DesktopNavbar />
             </DynamicComponent>
           </div>
           <div className="application-layout-mobile-nav">
-            <DynamicComponent name="ApplicationMobileNavbar" getPopupContainer={getNavbarPopupContainer}>
-              <MobileNavbar getPopupContainer={getNavbarPopupContainer} />
+            <DynamicComponent name="ApplicationMobileNavbar">
+              <MobileNavbar />
             </DynamicComponent>
           </div>
         </nav>
