@@ -31,6 +31,7 @@ TOOL_START_LABELS: dict[str, Callable[[dict[str, Any]], str]] = {
     "update_visualization": lambda a: f"Updating visualization #{a.get('visualization_id')}",
     "delete_visualization": lambda a: f"Deleting visualization #{a.get('visualization_id')}",
     "list_data_sources": lambda a: "Listing data sources",
+    "get_data_source": lambda a: f"Loading data source #{a.get('data_source_id')}",
     "get_data_source_schema": lambda a: f"Loading schema for data source #{a.get('data_source_id')}",
     "list_dashboards": lambda a: "Listing dashboards",
     "get_dashboard": lambda a: f"Loading dashboard #{a.get('dashboard_id')}",

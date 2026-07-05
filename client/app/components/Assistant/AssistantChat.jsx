@@ -19,7 +19,7 @@ const WELCOME = {
 
 const SUGGESTIONS = [
   "List my data sources",
-  "Search my queries",
+  "Create a map from public JSON URL data",
   "Search the web for Postgres window functions",
   "Create a line chart dashboard",
 ];

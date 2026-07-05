@@ -11,6 +11,7 @@ import requests
 
 from redash.assistant import docs as docs_catalog
 from redash.assistant import web as web_tools
+from redash.assistant.datasources import enrich_data_source, enrich_data_sources
 from redash.assistant.links import enrich_tool_payload
 
 logger = logging.getLogger(__name__)
@@ -82,12 +83,16 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
         "type": "function",
         "function": {
             "name": "run_query",
-            "description": "Execute a saved query or ad-hoc SQL and return result rows. Use this to explore data and test SQL before saving.",
+            "description": (
+                "Execute a saved query or ad-hoc query text and return result rows. "
+                "Use query_text + data_source_id to test before create_query. "
+                "SQL sources use SQL; JSON sources use YAML (see list_data_sources assistant_hint)."
+            ),
             "parameters": {
                 "type": "object",
                 "properties": {
                     "query_id": {"type": "integer", "description": "Saved query ID"},
-                    "query_text": {"type": "string", "description": "Ad-hoc SQL when query_id is omitted"},
+                    "query_text": {"type": "string", "description": "Ad-hoc SQL or JSON/YAML (for JSON data sources)"},
                     "data_source_id": {"type": "integer", "description": "Required with query_text"},
                     "parameters": {"type": "object", "description": "Parameter values for parameterized queries"},
                     "max_age": {
@@ -104,12 +109,17 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
         "type": "function",
         "function": {
             "name": "create_query",
-            "description": "Create a new saved query (starts as draft). SQL is executed automatically before and after save; the response includes validation with sample rows or an error. Fix SQL and retry if validation fails.",
+            "description": (
+                "Create a new saved query (starts as draft). The `query` field is SQL for SQL data sources "
+                "or YAML for JSON data sources (must include `url:`). "
+                "Always call list_data_sources first to pick data_source_id. "
+                "Query text is executed automatically before and after save; read validation for columns/sample rows."
+            ),
             "parameters": {
                 "type": "object",
                 "properties": {
                     "name": {"type": "string"},
-                    "query": {"type": "string", "description": "SQL text"},
+                    "query": {"type": "string", "description": "SQL or JSON/YAML depending on data source type"},
                     "data_source_id": {"type": "integer"},
                     "description": {"type": "string"},
                     "schedule": {"type": "object"},
@@ -157,9 +167,10 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
         "function": {
             "name": "create_visualization",
             "description": (
-                "Add a visualization to a query. Types: TABLE, CHART, COUNTER, DETAILS, PIVOT, MAP, etc. "
-                "For CHART, set options.columnMapping mapping column names to x/y (e.g. {\"date\": \"x\", \"count\": \"y\"}) "
-                "and options.globalSeriesType (column, line, bar, area, pie, scatter)."
+                "Add a visualization to a query. Types include TABLE, CHART, COUNTER, MAP, etc. "
+                "CHART: options.columnMapping + options.globalSeriesType (column, line, bar, area, pie, scatter). "
+                "MAP (markers): options.latColName and options.lonColName must match numeric columns from query results; "
+                "optional options.classify for grouping. Run the query first to learn exact column names."
             ),
             "parameters": {
                 "type": "object",
@@ -209,8 +220,23 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
         "type": "function",
         "function": {
             "name": "list_data_sources",
-            "description": "List connected data sources (id, name, type).",
+            "description": (
+                "List connected data sources (id, name, type) with assistant hints. "
+                "Always call this before create_query when the data source is unknown."
+            ),
             "parameters": {"type": "object", "properties": {}},
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_data_source",
+            "description": "Get one data source by id (type, options including base_url for JSON sources).",
+            "parameters": {
+                "type": "object",
+                "properties": {"data_source_id": {"type": "integer"}},
+                "required": ["data_source_id"],
+            },
         },
     },
     {
@@ -948,7 +974,10 @@ def execute_tool(ctx: ToolContext, name: str, arguments: dict) -> str:
         "create_visualization": ctx.create_visualization_tool,
         "update_visualization": ctx.update_visualization_tool,
         "delete_visualization": lambda a: ctx.request("DELETE", f"/api/visualizations/{a['visualization_id']}"),
-        "list_data_sources": lambda a: ctx.request("GET", "/api/data_sources"),
+        "list_data_sources": lambda a: enrich_data_sources(ctx.request("GET", "/api/data_sources")),
+        "get_data_source": lambda a: enrich_data_source(
+            _as_dict(ctx.request("GET", f"/api/data_sources/{a['data_source_id']}"), "data source")
+        ),
         "get_data_source_schema": lambda a: ctx.request(
             "GET",
             f"/api/data_sources/{a['data_source_id']}/schema",
