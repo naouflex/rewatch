@@ -173,13 +173,26 @@
   .chart-visualization-container,
   .sunburst-visualization-container,
   .sankey-visualization-container,
-  .map-visualization-container,
   .word-cloud-visualization-container,
   .box-plot-deprecated-visualization-container {
     position: relative;
     flex: 1 1 auto;
     min-height: 0;
     height: auto;
+    left: auto;
+    top: auto;
+    right: auto;
+    bottom: auto;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  // Leaflet needs a definite height; flex + height:auto collapses an empty map container.
+  .map-visualization-container {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 400px;
+    height: 100%;
     left: auto;
     top: auto;
     right: auto;

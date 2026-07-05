@@ -83,7 +83,9 @@ const config = {
     extensions: [".js", ".jsx", ".ts", ".tsx"],
     alias: {
       "@": appPath,
-      extensions: extensionPath
+      extensions: extensionPath,
+      "@rewatch/viz/lib": path.join(__dirname, "viz-lib/lib"),
+      "@rewatch/viz": path.join(__dirname, "viz-lib/lib"),
     },
     fallback: {
       fs: false,

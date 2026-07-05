@@ -110,8 +110,8 @@ importers:
         specifier: 2.12.7
         version: 2.12.7(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       sql-formatter:
-        specifier: git+https://github.com/getrewatch/sql-formatter.git
-        version: https://codeload.github.com/getrewatch/sql-formatter/tar.gz/26ab6c12fa4c989c8000d7f2ee46e55bd7ae43df
+        specifier: git+https://github.com/getredash/sql-formatter.git#26ab6c12fa4c989c8000d7f2ee46e55bd7ae43df
+        version: https://codeload.github.com/getredash/sql-formatter/tar.gz/26ab6c12fa4c989c8000d7f2ee46e55bd7ae43df
       universal-router:
         specifier: ^8.3.0
         version: 8.3.0
@@ -7851,8 +7851,8 @@ packages:
   sprintf-js@1.0.3:
     resolution: {integrity: sha512-D9cPgkvLlV3t3IzL0D0YLvGA9Ahk4PcvVwUbN0dSGr1aP0Nrt4AEnTUbuGvquEC0mA64Gqt1fzirlRs5ibXx8g==}
 
-  sql-formatter@https://codeload.github.com/getrewatch/sql-formatter/tar.gz/26ab6c12fa4c989c8000d7f2ee46e55bd7ae43df:
-    resolution: {tarball: https://codeload.github.com/getrewatch/sql-formatter/tar.gz/26ab6c12fa4c989c8000d7f2ee46e55bd7ae43df}
+  sql-formatter@https://codeload.github.com/getredash/sql-formatter/tar.gz/26ab6c12fa4c989c8000d7f2ee46e55bd7ae43df:
+    resolution: {tarball: https://codeload.github.com/getredash/sql-formatter/tar.gz/26ab6c12fa4c989c8000d7f2ee46e55bd7ae43df}
     version: 2.3.3
 
   sshpk@1.18.0:
@@ -17955,7 +17955,7 @@ snapshots:
 
   sprintf-js@1.0.3: {}
 
-  sql-formatter@https://codeload.github.com/getrewatch/sql-formatter/tar.gz/26ab6c12fa4c989c8000d7f2ee46e55bd7ae43df:
+  sql-formatter@https://codeload.github.com/getredash/sql-formatter/tar.gz/26ab6c12fa4c989c8000d7f2ee46e55bd7ae43df:
     dependencies:
       lodash: 4.17.23
 
