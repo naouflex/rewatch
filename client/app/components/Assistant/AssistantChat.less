@@ -48,6 +48,11 @@
         color: var(--rd-color-text);
         background: var(--rd-color-surface-hover);
       }
+
+      &.active {
+        color: var(--rd-color-brand);
+        background: var(--rd-color-brand-soft);
+      }
     }
   }
 }
@@ -167,6 +172,116 @@
   h2,
   h3 {
     font-size: 1.05em;
+  }
+}
+
+.assistant-chat-history {
+  border-bottom: 1px solid var(--rd-color-divider);
+  background: var(--rd-color-surface);
+  max-height: 55%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.assistant-chat-history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--rd-color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+
+  .assistant-chat-history-new {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border: 1px solid var(--rd-color-border);
+    background: var(--rd-color-surface);
+    color: var(--rd-color-text);
+    border-radius: var(--rd-radius-pill);
+    padding: 3px 10px;
+    font-size: 12px;
+    text-transform: none;
+    letter-spacing: normal;
+    cursor: pointer;
+
+    &:hover {
+      border-color: var(--rd-color-brand);
+      color: var(--rd-color-brand);
+    }
+  }
+}
+
+.assistant-chat-history-list {
+  overflow-y: auto;
+  min-height: 0;
+  padding: 0 8px 8px;
+}
+
+.assistant-chat-history-empty {
+  padding: 12px 16px 16px;
+  font-size: 12px;
+  color: var(--rd-color-text-muted);
+}
+
+.assistant-chat-history-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: var(--rd-radius-sm);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--rd-color-surface-hover);
+
+    .assistant-chat-history-item-delete {
+      opacity: 1;
+    }
+  }
+
+  &.active {
+    background: var(--rd-color-brand-soft);
+  }
+
+  .assistant-chat-history-item-body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .assistant-chat-history-item-title {
+    font-size: 13px;
+    color: var(--rd-color-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .assistant-chat-history-item-time {
+    font-size: 11px;
+    color: var(--rd-color-text-muted);
+    margin-top: 2px;
+  }
+
+  .assistant-chat-history-item-delete {
+    opacity: 0;
+    flex-shrink: 0;
+    color: var(--rd-color-text-muted);
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--rd-radius-sm);
+
+    &:hover {
+      color: var(--rd-color-danger, #f5222d);
+      background: var(--rd-color-surface);
+    }
   }
 }
 

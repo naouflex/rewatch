@@ -9,6 +9,7 @@ from typing import Any, Callable, Optional
 
 import requests
 
+from redash.assistant import catalog as platform_catalog
 from redash.assistant import docs as docs_catalog
 from redash.assistant import web as web_tools
 from redash.assistant.datasources import enrich_data_source, enrich_data_sources
@@ -86,13 +87,13 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
             "description": (
                 "Execute a saved query or ad-hoc query text and return result rows. "
                 "Use query_text + data_source_id to test before create_query. "
-                "SQL sources use SQL; JSON sources use YAML (see list_data_sources assistant_hint)."
+                "Query syntax depends on data source type — call get_query_runner_type first."
             ),
             "parameters": {
                 "type": "object",
                 "properties": {
                     "query_id": {"type": "integer", "description": "Saved query ID"},
-                    "query_text": {"type": "string", "description": "Ad-hoc SQL or JSON/YAML (for JSON data sources)"},
+                    "query_text": {"type": "string", "description": "Ad-hoc query text (syntax per get_query_runner_type)"},
                     "data_source_id": {"type": "integer", "description": "Required with query_text"},
                     "parameters": {"type": "object", "description": "Parameter values for parameterized queries"},
                     "max_age": {
@@ -110,8 +111,8 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
         "function": {
             "name": "create_query",
             "description": (
-                "Create a new saved query (starts as draft). The `query` field is SQL for SQL data sources "
-                "or YAML for JSON data sources (must include `url:`). "
+                "Create a new saved query (starts as draft). Query syntax depends on data source type — "
+                "call get_query_runner_type with the source type before writing `query`. "
                 "Always call list_data_sources first to pick data_source_id. "
                 "Query text is executed automatically before and after save; read validation for columns/sample rows."
             ),
@@ -119,7 +120,7 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
                 "type": "object",
                 "properties": {
                     "name": {"type": "string"},
-                    "query": {"type": "string", "description": "SQL or JSON/YAML depending on data source type"},
+                    "query": {"type": "string", "description": "Query text (syntax per get_query_runner_type)"},
                     "data_source_id": {"type": "integer"},
                     "description": {"type": "string"},
                     "schedule": {"type": "object"},
@@ -133,7 +134,11 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
         "type": "function",
         "function": {
             "name": "update_query",
-            "description": "Update an existing saved query. When SQL changes, it is executed automatically before and after save; the response includes validation results.",
+            "description": (
+                "Update an existing saved query. When query text changes, it is executed automatically "
+                "before and after save; the response includes validation results. "
+                "Use get_query_runner_type if unsure of query syntax."
+            ),
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -167,10 +172,8 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
         "function": {
             "name": "create_visualization",
             "description": (
-                "Add a visualization to a query. Types include TABLE, CHART, COUNTER, MAP, etc. "
-                "CHART: options.columnMapping + options.globalSeriesType (column, line, bar, area, pie, scatter). "
-                "MAP (markers): options.latColName and options.lonColName must match numeric columns from query results; "
-                "optional options.classify for grouping. Run the query first to learn exact column names."
+                "Add a visualization to a query. Call get_visualization_type(type) for required options. "
+                "Query must validate before creating non-TABLE visualizations."
             ),
             "parameters": {
                 "type": "object",
@@ -221,7 +224,7 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
         "function": {
             "name": "list_data_sources",
             "description": (
-                "List connected data sources (id, name, type) with assistant hints. "
+                "List connected data sources (id, name, type) with query_runner summary per type. "
                 "Always call this before create_query when the data source is unknown."
             ),
             "parameters": {"type": "object", "properties": {}},
@@ -230,8 +233,65 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
     {
         "type": "function",
         "function": {
+            "name": "list_query_runner_types",
+            "description": (
+                "List all query runner types the platform supports (syntax, summary). "
+                "Use before writing queries for unfamiliar data source types."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {"q": {"type": "string", "description": "Optional filter by name or type"}},
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_query_runner_type",
+            "description": (
+                "Get full documentation for a query runner type: syntax, config schema, examples, tips. "
+                "Call with the data source `type` from list_data_sources (e.g. json, pg, mongodb)."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {"type": {"type": "string", "description": "Query runner type string"}},
+                "required": ["type"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "list_visualization_types",
+            "description": "List visualization types (CHART, MAP, COUNTER, etc.) with summaries.",
+            "parameters": {
+                "type": "object",
+                "properties": {"q": {"type": "string", "description": "Optional filter"}},
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_visualization_type",
+            "description": (
+                "Get required/common options for a visualization type before create_visualization."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {"type": {"type": "string", "description": "Visualization type, e.g. CHART, MAP"}},
+                "required": ["type"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "get_data_source",
-            "description": "Get one data source by id (type, options including base_url for JSON sources).",
+            "description": (
+                "Get one data source by id (type, options, query_runner catalog summary). "
+                "Call get_query_runner_type with the same type for full query format docs."
+            ),
             "parameters": {
                 "type": "object",
                 "properties": {"data_source_id": {"type": "integer"}},
@@ -957,8 +1017,44 @@ class ToolContext:
         return self.request("POST", "/api/widgets", body=body)
 
 
+# Keep tool results within a sane share of the model context. Oversized
+# payloads (huge schemas, wide query results) get structurally truncated
+# instead of silently eating the whole window.
+MAX_TOOL_RESULT_CHARS = 24000
+_TRUNCATION_LIST_KEEP = 40
+
+
+def _shrink_payload(value: Any, depth: int = 0) -> Any:
+    if isinstance(value, list) and len(value) > _TRUNCATION_LIST_KEEP:
+        kept = value[:_TRUNCATION_LIST_KEEP]
+        return [_shrink_payload(item, depth + 1) for item in kept] + [
+            f"... truncated {len(value) - _TRUNCATION_LIST_KEEP} more items ..."
+        ]
+    if isinstance(value, list):
+        return [_shrink_payload(item, depth + 1) for item in value]
+    if isinstance(value, dict):
+        return {k: _shrink_payload(v, depth + 1) for k, v in value.items()}
+    if isinstance(value, str) and len(value) > 4000:
+        return value[:4000] + f"... truncated {len(value) - 4000} more characters ..."
+    return value
+
+
 def _compact(value: Any) -> str:
-    return json.dumps(value, indent=2, default=str)
+    text = json.dumps(value, separators=(",", ":"), default=str)
+    if len(text) <= MAX_TOOL_RESULT_CHARS:
+        return text
+
+    shrunk = _shrink_payload(value)
+    text = json.dumps(shrunk, separators=(",", ":"), default=str)
+    if len(text) <= MAX_TOOL_RESULT_CHARS:
+        return text
+    return json.dumps(
+        {
+            "truncated": True,
+            "note": "Result was too large; showing a prefix. Narrow the request (fewer rows/fields) for full data.",
+            "preview": text[:MAX_TOOL_RESULT_CHARS],
+        }
+    )
 
 
 def execute_tool(ctx: ToolContext, name: str, arguments: dict) -> str:
@@ -975,6 +1071,10 @@ def execute_tool(ctx: ToolContext, name: str, arguments: dict) -> str:
         "update_visualization": ctx.update_visualization_tool,
         "delete_visualization": lambda a: ctx.request("DELETE", f"/api/visualizations/{a['visualization_id']}"),
         "list_data_sources": lambda a: enrich_data_sources(ctx.request("GET", "/api/data_sources")),
+        "list_query_runner_types": lambda a: platform_catalog.list_query_runner_types(a.get("q")),
+        "get_query_runner_type": lambda a: platform_catalog.get_query_runner_type(a["type"]),
+        "list_visualization_types": lambda a: platform_catalog.list_visualization_types(a.get("q")),
+        "get_visualization_type": lambda a: platform_catalog.get_visualization_type(a["type"]),
         "get_data_source": lambda a: enrich_data_source(
             _as_dict(ctx.request("GET", f"/api/data_sources/{a['data_source_id']}"), "data source")
         ),

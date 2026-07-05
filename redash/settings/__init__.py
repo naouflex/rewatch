@@ -272,7 +272,9 @@ def email_server_is_configured():
 HOST = os.environ.get("REDASH_HOST", "")
 
 OPENAI_API_KEY = os.environ.get("REDASH_OPENAI_API_KEY") or os.environ.get("OPENAI_API_KEY", "")
-OPENAI_MODEL = os.environ.get("REDASH_OPENAI_MODEL", "gpt-4o-mini")
+OPENAI_MODEL = os.environ.get("REDASH_OPENAI_MODEL", "gpt-5.4-mini")
+# Optional reasoning effort for GPT-5+ models (none/low/medium/high). Empty = API default.
+OPENAI_REASONING_EFFORT = os.environ.get("REDASH_OPENAI_REASONING_EFFORT", "")
 ASSISTANT_ENABLED = parse_boolean(os.environ.get("REDASH_ASSISTANT_ENABLED", "true"))
 HELP_BASE_URL = os.environ.get("REDASH_HELP_BASE_URL", "https://naoufel.io")
 

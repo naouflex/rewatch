@@ -1,57 +1,10 @@
-"""Data source hints for the assistant."""
+"""Data source enrichment for the assistant."""
 
 from __future__ import annotations
 
 from typing import Any, Optional
 
-# Curated public JSON endpoints that work well with MAP visualizations (lat/lon columns).
-EXAMPLE_JSON_MAP_QUERIES = [
-    {
-        "title": "Sample users with geo coordinates (jsonplaceholder)",
-        "data_source_type": "json",
-        "query": (
-            "url: https://jsonplaceholder.typicode.com/users\n"
-            "fields:\n"
-            "  - name\n"
-            "  - username\n"
-            "  - geo.lat\n"
-            "  - geo.lng\n"
-            "  - address.city"
-        ),
-        "map_options": {"latColName": "geo.lat", "lonColName": "geo.lng", "classify": "address.city"},
-    },
-    {
-        "title": "Recent earthquakes (USGS GeoJSON — use properties, not raw geometry)",
-        "data_source_type": "json",
-        "query": (
-            "url: https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson\n"
-            "path: features\n"
-            "fields:\n"
-            "  - properties.title\n"
-            "  - properties.mag\n"
-            "  - properties.place\n"
-            "  - properties.time"
-        ),
-        "map_options": None,
-        "note": "This feed does not expose separate lat/lon columns; use for tables/charts or find a dataset with geo.lat/geo.lng.",
-    },
-]
-
-TYPE_HINTS: dict[str, str] = {
-    "json": (
-        "Query language is YAML (not SQL). Each query must include `url:` (absolute or relative to the "
-        "data source base URL). Optional: `path` (dot path to array in response), `fields` (columns to keep), "
-        "`params`, `headers`. Test with run_query using query_text + data_source_id before create_query."
-    ),
-    "pg": "PostgreSQL — use SQL.",
-    "postgres": "PostgreSQL — use SQL.",
-    "mysql": "MySQL — use SQL.",
-    "bigquery": "BigQuery — use SQL.",
-    "clickhouse": "ClickHouse — use SQL.",
-    "sqlite": "SQLite — use SQL.",
-    "mongodb": "MongoDB — query language is JSON.",
-    "google_spreadsheets": "Google Sheets — query language is JSON.",
-}
+from redash.assistant.catalog import get_query_runner_type, summarize_runner_for_type
 
 
 def _base_url(options: Any) -> Optional[str]:
@@ -67,34 +20,38 @@ def enrich_data_source(data_source: dict[str, Any]) -> dict[str, Any]:
         return data_source
 
     ds_type = (data_source.get("type") or "").lower()
-    hint = TYPE_HINTS.get(ds_type)
-    if hint:
-        data_source["assistant_hint"] = hint
+    runner_summary = summarize_runner_for_type(ds_type)
+    if runner_summary:
+        data_source["query_runner"] = runner_summary
+
     if ds_type == "json":
         base = _base_url(data_source.get("options"))
-        data_source["assistant_json_base_url"] = base or ""
-        data_source["assistant_example_queries"] = EXAMPLE_JSON_MAP_QUERIES
+        data_source["json_base_url"] = base or ""
+        # Full type docs including example_query when present
+        type_docs = get_query_runner_type("json")
+        if isinstance(type_docs, dict) and not type_docs.get("error"):
+            notes = type_docs.get("type_notes") or {}
+            if notes.get("example_query"):
+                data_source["example_query"] = notes["example_query"]
+
     return data_source
 
 
 def enrich_data_sources(payload: Any) -> Any:
     if isinstance(payload, list):
         enriched = [enrich_data_source(item) if isinstance(item, dict) else item for item in payload]
-        types = sorted({(item.get("type") or "").lower() for item in enriched if isinstance(item, dict) and item.get("type")})
+        types = sorted(
+            {(item.get("type") or "").lower() for item in enriched if isinstance(item, dict) and item.get("type")}
+        )
         result: dict[str, Any] = {
             "data_sources": enriched,
             "available_types": types,
             "assistant_note": (
-                "Pick a data source by id and type before create_query. "
-                "For JSON/URL data and map visualizations, prefer type `json`. "
-                "Use web_search + fetch_url to find public JSON URLs — never invent sample JSON."
+                "Each data source includes query_runner (syntax + summary). "
+                "For full query format details call get_query_runner_type with the data source `type`. "
+                "Pick a data source by id before create_query."
             ),
         }
-        if "json" not in types:
-            result["assistant_warning"] = (
-                "No JSON data source is configured. Ask an admin to add a JSON data source "
-                "(Settings → Data Sources) to query public JSON/GeoJSON URLs."
-            )
         return result
     return payload
 

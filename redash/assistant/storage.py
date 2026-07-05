@@ -8,8 +8,10 @@ from typing import Any, Optional
 from redash.models import AssistantMessage, AssistantThread, db
 
 MAX_THREADS = 30
-MAX_LLM_MESSAGES = 36
-MAX_LLM_CHARS = 28000
+# gpt-5.4-mini has a 400K-token window; allow much longer thread recall while
+# still bounding worst-case prompt size (~30K tokens of history).
+MAX_LLM_MESSAGES = 60
+MAX_LLM_CHARS = 120000
 DEFAULT_TITLE = "New chat"
 
 

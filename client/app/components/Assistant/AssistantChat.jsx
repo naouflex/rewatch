@@ -1,11 +1,15 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import cx from "classnames";
+import moment from "moment";
 import HtmlContent from "@redash/viz/lib/components/HtmlContent";
 import { markdown } from "markdown";
 import Link from "@/components/Link";
 import PlainButton from "@/components/PlainButton";
 import CloseOutlined from "@ant-design/icons/CloseOutlined";
+import HistoryOutlined from "@ant-design/icons/HistoryOutlined";
+import PlusOutlined from "@ant-design/icons/PlusOutlined";
+import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
 import Assistant from "@/services/assistant";
 import AssistantThinking from "@/components/Assistant/AssistantThinking";
 
@@ -55,8 +59,12 @@ export default function AssistantChat({
   const [loading, setLoading] = useState(false);
   const [thinkingStatus, setThinkingStatus] = useState("Thinking…");
   const [thinkingActivities, setThinkingActivities] = useState([]);
+  const [draftReply, setDraftReply] = useState("");
   const [bootstrapping, setBootstrapping] = useState(true);
   const [error, setError] = useState(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyThreads, setHistoryThreads] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -105,11 +113,74 @@ export default function AssistantChat({
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [messages, loading, thinkingActivities]);
+  }, [messages, loading, thinkingActivities, draftReply]);
+
+  const refreshHistory = useCallback(async () => {
+    setHistoryLoading(true);
+    try {
+      const data = await Assistant.listThreads();
+      setHistoryThreads(data);
+    } catch (err) {
+      setHistoryThreads([]);
+    } finally {
+      setHistoryLoading(false);
+    }
+  }, []);
+
+  const toggleHistory = useCallback(() => {
+    setHistoryOpen(prev => {
+      if (!prev) {
+        refreshHistory();
+      }
+      return !prev;
+    });
+  }, [refreshHistory]);
+
+  const selectHistoryThread = useCallback(
+    id => {
+      Assistant.setStoredThreadId(id);
+      onThreadIdChange(id);
+      setHistoryOpen(false);
+    },
+    [onThreadIdChange]
+  );
+
+  const startNewChat = useCallback(() => {
+    Assistant.setStoredThreadId(null);
+    onThreadIdChange(null);
+    setHistoryOpen(false);
+  }, [onThreadIdChange]);
+
+  const deleteHistoryThread = useCallback(
+    async id => {
+      try {
+        await Assistant.deleteThread(id);
+      } catch (err) {
+        // thread may already be gone; refresh regardless
+      }
+      if (id === threadId) {
+        Assistant.setStoredThreadId(null);
+        onThreadIdChange(null);
+      }
+      if (onThreadsChanged) {
+        onThreadsChanged();
+      }
+      refreshHistory();
+    },
+    [threadId, onThreadIdChange, onThreadsChanged, refreshHistory]
+  );
 
   const handleStreamEvent = useCallback(event => {
     if (event.type === "status") {
       setThinkingStatus(event.message);
+      return;
+    }
+    if (event.type === "reply_delta") {
+      setDraftReply(prev => prev + (event.text || ""));
+      return;
+    }
+    if (event.type === "reply_reset") {
+      setDraftReply("");
       return;
     }
     if (event.type === "tool_start") {
@@ -147,8 +218,10 @@ export default function AssistantChat({
 
       setError(null);
       setInput("");
+      setHistoryOpen(false);
       setThinkingStatus("Analyzing your request…");
       setThinkingActivities([]);
+      setDraftReply("");
       setMessages(prev => [...prev, { role: "user", content: text }]);
       setLoading(true);
 
@@ -182,6 +255,7 @@ export default function AssistantChat({
         setLoading(false);
         setThinkingActivities([]);
         setThinkingStatus("Thinking…");
+        setDraftReply("");
       }
     },
     [input, loading, onThreadIdChange, onThreadsChanged, runChat, threadId]
@@ -212,6 +286,20 @@ export default function AssistantChat({
               Open full page
             </Link>
           )}
+          {compact && (
+            <PlainButton aria-label="New chat" title="New chat" onClick={startNewChat}>
+              <PlusOutlined />
+            </PlainButton>
+          )}
+          {compact && (
+            <PlainButton
+              aria-label="Chat history"
+              title="Chat history"
+              className={cx({ active: historyOpen })}
+              onClick={toggleHistory}>
+              <HistoryOutlined />
+            </PlainButton>
+          )}
           {onClose && (
             <PlainButton aria-label="Close assistant" onClick={onClose}>
               <CloseOutlined />
@@ -219,6 +307,55 @@ export default function AssistantChat({
           )}
         </div>
       </div>
+
+      {historyOpen && (
+        <div className="assistant-chat-history">
+          <div className="assistant-chat-history-header">
+            <span>Recent chats</span>
+            <button type="button" className="assistant-chat-history-new" onClick={startNewChat}>
+              <PlusOutlined /> New chat
+            </button>
+          </div>
+          {historyLoading ? (
+            <div className="assistant-chat-history-empty">Loading…</div>
+          ) : historyThreads.length === 0 ? (
+            <div className="assistant-chat-history-empty">No conversations yet.</div>
+          ) : (
+            <div className="assistant-chat-history-list">
+              {historyThreads.map(thread => (
+                <div
+                  key={thread.id}
+                  role="button"
+                  tabIndex={0}
+                  className={cx("assistant-chat-history-item", { active: thread.id === threadId })}
+                  onClick={() => selectHistoryThread(thread.id)}
+                  onKeyDown={event => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      selectHistoryThread(thread.id);
+                    }
+                  }}>
+                  <div className="assistant-chat-history-item-body">
+                    <div className="assistant-chat-history-item-title">
+                      {thread.title && thread.title !== "New chat" ? thread.title : thread.preview || "New chat"}
+                    </div>
+                    <div className="assistant-chat-history-item-time">{moment(thread.updated_at).fromNow()}</div>
+                  </div>
+                  <PlainButton
+                    aria-label="Delete chat"
+                    className="assistant-chat-history-item-delete"
+                    onClick={event => {
+                      event.stopPropagation();
+                      deleteHistoryThread(thread.id);
+                    }}>
+                    <DeleteOutlined />
+                  </PlainButton>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="assistant-chat-messages">
         {bootstrapping ? (
@@ -250,7 +387,12 @@ export default function AssistantChat({
             </div>
           ))
         )}
-        {loading && <AssistantThinking status={thinkingStatus} activities={thinkingActivities} />}
+        {loading && draftReply && (
+          <div className="assistant-chat-message assistant">
+            <HtmlContent className="markdown">{renderMarkdown(draftReply)}</HtmlContent>
+          </div>
+        )}
+        {loading && !draftReply && <AssistantThinking status={thinkingStatus} activities={thinkingActivities} />}
         <div ref={messagesEndRef} />
       </div>
 

@@ -4,9 +4,16 @@ from __future__ import annotations
 
 import json
 import logging
+import time
 from typing import Any, Callable, Optional
 
-from openai import OpenAI
+from openai import (
+    APIConnectionError,
+    APITimeoutError,
+    InternalServerError,
+    OpenAI,
+    RateLimitError,
+)
 
 from redash import settings
 from redash.assistant.activity import tool_start_label
@@ -31,31 +38,22 @@ You help users:
 
 Guidelines:
 - Use tools to fetch real data instead of guessing. When explaining query results, summarize clearly and cite column names and sample values.
+- Platform catalog (use proactively — do not guess query or visualization syntax):
+  - list_data_sources returns each source's `type` and a `query_runner` summary (syntax + tips).
+  - Before writing query text for any unfamiliar data source type, call get_query_runner_type with that `type`.
+  - Before create_visualization, call get_visualization_type for the target type (CHART, MAP, CHOROPLETH, etc.).
+  - list_query_runner_types / list_visualization_types browse everything the platform supports.
 - When the user asks to create a query and the data source is not specified, call list_data_sources first and pick the best match by type/name. Never ask the user which data source to use if one is available.
-- Before creating queries against SQL sources, inspect schema with get_data_source_schema when table/column names are unknown.
-- JSON / URL data sources (type `json`):
-  - Query text is YAML, not SQL. Minimum: `url: https://example.com/data.json`. Optional: `path` (dot path to rows array), `fields` (column whitelist).
-  - URLs can be absolute or relative to the data source `base_url` (see get_data_source).
-  - To find public datasets: web_search for open JSON/GeoJSON/API endpoints, then fetch_url to inspect shape. Never paste invented JSON or ask the user to host data unless every public option failed.
-  - Prefer datasets with separate latitude/longitude columns (e.g. geo.lat / geo.lng) for map visualizations — raw GeoJSON geometry.coordinates arrays are not directly usable.
-  - Workflow: list_data_sources → run_query (ad-hoc query_text) → create_query → create_visualization.
-  - Example JSON query that works for MAP markers:
-    url: https://jsonplaceholder.typicode.com/users
-    fields:
-      - name
-      - geo.lat
-      - geo.lng
-      - address.city
-- MAP visualizations (type MAP): set options.latColName and options.lonColName to numeric columns from validation results; optional options.classify for color grouping. Example: {"latColName": "geo.lat", "lonColName": "geo.lng", "classify": "address.city"}.
+- SQL data sources: use get_data_source_schema when table/column names are unknown.
+- Non-SQL data sources: follow get_query_runner_type docs exactly (YAML, JSON, GraphQL, Python, etc.). Test with run_query (ad-hoc query_text) before create_query.
+- For public HTTP/JSON datasets: web_search + fetch_url to find real endpoints — never invent sample data.
 - create_query and update_query automatically execute query text before saving and again after saving. Always read the validation block in the tool response:
   - If validation status is error, fix the query using the error message, schema, and sample data, then update_query. Never tell the user a broken query succeeded.
   - If status is needs_parameters, ask the user for parameter values or use run_query with parameters before continuing.
   - If validation includes action_required, call update_query to fix the saved query — do not create a duplicate query.
   - Use validation columns/rows when building chart columnMapping.
 - When exploring unfamiliar data, use run_query with ad-hoc query_text first, then create_query once validation succeeds.
-- New queries get a default Table visualization automatically. For charts, use create_visualization with type CHART only after the query validation succeeded:
-  - Set options.columnMapping (e.g. {"date_col": "x", "metric_col": "y"}).
-  - Set options.globalSeriesType: column, line, bar, area, pie, or scatter.
+- New queries get a default Table visualization automatically. For other visualizations, consult get_visualization_type and use validation columns in options.
 - To put a chart on a dashboard: create_visualization → add_widget_to_dashboard with visualization_id.
   Use get_dashboard to read the current layout; widget options use col, row, sizeX, sizeY grid units.
 - When creating alerts, confirm the query exists and pick a sensible column from its result set.
@@ -75,6 +73,77 @@ def _client() -> OpenAI:
     if not settings.OPENAI_API_KEY:
         raise RuntimeError("OpenAI API key is not configured")
     return OpenAI(api_key=settings.OPENAI_API_KEY)
+
+
+_RETRYABLE_ERRORS = (RateLimitError, APIConnectionError, APITimeoutError, InternalServerError)
+_MAX_API_ATTEMPTS = 3
+
+
+def _stream_completion(
+    client: OpenAI,
+    conversation: list[dict[str, Any]],
+    on_activity: Optional[ActivityCallback],
+    *,
+    tool_choice: str = "auto",
+) -> dict[str, Any]:
+    """Stream one completion, emitting reply text deltas as they arrive.
+
+    Returns {"content": str, "tool_calls": [{"id", "name", "arguments"}, ...]}.
+    Retries transient API errors with backoff.
+    """
+    kwargs: dict[str, Any] = {
+        "model": settings.OPENAI_MODEL,
+        "messages": conversation,
+        "tools": TOOL_DEFINITIONS,
+        "tool_choice": tool_choice,
+        "stream": True,
+    }
+    if settings.OPENAI_REASONING_EFFORT:
+        kwargs["reasoning_effort"] = settings.OPENAI_REASONING_EFFORT
+
+    last_error: Optional[Exception] = None
+    for attempt in range(_MAX_API_ATTEMPTS):
+        content_parts: list[str] = []
+        tool_calls: dict[int, dict[str, str]] = {}
+        emitted_any_delta = False
+        try:
+            stream = client.chat.completions.create(**kwargs)
+            for chunk in stream:
+                if not chunk.choices:
+                    continue
+                delta = chunk.choices[0].delta
+                if delta is None:
+                    continue
+                if delta.content:
+                    content_parts.append(delta.content)
+                    emitted_any_delta = True
+                    _emit(on_activity, {"type": "reply_delta", "text": delta.content})
+                for tc in delta.tool_calls or []:
+                    entry = tool_calls.setdefault(tc.index, {"id": "", "name": "", "arguments": ""})
+                    if tc.id:
+                        entry["id"] = tc.id
+                    if tc.function:
+                        if tc.function.name:
+                            entry["name"] = tc.function.name
+                        if tc.function.arguments:
+                            entry["arguments"] += tc.function.arguments
+            return {
+                "content": "".join(content_parts),
+                "tool_calls": [tool_calls[i] for i in sorted(tool_calls)],
+            }
+        except _RETRYABLE_ERRORS as exc:
+            last_error = exc
+            # If tokens already reached the client we can't cleanly retry the
+            # same turn — surface the error instead of duplicating output.
+            if emitted_any_delta:
+                raise
+            if attempt < _MAX_API_ATTEMPTS - 1:
+                wait = 2**attempt
+                logger.warning("Assistant OpenAI transient error (attempt %s): %s", attempt + 1, exc)
+                _emit(on_activity, {"type": "status", "message": "AI service hiccup — retrying…"})
+                time.sleep(wait)
+
+    raise last_error  # type: ignore[misc]
 
 
 def _emit(on_activity: Optional[ActivityCallback], event: dict[str, Any]) -> None:
@@ -140,16 +209,30 @@ def chat(
 
     max_rounds = 18
     collected_previews: list[dict[str, str]] = []
-    for round_idx in range(max_rounds):
+    for round_idx in range(max_rounds + 1):
         if round_idx > 0:
             _emit(on_activity, {"type": "status", "message": "Planning next step…"})
 
+        # Past the round budget, force a text answer so the user always gets
+        # a summary of progress instead of a hard failure.
+        final_round = round_idx == max_rounds
+        if final_round:
+            conversation.append(
+                {
+                    "role": "system",
+                    "content": (
+                        "Tool budget exhausted. Do not call more tools. Summarize what was "
+                        "accomplished so far, what remains, and how the user can continue."
+                    ),
+                }
+            )
+
         try:
-            response = client.chat.completions.create(
-                model=settings.OPENAI_MODEL,
-                messages=conversation,
-                tools=TOOL_DEFINITIONS,
-                tool_choice="auto",
+            turn = _stream_completion(
+                client,
+                conversation,
+                on_activity,
+                tool_choice="none" if final_round else "auto",
             )
         except Exception as exc:
             logger.exception("Assistant OpenAI request failed")
@@ -159,32 +242,33 @@ def chat(
             )
             return {"reply": fallback, "messages": messages + [{"role": "assistant", "content": fallback}]}
 
-        choice = response.choices[0].message
-
-        if choice.tool_calls:
+        if turn["tool_calls"]:
+            # Interim content preceding tool calls is not the final reply —
+            # tell the client to clear any streamed draft.
+            _emit(on_activity, {"type": "reply_reset"})
             conversation.append(
                 {
                     "role": "assistant",
-                    "content": choice.content or "",
+                    "content": turn["content"] or "",
                     "tool_calls": [
                         {
-                            "id": tc.id,
+                            "id": tc["id"],
                             "type": "function",
-                            "function": {"name": tc.function.name, "arguments": tc.function.arguments},
+                            "function": {"name": tc["name"], "arguments": tc["arguments"]},
                         }
-                        for tc in choice.tool_calls
+                        for tc in turn["tool_calls"]
                     ],
                 }
             )
-            for tool_call in choice.tool_calls:
-                fn_name = tool_call.function.name
+            for tool_call in turn["tool_calls"]:
+                fn_name = tool_call["name"]
                 try:
-                    fn_args = json.loads(tool_call.function.arguments or "{}")
+                    fn_args = json.loads(tool_call["arguments"] or "{}")
                 except json.JSONDecodeError:
                     fn_args = {}
 
                 label = tool_start_label(fn_name, fn_args)
-                activity_id = tool_call.id
+                activity_id = tool_call["id"]
                 _emit(
                     on_activity,
                     {"type": "tool_start", "id": activity_id, "tool": fn_name, "label": label},
@@ -205,20 +289,19 @@ def chat(
                 conversation.append(
                     {
                         "role": "tool",
-                        "tool_call_id": tool_call.id,
+                        "tool_call_id": tool_call["id"],
                         "content": result,
                     }
                 )
             continue
 
         try:
-            reply = normalize_reply_links(choice.content or "")
+            reply = normalize_reply_links(turn["content"] or "")
             reply = append_preview_markdown(reply, collected_previews)
         except Exception as exc:
             logger.exception("Assistant reply formatting failed")
-            reply = (choice.content or "").strip() or f"I finished the requested actions but hit a formatting error: {exc}"
+            reply = (turn["content"] or "").strip() or f"I finished the requested actions but hit a formatting error: {exc}"
         conversation.append({"role": "assistant", "content": reply})
-        _emit(on_activity, {"type": "status", "message": "Composing reply…"})
         client_messages = [m for m in conversation if m["role"] in ("user", "assistant") and m.get("content")]
         return {"reply": reply, "messages": client_messages}
 
