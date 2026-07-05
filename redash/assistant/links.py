@@ -75,12 +75,21 @@ def enrich_resource_links(data: dict, base_url: str) -> dict:
 def enrich_tool_payload(payload: Any, base_url: str) -> Any:
     if isinstance(payload, dict):
         if "results" in payload and isinstance(payload["results"], list):
-            payload["results"] = [enrich_resource_links(item, base_url) for item in payload["results"]]
+            payload["results"] = [
+                enrich_resource_links(item, base_url) if isinstance(item, dict) else item
+                for item in payload["results"]
+            ]
         if "visualizations" in payload and isinstance(payload["visualizations"], list):
-            payload["visualizations"] = [enrich_resource_links(item, base_url) for item in payload["visualizations"]]
+            payload["visualizations"] = [
+                enrich_resource_links(item, base_url) if isinstance(item, dict) else item
+                for item in payload["visualizations"]
+            ]
         return enrich_resource_links(payload, base_url)
     if isinstance(payload, list):
-        return [enrich_resource_links(item, base_url) if isinstance(item, dict) else item for item in payload]
+        return [
+            enrich_resource_links(item, base_url) if isinstance(item, dict) else item
+            for item in payload
+        ]
     return payload
 
 
@@ -104,6 +113,8 @@ def collect_previews(payload: Any) -> list[dict[str, str]]:
     seen: set[str] = set()
     unique: list[dict[str, str]] = []
     for item in previews:
+        if not isinstance(item, dict):
+            continue
         url = item.get("preview_image_url")
         if url and url not in seen:
             seen.add(url)
@@ -117,6 +128,8 @@ def append_preview_markdown(reply: str, previews: list[dict[str, str]]) -> str:
     blocks = []
     seen_urls: set[str] = set()
     for preview in previews:
+        if not isinstance(preview, dict):
+            continue
         url = preview.get("preview_image_url")
         title = preview.get("title") or "Preview"
         if url and url not in reply and url not in seen_urls:

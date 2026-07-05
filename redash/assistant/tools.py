@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import time
 from typing import Any, Callable, Optional
 
@@ -12,9 +13,36 @@ from redash.assistant import docs as docs_catalog
 from redash.assistant import web as web_tools
 from redash.assistant.links import enrich_tool_payload
 
+logger = logging.getLogger(__name__)
+
 JOB_FINISHED = 3
 JOB_FAILED = 4
 JOB_CANCELED = 5
+
+
+def _as_dict(value: Any, label: str = "response") -> dict[str, Any]:
+    if isinstance(value, dict):
+        return value
+    raise RuntimeError(f"Unexpected {label} type: {type(value).__name__}")
+
+
+def _extract_query_result_rows(response: Any) -> tuple[list[str], list[dict[str, Any]]]:
+    if not isinstance(response, dict):
+        return [], []
+    query_result = response.get("query_result")
+    if not isinstance(query_result, dict):
+        return [], []
+    data = query_result.get("data")
+    if not isinstance(data, dict):
+        return [], []
+    rows = data.get("rows") or []
+    if not isinstance(rows, list):
+        rows = []
+    columns = []
+    for column in data.get("columns") or []:
+        if isinstance(column, dict) and column.get("name"):
+            columns.append(column["name"])
+    return columns, rows
 
 
 def _merge_body(**kwargs) -> dict:
@@ -673,6 +701,7 @@ class ToolContext:
 
     def poll_job(self, job: dict, timeout_seconds: int = 120) -> int:
         deadline = time.monotonic() + timeout_seconds
+        job = _as_dict(job, "job payload")
         job_id = job["id"]
         while time.monotonic() < deadline:
             status = job.get("status")
@@ -684,7 +713,9 @@ class ToolContext:
             if status in (JOB_FAILED, JOB_CANCELED):
                 raise RuntimeError(job.get("error") or "Query execution failed")
             time.sleep(1)
-            job = self.request("GET", f"/api/jobs/{job_id}")["job"]
+            resp = self.request("GET", f"/api/jobs/{job_id}")
+            next_job = resp.get("job") if isinstance(resp, dict) else resp
+            job = _as_dict(next_job, "job status")
         raise RuntimeError(f"Query timed out (job {job_id})")
 
     def run_query_tool(self, args: dict) -> dict:
@@ -709,17 +740,18 @@ class ToolContext:
             raise RuntimeError("Provide query_id or query_text + data_source_id")
 
         if "job" in response:
-            result_id = self.poll_job(response["job"])
+            result_id = self.poll_job(_as_dict(response["job"], "async job"))
             if query_id is not None:
                 response = self.request("GET", f"/api/queries/{query_id}/results/{result_id}.json")
             else:
                 response = self.request("GET", f"/api/query_results/{result_id}")
 
-        query_result = response.get("query_result") or {}
-        rows = query_result.get("data", {}).get("rows", [])
-        columns = [c.get("name") for c in query_result.get("data", {}).get("columns", [])]
+        columns, rows = _extract_query_result_rows(response)
+        max_rows = args.get("max_rows", 50)
+        query_result = response.get("query_result") if isinstance(response, dict) else {}
+        query_result_id = query_result.get("id") if isinstance(query_result, dict) else None
         return {
-            "query_result_id": query_result.get("id"),
+            "query_result_id": query_result_id,
             "columns": columns,
             "row_count": len(rows),
             "rows": rows[:max_rows],
@@ -785,6 +817,7 @@ class ToolContext:
             }
 
     def _validate_saved_query(self, query: dict[str, Any]) -> dict[str, Any]:
+        query = _as_dict(query, "saved query")
         query_id = query.get("id")
         if not query_id:
             return query
@@ -796,13 +829,15 @@ class ToolContext:
         if pre_validation.get("status") == "error":
             raise RuntimeError(f"Query failed validation before save: {pre_validation['message']}")
 
-        query = self.request("POST", "/api/queries", body=_merge_body(**args))
+        query = _as_dict(self.request("POST", "/api/queries", body=_merge_body(**args)), "create query")
         query = self._validate_saved_query(query)
+        post_save = query.get("validation")
+        if not isinstance(post_save, dict):
+            post_save = {}
         query["validation"] = {
             "pre_save": pre_validation,
-            "post_save": query.get("validation"),
+            "post_save": post_save,
         }
-        post_save = query["validation"].get("post_save") or {}
         if post_save.get("status") == "error":
             query["validation"]["action_required"] = (
                 f"Query #{query.get('id')} was saved but failed to run. Fix the SQL with update_query."
@@ -812,7 +847,7 @@ class ToolContext:
     def update_query_tool(self, args: dict) -> Any:
         args = dict(args)
         query_id = args.pop("query_id")
-        current = self.request("GET", f"/api/queries/{query_id}")
+        current = _as_dict(self.request("GET", f"/api/queries/{query_id}"), "query")
         pre_validation = None
         if "query" in args:
             data_source_id = args.get("data_source_id") or current.get("data_source_id")
@@ -822,7 +857,7 @@ class ToolContext:
 
         body = _merge_body(**args)
         body.setdefault("version", current.get("version"))
-        query = self.request("POST", f"/api/queries/{query_id}", body=body)
+        query = _as_dict(self.request("POST", f"/api/queries/{query_id}", body=body), "update query")
         post_validation = self._execute_saved_query_validation(query_id)
         validation: dict[str, Any] = {"post_save": post_validation}
         if pre_validation is not None:
@@ -876,7 +911,7 @@ class ToolContext:
             options=args.get("options") or {},
             description=args.get("description"),
         )
-        visualization = self.request("POST", "/api/visualizations", body=body)
+        visualization = _as_dict(self.request("POST", "/api/visualizations", body=body), "visualization")
         visualization["query_validation"] = query_validation
         return visualization
 
@@ -986,7 +1021,11 @@ def execute_tool(ctx: ToolContext, name: str, arguments: dict) -> str:
         raise RuntimeError(f"Unknown tool {name!r}")
     try:
         payload = handler(arguments)
-        payload = enrich_tool_payload(payload, ctx.base_url)
+        try:
+            payload = enrich_tool_payload(payload, ctx.base_url)
+        except Exception as exc:
+            logger.warning("Assistant enrich_tool_payload failed for %s: %s", name, exc)
         return _compact(payload)
     except Exception as exc:
+        logger.warning("Assistant tool %s failed: %s", name, exc)
         return json.dumps({"error": str(exc)})

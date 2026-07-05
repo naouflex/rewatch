@@ -67,8 +67,8 @@ def _emit(on_activity: Optional[ActivityCallback], event: dict[str, Any]) -> Non
         on_activity(event)
 
 
-def _emit_validation_status(on_activity: Optional[ActivityCallback], payload: dict[str, Any]) -> None:
-    if not on_activity:
+def _emit_validation_status(on_activity: Optional[ActivityCallback], payload: Any) -> None:
+    if not on_activity or not isinstance(payload, dict):
         return
 
     validation = payload.get("validation")
@@ -129,12 +129,21 @@ def chat(
         if round_idx > 0:
             _emit(on_activity, {"type": "status", "message": "Planning next step…"})
 
-        response = client.chat.completions.create(
-            model=settings.OPENAI_MODEL,
-            messages=conversation,
-            tools=TOOL_DEFINITIONS,
-            tool_choice="auto",
-        )
+        try:
+            response = client.chat.completions.create(
+                model=settings.OPENAI_MODEL,
+                messages=conversation,
+                tools=TOOL_DEFINITIONS,
+                tool_choice="auto",
+            )
+        except Exception as exc:
+            logger.exception("Assistant OpenAI request failed")
+            fallback = (
+                "Sorry, I ran into an error talking to the AI service. "
+                f"Please try again. ({exc})"
+            )
+            return {"reply": fallback, "messages": messages + [{"role": "assistant", "content": fallback}]}
+
         choice = response.choices[0].message
 
         if choice.tool_calls:
@@ -172,8 +181,8 @@ def chat(
                     payload = json.loads(result)
                     collected_previews.extend(collect_previews(payload))
                     _emit_validation_status(on_activity, payload)
-                except json.JSONDecodeError:
-                    pass
+                except (json.JSONDecodeError, TypeError, AttributeError) as exc:
+                    logger.warning("Assistant post-tool processing failed for %s: %s", fn_name, exc)
                 _emit(
                     on_activity,
                     {"type": "tool_done", "id": activity_id, "tool": fn_name, "label": label},
@@ -187,8 +196,12 @@ def chat(
                 )
             continue
 
-        reply = normalize_reply_links(choice.content or "")
-        reply = append_preview_markdown(reply, collected_previews)
+        try:
+            reply = normalize_reply_links(choice.content or "")
+            reply = append_preview_markdown(reply, collected_previews)
+        except Exception as exc:
+            logger.exception("Assistant reply formatting failed")
+            reply = (choice.content or "").strip() or f"I finished the requested actions but hit a formatting error: {exc}"
         conversation.append({"role": "assistant", "content": reply})
         _emit(on_activity, {"type": "status", "message": "Composing reply…"})
         client_messages = [m for m in conversation if m["role"] in ("user", "assistant") and m.get("content")]
