@@ -293,28 +293,36 @@
 
   /* ---- Dropdown / Menu ---- */
 
-  .ant-dropdown-menu,
-  .ant-menu-vertical.ant-menu-sub,
-  .ant-menu-submenu-popup .ant-menu {
-    background-color: var(--rd-color-surface);
-    border: 1px solid var(--rd-color-border);
-    box-shadow: var(--rd-shadow-3);
-    color: var(--rd-color-text);
-  }
-
   /* Inline menus used inside light tiles (e.g. sidebar tags-list,
      settings/admin tabs). Antd defaults the inline menu to white.
      Exclude floating dropdown/submenu panels — they need a solid surface. */
 
-  .ant-menu:not(.ant-dropdown-menu),
+  .ant-menu:not(.ant-dropdown-menu):not(.ant-menu-sub),
   .ant-menu-inline,
   .ant-menu-vertical:not(.ant-dropdown-menu):not(.ant-menu-sub),
   .ant-menu-horizontal:not(.ant-dropdown-menu),
-  .ant-menu-light:not(.ant-dropdown-menu),
-  .ant-menu-root:not(.ant-dropdown-menu) {
+  .ant-menu-light:not(.ant-dropdown-menu):not(.ant-menu-sub),
+  .ant-menu-root:not(.ant-dropdown-menu):not(.ant-menu-sub) {
     background-color: transparent;
     color: var(--rd-color-text);
     border-color: var(--rd-color-divider);
+  }
+
+  /* Floating menu surfaces — declared after inline transparent rules. */
+
+  .ant-dropdown-menu,
+  .ant-dropdown-menu-root,
+  .ant-menu-submenu-popup > .ant-menu,
+  .ant-menu-vertical.ant-menu-sub,
+  .ant-menu-submenu-popup .ant-menu,
+  .desktop-navbar-submenu .ant-menu,
+  .mobile-navbar-menu,
+  .ant-tabs-dropdown-menu,
+  .query-control-dropdown-overlay .ant-dropdown-menu {
+    background-color: var(--rd-color-surface);
+    border: 1px solid var(--rd-color-border);
+    box-shadow: var(--rd-shadow-3);
+    color: var(--rd-color-text);
   }
 
   .ant-menu-horizontal {
