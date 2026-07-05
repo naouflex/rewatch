@@ -290,6 +290,7 @@ def client_config():
         "pageSize": settings.PAGE_SIZE,
         "pageSizeOptions": settings.PAGE_SIZE_OPTIONS,
         "tableCellMaxJSONSize": settings.TABLE_CELL_MAX_JSON_SIZE,
+        "assistantEnabled": bool(settings.ASSISTANT_ENABLED and settings.OPENAI_API_KEY),
     }
 
     client_config.update(defaults)

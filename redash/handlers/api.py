@@ -7,6 +7,7 @@ from redash.handlers.alert_events import (
     AlertEventResource,
     MyAlertEventsResource,
 )
+from redash.handlers.assistant import AssistantChatResource, AssistantStatusResource
 from redash.handlers.alerts import (
     AlertArchiveResource,
     AlertArchivedListResource,
@@ -569,3 +570,6 @@ api.add_org_resource(QuerySnippetResource, "/api/query_snippets/<snippet_id>", e
 api.add_org_resource(QuerySnippetListResource, "/api/query_snippets", endpoint="query_snippets")
 
 api.add_org_resource(OrganizationSettings, "/api/settings/organization", endpoint="organization_settings")
+
+api.add_org_resource(AssistantStatusResource, "/api/assistant/status", endpoint="assistant_status")
+api.add_org_resource(AssistantChatResource, "/api/assistant/chat", endpoint="assistant_chat")

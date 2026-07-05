@@ -271,6 +271,11 @@ def email_server_is_configured():
 
 HOST = os.environ.get("REDASH_HOST", "")
 
+OPENAI_API_KEY = os.environ.get("REDASH_OPENAI_API_KEY") or os.environ.get("OPENAI_API_KEY", "")
+OPENAI_MODEL = os.environ.get("REDASH_OPENAI_MODEL", "gpt-4o-mini")
+ASSISTANT_ENABLED = parse_boolean(os.environ.get("REDASH_ASSISTANT_ENABLED", "true"))
+HELP_BASE_URL = os.environ.get("REDASH_HELP_BASE_URL", "https://naoufel.io")
+
 SEND_FAILURE_EMAIL_INTERVAL = int(os.environ.get("REDASH_SEND_FAILURE_EMAIL_INTERVAL", 60))
 MAX_FAILURE_REPORTS_PER_QUERY = int(os.environ.get("REDASH_MAX_FAILURE_REPORTS_PER_QUERY", 100))
 

@@ -1,6 +1,7 @@
 import React, { useRef, useCallback } from "react";
 import PropTypes from "prop-types";
 import DynamicComponent from "@/components/DynamicComponent";
+import AssistantBubble from "@/components/AssistantBubble";
 import DesktopNavbar from "./DesktopNavbar";
 import MobileNavbar from "./MobileNavbar";
 
@@ -28,6 +29,7 @@ export default function ApplicationLayout({ children }) {
           {children}
         </div>
       </DynamicComponent>
+      <AssistantBubble />
     </React.Fragment>
   );
 }

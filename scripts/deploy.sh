@@ -104,7 +104,7 @@ vm_compose() {
 # small VM this can OOM — prefer building locally and uploading when it does.
 vm_build_frontend() {
   log "Building frontend on $INSTANCE in a node:24 container (pnpm install + build)..."
-  ssh_vm "cd ~/$REMOTE_DIR && docker run --rm -v \"\$PWD\":/app -w /app node:24-bookworm \
+  ssh_vm "cd ~/$REMOTE_DIR && docker run --rm -u \"\$(id -u):\$(id -g)\" -v \"\$PWD\":/app -w /app node:24-bookworm \
     bash -lc 'npm i -g pnpm@10.30.3 && pnpm install --frozen-lockfile && pnpm run build'"
   ok "Frontend built into ~/$REMOTE_DIR/client/dist."
 }
@@ -275,10 +275,15 @@ cmd_upload() {
   fi
 
   log "Streaming project to $INSTANCE:~/$REMOTE_DIR (gzipped tar over ssh, excludes node_modules/.git/etc)..."
-  ssh_vm "mkdir -p ~/$REMOTE_DIR"
+  # vm_build_frontend and docker bind mounts leave files under client/dist owned
+  # by root; plain tar extraction then fails with "File exists" / "Operation not
+  # permitted". Drop the tree and fix ownership before unpacking.
+  ssh_vm "mkdir -p ~/$REMOTE_DIR && \
+    sudo rm -rf ~/$REMOTE_DIR/client/dist && \
+    sudo chown -R \$USER:\$USER ~/$REMOTE_DIR 2>/dev/null || true"
   tar -C "$PROJECT_ROOT" "${UPLOAD_EXCLUDES[@]}" -czf - . \
     | gcloud compute ssh "$INSTANCE" --zone="$ZONE" --quiet \
-        --command="tar -xzf - -C ~/$REMOTE_DIR"
+        --command="tar -xzf - -C ~/$REMOTE_DIR --overwrite"
 
   log "Verifying .env landed on the VM..."
   ssh_vm "test -f ~/$REMOTE_DIR/.env && echo 'env ok' || (echo 'MISSING .env on VM' >&2; exit 1)"
