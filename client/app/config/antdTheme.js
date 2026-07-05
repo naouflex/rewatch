@@ -2,7 +2,7 @@ import theme from "antd/lib/theme";
 
 import { getResolvedTheme } from "@/services/theme";
 
-/** Map Redash design tokens to antd 5/6 theme config. */
+/** Map Rewatch design tokens to antd 5/6 theme config. */
 export function buildAntdTheme(resolved = getResolvedTheme()) {
   const isDark = resolved === "dark";
 

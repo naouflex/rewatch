@@ -43,7 +43,7 @@ describe("View Alert", () => {
       cy.login();
       cy.createUser({
         name: "Example User",
-        email: "user@redash.io",
+        email: "user@rewatch.io",
         password: "password",
       });
     });
@@ -69,7 +69,7 @@ describe("View Alert", () => {
                 .should("exist");
             });
 
-          return cy.logout().then(() => cy.login("user@redash.io", "password"));
+          return cy.logout().then(() => cy.login("user@rewatch.io", "password"));
         })
         .then(() => {
           cy.visit(this.alertUrl);
@@ -85,7 +85,7 @@ describe("View Alert", () => {
       cy.route("GET", "**/api/alerts/*/subscriptions").as("Subscriptions");
 
       cy.logout()
-        .then(() => cy.login("user@redash.io", "password"))
+        .then(() => cy.login("user@rewatch.io", "password"))
         .then(() => cy.addDestinationSubscription(this.alertId, "Test Email Destination"))
         .then(() => {
           cy.visit(this.alertUrl);

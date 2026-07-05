@@ -11,7 +11,7 @@ from redash.utils.requests_session import UnacceptableAddressException, requests
 
 MAX_FETCH_BYTES = 500_000
 MAX_TEXT_CHARS = 14_000
-USER_AGENT = "Mozilla/5.0 (compatible; RewatchAssistant/1.0; +https://redash.io)"
+USER_AGENT = "Mozilla/5.0 (compatible; RewatchAssistant/1.0)"
 
 
 class _TextExtractor(HTMLParser):

@@ -86,23 +86,33 @@ export const ColorPaletteArray = values(ColorPalette);
 
 export default ColorPalette;
 
+export const DEFAULT_COLOR_SCHEME = "Rewatch";
+
 export const AllColorPalettes = {
-  "Redash" : ColorPalette,
-  "Viridis" : Viridis,
-  "Tableau 10" : Tableau,
-  "D3 Category 10" : D3Category10,
-}
+  Rewatch: ColorPalette,
+  Viridis: Viridis,
+  "Tableau 10": Tableau,
+  "D3 Category 10": D3Category10,
+};
 
 export const AllColorPaletteArrays = {
-  "Redash" : ColorPaletteArray,
-  "Viridis" : values(Viridis),
-  "Tableau 10" : values(Tableau),
-  "D3 Category 10" : values(D3Category10),
+  Rewatch: ColorPaletteArray,
+  Viridis: values(Viridis),
+  "Tableau 10": values(Tableau),
+  "D3 Category 10": values(D3Category10),
 };
 
 export const ColorPaletteTypes = {
-  "Redash" : 'discrete',
-  "Viridis" : 'continuous',
-  "Tableau 10" : 'discrete',
-  "D3 Category 10" : 'discrete',
+  Rewatch: "discrete",
+  Viridis: "continuous",
+  "Tableau 10": "discrete",
+  "D3 Category 10": "discrete",
+};
+
+const COLOR_SCHEME_ALIASES: Record<string, string> = {
+  Redash: "Rewatch",
+};
+
+export function resolveColorScheme(name: string) {
+  return COLOR_SCHEME_ALIASES[name] || name;
 }

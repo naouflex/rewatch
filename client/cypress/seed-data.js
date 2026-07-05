@@ -4,16 +4,16 @@ exports.seedData = [
     type: "form",
     data: {
       name: "Example Admin",
-      email: "admin@redash.io",
+      email: "admin@rewatch.io",
       password: "password",
-      org_name: "Redash",
+      org_name: "Rewatch",
     },
   },
   {
     route: "/login",
     type: "form",
     data: {
-      email: "admin@redash.io",
+      email: "admin@rewatch.io",
       password: "password",
     },
   },

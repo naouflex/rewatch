@@ -17,14 +17,14 @@ describe("Edit Profile", () => {
   });
 
   it("updates the user after Save", () => {
-    fillProfileDataAndSave("Jian Yang", "jian.yang@redash.io");
+    fillProfileDataAndSave("Jian Yang", "jian.yang@rewatch.io");
     cy.logout();
-    cy.login("jian.yang@redash.io")
+    cy.login("jian.yang@rewatch.io")
       .its("status")
       .should("eq", 200);
     cy.visit("/users/me");
     cy.contains("Jian Yang");
-    fillProfileDataAndSave("Example Admin", "admin@redash.io");
+    fillProfileDataAndSave("Example Admin", "admin@rewatch.io");
   });
 
   it("regenerates API Key", () => {

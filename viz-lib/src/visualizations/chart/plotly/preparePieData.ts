@@ -1,7 +1,7 @@
 import { isString, each, extend, includes, map, reduce } from "lodash";
 import d3 from "d3";
 import chooseTextColorForBackground from "@/lib/chooseTextColorForBackground";
-import { AllColorPaletteArrays, ColorPaletteTypes } from "@/visualizations/ColorPalette";
+import { AllColorPaletteArrays, ColorPaletteTypes, resolveColorScheme } from "@/visualizations/ColorPalette";
 
 import { cleanNumber, normalizeValue } from "./utils";
 
@@ -106,13 +106,14 @@ function prepareSeries(series: any, options: any, additionalOptions: any) {
 }
 
 export default function preparePieData(seriesList: any, options: any) {
+  const colorScheme = resolveColorScheme(options.color_scheme);
   // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
-  const palette = AllColorPaletteArrays[options.color_scheme];
+  const palette = AllColorPaletteArrays[colorScheme];
   const valuesColors = {};
   let getDefaultColor : Function;
 
   // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
-  if (typeof(seriesList[0]) !== 'undefined' && ColorPaletteTypes[options.color_scheme] === 'continuous') {
+  if (typeof(seriesList[0]) !== 'undefined' && ColorPaletteTypes[colorScheme] === 'continuous') {
     const uniqueXValues =[... new Set(seriesList[0].data.map((d: any) => d.x))];
     const step = (palette.length - 1) / (uniqueXValues.length - 1 || 1);
     const colorIndices = d3.range(uniqueXValues.length).map(function(i) {

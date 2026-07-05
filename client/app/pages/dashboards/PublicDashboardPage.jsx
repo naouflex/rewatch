@@ -13,6 +13,7 @@ import Filters from "@/components/Filters";
 import { Dashboard } from "@/services/dashboard";
 import routes from "@/services/routes";
 
+import { APPLICATION_TITLE } from "@/config/brand";
 import logoUrl from "@/assets/images/icon_small.png";
 
 import useDashboard from "./hooks/useDashboard";
@@ -90,11 +91,11 @@ class PublicDashboardPage extends React.Component {
         )}
         <div id="footer">
           <div className="text-center">
-            <Link href="https://naoufel.io">
-              <img alt="Redash Logo" src={logoUrl} width="38" />
+            <Link href="./">
+              <img alt="" src={logoUrl} width="38" />
             </Link>
           </div>
-          Powered by <Link href="https://naoufel.io/?ref=public-dashboard">Redash</Link>
+          Powered by {APPLICATION_TITLE}
         </div>
       </div>
     );

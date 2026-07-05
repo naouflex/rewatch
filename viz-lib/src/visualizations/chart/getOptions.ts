@@ -17,7 +17,7 @@ const DEFAULT_OPTIONS = {
   sizemode: "diameter",
   coefficient: 1,
   piesort: true,
-  color_scheme: "Redash",
+  color_scheme: "Rewatch",
   lineShape: "linear",
 
   // showDataLabels: false, // depends on chart type

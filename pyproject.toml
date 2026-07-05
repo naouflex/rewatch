@@ -2,13 +2,12 @@
 name = "redash"
 version = "26.04.0-dev"
 requires-python = ">=3.13"
-description = "Make Your Company Data Driven. Connect to any data source, easily visualize, dashboard and share your data."
+description = "Rewatch — connect to any data source, visualize, dashboard, and share your data."
 authors = [
-    { name = "Arik Fraimovich", email = "<arik@redash.io>" }
+    { name = "Rewatch maintainers", email = "maintainers@naoufel.io" }
 ]
-# to be added to/removed from the mailing list, please reach out to Arik via the above email or Discord
 maintainers = [
-    { name = "Redash maintainers and contributors", email = "<maintainers@redash.io>" }
+    { name = "Rewatch maintainers", email = "maintainers@naoufel.io" }
 ]
 readme = "README.md"
 dependencies = []

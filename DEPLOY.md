@@ -5,7 +5,7 @@ Quick recipe for running the production `compose.yaml` on a GCE instance.
 ## 1. Create the VM
 
 ```bash
-gcloud compute instances create redash-prod \
+gcloud compute instances create rewatch-prod \
   --machine-type=e2-standard-2 \
   --image-family=debian-12 \
   --image-project=debian-cloud \
@@ -14,17 +14,17 @@ gcloud compute instances create redash-prod \
   --zone=europe-west1-b
 ```
 
-Open the app port (Redash listens on `5001` per `compose.yaml`):
+Open the app port (Rewatch listens on `5001` per `compose.yaml`):
 
 ```bash
-gcloud compute firewall-rules create allow-redash \
+gcloud compute firewall-rules create allow-rewatch \
   --allow=tcp:5001 --target-tags=http-server
 ```
 
 ## 2. Install Docker on the VM
 
 ```bash
-gcloud compute ssh redash-prod --zone=europe-west1-b
+gcloud compute ssh rewatch-prod --zone=europe-west1-b
 curl -fsSL https://get.docker.com | sh
 sudo usermod -aG docker $USER && exit   # log out so the group takes effect
 ```
@@ -36,7 +36,7 @@ From your laptop:
 ```bash
 gcloud compute scp --recurse --compress \
   --zone=europe-west1-b \
-  ./ redash-prod:~/redash
+  ./ rewatch-prod:~/redash
 ```
 
 `.env` is in `.gitignore` but `scp --recurse` copies it; double-check it landed

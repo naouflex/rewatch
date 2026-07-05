@@ -6,8 +6,8 @@ import Link from "@/components/Link";
 import routeWithUserSession from "@/components/ApplicationArea/routeWithUserSession";
 import EmptyState, { EmptyStateHelpMessage } from "@/components/empty-state/EmptyState";
 import DynamicComponent from "@/components/DynamicComponent";
-import BeaconConsent from "@/components/BeaconConsent";
 import PlainButton from "@/components/PlainButton";
+import { APPLICATION_TITLE } from "@/config/brand";
 
 import { axios } from "@/services/axios";
 import recordEvent from "@/services/recordEvent";
@@ -79,7 +79,7 @@ export default function Home() {
         {includes(messages, "email-not-verified") && <EmailNotVerifiedAlert />}
         <DynamicComponent name="Home.EmptyState">
           <EmptyState
-            header="Welcome to Redash 👋"
+            header={`Welcome to ${APPLICATION_TITLE} 👋`}
             description="Connect to any data source, easily visualize and share your data"
             illustration="dashboard"
             helpMessage={<EmptyStateHelpMessage helpTriggerType="GETTING_STARTED" />}
@@ -90,7 +90,6 @@ export default function Home() {
         </DynamicComponent>
         <DynamicComponent name="HomeExtra" />
         <DashboardAndQueryFavoritesList />
-        <BeaconConsent />
       </div>
     </div>
   );
@@ -100,7 +99,7 @@ routes.register(
   "Home",
   routeWithUserSession({
     path: "/",
-    title: "Redash",
+    title: APPLICATION_TITLE,
     render: (pageProps) => <Home {...pageProps} />,
   })
 );

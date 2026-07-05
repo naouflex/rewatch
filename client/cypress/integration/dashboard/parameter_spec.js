@@ -65,11 +65,11 @@ describe("Dashboard Parameters", () => {
 
       cy.getByTestId("ParameterName-param1")
         .find("input")
-        .type("{selectall}Redash");
+        .type("{selectall}Rewatch");
 
       cy.getByTestId("ParameterApplyButton").click();
 
-      cy.getByTestId("TableVisualization").should("contain", "Redash");
+      cy.getByTestId("TableVisualization").should("contain", "Rewatch");
     });
 
     cy.getByTestId("DashboardParameters").should("not.exist");

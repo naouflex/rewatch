@@ -6,12 +6,12 @@ labels: "Support Question"
 
 We use GitHub only for bug reports 🐛
 
-Anything else should be a discussion: https://github.com/getredash/redash/discussions/ 👫
+Anything else should be a discussion: https://github.com/naouflex/rewatch/discussions/ 👫
 
-🚨For support, help & questions use https://github.com/getredash/redash/discussions/categories/q-a
-💡For feature requests & ideas use https://github.com/getredash/redash/discussions/categories/ideas
+🚨For support, help & questions use https://github.com/naouflex/rewatch/discussions/categories/q-a
+💡For feature requests & ideas use https://github.com/naouflex/rewatch/discussions/categories/ideas
 
 Alternatively, check out these resources below. Thanks! 😁.
 
-- [Discussions](https://github.com/getredash/redash/discussions/)
-- [Knowledge Base](https://redash.io/help)
+- [Discussions](https://github.com/naouflex/rewatch/discussions/)
+- [Knowledge Base](https://naoufel.io/help)

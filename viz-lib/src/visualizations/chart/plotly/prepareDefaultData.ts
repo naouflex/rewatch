@@ -1,13 +1,14 @@
 import { isNil, extend, each, includes, map, sortBy, toString } from "lodash";
 import chooseTextColorForBackground from "@/lib/chooseTextColorForBackground";
-import { AllColorPaletteArrays, ColorPaletteTypes } from "@/visualizations/ColorPalette";
+import { AllColorPaletteArrays, ColorPaletteTypes, resolveColorScheme } from "@/visualizations/ColorPalette";
 import { cleanNumber, normalizeValue, getSeriesAxis } from "./utils";
 
 function getSeriesColor(options: any, seriesOptions: any, seriesIndex: any, numSeries: any) {
+  const colorScheme = resolveColorScheme(options.color_scheme);
   // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
-  let palette = AllColorPaletteArrays[options.color_scheme];
+  let palette = AllColorPaletteArrays[colorScheme];
   // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
-  if (ColorPaletteTypes[options.color_scheme] === "continuous" && palette.length > numSeries) {
+  if (ColorPaletteTypes[colorScheme] === "continuous" && palette.length > numSeries) {
     const step = (palette.length - 1) / (numSeries - 1 || 1);
     const index = Math.round(step * seriesIndex);
     return seriesOptions.color || palette[index % palette.length];

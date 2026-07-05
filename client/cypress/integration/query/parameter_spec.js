@@ -40,16 +40,16 @@ describe("Parameter", () => {
     });
 
     it("updates the results after clicking Apply", () => {
-      cy.getByTestId("ParameterName-test-parameter").find("input").type("Redash");
+      cy.getByTestId("ParameterName-test-parameter").find("input").type("Rewatch");
 
       cy.getByTestId("ParameterApplyButton").click();
 
-      cy.getByTestId("TableVisualization").should("contain", "Redash");
+      cy.getByTestId("TableVisualization").should("contain", "Rewatch");
     });
 
     it("sets dirty state when edited", () => {
       expectDirtyStateChange(() => {
-        cy.getByTestId("ParameterName-test-parameter").find("input").type("Redash");
+        cy.getByTestId("ParameterName-test-parameter").find("input").type("Rewatch");
       });
     });
   });
@@ -482,18 +482,18 @@ describe("Parameter", () => {
 
   describe("Apply Changes", () => {
     const expectAppliedChanges = (apply) => {
-      cy.getByTestId("ParameterName-test-parameter-1").find("input").as("Input").type("Redash");
+      cy.getByTestId("ParameterName-test-parameter-1").find("input").as("Input").type("Rewatch");
 
-      cy.getByTestId("ParameterName-test-parameter-2").find("input").type("Redash");
+      cy.getByTestId("ParameterName-test-parameter-2").find("input").type("Rewatch");
 
-      cy.location("search").should("not.contain", "Redash");
+      cy.location("search").should("not.contain", "Rewatch");
 
       cy.server();
       cy.route("POST", "**/api/queries/*/results").as("Results");
 
       apply(cy.get("@Input"));
 
-      cy.location("search").should("contain", "Redash");
+      cy.location("search").should("contain", "Rewatch");
       cy.wait("@Results");
     };
 
@@ -520,7 +520,7 @@ describe("Parameter", () => {
     it("shows and hides according to parameter dirty state", () => {
       cy.getByTestId("ParameterApplyButton").should("not.be", "visible");
 
-      cy.getByTestId("ParameterName-test-parameter-1").find("input").as("Param").type("Redash");
+      cy.getByTestId("ParameterName-test-parameter-1").find("input").as("Param").type("Rewatch");
 
       cy.getByTestId("ParameterApplyButton").should("be.visible");
 
@@ -530,11 +530,11 @@ describe("Parameter", () => {
     });
 
     it("updates dirty counter", () => {
-      cy.getByTestId("ParameterName-test-parameter-1").find("input").type("Redash");
+      cy.getByTestId("ParameterName-test-parameter-1").find("input").type("Rewatch");
 
       cy.getByTestId("ParameterApplyButton").find(".ant-badge-count p.current").should("contain", "1");
 
-      cy.getByTestId("ParameterName-test-parameter-2").find("input").type("Redash");
+      cy.getByTestId("ParameterName-test-parameter-2").find("input").type("Rewatch");
 
       cy.getByTestId("ParameterApplyButton").find(".ant-badge-count p.current").should("contain", "2");
     });
@@ -552,7 +552,7 @@ describe("Parameter", () => {
     });
 
     it('disables "Execute" button', () => {
-      cy.getByTestId("ParameterName-test-parameter-1").find("input").as("Input").type("Redash");
+      cy.getByTestId("ParameterName-test-parameter-1").find("input").as("Input").type("Rewatch");
       cy.getByTestId("ExecuteButton").should("be.disabled");
 
       cy.get("@Input").clear();

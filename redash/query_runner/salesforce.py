@@ -97,7 +97,7 @@ class Salesforce(BaseQueryRunner):
             security_token=self.configuration["token"],
             sandbox=self.configuration.get("sandbox", False),
             version=self.configuration.get("api_version", DEFAULT_API_VERSION),
-            client_id="Redash",
+            client_id="Rewatch",
         )
         return sf
 

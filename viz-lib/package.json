@@ -1,7 +1,7 @@
 {
   "name": "@redash/viz",
   "version": "1.0.0",
-  "description": "Redash visualizations",
+  "description": "Rewatch visualizations",
   "main": "dist/redash-visualizations.js",
   "scripts": {
     "clean": "rm -rf lib dist",
@@ -21,9 +21,9 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/getredash/redash.git"
+    "url": "git+https://github.com/naouflex/rewatch.git"
   },
-  "author": "Redash",
+  "author": "Rewatch",
   "license": "BSD-2-Clause",
   "peerDependencies": {
     "@ant-design/icons": ">=6.0.0",

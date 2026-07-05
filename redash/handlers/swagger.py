@@ -95,9 +95,9 @@ _CONVERTER_TYPES = {
 _TAG_TABLE: List[Tuple[str, str, str]] = [
     # (prefix, tag name, description)
     ("/api/ml_models_versions", "MLModelVersions", "Snapshots produced by training runs of an MLModel."),
-    ("/api/ml_models", "MLModels", "Train and run predictions with scikit-learn models bound to a Redash query."),
+    ("/api/ml_models", "MLModels", "Train and run predictions with scikit-learn models bound to a Rewatch query."),
     ("/api/predictions", "Predictions", "Stored prediction results emitted by trained MLModel runs."),
-    ("/api/indexers", "Indexers", "Long-running ingestion jobs that materialize external data into Redash."),
+    ("/api/indexers", "Indexers", "Long-running ingestion jobs that materialize external data into Rewatch."),
     ("/api/alerts", "Alerts", "Alerts evaluated against query results and the destinations they notify."),
     ("/api/alert_events", "AlertEvents", "History of alert evaluations and state transitions."),
     ("/api/dashboards", "Dashboards", "Dashboards, their widgets, sharing and favorites."),
@@ -426,9 +426,9 @@ def _build_spec(app) -> Dict[str, Any]:
     spec: Dict[str, Any] = {
         "swagger": "2.0",
         "info": {
-            "title": "Redash API",
+            "title": "Rewatch API",
             "description": (
-                "The Redash REST API exposes everything the web UI uses: queries, "
+                "The Rewatch REST API exposes everything the web UI uses: queries, "
                 "dashboards, alerts, ML models, predictions, indexers and more.\n\n"
                 "**Authentication.** Pass your personal API key as the ``api_key`` "
                 "query parameter, or via the ``Authorization: Key <key>`` header. "
@@ -489,7 +489,7 @@ _SCALAR_TEMPLATE = """<!DOCTYPE html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Redash API</title>
+  <title>Rewatch API</title>
   <link rel="icon" type="image/png" href="/static/images/favicon-32x32.png">
 </head>
 <body>
@@ -497,7 +497,7 @@ _SCALAR_TEMPLATE = """<!DOCTYPE html>
     id="api-reference"
     type="application/json"
     data-url="/api/spec"
-    data-configuration='{"theme":"default","layout":"modern","defaultOpenAllTags":false,"hideClientButton":false,"hideDownloadButton":false,"hideSearch":false,"metaData":{"title":"Redash API"}}'></script>
+    data-configuration='{"theme":"default","layout":"modern","defaultOpenAllTags":false,"hideClientButton":false,"hideDownloadButton":false,"hideSearch":false,"metaData":{"title":"Rewatch API"}}'></script>
   <script src="/api/docs/scalar.standalone.js"></script>
 </body>
 </html>

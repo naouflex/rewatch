@@ -1,7 +1,7 @@
 {
-  "name": "redash-client",
+  "name": "rewatch-client",
   "version": "26.04.0-dev",
-  "description": "The frontend part of Redash.",
+  "description": "The frontend for Rewatch.",
   "main": "index.js",
   "scripts": {
     "start": "npm-run-all --parallel watch:viz webpack-dev-server",
@@ -29,18 +29,18 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/getredash/redash.git"
+    "url": "git+https://github.com/naouflex/rewatch.git"
   },
   "packageManager": "pnpm@10.30.3",
   "engines": {
     "node": ">=18.0.0 <26.0.0"
   },
-  "author": "Redash Contributors",
+  "author": "Rewatch Contributors",
   "license": "BSD-2-Clause",
   "bugs": {
-    "url": "https://github.com/getredash/redash/issues"
+    "url": "https://github.com/naouflex/rewatch/issues"
   },
-  "homepage": "https://redash.io/",
+  "homepage": "https://naoufel.io/",
   "dependencies": {
     "@ant-design/icons": "^6.0.0",
     "@redash/viz": "workspace:*",

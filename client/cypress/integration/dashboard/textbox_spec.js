@@ -84,7 +84,7 @@ describe("Textbox", () => {
         cy.getByTestId(elTestId2)
           .as("textbox2")
           .within(() => {
-            // unclickable https://github.com/getredash/redash/issues/3202
+            // unclickable overlay issue in legacy dashboard textbox tests
             cy.getByTestId("WidgetDeleteButton").click();
           });
 

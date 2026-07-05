@@ -5,6 +5,7 @@ import WarningFilledIcon from "@ant-design/icons/WarningFilled";
 import Typography from "antd/lib/typography";
 import Link from "@/components/Link";
 import DynamicComponent from "@/components/DynamicComponent";
+import { APPLICATION_TITLE } from "@/config/brand";
 import { currentUser } from "@/services/auth";
 
 import useQueryFlags from "../hooks/useQueryFlags";
@@ -23,7 +24,7 @@ export default function QuerySourceAlerts({ query, dataSourcesAvailable }) {
         <p>
           <Typography.Text type="secondary">
             You can either <Link href="queries">browse existing queries</Link>, or ask for additional permissions from
-            your Redash admin.
+            your {APPLICATION_TITLE} admin.
           </Typography.Text>
         </p>
       </React.Fragment>
@@ -56,7 +57,7 @@ export default function QuerySourceAlerts({ query, dataSourcesAvailable }) {
             Looks like no data sources were created yet or none of them available to the group(s) you're member of.
           </Typography.Title>
           <p>
-            <Typography.Text type="secondary">Please ask your Redash admin to create one first.</Typography.Text>
+            <Typography.Text type="secondary">Please ask your {APPLICATION_TITLE} admin to create one first.</Typography.Text>
           </p>
         </React.Fragment>
       );

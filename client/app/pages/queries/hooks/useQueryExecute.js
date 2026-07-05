@@ -2,7 +2,7 @@ import { useReducer, useEffect, useRef } from "react";
 import location from "@/services/location";
 import recordEvent from "@/services/recordEvent";
 import { ExecutionStatus } from "@/services/query-result";
-import notifications from "@/services/notifications";
+import { APPLICATION_TITLE } from "@/config/brand";
 import useImmutableCallback from "@/lib/hooks/useImmutableCallback";
 
 function getMaxAge() {
@@ -78,7 +78,7 @@ export default function useQueryExecute(query) {
           }
 
           if (executionState.loadedInitialResults) {
-            notifications.showNotification("Redash", `${query.name} updated.`);
+            notifications.showNotification(APPLICATION_TITLE, `${query.name} updated.`);
           }
 
           setExecutionState({
@@ -94,7 +94,7 @@ export default function useQueryExecute(query) {
       .catch(queryResult => {
         if (queryResultInExecution.current === newQueryResult) {
           if (executionState.loadedInitialResults) {
-            notifications.showNotification("Redash", `${query.name} failed to run: ${queryResult.getError()}`);
+            notifications.showNotification(APPLICATION_TITLE, `${query.name} failed to run: ${queryResult.getError()}`);
           }
 
           setExecutionState({

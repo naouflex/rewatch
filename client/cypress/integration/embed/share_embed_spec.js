@@ -106,7 +106,7 @@ describe("Embedded Queries", () => {
       .get(".ace_text-input")
       .type("SELECT name, slug FROM organizations WHERE name='{{}{{}name}}'{esc}", { force: true });
 
-    cy.getByTestId("TextParamInput").type("Redash");
+    cy.getByTestId("TextParamInput").type("Rewatch");
     cy.getByTestId("ParameterApplyButton").click();
     cy.clickThrough(`
       ParameterSettings-name
@@ -119,7 +119,7 @@ describe("Embedded Queries", () => {
     // Add a little waiting - page is not updated fast enough
     cy.wait(500); // eslint-disable-line cypress/no-unnecessary-waiting
 
-    cy.location("search").should("eq", "?p_name=Redash");
+    cy.location("search").should("eq", "?p_name=Rewatch");
     cy.clickThrough(`
       QueryControlDropdownButton
       ShowEmbedDialogButton

@@ -70,7 +70,7 @@ class Databricks(BaseSQLQueryRunner):
         }
 
     def _get_cursor(self):
-        user_agent = "Redash/{} (Databricks)".format(__version__.split("-")[0])
+        user_agent = "Rewatch/{} (Databricks)".format(__version__.split("-")[0])
         connection_string = _build_odbc_connection_string(
             Driver="Simba",
             UID="token",

@@ -3,7 +3,7 @@ import React, { useMemo, useCallback } from "react";
 import Table from "antd/lib/table";
 import ColorPicker from "@/components/ColorPicker";
 import { EditorPropTypes } from "@/visualizations/prop-types";
-import { AllColorPalettes } from "@/visualizations/ColorPalette";
+import { AllColorPalettes, resolveColorScheme } from "@/visualizations/ColorPalette";
 import getChartData from "../getChartData";
 import { Section, Select } from "@/components/visualizations/editor";
 
@@ -22,7 +22,7 @@ export default function PieColorsSettings({ options, data, onOptionsChange }: an
     () => ({
       Automatic: null,
       // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
-      ...AllColorPalettes[options.color_scheme],
+      ...AllColorPalettes[resolveColorScheme(options.color_scheme)],
     }),
     [options.color_scheme]
   );

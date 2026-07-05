@@ -32,7 +32,7 @@
           "visible": true
         }
       },
-      "color_scheme": "Redash"
+      "color_scheme": "Rewatch"
     },
     "data": [
       {
@@ -98,7 +98,7 @@
             0.9
           ]
         },
-        "color_scheme": "Redash",
+        "color_scheme": "Rewatch",
         "hover": []
       }
     ]

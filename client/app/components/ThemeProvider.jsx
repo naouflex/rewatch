@@ -7,7 +7,7 @@ import {
   toggleTheme,
 } from "@/services/theme";
 
-// `useTheme` was a custom hook in inverse-watch's ThemeProvider. Redash exposes
+// `useTheme` was a custom hook in inverse-watch's ThemeProvider. Rewatch exposes
 // the same primitives through the imperative `services/theme` module instead.
 // To minimise diffs in the ported MLModel components, we re-expose the same
 // hook here on top of redash's existing service.
@@ -39,7 +39,7 @@ export function useTheme() {
   };
 }
 
-// Some ported components also import a default `ThemeProvider` wrapper. Redash
+// Some ported components also import a default `ThemeProvider` wrapper. Rewatch
 // applies the theme imperatively (see `services/theme`), so the provider here
 // is a no-op pass-through that just renders its children.
 export default function ThemeProvider({ children }) {

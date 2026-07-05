@@ -42,7 +42,7 @@ describe("Create Data Source", () => {
       .contains("PostgreSQL")
       .click();
 
-    cy.getByTestId("Name").type("Redash");
+    cy.getByTestId("Name").type("Rewatch");
     cy.getByTestId("Host").type("postgres");
     cy.getByTestId("User").type("postgres");
     cy.getByTestId("Password").type("postgres");

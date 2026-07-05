@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 ActivityCallback = Callable[[dict[str, Any]], None]
 
-SYSTEM_PROMPT = """You are Rewatch Assistant, an expert helper embedded in the Rewatch data platform (a Redash fork).
+SYSTEM_PROMPT = """You are Rewatch Assistant, an expert helper embedded in the Rewatch data platform.
 
 You help users:
 - Explore and explain query data (run queries, summarize results, spot trends)

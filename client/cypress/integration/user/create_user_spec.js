@@ -13,16 +13,16 @@ describe("Create User", () => {
   };
 
   it("creates a new user", () => {
-    // delete existing "new-user@redash.io"
+    // delete existing "new-user@rewatch.io"
     cy.request("GET", "api/users?q=new-user")
-      .then(({ body }) => body.results.filter(user => user.email === "new-user@redash.io"))
+      .then(({ body }) => body.results.filter(user => user.email === "new-user@rewatch.io"))
       .each(user => cy.request("DELETE", `api/users/${user.id}`));
 
-    fillUserFormAndSubmit("New User", "admin@redash.io");
+    fillUserFormAndSubmit("New User", "admin@rewatch.io");
 
     cy.getByTestId("CreateUserErrorAlert").should("contain", "Email already taken");
 
-    fillUserFormAndSubmit("{selectall}New User", "{selectall}new-user@redash.io");
+    fillUserFormAndSubmit("{selectall}New User", "{selectall}new-user@rewatch.io");
     cy.contains("Saved.");
   });
 });

@@ -1,7 +1,7 @@
 describe("Settings Tabs", () => {
   const regularUser = {
     name: "Example User",
-    email: "user@redash.io",
+    email: "user@rewatch.io",
     password: "password",
   };
 
