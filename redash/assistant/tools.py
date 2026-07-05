@@ -10,6 +10,7 @@ import requests
 
 from redash.assistant import docs as docs_catalog
 from redash.assistant import web as web_tools
+from redash.assistant.links import enrich_tool_payload
 
 JOB_FINISHED = 3
 JOB_FAILED = 4
@@ -878,6 +879,8 @@ def execute_tool(ctx: ToolContext, name: str, arguments: dict) -> str:
     if not handler:
         raise RuntimeError(f"Unknown tool {name!r}")
     try:
-        return _compact(handler(arguments))
+        payload = handler(arguments)
+        payload = enrich_tool_payload(payload, ctx.base_url)
+        return _compact(payload)
     except Exception as exc:
         return json.dumps({"error": str(exc)})

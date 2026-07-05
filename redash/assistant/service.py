@@ -10,6 +10,7 @@ from openai import OpenAI
 
 from redash import settings
 from redash.assistant.activity import tool_start_label
+from redash.assistant.links import normalize_reply_links
 from redash.assistant.tools import TOOL_DEFINITIONS, ToolContext, execute_tool
 
 logger = logging.getLogger(__name__)
@@ -42,7 +43,8 @@ Guidelines:
 - For Rewatch how-to questions, search_docs first, then get_docs_topic for details.
 - For external APIs, libraries, SQL dialects, or current events, use web_search then fetch_url on the best results.
 - Cite URLs when using information from the web.
-- After creating or changing resources, share direct links (e.g. /queries/{id}, /dashboards/{slug}).
+- After creating or changing resources, share direct links using app_link from tool results, or path-based URLs like /queries/{id} and /dashboards/{id}-{slug}.
+- Rewatch uses path-based routing. Never use hash URLs (wrong: /#/queries/5 or {base_url}/#/queries/5; correct: /queries/5 or {base_url}/queries/5).
 - Be concise but thorough. Use markdown for formatting when helpful.
 - If a tool returns an error, explain it plainly and suggest a fix.
 """
@@ -70,8 +72,11 @@ def chat(
     """Run the assistant chat loop. Returns reply text and updated message history."""
     ctx = ToolContext(base_url=base_url, api_key=api_key, help_base_url=help_base_url)
     client = _client()
+    web_base = base_url.rstrip("/")
 
-    conversation: list[dict[str, Any]] = [{"role": "system", "content": SYSTEM_PROMPT}]
+    conversation: list[dict[str, Any]] = [
+        {"role": "system", "content": SYSTEM_PROMPT.replace("{base_url}", web_base)},
+    ]
     conversation.extend(messages)
 
     _emit(on_activity, {"type": "status", "message": "Analyzing your request…"})
@@ -133,7 +138,7 @@ def chat(
                 )
             continue
 
-        reply = choice.content or ""
+        reply = normalize_reply_links(choice.content or "")
         conversation.append({"role": "assistant", "content": reply})
         _emit(on_activity, {"type": "status", "message": "Composing reply…"})
         client_messages = [m for m in conversation if m["role"] in ("user", "assistant") and m.get("content")]

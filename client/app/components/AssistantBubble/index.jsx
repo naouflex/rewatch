@@ -2,12 +2,15 @@ import React, { useCallback, useEffect, useState } from "react";
 import MessageOutlined from "@ant-design/icons/MessageOutlined";
 import CloseOutlined from "@ant-design/icons/CloseOutlined";
 import AssistantChat from "@/components/Assistant/AssistantChat";
+import { useCurrentRoute } from "@/components/ApplicationArea/Router";
 import { clientConfig } from "@/services/auth";
+import location from "@/services/location";
 import Assistant from "@/services/assistant";
 
 import "./index.less";
 
 export default function AssistantBubble() {
+  const currentRoute = useCurrentRoute();
   const [enabled, setEnabled] = useState(!!clientConfig.assistantEnabled);
   const [open, setOpen] = useState(false);
   const [threadId, setThreadId] = useState(Assistant.getStoredThreadId());
@@ -28,7 +31,10 @@ export default function AssistantBubble() {
     Assistant.setStoredThreadId(id);
   }, []);
 
-  if (!enabled) {
+  const onAssistantPage =
+    currentRoute?.id === "Assistant" || location.path === "/assistant" || location.path.startsWith("/assistant/");
+
+  if (!enabled || onAssistantPage) {
     return null;
   }
 

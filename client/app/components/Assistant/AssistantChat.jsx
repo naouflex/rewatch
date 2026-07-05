@@ -24,9 +24,19 @@ const SUGGESTIONS = [
   "Create a line chart dashboard",
 ];
 
+function normalizeAssistantLinks(text) {
+  if (!text) {
+    return text;
+  }
+  return text
+    .replace(/(https?:\/\/[^\s)\]]+)\/#\//gi, "$1/")
+    .replace(/\]\(\/#\//g, "](/")
+    .replace(/(?<![:/])\/#\//g, "/");
+}
+
 function renderMarkdown(text) {
   try {
-    return markdown.toHTML(text || "");
+    return markdown.toHTML(normalizeAssistantLinks(text || ""));
   } catch (e) {
     return text;
   }

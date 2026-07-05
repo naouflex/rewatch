@@ -31,6 +31,15 @@ def _ensure_assistant_enabled(current_user):
         abort(403, message="Assistant is not available for API key sessions.")
 
 
+def _user_api_key(user):
+    api_key = user.api_key
+    if api_key:
+        return api_key
+    user.regenerate_api_key()
+    db.session.commit()
+    return user.api_key
+
+
 def _parse_chat_payload(payload):
     thread_id = payload.get("thread_id")
     message = (payload.get("message") or "").strip()
@@ -118,7 +127,7 @@ class AssistantChatResource(BaseResource):
             result = chat(
                 messages=llm_messages,
                 base_url=_assistant_base_url(),
-                api_key=self.current_user.api_key,
+                api_key=_user_api_key(self.current_user),
                 help_base_url=_help_base_url(),
             )
         except Exception as exc:
@@ -136,6 +145,10 @@ class AssistantChatStreamResource(BaseResource):
         thread_id, message = _parse_chat_payload(payload)
         thread, thread_id, llm_messages = _prepare_thread(self.current_user, self.current_org, thread_id, message)
 
+        user_api_key = _user_api_key(self.current_user)
+        chat_base_url = _assistant_base_url()
+        help_base_url = _help_base_url()
+
         events: queue.Queue = queue.Queue()
         result_holder: dict = {}
         error_holder: dict = {}
@@ -147,9 +160,9 @@ class AssistantChatStreamResource(BaseResource):
             try:
                 result_holder["result"] = chat(
                     messages=llm_messages,
-                    base_url=_assistant_base_url(),
-                    api_key=self.current_user.api_key,
-                    help_base_url=_help_base_url(),
+                    base_url=chat_base_url,
+                    api_key=user_api_key,
+                    help_base_url=help_base_url,
                     on_activity=on_activity,
                 )
             except Exception as exc:
