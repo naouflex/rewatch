@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useCallback } from "react";
 import cx from "classnames";
 import PropTypes from "prop-types";
 import { map, includes } from "lodash";
@@ -129,7 +129,7 @@ function DashboardMoreOptionsButton({ dashboardConfiguration }) {
     duplicateDashboard,
   } = dashboardConfiguration;
 
-  const archive = () => {
+  const archive = useCallback(() => {
     Modal.confirm({
       title: "Archive Dashboard",
       content: `Are you sure you want to archive the "${dashboard.name}" dashboard?`,
@@ -139,7 +139,7 @@ function DashboardMoreOptionsButton({ dashboardConfiguration }) {
       maskClosable: true,
       autoFocusButton: null,
     });
-  };
+  }, [dashboard.name, archiveDashboard]);
 
   const moreOptionsMenuItems = useMemo(
     () => [
