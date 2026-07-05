@@ -23,6 +23,8 @@ A local [MCP](https://modelcontextprotocol.io) (stdio) server that exposes the R
 | `REWATCH_BASE_URL` | no | `http://localhost:5001` | Base URL of the Rewatch instance |
 | `REWATCH_MCP_READ_ONLY` | no | unset | When `true`, `call_api` only allows GET requests |
 
+The server automatically loads `${workspace}/.env` when present, so you can keep the API key there instead of in `mcp.json`.
+
 ## Running
 
 With [uv](https://docs.astral.sh/uv/) (no install step needed):
@@ -40,7 +42,8 @@ REWATCH_API_KEY=... rewatch-mcp
 
 ## Client configuration
 
-Example `mcp.json` entry (Cursor: `.cursor/mcp.json`, already included in this repo):
+Example `mcp.json` entry (Cursor: `.cursor/mcp.json`, already included in this repo).
+Put `REWATCH_API_KEY` in the workspace `.env` file (recommended) or in the `env` block:
 
 ```json
 {

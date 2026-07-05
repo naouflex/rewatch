@@ -7,7 +7,7 @@ import Dropdown from "antd/lib/dropdown";
 import Menu from "antd/lib/menu";
 import Link from "@/components/Link";
 import ThemeToggle from "@/components/ThemeToggle";
-import { Auth, currentUser } from "@/services/auth";
+import { Auth, clientConfig, currentUser } from "@/services/auth";
 import settingsMenu from "@/services/settingsMenu";
 import logoUrl from "@/assets/images/icon_small.png";
 
@@ -78,6 +78,11 @@ export default function MobileNavbar({ getPopupContainer }) {
               {currentUser.hasPermission("list_models") && (
                 <Menu.Item key="predictions">
                   <Link href="predictions">Predictions</Link>
+                </Menu.Item>
+              )}
+              {clientConfig.assistantEnabled && (
+                <Menu.Item key="assistant">
+                  <Link href="assistant">Assistant</Link>
                 </Menu.Item>
               )}
               <Menu.Item key="profile">

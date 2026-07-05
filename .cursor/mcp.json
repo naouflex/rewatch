@@ -4,7 +4,9 @@
       "type": "stdio",
       "command": "uv",
       "args": ["run", "--directory", "${workspaceFolder}/mcp_server", "rewatch-mcp"],
-      "envFile": "${workspaceFolder}/.env"
+      "env": {
+        "REWATCH_BASE_URL": "https://watch.naoufel.io"
+      }
     }
   }
 }

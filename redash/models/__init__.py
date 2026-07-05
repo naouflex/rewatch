@@ -1971,6 +1971,8 @@ from redash.models.ml_models import (  # noqa: E402,F401
     PredictionResult,
 )
 
+from redash.models.assistant import AssistantMessage, AssistantThread  # noqa: E402,F401
+
 
 def init_db():
     default_org = Organization(name="Default", slug="default", settings={})

@@ -18,6 +18,8 @@ import "./ml-model-version/MLModelVersion";
 import "./predictions/PredictionResultsList";
 import "./prediction/PredictionResult";
 
+import "./assistant/AssistantPage";
+
 import "./dashboards/DashboardList";
 import "./dashboards/DashboardPage";
 import "./dashboards/PublicDashboardPage";

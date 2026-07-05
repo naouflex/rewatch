@@ -18,10 +18,16 @@ from __future__ import annotations
 import json
 import os
 import time
+from pathlib import Path
 from typing import Any, Optional
 
 import httpx
+from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
+
+_WORKSPACE_ENV = Path(__file__).resolve().parent.parent.parent / ".env"
+if _WORKSPACE_ENV.is_file():
+    load_dotenv(_WORKSPACE_ENV, override=False)
 
 BASE_URL = os.environ.get("REWATCH_BASE_URL", "http://localhost:5001").rstrip("/")
 API_KEY = os.environ.get("REWATCH_API_KEY", "")

@@ -6,7 +6,7 @@ import PlainButton from "@/components/PlainButton";
 import HelpTrigger from "@/components/HelpTrigger";
 import CreateDashboardDialog from "@/components/dashboards/CreateDashboardDialog";
 import { useCurrentRoute } from "@/components/ApplicationArea/Router";
-import { Auth, currentUser, subscribeToCurrentUser } from "@/services/auth";
+import { Auth, clientConfig, currentUser, subscribeToCurrentUser } from "@/services/auth";
 import settingsMenu from "@/services/settingsMenu";
 import logoUrl from "@/assets/images/icon_small.png";
 
@@ -15,6 +15,7 @@ import CodeOutlinedIcon from "@ant-design/icons/CodeOutlined";
 import AlertOutlinedIcon from "@ant-design/icons/AlertOutlined";
 import DatabaseOutlinedIcon from "@ant-design/icons/DatabaseOutlined";
 import ExperimentOutlinedIcon from "@ant-design/icons/ExperimentOutlined";
+import MessageOutlinedIcon from "@ant-design/icons/MessageOutlined";
 import PlusOutlinedIcon from "@ant-design/icons/PlusOutlined";
 import QuestionCircleOutlinedIcon from "@ant-design/icons/QuestionCircleOutlined";
 import SettingOutlinedIcon from "@ant-design/icons/SettingOutlined";
@@ -64,6 +65,7 @@ function useNavbarActiveState() {
         currentRoute.id
       ),
       dataSources: includes(["DataSources.List"], currentRoute.id),
+      assistant: currentRoute.id === "Assistant",
       alerts: includes(
         [
           "Alerts.List",
@@ -235,6 +237,14 @@ export default function DesktopNavbar() {
               <Link href="predictions">Predictions</Link>
             </Menu.Item>
           </Menu.SubMenu>
+        )}
+        {clientConfig.assistantEnabled && (
+          <Menu.Item key="assistant" className={activeState.assistant ? "navbar-active-item" : null}>
+            <Link href="assistant">
+              <MessageOutlinedIcon aria-label="Assistant navigation button" />
+              <span className="desktop-navbar-label">Assistant</span>
+            </Link>
+          </Menu.Item>
         )}
       </NavbarSection>
 
