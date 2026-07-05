@@ -5,30 +5,26 @@ import Tooltip from "antd/lib/tooltip";
 
 import "./swatch.less";
 
-type OwnProps = {
-  className?: string;
+type Props = {
+  className?: string | null;
   style?: any;
-  title?: string;
-  color?: string;
+  title?: string | null;
+  color?: string | null;
   size?: number;
+  [key: string]: any;
 };
 
-const swatchDefaultProps = {
-  className: null,
-  style: null,
-  title: null,
-  color: "transparent",
-  size: 12,
-};
-
-type Props = OwnProps & typeof swatchDefaultProps;
-
-// @ts-expect-error ts-migrate(2700) FIXME: Rest types may only be created from object types.
-export default function Swatch({ className, color, title, size, style, ...props }: Props) {
+export default function Swatch({
+  className = null,
+  color = "transparent",
+  title = null,
+  size = 12,
+  style = null,
+  ...props
+}: Props) {
   const result = (
     <span
       className={cx("color-swatch", className)}
-      // @ts-expect-error ts-migrate(2698) FIXME: Spread types may only be created from object types... Remove this comment to see the full error message
       style={{ backgroundColor: color, width: size, ...style }}
       {...props}
     />
@@ -43,5 +39,3 @@ export default function Swatch({ className, color, title, size, style, ...props 
   }
   return result;
 }
-
-Swatch.defaultProps = swatchDefaultProps;

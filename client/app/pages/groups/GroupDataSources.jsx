@@ -2,7 +2,6 @@ import { filter, map, includes, toLower } from "lodash";
 import React from "react";
 import Button from "antd/lib/button";
 import Dropdown from "antd/lib/dropdown";
-import Menu from "antd/lib/menu";
 import DownOutlinedIcon from "@ant-design/icons/DownOutlined";
 
 import routeWithUserSession from "@/components/ApplicationArea/routeWithUserSession";
@@ -61,17 +60,17 @@ class GroupDataSources extends React.Component {
     }),
     Columns.custom(
       (text, datasource) => {
-        const menu = (
-          <Menu
-            selectedKeys={[datasource.view_only ? "viewonly" : "full"]}
-            onClick={item => this.setDataSourcePermissions(datasource, item.key)}>
-            <Menu.Item key="full">Full Access</Menu.Item>
-            <Menu.Item key="viewonly">View Only</Menu.Item>
-          </Menu>
-        );
+        const menu = {
+          selectedKeys: [datasource.view_only ? "viewonly" : "full"],
+          onClick: item => this.setDataSourcePermissions(datasource, item.key),
+          items: [
+            { key: "full", label: "Full Access" },
+            { key: "viewonly", label: "View Only" },
+          ],
+        };
 
         return (
-          <Dropdown trigger={["click"]} overlay={menu}>
+          <Dropdown trigger={["click"]} menu={menu}>
             <Button className="w-100" aria-label="Permissions">
               {datasource.view_only ? "View Only" : "Full Access"}
               <DownOutlinedIcon aria-hidden="true" />

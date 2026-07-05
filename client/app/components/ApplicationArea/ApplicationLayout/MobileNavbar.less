@@ -9,9 +9,31 @@
   height: 100%;
 
   &-logo {
+    min-width: 0;
+    flex: 1 1 auto;
+
+    &-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      color: var(--rd-color-text);
+      max-width: 100%;
+    }
+
+    &-title {
+      font-size: var(--rd-font-size-md);
+      font-weight: var(--rd-font-weight-semibold);
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
     img {
       height: 36px;
       width: 36px;
+      flex-shrink: 0;
     }
   }
 

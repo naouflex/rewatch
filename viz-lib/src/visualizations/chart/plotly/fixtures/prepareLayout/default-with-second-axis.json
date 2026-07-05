@@ -2,57 +2,166 @@
   "input": {
     "options": {
       "globalSeriesType": "column",
-      "xAxis": { "type": "-", "labels": { "enabled": true } },
-      "yAxis": [{ "type": "linear" }, { "type": "linear", "opposite": true }],
-      "series": { "stacking": null, "error_y": { "type": "data", "visible": true } },
+      "xAxis": {
+        "type": "-",
+        "labels": {
+          "enabled": true
+        }
+      },
+      "yAxis": [
+        {
+          "type": "linear"
+        },
+        {
+          "type": "linear",
+          "opposite": true
+        }
+      ],
+      "series": {
+        "stacking": null,
+        "error_y": {
+          "type": "data",
+          "visible": true
+        }
+      },
       "legend": {
         "traceorder": "normal"
       }
     },
     "series": [
-      { "name": "a" },
-      { "name": "b", "yaxis": "y2" }
+      {
+        "name": "a"
+      },
+      {
+        "name": "b",
+        "yaxis": "y2"
+      }
     ]
   },
   "output": {
     "layout": {
-      "margin": { "l": 10, "r": 10, "b": 5, "t": 20, "pad": 4 },
+      "margin": {
+        "l": 16,
+        "r": 16,
+        "b": 8,
+        "t": 24,
+        "pad": 6
+      },
       "width": 400,
       "height": 300,
       "autosize": false,
       "showlegend": true,
+      "paper_bgcolor": "rgba(0,0,0,0)",
+      "plot_bgcolor": "rgba(0,0,0,0)",
+      "font": {
+        "color": "#1f1a16",
+        "family": "\"Inter\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        "size": 12
+      },
+      "colorway": [
+        "#4C6EF5",
+        "#FF7230",
+        "#12B886",
+        "#F06595",
+        "#7950F2",
+        "#F59F00",
+        "#15AABF",
+        "#82C91E",
+        "#748FFC",
+        "#FA5252",
+        "#CC5DE8",
+        "#20C997",
+        "#1864AB",
+        "#868E96",
+        "#E8590C",
+        "#2F9E44",
+        "#4DABF7",
+        "#9C36B5",
+        "#E64980",
+        "#495057",
+        "#212529"
+      ],
       "legend": {
-        "traceorder": "normal"
-      },
-      "xaxis": {
-        "automargin": true,
-        "showticklabels": true,
-        "title": null,
-        "tickformat": null,
-        "type": "-"
-      },
-      "yaxis": {
-        "automargin": true,
-        "title": null,
-        "tickformat": null,
-        "type": "linear",
-        "autorange": true,
-        "range": null
-      },
-      "yaxis2": {
-        "automargin": true,
-        "title": null,
-        "tickformat": null,
-        "type": "linear",
-        "autorange": true,
-        "range": null,
-        "overlaying": "y",
-        "side": "right"
+        "traceorder": "normal",
+        "font": {
+          "color": "#1f1a16",
+          "family": "\"Inter\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "size": 12
+        },
+        "bgcolor": "rgba(0,0,0,0)"
       },
       "hoverlabel": {
-        "namelength": -1
+        "namelength": -1,
+        "bgcolor": "#ffffff",
+        "bordercolor": "#ece8e1",
+        "font": {
+          "color": "#1f1a16",
+          "family": "\"Inter\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "size": 12
+        }
       },
-      "hovermode": "x"
+      "hovermode": "x",
+      "xaxis": {
+        "title": null,
+        "type": "-",
+        "automargin": true,
+        "tickformat": null,
+        "showticklabels": true,
+        "gridcolor": "#f1eee8",
+        "gridwidth": 1,
+        "zeroline": false,
+        "showline": false,
+        "linecolor": "#ece8e1",
+        "tickcolor": "#f1eee8",
+        "ticklen": 4,
+        "tickfont": {
+          "color": "#7a7068",
+          "size": 11,
+          "family": "\"Inter\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif"
+        }
+      },
+      "yaxis": {
+        "title": null,
+        "type": "linear",
+        "automargin": true,
+        "autorange": true,
+        "range": null,
+        "tickformat": null,
+        "gridcolor": "#f1eee8",
+        "gridwidth": 1,
+        "zeroline": false,
+        "showline": false,
+        "linecolor": "#ece8e1",
+        "tickcolor": "#f1eee8",
+        "ticklen": 4,
+        "tickfont": {
+          "color": "#7a7068",
+          "size": 11,
+          "family": "\"Inter\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif"
+        }
+      },
+      "yaxis2": {
+        "title": null,
+        "type": "linear",
+        "automargin": true,
+        "autorange": true,
+        "range": null,
+        "tickformat": null,
+        "gridcolor": "#f1eee8",
+        "gridwidth": 1,
+        "zeroline": false,
+        "showline": false,
+        "linecolor": "#ece8e1",
+        "tickcolor": "#f1eee8",
+        "ticklen": 4,
+        "tickfont": {
+          "color": "#7a7068",
+          "size": 11,
+          "family": "\"Inter\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif"
+        },
+        "overlaying": "y",
+        "side": "right"
+      }
     }
   }
 }

@@ -43,7 +43,7 @@ export default function Rearm({ value, onChange, editMode, rearmType }) {
           <Select
             value={value}
             onChange={handleRearmChange}
-            dropdownMatchSelectWidth={false}
+            popupMatchSelectWidth={false}
             style={{ minWidth: 150 }}>
             <Select.Option value="always">Always send notifications</Select.Option>
             <Select.Option value="never">Never send notifications</Select.Option>

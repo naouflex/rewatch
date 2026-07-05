@@ -4,7 +4,7 @@ body.fixed-layout {
 
   #application-root {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     padding-bottom: 0;
 
     width: 100vw;
@@ -21,10 +21,12 @@ body.fixed-layout {
 }
 
 .bottom-controller-container {
-  box-shadow: 0 0 9px 0 rgba(102, 136, 153, 0.15);
+  box-shadow: var(--rd-shadow-2);
   z-index: 1;
   border: none !important;
   flex-shrink: 0;
+  background: var(--rd-color-surface);
+  color: var(--rd-color-text);
 }
 
 // Editor

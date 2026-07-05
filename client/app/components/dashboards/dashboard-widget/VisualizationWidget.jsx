@@ -1,9 +1,8 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
-import { compact, isEmpty, invoke, map } from "lodash";
+import { isEmpty, invoke, map } from "lodash";
 import { markdown } from "markdown";
 import cx from "classnames";
-import Menu from "antd/lib/menu";
 import HtmlContent from "@redash/viz/lib/components/HtmlContent";
 import { currentUser } from "@/services/auth";
 import recordEvent from "@/services/recordEvent";
@@ -30,46 +29,60 @@ function visualizationWidgetMenuOptions({ widget, canEditDashboard, onParameters
 
   const downloadLink = fileType => widgetQueryResult.getLink(widget.getQuery().id, fileType);
   const downloadName = fileType => widgetQueryResult.getName(widget.getQuery().name, fileType);
-  return compact([
-    <Menu.Item key="download_csv" disabled={isQueryResultEmpty}>
-      {!isQueryResultEmpty ? (
-        <Link href={downloadLink("csv")} download={downloadName("csv")} target="_self">
-          Download as CSV File
-        </Link>
-      ) : (
-        "Download as CSV File"
-      )}
-    </Menu.Item>,
-    <Menu.Item key="download_tsv" disabled={isQueryResultEmpty}>
-      {!isQueryResultEmpty ? (
-        <Link href={downloadLink("tsv")} download={downloadName("tsv")} target="_self">
-          Download as TSV File
-        </Link>
-      ) : (
-        "Download as TSV File"
-      )}
-    </Menu.Item>,
-    <Menu.Item key="download_excel" disabled={isQueryResultEmpty}>
-      {!isQueryResultEmpty ? (
-        <Link href={downloadLink("xlsx")} download={downloadName("xlsx")} target="_self">
-          Download as Excel File
-        </Link>
-      ) : (
-        "Download as Excel File"
-      )}
-    </Menu.Item>,
-    (canViewQuery || canEditParameters) && <Menu.Divider key="divider" />,
-    canViewQuery && (
-      <Menu.Item key="view_query">
-        <Link href={widget.getQuery().getUrl(true, widget.visualization.id)}>View Query</Link>
-      </Menu.Item>
+  const items = [];
+
+  items.push({
+    key: "download_csv",
+    disabled: isQueryResultEmpty,
+    label: !isQueryResultEmpty ? (
+      <Link href={downloadLink("csv")} download={downloadName("csv")} target="_self">
+        Download as CSV File
+      </Link>
+    ) : (
+      "Download as CSV File"
     ),
-    canEditParameters && (
-      <Menu.Item key="edit_parameters" onClick={onParametersEdit}>
-        Edit Parameters
-      </Menu.Item>
+  });
+  items.push({
+    key: "download_tsv",
+    disabled: isQueryResultEmpty,
+    label: !isQueryResultEmpty ? (
+      <Link href={downloadLink("tsv")} download={downloadName("tsv")} target="_self">
+        Download as TSV File
+      </Link>
+    ) : (
+      "Download as TSV File"
     ),
-  ]);
+  });
+  items.push({
+    key: "download_excel",
+    disabled: isQueryResultEmpty,
+    label: !isQueryResultEmpty ? (
+      <Link href={downloadLink("xlsx")} download={downloadName("xlsx")} target="_self">
+        Download as Excel File
+      </Link>
+    ) : (
+      "Download as Excel File"
+    ),
+  });
+
+  if (canViewQuery || canEditParameters) {
+    items.push({ type: "divider", key: "divider" });
+  }
+  if (canViewQuery) {
+    items.push({
+      key: "view_query",
+      label: <Link href={widget.getQuery().getUrl(true, widget.visualization.id)}>View Query</Link>,
+    });
+  }
+  if (canEditParameters) {
+    items.push({
+      key: "edit_parameters",
+      label: "Edit Parameters",
+      onClick: onParametersEdit,
+    });
+  }
+
+  return items;
 }
 
 function RefreshIndicator({ refreshStartedAt }) {

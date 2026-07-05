@@ -250,7 +250,7 @@ function MLModelVersions({ versions, revertToVersion }) {
       )}
       <Modal
         title="Revert Model Version"
-        visible={isRevertModalVisible}
+        open={isRevertModalVisible}
         onOk={handleRevertOk}
         onCancel={handleRevertCancel}
         className={isDarkMode ? 'dark-mode' : ''}

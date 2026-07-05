@@ -4,7 +4,6 @@ import cx from "classnames";
 import { isEmpty } from "lodash";
 import Dropdown from "antd/lib/dropdown";
 import Modal from "antd/lib/modal";
-import Menu from "antd/lib/menu";
 import recordEvent from "@/services/recordEvent";
 import { Moment } from "@/components/proptypes";
 import PlainButton from "@/components/PlainButton";
@@ -12,17 +11,29 @@ import PlainButton from "@/components/PlainButton";
 import "./Widget.less";
 
 function WidgetDropdownButton({ extraOptions, showDeleteOption, onDelete }) {
-  const WidgetMenu = (
-    <Menu data-test="WidgetDropdownButtonMenu">
-      {extraOptions}
-      {showDeleteOption && extraOptions && <Menu.Divider />}
-      {showDeleteOption && <Menu.Item onClick={onDelete}>Remove from Dashboard</Menu.Item>}
-    </Menu>
-  );
+  const items = [
+    ...(extraOptions || []),
+    ...(showDeleteOption && extraOptions && extraOptions.length > 0 ? [{ type: "divider" }] : []),
+    ...(showDeleteOption
+      ? [
+          {
+            key: "delete",
+            label: "Remove from Dashboard",
+            onClick: onDelete,
+          },
+        ]
+      : []),
+  ];
 
   return (
     <div className="widget-menu-regular">
-      <Dropdown overlay={WidgetMenu} placement="bottomRight" trigger={["click"]}>
+      <Dropdown
+        menu={{
+          items,
+          "data-test": "WidgetDropdownButtonMenu",
+        }}
+        placement="bottomRight"
+        trigger={["click"]}>
         <PlainButton className="action p-l-15 p-r-15" data-test="WidgetDropdownButton" aria-label="More options">
           <i className="zmdi zmdi-more-vert" aria-hidden="true" />
         </PlainButton>
@@ -32,7 +43,7 @@ function WidgetDropdownButton({ extraOptions, showDeleteOption, onDelete }) {
 }
 
 WidgetDropdownButton.propTypes = {
-  extraOptions: PropTypes.node,
+  extraOptions: PropTypes.array,
   showDeleteOption: PropTypes.bool,
   onDelete: PropTypes.func,
 };
@@ -71,7 +82,7 @@ class Widget extends React.Component {
     canEdit: PropTypes.bool,
     isPublic: PropTypes.bool,
     refreshStartedAt: Moment,
-    menuOptions: PropTypes.node,
+    menuOptions: PropTypes.array,
     tileProps: PropTypes.object, // eslint-disable-line react/forbid-prop-types
     onDelete: PropTypes.func,
   };

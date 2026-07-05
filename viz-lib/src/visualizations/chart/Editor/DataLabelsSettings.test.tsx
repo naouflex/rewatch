@@ -1,16 +1,14 @@
 import React from "react";
-import enzyme from "enzyme";
+import { render } from "@testing-library/react";
+
+import { changeInputValue, toggleInput } from "@/testHelpers";
 
 import getOptions from "../getOptions";
 import DataLabelsSettings from "./DataLabelsSettings";
 
-function findByTestID(wrapper: any, testId: any) {
-  return wrapper.find(`[data-test="${testId}"]`);
-}
-
-function mount(options: any, done: any) {
+function renderSettings(options: any, done: any) {
   options = getOptions(options);
-  return enzyme.mount(
+  return render(
     <DataLabelsSettings
       visualizationName="Test"
       data={{ columns: [], rows: [] }}
@@ -25,7 +23,7 @@ function mount(options: any, done: any) {
 
 describe("Visualizations -> Chart -> Editor -> Data Labels Settings", () => {
   test("Sets Show Data Labels option", done => {
-    const el = mount(
+    renderSettings(
       {
         globalSeriesType: "column",
         showDataLabels: false,
@@ -33,14 +31,11 @@ describe("Visualizations -> Chart -> Editor -> Data Labels Settings", () => {
       done
     );
 
-    findByTestID(el, "Chart.DataLabels.ShowDataLabels")
-      .last()
-      .find("input")
-      .simulate("change", { target: { checked: true } });
+    toggleInput("Chart.DataLabels.ShowDataLabels");
   });
 
   test("Changes number format", done => {
-    const el = mount(
+    renderSettings(
       {
         globalSeriesType: "column",
         numberFormat: "0[.]0000",
@@ -48,13 +43,11 @@ describe("Visualizations -> Chart -> Editor -> Data Labels Settings", () => {
       done
     );
 
-    findByTestID(el, "Chart.DataLabels.NumberFormat")
-      .last()
-      .simulate("change", { target: { value: "0.00" } });
+    changeInputValue("Chart.DataLabels.NumberFormat", "0.00");
   });
 
   test("Changes percent values format", done => {
-    const el = mount(
+    renderSettings(
       {
         globalSeriesType: "column",
         percentFormat: "0[.]00%",
@@ -62,13 +55,11 @@ describe("Visualizations -> Chart -> Editor -> Data Labels Settings", () => {
       done
     );
 
-    findByTestID(el, "Chart.DataLabels.PercentFormat")
-      .last()
-      .simulate("change", { target: { value: "0.0%" } });
+    changeInputValue("Chart.DataLabels.PercentFormat", "0.0%");
   });
 
   test("Changes date/time format", done => {
-    const el = mount(
+    renderSettings(
       {
         globalSeriesType: "column",
         dateTimeFormat: "YYYY-MM-DD HH:mm:ss",
@@ -76,13 +67,11 @@ describe("Visualizations -> Chart -> Editor -> Data Labels Settings", () => {
       done
     );
 
-    findByTestID(el, "Chart.DataLabels.DateTimeFormat")
-      .last()
-      .simulate("change", { target: { value: "YYYY MMM DD" } });
+    changeInputValue("Chart.DataLabels.DateTimeFormat", "YYYY MMM DD");
   });
 
   test("Changes data labels format", done => {
-    const el = mount(
+    renderSettings(
       {
         globalSeriesType: "column",
         textFormat: null,
@@ -90,8 +79,6 @@ describe("Visualizations -> Chart -> Editor -> Data Labels Settings", () => {
       done
     );
 
-    findByTestID(el, "Chart.DataLabels.TextFormat")
-      .last()
-      .simulate("change", { target: { value: "{{ @@x }} :: {{ @@y }} / {{ @@yPercent }}" } });
+    changeInputValue("Chart.DataLabels.TextFormat", "{{ @@x }} :: {{ @@y }} / {{ @@yPercent }}");
   });
 });

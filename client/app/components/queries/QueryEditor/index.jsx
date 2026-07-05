@@ -8,16 +8,34 @@ import resizeObserver from "@/services/resizeObserver";
 import QuerySnippet from "@/services/query-snippet";
 
 import QueryEditorControls from "./QueryEditorControls";
+import QueryPromptLine from "./QueryPromptLine";
+import { useTheme } from "@/components/ThemeProvider";
 import "./index.less";
 
 const editorProps = { $blockScrolling: Infinity };
 
 const QueryEditor = React.forwardRef(function(
-  { className, syntax, value, autocompleteEnabled, schema, onChange, onSelectionChange, ...props },
+  {
+    className,
+    syntax,
+    value,
+    autocompleteEnabled,
+    schema,
+    onChange,
+    onSelectionChange,
+    promptLineEnabled,
+    dataSourceId,
+    dataSourceType,
+    dataSourceName,
+    onQueryGenerated,
+    ...props
+  },
   ref
 ) {
   const [container, setContainer] = useState(null);
   const [editorRef, setEditorRef] = useState(null);
+  const { isDarkMode } = useTheme();
+  const aceTheme = isDarkMode ? "tomorrow_night" : "textmate";
 
   // For some reason, value for AceEditor should be managed in this way - otherwise it goes berserk when selecting text
   const [currentValue, setCurrentValue] = useState(value);
@@ -130,8 +148,10 @@ const QueryEditor = React.forwardRef(function(
       snippetManager.register(m.snippets || [], m.scope);
     });
 
-    editor.focus();
-  }, []);
+    if (!promptLineEnabled) {
+      editor.focus();
+    }
+  }, [promptLineEnabled]);
 
   useImperativeHandle(
     ref,
@@ -154,23 +174,54 @@ const QueryEditor = React.forwardRef(function(
     [editorRef, onChange]
   );
 
+  const handleQueryGenerated = useCallback(
+    queryText => {
+      setCurrentValue(queryText);
+      onChange(queryText);
+      if (onQueryGenerated) {
+        onQueryGenerated(queryText);
+      }
+      if (editorRef) {
+        editorRef.editor.focus();
+      }
+    },
+    [editorRef, onChange, onQueryGenerated]
+  );
+
   return (
-    <div className={cx("query-editor-container", className)} {...props} ref={setContainer}>
-      <AceEditor
-        ref={setEditorRef}
-        theme="textmate"
-        mode={syntax || "sql"}
-        value={currentValue}
-        editorProps={editorProps}
-        width="100%"
-        height="100%"
-        setOptions={editorOptions}
-        showPrintMargin={false}
-        wrapEnabled={false}
-        onLoad={initEditor}
-        onChange={handleChange}
-        onSelectionChange={handleSelectionChange}
-      />
+    <div
+      className={cx("query-editor-container", className, { "has-prompt-line": promptLineEnabled })}
+      {...props}
+      ref={setContainer}>
+      {promptLineEnabled && (
+        <QueryPromptLine
+          dataSourceId={dataSourceId}
+          dataSourceType={dataSourceType}
+          dataSourceName={dataSourceName}
+          syntax={syntax}
+          schema={schema}
+          existingQuery={currentValue}
+          disabled={!dataSourceId}
+          onGenerated={handleQueryGenerated}
+        />
+      )}
+      <div className="query-editor-ace-wrapper">
+        <AceEditor
+          ref={setEditorRef}
+          theme={aceTheme}
+          mode={syntax || "sql"}
+          value={currentValue}
+          editorProps={editorProps}
+          width="100%"
+          height="100%"
+          setOptions={editorOptions}
+          showPrintMargin={false}
+          wrapEnabled={false}
+          onLoad={initEditor}
+          onChange={handleChange}
+          onSelectionChange={handleSelectionChange}
+        />
+      </div>
     </div>
   );
 });
@@ -183,6 +234,11 @@ QueryEditor.propTypes = {
   schema: PropTypes.arrayOf(SchemaItemType),
   onChange: PropTypes.func,
   onSelectionChange: PropTypes.func,
+  promptLineEnabled: PropTypes.bool,
+  dataSourceId: PropTypes.number,
+  dataSourceType: PropTypes.string,
+  dataSourceName: PropTypes.string,
+  onQueryGenerated: PropTypes.func,
 };
 
 QueryEditor.defaultProps = {
@@ -193,6 +249,11 @@ QueryEditor.defaultProps = {
   schema: [],
   onChange: () => {},
   onSelectionChange: () => {},
+  promptLineEnabled: false,
+  dataSourceId: null,
+  dataSourceType: null,
+  dataSourceName: null,
+  onQueryGenerated: null,
 };
 
 QueryEditor.Controls = QueryEditorControls;

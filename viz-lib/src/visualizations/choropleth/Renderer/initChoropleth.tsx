@@ -1,6 +1,6 @@
 import { isFunction, isObject, isArray, map } from "lodash";
 import React from "react";
-import ReactDOM from "react-dom";
+import { createRoot, Root } from "react-dom/client";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet-fullscreen";
@@ -22,6 +22,14 @@ const CustomControl = L.Control.extend({
   options: {
     position: "topright",
   },
+  _reactRoot: null as Root | null,
+  getReactRoot(): Root {
+    if (!this._reactRoot) {
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'getContainer' does not exist on type '{ ... Remove this comment to see the full error message
+      this._reactRoot = createRoot(this.getContainer());
+    }
+    return this._reactRoot;
+  },
   onAdd() {
     const div = document.createElement("div");
     div.className = "leaflet-bar leaflet-custom-toolbar";
@@ -30,8 +38,13 @@ const CustomControl = L.Control.extend({
     return div;
   },
   onRemove() {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'getContainer' does not exist on type '{ ... Remove this comment to see the full error message
-    ReactDOM.unmountComponentAtNode(this.getContainer());
+    if (this._reactRoot) {
+      const root = this._reactRoot;
+      this._reactRoot = null;
+      // Defer unmount: Leaflet may call onRemove synchronously while React is
+      // rendering, and root.unmount() cannot run during a render pass.
+      setTimeout(() => root.unmount(), 0);
+    }
   },
 });
 
@@ -157,14 +170,12 @@ export default function initChoropleth(container: any, onBoundsChange: any) {
     if (options.legend.visible && legend.length > 0) {
       _legend.setPosition(options.legend.position.replace("-", ""));
       _map.addControl(_legend);
-      ReactDOM.render(
-        // @ts-expect-error ts-migrate(2769) FIXME: No overload matches this call.
+      _legend.getReactRoot().render(
         <Legend
           // @ts-expect-error ts-migrate(2322) FIXME: Type '{ text: any; color: any; limit: any; }[]' is... Remove this comment to see the full error message
           items={map(legend, item => ({ ...item, text: formatValue(item.limit) }))}
           alignText={options.legend.alignText}
-        />,
-        _legend.getContainer()
+        />
       );
     }
   }

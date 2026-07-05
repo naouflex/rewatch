@@ -1,43 +1,38 @@
-@import "~antd/lib/style/core/iconfont";
-@import "~antd/lib/style/core/motion";
-@import "~antd/lib/alert/style/index";
-@import "~antd/lib/input/style/index";
-@import "~antd/lib/input-number/style/index";
-@import "~antd/lib/date-picker/style/index";
-@import "~antd/lib/modal/style/index";
-@import "~antd/lib/tooltip/style/index";
-@import "~antd/lib/select/style/index";
-@import "~antd/lib/checkbox/style/index";
-@import "~antd/lib/upload/style/index";
-@import "~antd/lib/form/style/index";
-@import "~antd/lib/button/style/index";
-@import "~antd/lib/radio/style/index";
-@import "~antd/lib/time-picker/style/index";
-@import "~antd/lib/pagination/style/index";
-@import "~antd/lib/table/style/index";
-@import "~antd/lib/popover/style/index";
-@import "~antd/lib/tag/style/index";
-@import "~antd/lib/grid/style/index";
-@import "~antd/lib/switch/style/index";
-@import "~antd/lib/empty/style/index";
-@import "~antd/lib/drawer/style/index";
-@import "~antd/lib/card/style/index";
-@import "~antd/lib/steps/style/index";
-@import "~antd/lib/divider/style/index";
-@import "~antd/lib/dropdown/style/index";
-@import "~antd/lib/menu/style/index";
-@import "~antd/lib/list/style/index";
-@import "~antd/lib/badge/style/index";
-@import "~antd/lib/card/style/index";
-@import "~antd/lib/spin/style/index";
-@import "~antd/lib/skeleton/style/index";
-@import "~antd/lib/tabs/style/index";
-@import "~antd/lib/notification/style/index";
-@import "~antd/lib/collapse/style/index";
-@import "~antd/lib/progress/style/index";
-@import "~antd/lib/typography/style/index";
-@import "~antd/lib/descriptions/style/index";
+// Ant Design v5+ ships component styles via ConfigProvider (css-in-js).
+// This bundle holds app-level overrides that target .ant-* classes.
+
 @import "inc/ant-variables";
+
+// Class prefix aliases (formerly supplied by antd Less)
+@ant-prefix: ant;
+@iconfont-css-prefix: anticon;
+@btn-prefix-cls: ~"@{ant-prefix}-btn";
+@checkbox-prefix-cls: ~"@{ant-prefix}-checkbox";
+@collapse-prefix-cls: ~"@{ant-prefix}-collapse";
+@dropdown-prefix-cls: ~"@{ant-prefix}-dropdown";
+@drawer-prefix-cls: ~"@{ant-prefix}-drawer";
+@form-prefix-cls: ~"@{ant-prefix}-form";
+@list-prefix-cls: ~"@{ant-prefix}-list";
+@menu-prefix-cls: ~"@{ant-prefix}-menu";
+@pagination-prefix-cls: ~"@{ant-prefix}-pagination";
+@select-prefix-cls: ~"@{ant-prefix}-select";
+@table-prefix-cls: ~"@{ant-prefix}-table";
+@dialog-prefix-cls: ~"@{ant-prefix}-modal";
+@notification-prefix-cls: ~"@{ant-prefix}-notification";
+
+@border-width-base: 1px;
+@border-style-base: solid;
+@text-color-secondary: #64748b;
+@notification-padding-vertical: 16px;
+@pagination-item-size-sm: 24px;
+@menu-highlight-color: @primary-color;
+
+// Common antd Less tokens referenced by component stylesheets
+@animation-duration-slow: 0.3s;
+@font-size-lg: 16px;
+@heading-color: @text-color;
+@btn-default-color: @text-color;
+@icon-color-hover: @primary-color;
 
 // Increase z-indexes to avoid conflicts with some other libraries (e.g. Plotly)
 @zindex-modal: 2000;
@@ -207,9 +202,9 @@
   vertical-align: top;
 
   &-item {
-    background-color: @pagination-bg;
+    background-color: var(--rd-color-surface-hover);
     border-color: transparent;
-    color: @pagination-color;
+    color: var(--rd-color-text-secondary);
     font-size: 14px;
     margin-right: 5px;
 
@@ -219,9 +214,9 @@
 
     &:focus,
     &:hover {
-      background-color: @pagination-hover-bg;
+      background-color: var(--rd-color-surface-hover);
       border-color: transparent;
-      color: @pagination-hover-color;
+      color: var(--rd-color-text);
       a {
         color: inherit;
       }
@@ -231,8 +226,8 @@
       &,
       &:hover,
       &:focus {
-        background-color: @pagination-active-bg;
-        color: @pagination-active-color;
+        background-color: var(--rd-color-brand);
+        color: var(--rd-color-text-inverse);
         border-color: transparent;
         pointer-events: none;
         cursor: default;
@@ -256,9 +251,9 @@
   &-prev,
   &-next {
     .@{pagination-prefix-cls}-item-link {
-      background-color: @pagination-bg;
-      border-color: transparent;
-      color: @pagination-color;
+      background-color: var(--rd-color-surface-hover);
+      border-color: var(--rd-color-border);
+      color: var(--rd-color-text-secondary);
       line-height: @pagination-item-size - 2px;
 
       .@{pagination-prefix-cls}.mini & {
@@ -268,9 +263,9 @@
 
     &:focus .@{pagination-prefix-cls}-item-link,
     &:hover .@{pagination-prefix-cls}-item-link {
-      background-color: @pagination-hover-bg;
-      border-color: transparent;
-      color: @pagination-hover-color;
+      background-color: var(--rd-color-surface-hover);
+      border-color: var(--rd-color-border);
+      color: var(--rd-color-text);
     }
   }
 
@@ -328,7 +323,7 @@
     &:focus,
     &:focus-within {
       & > td {
-        background: @table-row-hover-bg;
+        background: var(--rd-color-surface-hover);
       }
     }
   }

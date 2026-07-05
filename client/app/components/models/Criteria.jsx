@@ -88,7 +88,7 @@ export default function Criteria({ columnNames, resultValues, modelOptions, onCh
           <Select
             value={modelOptions[`${criteriaType}_criteria`]}
             onChange={handleCriteriaChange}
-            dropdownMatchSelectWidth={false}
+            popupMatchSelectWidth={false}
             style={{ minWidth: 150 }}>
             <Select.Option value="query_refreshed">When query is refreshed</Select.Option>
             <Select.Option value="based_on_column">Based on column value</Select.Option>
@@ -108,7 +108,7 @@ export default function Criteria({ columnNames, resultValues, modelOptions, onCh
               <Select
                 value={modelOptions[columnKey]}
                 onChange={column => onChange({ [columnKey]: column })}
-                dropdownMatchSelectWidth={false}
+                popupMatchSelectWidth={false}
                 style={{ minWidth: 100 }}>
                 {columnNames.map(name => (
                   <Select.Option key={name}>{name}</Select.Option>
@@ -125,7 +125,7 @@ export default function Criteria({ columnNames, resultValues, modelOptions, onCh
                 value={modelOptions[opKey]}
                 onChange={op => onChange({ [opKey]: op })}
                 optionLabelProp="label"
-                dropdownMatchSelectWidth={false}
+                popupMatchSelectWidth={false}
                 style={{ width: 55 }}>
                 <Select.Option value=">" label={CONDITIONS[">"]}>
                   {CONDITIONS[">"]} greater than

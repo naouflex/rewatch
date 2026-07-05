@@ -2,10 +2,8 @@
     Dark theme overrides
     --------------------------------------------------------
     Activated by [data-theme="dark"] on <html>. The token layer
-    in tokens.less already redefines color tokens; this file
-    retargets Ant Design 4 component styles whose values are
-    baked into hex literals (white surfaces, near-black text,
-    light borders) and so don't pick up tokens automatically.
+    in tokens.less redefines color tokens; Ant Design theming is
+    handled by ConfigProvider (see client/app/config/antdTheme.js).
 -----------------------------------------------------------*/
 
 [data-theme="dark"] {
@@ -118,1179 +116,160 @@
     background-color: var(--rd-color-surface-alt) !important;
   }
 
-  /* ============================================================
-     Ant Design 4 component overrides
-     ============================================================ */
+  /* Ant Design component theming is handled by ConfigProvider tokens (antdTheme.js). */
 
-  /* ---- Inputs / Selects / Pickers / InputNumber ---- */
+  /* Tables, list pagination, and sidebar menus — align static ant.less rules
+     and css-in-js output with design tokens in dark mode. */
 
-  .ant-input,
-  .ant-input-affix-wrapper,
-  .ant-input-number,
-  .ant-input-number-input,
-  .ant-picker,
-  .ant-cascader-picker,
-  .ant-select:not(.ant-select-customize-input) .ant-select-selector,
-  textarea.ant-input {
-    background-color: var(--rd-color-surface-alt);
-    color: var(--rd-color-text);
-    border-color: var(--rd-color-border);
-  }
-
-  .ant-input::placeholder,
-  .ant-input-number-input::placeholder {
-    color: var(--rd-color-text-muted);
-  }
-
-  .ant-input-affix-wrapper > input.ant-input,
-  .ant-input-number-handler-wrap {
-    background: transparent;
-  }
-
-  .ant-input-group-addon {
-    background: var(--rd-color-surface-hover);
-    color: var(--rd-color-text-secondary);
-    border-color: var(--rd-color-border);
-  }
-
-  .ant-input-search-button {
-    background-color: var(--rd-color-surface-alt);
-    border-color: var(--rd-color-border);
-    color: var(--rd-color-text);
-  }
-
-  /* Disabled inputs */
-
-  .ant-input[disabled],
-  .ant-input-affix-wrapper-disabled,
-  .ant-input-number-disabled,
-  .ant-picker.ant-picker-disabled,
-  .ant-select-disabled.ant-select:not(.ant-select-customize-input) .ant-select-selector {
-    background-color: var(--rd-color-bg-subtle) !important;
-    color: var(--rd-color-text-disabled) !important;
-    border-color: var(--rd-color-border) !important;
-  }
-
-  /* ---- Select dropdown ---- */
-
-  .ant-select-dropdown {
-    background-color: var(--rd-color-surface);
-    border: 1px solid var(--rd-color-border);
-    box-shadow: var(--rd-shadow-3);
-    color: var(--rd-color-text);
-  }
-
-  .ant-select-item {
-    color: var(--rd-color-text-secondary);
-
-    &-option-active:not(.ant-select-item-option-disabled),
-    &-option-selected:not(.ant-select-item-option-disabled) {
-      background-color: var(--rd-color-surface-hover) !important;
-      color: var(--rd-color-text);
-    }
-  }
-
-  .ant-select-arrow,
-  .ant-select-clear,
-  .ant-picker-suffix,
-  .ant-picker-clear,
-  .ant-select-multiple .ant-select-selection-item-remove {
-    color: var(--rd-color-text-muted);
-  }
-
-  .ant-select-multiple .ant-select-selection-item {
-    background: var(--rd-color-surface-hover);
-    border-color: var(--rd-color-border);
-    color: var(--rd-color-text);
-  }
-
-  /* ---- Date Picker dropdown ---- */
-
-  .ant-picker-dropdown,
-  .ant-picker-panel,
-  .ant-picker-panel-container {
-    background-color: var(--rd-color-surface);
-    border-color: var(--rd-color-border);
-    color: var(--rd-color-text);
-  }
-
-  .ant-picker-header,
-  .ant-picker-footer,
-  .ant-picker-content th {
-    color: var(--rd-color-text);
-    border-color: var(--rd-color-divider);
-  }
-
-  .ant-picker-cell {
-    color: var(--rd-color-text-muted);
-
-    &-in-view {
+  .ant-table-wrapper,
+  .table-data.ant-table-wrapper,
+  .table-visualization-container .ant-table-wrapper {
+    .ant-table,
+    .ant-table-container,
+    .ant-table-content,
+    .ant-table-body {
+      background: var(--rd-color-surface);
       color: var(--rd-color-text);
     }
 
-    &:hover .ant-picker-cell-inner {
-      background: var(--rd-color-surface-hover);
-    }
-  }
-
-  .ant-picker-cell-today .ant-picker-cell-inner::before {
-    border-color: var(--rd-color-brand);
-  }
-
-  /* ---- Modal ---- */
-
-  .ant-modal-content {
-    background-color: var(--rd-color-surface);
-    color: var(--rd-color-text);
-    border: 1px solid var(--rd-color-border);
-  }
-
-  .ant-modal-header {
-    background-color: var(--rd-color-surface);
-    border-color: var(--rd-color-divider);
-  }
-
-  .ant-modal-title {
-    color: var(--rd-color-text);
-  }
-
-  .ant-modal-close,
-  .ant-modal-close-x {
-    color: var(--rd-color-text-muted);
-
-    &:hover {
-      color: var(--rd-color-text);
-    }
-  }
-
-  .ant-modal-footer {
-    background-color: var(--rd-color-surface);
-    border-color: var(--rd-color-divider);
-  }
-
-  .ant-modal-body {
-    color: var(--rd-color-text);
-  }
-
-  .ant-modal-mask {
-    background-color: rgba(0, 0, 0, 0.65);
-  }
-
-  /* ---- Drawer ---- */
-
-  .ant-drawer-content,
-  .ant-drawer-header,
-  .ant-drawer-footer {
-    background-color: var(--rd-color-surface);
-    color: var(--rd-color-text);
-    border-color: var(--rd-color-divider);
-  }
-
-  .ant-drawer-title,
-  .ant-drawer-close {
-    color: var(--rd-color-text);
-  }
-
-  /* ---- Dropdown / Menu ---- */
-
-  /* Inline menus used inside light tiles (e.g. sidebar tags-list,
-     settings/admin tabs). Antd defaults the inline menu to white.
-     Exclude floating dropdown/submenu panels — they need a solid surface. */
-
-  .ant-menu:not(.ant-dropdown-menu):not(.ant-menu-sub),
-  .ant-menu-inline,
-  .ant-menu-vertical:not(.ant-dropdown-menu):not(.ant-menu-sub),
-  .ant-menu-horizontal:not(.ant-dropdown-menu),
-  .ant-menu-light:not(.ant-dropdown-menu):not(.ant-menu-sub),
-  .ant-menu-root:not(.ant-dropdown-menu):not(.ant-menu-sub) {
-    background-color: transparent;
-    color: var(--rd-color-text);
-    border-color: var(--rd-color-divider);
-  }
-
-  /* Floating menu surfaces — declared after inline transparent rules. */
-
-  .ant-dropdown-menu,
-  .ant-dropdown-menu-root,
-  .ant-menu-submenu-popup > .ant-menu,
-  .ant-menu-vertical.ant-menu-sub,
-  .ant-menu-submenu-popup .ant-menu,
-  .desktop-navbar-submenu .ant-menu,
-  .mobile-navbar-menu,
-  .ant-tabs-dropdown-menu,
-  .query-control-dropdown-overlay .ant-dropdown-menu {
-    background-color: var(--rd-color-surface);
-    border: 1px solid var(--rd-color-border);
-    box-shadow: var(--rd-shadow-3);
-    color: var(--rd-color-text);
-  }
-
-  .ant-menu-horizontal {
-    border-bottom-color: var(--rd-color-divider);
-  }
-
-  .ant-dropdown-menu-item,
-  .ant-dropdown-menu-submenu-title,
-  .ant-menu-item,
-  .ant-menu-submenu-title {
-    color: var(--rd-color-text-secondary);
-
-    &:hover,
-    &:focus,
-    &-active {
-      background-color: var(--rd-color-surface-hover);
-      color: var(--rd-color-text);
-    }
-  }
-
-  /* Selected state — used by sidebar `selectedKeys` and the
-     Settings/Admin horizontal tabs to highlight the current page. */
-
-  .ant-menu-item-selected,
-  .ant-menu-item-selected:hover,
-  .ant-menu-item-selected:focus {
-    background-color: var(--rd-color-brand-soft) !important;
-    color: var(--rd-color-text) !important;
-
-    a {
-      color: inherit;
-    }
-  }
-
-  .ant-menu-horizontal > .ant-menu-item-selected,
-  .ant-menu-horizontal > .ant-menu-item-active,
-  .ant-menu-horizontal > .ant-menu-item:hover {
-    background-color: transparent !important;
-    color: var(--rd-color-brand) !important;
-    border-bottom-color: var(--rd-color-brand) !important;
-
-    a {
-      color: inherit;
-    }
-  }
-
-  .ant-menu-horizontal > .ant-menu-item,
-  .ant-menu-horizontal > .ant-menu-submenu {
-    color: var(--rd-color-text-secondary);
-
-    a {
-      color: inherit;
+    .ant-table-thead > tr > th,
+    .ant-table-thead > tr > td {
+      background: var(--rd-color-surface-alt) !important;
+      color: var(--rd-color-text) !important;
+      border-color: var(--rd-color-divider) !important;
     }
 
-    &:hover {
-      color: var(--rd-color-text);
+    .ant-table-tbody > tr > td {
+      background: var(--rd-color-surface) !important;
+      color: var(--rd-color-text) !important;
+      border-color: var(--rd-color-divider) !important;
     }
-  }
 
-  /* Inline (vertical) menu — left sidebar selected pill */
+    .ant-table-tbody > tr.ant-table-row:hover > td,
+    .ant-table-tbody > tr > td.ant-table-cell-row-hover {
+      background: var(--rd-color-surface-hover) !important;
+    }
 
-  .ant-menu-inline > .ant-menu-item-selected::after,
-  .ant-menu-vertical > .ant-menu-item-selected::after {
-    border-right-color: var(--rd-color-brand);
-  }
+    .ant-table-column-sorter-up,
+    .ant-table-column-sorter-down {
+      color: var(--rd-color-text-muted);
 
-  .ant-menu-inline.invert-stripe-position .ant-menu-item-selected::after {
-    border-color: var(--rd-color-brand);
-  }
+      &.active {
+        color: var(--rd-color-brand);
+      }
+    }
 
-  .ant-dropdown-menu-item-divider,
-  .ant-menu-item-divider {
-    background-color: var(--rd-color-divider);
-  }
-
-  /* ---- Popover ---- */
-
-  .ant-popover-inner {
-    background-color: var(--rd-color-surface);
-    color: var(--rd-color-text);
-    border: 1px solid var(--rd-color-border);
-  }
-
-  .ant-popover-title {
-    color: var(--rd-color-text);
-    border-bottom-color: var(--rd-color-divider);
-  }
-
-  .ant-popover-arrow-content,
-  .ant-popover-arrow {
-    background-color: var(--rd-color-surface);
-    border-color: var(--rd-color-border);
-  }
-
-  /* ---- Tooltip ---- */
-
-  .ant-tooltip-inner {
-    background-color: #1f2937;
-    color: #f9fafb;
-  }
-
-  .ant-tooltip-arrow-content,
-  .ant-tooltip-arrow {
-    background-color: #1f2937;
-    border-color: #1f2937;
-  }
-
-  /* ---- Tables ---- */
-
-  .ant-table {
-    background-color: var(--rd-color-surface);
-    color: var(--rd-color-text);
-  }
-
-  .ant-table-thead > tr > th {
-    /* Match the surrounding tile surface so the rounded tile corners
-       (.tiled has border-radius) stay visually clean. The header is
-       separated from the body by the bottom border alone. */
-    background-color: var(--rd-color-surface);
-    color: var(--rd-color-text);
-    border-bottom: 1px solid var(--rd-color-divider);
-  }
-
-  .ant-table-tbody > tr > td {
-    background-color: var(--rd-color-surface);
-    border-bottom-color: var(--rd-color-divider);
-  }
-
-  .ant-table-tbody > tr.ant-table-row:hover > td,
-  .ant-table-tbody > tr.ant-table-row:focus > td,
-  .ant-table-tbody > tr.ant-table-row:focus-within > td {
-    background-color: var(--rd-color-surface-hover);
-  }
-
-  .ant-table-placeholder {
-    background-color: var(--rd-color-surface);
+    .ant-table-placeholder,
+    .ant-table-expanded-row-fixed {
+      background: var(--rd-color-surface);
+    }
 
     .ant-empty-description {
       color: var(--rd-color-text-muted);
     }
   }
 
-  .ant-table-column-sorter,
-  .ant-table-filter-trigger {
-    color: var(--rd-color-text-muted);
-  }
-
-  /* Header "corner" cell aligned with the body scrollbar — antd defaults
-     to a hardcoded #fafafa box-shadow which shows as a grey square on top-right
-     in dark mode. Repaint it with our themed surface color. */
-  .ant-table-cell-scrollbar {
-    background-color: var(--rd-color-surface-alt);
-    box-shadow: 0 1px 0 1px var(--rd-color-surface-alt);
-  }
-
-  /* Sortable column header hover/active states — antd hardcodes #f2f2f2
-     / #f5f5f5 / #fafafa which flash white in dark mode. We keep these
-     subtle so they don't visually break the rounded tile corners. */
-  .ant-table-thead th.ant-table-column-has-sorters:hover {
-    background-color: var(--rd-color-surface-hover);
-  }
-
-  .ant-table-thead th.ant-table-column-has-sorters:hover .ant-table-filter-trigger-container {
-    background-color: var(--rd-color-surface-hover);
-  }
-
-  .ant-table-thead th.ant-table-column-sort,
-  .ant-table-tbody > tr > td.ant-table-column-sort {
-    background-color: var(--rd-color-surface-hover);
-  }
-
-  /* Row selection (checkbox-driven) */
-  .ant-table-tbody > tr.ant-table-row-selected > td {
-    background: var(--rd-color-brand-soft);
-    border-color: var(--rd-color-divider);
-  }
-
-  .ant-table-tbody > tr.ant-table-row-selected:hover > td {
-    background: var(--rd-color-brand-soft-hover);
-  }
-
-  /* tfoot */
-  .ant-table tfoot > tr > th,
-  .ant-table tfoot > tr > td {
-    border-bottom-color: var(--rd-color-divider);
-    color: var(--rd-color-text);
-  }
-
-  /* Expanded row */
-  tr.ant-table-expanded-row > td,
-  tr.ant-table-expanded-row:hover > td {
-    background: var(--rd-color-surface-alt);
-  }
-
-  /* Filter trigger pill (the funnel icon button on column headers) */
-  .ant-table-filter-trigger-container-open,
-  .ant-table-filter-trigger-container:hover,
-  .ant-table-thead th.ant-table-column-has-sorters:hover .ant-table-filter-trigger-container:hover {
-    background: var(--rd-color-surface-hover);
-  }
-
-  .ant-table-filter-trigger-container-open .ant-table-filter-trigger,
-  .ant-table-filter-trigger:hover {
-    color: var(--rd-color-text);
-  }
-
-  .ant-table-filter-trigger.active {
-    color: var(--rd-color-brand);
-  }
-
-  /* Column sorter active arrows */
-  .ant-table-column-sorter-up.active,
-  .ant-table-column-sorter-down.active {
-    color: var(--rd-color-brand);
-  }
-
-  /* Filter dropdown (panel that opens from the funnel icon) */
-  .ant-table-filter-dropdown {
-    background-color: var(--rd-color-surface);
-    color: var(--rd-color-text);
-    box-shadow: var(--rd-shadow-3);
-    border: 1px solid var(--rd-color-border);
-  }
-
-  .ant-table-filter-dropdown-btns {
-    border-top-color: var(--rd-color-divider);
-    background-color: inherit;
-  }
-
-  /* Bordered tables */
-  .ant-table.ant-table-bordered > .ant-table-title,
-  .ant-table.ant-table-bordered > .ant-table-container,
-  .ant-table.ant-table-bordered > .ant-table-footer {
-    border-color: var(--rd-color-divider);
-  }
-
-  .ant-table.ant-table-bordered > .ant-table-container > .ant-table-content > table > thead > tr > th,
-  .ant-table.ant-table-bordered > .ant-table-container > .ant-table-header > table > thead > tr > th,
-  .ant-table.ant-table-bordered > .ant-table-container > .ant-table-body > table > thead > tr > th,
-  .ant-table.ant-table-bordered > .ant-table-container > .ant-table-content > table > tbody > tr > td,
-  .ant-table.ant-table-bordered > .ant-table-container > .ant-table-header > table > tbody > tr > td,
-  .ant-table.ant-table-bordered > .ant-table-container > .ant-table-body > table > tbody > tr > td,
-  .ant-table.ant-table-bordered > .ant-table-container > .ant-table-content > table > tfoot > tr > th,
-  .ant-table.ant-table-bordered > .ant-table-container > .ant-table-content > table > tfoot > tr > td {
-    border-right-color: var(--rd-color-divider);
-  }
-
-  .ant-table.ant-table-bordered > .ant-table-container > .ant-table-content > table > thead > tr:not(:last-child) > th,
-  .ant-table.ant-table-bordered > .ant-table-container > .ant-table-header > table > thead > tr:not(:last-child) > th,
-  .ant-table.ant-table-bordered > .ant-table-container > .ant-table-body > table > thead > tr:not(:last-child) > th {
-    border-bottom-color: var(--rd-color-divider);
-  }
-
-  /* Body cell border */
-  .ant-table-tbody > tr > td {
-    border-bottom-color: var(--rd-color-divider);
-  }
-
-  /* Cells inheriting link color */
-  .ant-table-tbody > tr > td a {
-    color: var(--rd-color-brand);
-
-    &:hover,
-    &:focus {
-      color: var(--rd-color-brand);
-      filter: brightness(1.15);
-    }
-  }
-
-  /* Empty / placeholder rows */
-  .ant-table.ant-table-empty .ant-table-tbody > tr.ant-table-placeholder,
-  .ant-table.ant-table-empty .ant-table-tbody > tr.ant-table-placeholder:hover > td {
-    background: var(--rd-color-surface);
-  }
-
-  /* Fixed (sticky) columns — antd renders them with the same surface;
-     override hover state to align with regular cell hover. */
-  .ant-table-cell-fix-left,
-  .ant-table-cell-fix-right {
-    background: var(--rd-color-surface) !important;
-  }
-
-  .ant-table-tbody > tr.ant-table-row:hover > .ant-table-cell-fix-left,
-  .ant-table-tbody > tr.ant-table-row:hover > .ant-table-cell-fix-right {
-    background: var(--rd-color-surface-hover) !important;
-  }
-
-  /* ---- Buttons (default / dashed / link / text / ghost) ----
-     Antd hardcodes #fff backgrounds, #d9d9d9 borders, and rgba(0,0,0,*) text
-     on every non-primary variant. Re-target each so default buttons fit
-     the dark theme. (Primary, danger, and brand-ghost variants already
-     inherit colored backgrounds and don't need overrides.) */
-
-  .ant-btn {
-    color: var(--rd-color-text);
-    background: var(--rd-color-surface);
-    border-color: var(--rd-color-border);
-
-    &:hover,
-    &:focus {
-      color: var(--rd-color-brand);
-      background: var(--rd-color-surface-hover);
-      border-color: var(--rd-color-brand);
-    }
-
-    &:active {
-      color: var(--rd-color-brand);
-      background: var(--rd-color-surface-hover);
-      border-color: var(--rd-color-brand);
-    }
-
-    > a:only-child {
-      color: currentColor;
-    }
-  }
-
-  .ant-btn[disabled],
-  .ant-btn[disabled]:hover,
-  .ant-btn[disabled]:focus,
-  .ant-btn[disabled]:active {
-    color: var(--rd-color-text-disabled);
-    background: var(--rd-color-surface-alt);
-    border-color: var(--rd-color-border);
-    text-shadow: none;
-    box-shadow: none;
-  }
-
-  /* Dashed buttons */
-  .ant-btn-dashed {
-    color: var(--rd-color-text);
-    background: var(--rd-color-surface);
-    border-color: var(--rd-color-border-strong);
-    border-style: dashed;
-
-    &:hover,
-    &:focus {
-      color: var(--rd-color-brand);
-      background: var(--rd-color-surface-hover);
-      border-color: var(--rd-color-brand);
-    }
-
-    &:active {
-      color: var(--rd-color-brand);
-      background: var(--rd-color-surface-hover);
-      border-color: var(--rd-color-brand);
-    }
-  }
-
-  .ant-btn-dashed[disabled],
-  .ant-btn-dashed[disabled]:hover,
-  .ant-btn-dashed[disabled]:focus,
-  .ant-btn-dashed[disabled]:active {
-    color: var(--rd-color-text-disabled);
-    background: var(--rd-color-surface-alt);
-    border-color: var(--rd-color-border);
-  }
-
-  /* Link buttons */
-  .ant-btn-link {
-    color: var(--rd-color-brand);
-    background: transparent;
-    border-color: transparent;
-
-    &:hover,
-    &:focus {
-      color: var(--rd-color-brand);
-      background: transparent;
-      border-color: transparent;
-      filter: brightness(1.15);
-    }
-
-    &:active {
-      color: var(--rd-color-brand);
-    }
-  }
-
-  .ant-btn-link[disabled],
-  .ant-btn-link[disabled]:hover,
-  .ant-btn-link[disabled]:focus,
-  .ant-btn-link[disabled]:active {
-    color: var(--rd-color-text-disabled);
-    background: transparent;
-    border-color: transparent;
-    filter: none;
-  }
-
-  /* Text buttons (subtle, used in toolbars / inline actions) */
-  .ant-btn-text {
-    color: var(--rd-color-text);
-    background: transparent;
-    border-color: transparent;
-
-    &:hover,
-    &:focus {
-      color: var(--rd-color-text);
-      background: var(--rd-color-surface-hover);
-      border-color: transparent;
-    }
-  }
-
-  .ant-btn-text[disabled],
-  .ant-btn-text[disabled]:hover,
-  .ant-btn-text[disabled]:focus,
-  .ant-btn-text[disabled]:active {
-    color: var(--rd-color-text-disabled);
-    background: transparent;
-    border-color: transparent;
-  }
-
-  /* Ghost (transparent variant used over images / colored surfaces) */
-  .ant-btn-background-ghost {
-    color: var(--rd-color-text);
-    background: transparent !important;
-    border-color: var(--rd-color-border-strong);
-
-    &:hover,
-    &:focus {
-      color: var(--rd-color-brand);
-      background: transparent !important;
-      border-color: var(--rd-color-brand);
-    }
-  }
-
-  .ant-btn-background-ghost.ant-btn-primary {
-    color: var(--rd-color-brand);
-    border-color: var(--rd-color-brand);
-
-    &:hover,
-    &:focus {
-      color: var(--rd-color-brand);
-      border-color: var(--rd-color-brand);
-      filter: brightness(1.15);
-    }
-  }
-
-  /* Button group dividers */
-  .ant-btn-group .ant-btn {
-    border-color: var(--rd-color-border);
-  }
-
-  .ant-btn-group .ant-btn-primary:not(:first-child):not(:last-child) {
-    border-right-color: var(--rd-color-brand);
-    border-left-color: var(--rd-color-brand);
-  }
-
-  /* Loading state */
-  .ant-btn-loading::before {
-    background: var(--rd-color-surface);
-    opacity: 0.35;
-  }
-
-  /* ---- Spin (loading state) ----
-     Antd renders a `::after` overlay on `.ant-spin-container` with a hardcoded
-     white background. While the table loads, this paints a near-white scrim
-     across the dark tile. Re-target the overlay and the tip/text shadow. */
-
-  .ant-spin-container::after {
-    background: var(--rd-color-surface);
-  }
-
-  @media all and (-ms-high-contrast: none), (-ms-high-contrast: active) {
-    .ant-spin-blur {
-      background: var(--rd-color-surface);
-    }
-  }
-
-  .ant-spin-nested-loading > div > .ant-spin .ant-spin-text {
-    text-shadow: 0 1px 2px var(--rd-color-bg);
-    color: var(--rd-color-brand);
-  }
-
-  .ant-spin-tip {
-    color: var(--rd-color-text-muted);
-  }
-
-  .ant-spin {
-    color: var(--rd-color-brand);
-  }
-
-  /* Empty-star (idle favorite) needs a touch more contrast in dark mode.
-     The hover color stays the warm yellow used for filled stars in light mode
-     so the affordance remains "this becomes a star". */
-  .btn-favorite {
-    color: var(--rd-color-text-muted);
-  }
-
-  /* ---- Pagination ---- */
-
-  .ant-pagination-item,
-  .ant-pagination-prev .ant-pagination-item-link,
-  .ant-pagination-next .ant-pagination-item-link {
-    background-color: var(--rd-color-surface-alt);
-    border-color: transparent;
-    color: var(--rd-color-text-secondary);
-
-    a {
-      color: inherit;
-    }
-
-    &:hover,
-    &:focus {
-      background-color: var(--rd-color-surface-hover);
-      color: var(--rd-color-text);
-    }
-  }
-
-  .ant-pagination-item-active,
-  .ant-pagination-item-active:hover,
-  .ant-pagination-item-active:focus {
-    background-color: var(--rd-color-brand);
-    color: #fff;
-
-    a {
-      color: #fff;
-    }
-  }
-
-  .ant-pagination-options .ant-select .ant-select-selector {
-    background-color: var(--rd-color-surface-alt);
-  }
-
-  /* ---- List ---- */
-
-  .ant-list,
-  .ant-list-item {
-    background: transparent;
-    color: var(--rd-color-text);
-    border-color: var(--rd-color-divider);
-  }
-
-  .ant-list-item.selected {
-    background-color: var(--rd-color-surface-hover);
-  }
-
-  /* ---- Card / Collapse ---- */
-
-  .ant-card {
-    background-color: var(--rd-color-surface);
-    border-color: var(--rd-color-divider);
-    color: var(--rd-color-text);
-  }
-
-  .ant-card-head {
-    color: var(--rd-color-text);
-    border-bottom-color: var(--rd-color-divider);
-  }
-
-  .ant-collapse {
-    background-color: var(--rd-color-surface);
-    border-color: var(--rd-color-divider);
-
-    > .ant-collapse-item {
-      border-bottom-color: var(--rd-color-divider);
-    }
-  }
-
-  .ant-collapse-content {
-    background-color: var(--rd-color-surface);
-    color: var(--rd-color-text);
-    border-top-color: var(--rd-color-divider);
-  }
-
-  .ant-collapse-header,
-  .ant-collapse-arrow {
-    color: var(--rd-color-text);
-  }
-
-  /* ---- Typography text colors (antd hardcodes rgba(0,0,0,0.65/0.85))
-     These overrides ensure body and heading text inside antd containers
-     (forms, lists, cards, modals, etc.) inherit the dark theme palette. */
-
-  .ant-form,
-  .ant-form-item,
-  .ant-list,
-  .ant-list-item,
-  .ant-list-item-meta-description,
-  .ant-list-empty-text,
-  .ant-card,
-  .ant-card-meta-description,
-  .ant-statistic,
-  .ant-collapse,
-  .ant-modal,
-  .ant-modal-body,
-  .ant-message,
-  .ant-notification-notice,
-  .ant-radio-wrapper,
-  .ant-radio-group,
-  .ant-checkbox-wrapper,
-  .ant-checkbox-group,
-  .ant-descriptions,
-  .ant-descriptions-item-content,
-  .ant-tree,
-  .ant-tree-node-content-wrapper,
-  .ant-timeline,
-  .ant-steps,
-  .ant-popover-inner-content,
-  .ant-result-subtitle,
-  .ant-empty-description,
-  .ant-page-header,
-  .ant-popconfirm-message {
-    color: var(--rd-color-text);
-  }
-
-  /* Stronger emphasis text (was rgba(0,0,0,0.85)) — titles & primary labels */
-  .ant-form-item-label > label,
-  .ant-card-head-title,
-  .ant-card-meta-title,
-  .ant-list-item-meta-title,
-  .ant-list-item-meta-title > a,
-  .ant-statistic-content,
-  .ant-collapse-header,
-  .ant-modal-title,
-  .ant-modal-confirm-title,
-  .ant-modal-confirm-body > .anticon + .ant-modal-confirm-title + .ant-modal-confirm-content,
-  .ant-descriptions-title,
-  .ant-descriptions-item-label,
-  .ant-result-title,
-  .ant-page-header-heading-title,
-  .ant-typography {
-    color: var(--rd-color-text);
-  }
-
-  /* Headings (h1-h6) inside antd surfaces */
-  .ant-modal h1, .ant-modal h2, .ant-modal h3, .ant-modal h4, .ant-modal h5, .ant-modal h6,
-  .ant-card h1, .ant-card h2, .ant-card h3, .ant-card h4, .ant-card h5, .ant-card h6,
-  .ant-collapse h1, .ant-collapse h2, .ant-collapse h3, .ant-collapse h4, .ant-collapse h5, .ant-collapse h6,
-  .ant-drawer h1, .ant-drawer h2, .ant-drawer h3, .ant-drawer h4, .ant-drawer h5, .ant-drawer h6,
-  h1.ant-typography, h2.ant-typography, h3.ant-typography,
-  h4.ant-typography, h5.ant-typography {
-    color: var(--rd-color-text);
-  }
-
-  /* Lower-emphasis support text (help/extra/legend) */
-  .ant-form-item-explain,
-  .ant-form-item-extra,
-  .ant-form legend,
-  .ant-list-item-meta-description,
-  .ant-card-meta-description,
-  .ant-statistic-title,
-  .ant-typography-secondary,
-  .ant-popover-message,
-  .ant-modal-confirm-content {
-    color: var(--rd-color-text-muted);
-  }
-
-  /* Disabled */
-  .ant-form-item-control-input-content > input[disabled],
-  .ant-input[disabled],
-  .ant-input-affix-wrapper-disabled,
-  .ant-typography-disabled,
-  .ant-radio-wrapper-disabled,
-  .ant-radio-disabled + span,
-  .ant-checkbox-wrapper-disabled,
-  .ant-checkbox-disabled + span {
-    color: var(--rd-color-text-disabled);
-  }
-
-  /* Bootstrap form labels & headings inside themed tiles
-     (used by legacy forms in profile, query snippets, alerts dialogs, etc.) */
-  .tiled,
-  .bg-white {
-    h1, h2, h3, h4, h5, h6,
-    .control-label,
-    label,
-    dt, dd,
-    .help-block,
-    p, span:not([class]) {
-      color: inherit;
-    }
-
-    .control-label,
-    label {
-      color: var(--rd-color-text);
-    }
-
-    .help-block,
-    .text-muted {
-      color: var(--rd-color-text-muted);
-    }
-  }
-
-  /* ---- Tabs ---- */
-
-  .ant-tabs,
-  .ant-tabs-tab {
-    color: var(--rd-color-text-secondary);
-  }
-
-  .ant-tabs-tab:hover {
-    color: var(--rd-color-text);
-  }
-
-  .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
-    color: var(--rd-color-brand);
-  }
-
-  .ant-tabs-ink-bar {
-    background: var(--rd-color-brand);
-  }
-
-  .ant-tabs-top > .ant-tabs-nav::before,
-  .ant-tabs-bottom > .ant-tabs-nav::before {
-    border-bottom-color: var(--rd-color-divider);
-  }
-
-  /* ---- Alerts ---- */
-
-  .ant-alert {
-    border-color: var(--rd-color-border);
-
-    &-success {
-      background: rgba(22, 163, 74, 0.12);
-      border-color: rgba(22, 163, 74, 0.3);
-      color: #86efac;
-    }
-
-    &-info {
-      background: rgba(14, 165, 233, 0.12);
-      border-color: rgba(14, 165, 233, 0.3);
-      color: #7dd3fc;
-    }
-
-    &-warning {
-      background: rgba(217, 119, 6, 0.12);
-      border-color: rgba(217, 119, 6, 0.3);
-      color: #fcd34d;
-    }
-
-    &-error {
-      background: rgba(220, 38, 38, 0.12);
-      border-color: rgba(220, 38, 38, 0.3);
-      color: #fca5a5;
-    }
-
-    &-message,
-    &-description {
-      color: inherit;
-    }
-  }
-
-  /* ---- Notifications ---- */
-
-  .ant-notification-notice {
-    background-color: var(--rd-color-surface);
-    border: 1px solid var(--rd-color-border);
-    color: var(--rd-color-text);
-  }
-
-  .ant-notification-notice-message,
-  .ant-notification-notice-description {
-    color: inherit;
-  }
-
-  .ant-notification-notice-close {
-    color: var(--rd-color-text-muted);
-  }
-
-  /* ---- Skeleton ----
-     Two selector tiers: the static (non-active) baseline AND the
-     `active` variant which Ant Design ships with a higher-specificity
-     gradient. Without the active selector, the loading shimmer keeps
-     its default whitish bars in dark mode. */
-
-  .ant-skeleton-content .ant-skeleton-title,
-  .ant-skeleton-content .ant-skeleton-paragraph > li,
-  .ant-skeleton-avatar,
-  .ant-skeleton-button,
-  .ant-skeleton-input,
-  .ant-skeleton-image {
-    background: var(--rd-color-surface-alt);
-  }
-
-  .ant-skeleton.ant-skeleton-active .ant-skeleton-content .ant-skeleton-title,
-  .ant-skeleton.ant-skeleton-active .ant-skeleton-content .ant-skeleton-paragraph > li,
-  .ant-skeleton.ant-skeleton-active .ant-skeleton-avatar,
-  .ant-skeleton.ant-skeleton-active .ant-skeleton-button,
-  .ant-skeleton.ant-skeleton-active .ant-skeleton-input,
-  .ant-skeleton.ant-skeleton-active .ant-skeleton-image {
-    background: linear-gradient(
-      90deg,
-      var(--rd-color-surface-alt) 25%,
-      var(--rd-color-surface-hover) 37%,
-      var(--rd-color-surface-alt) 63%
-    );
-    background-size: 400% 100%;
-  }
-
-  /* ---- Checkbox / Radio ---- */
-
-  .ant-checkbox-inner,
-  .ant-radio-inner {
-    background-color: var(--rd-color-surface-alt);
-    border-color: var(--rd-color-border-strong);
-  }
-
-  .ant-checkbox-checked .ant-checkbox-inner,
-  .ant-radio-checked .ant-radio-inner {
-    background-color: var(--rd-color-brand);
-    border-color: var(--rd-color-brand);
-  }
-
-  /* ---- Switch ---- */
-
-  .ant-switch {
-    background-color: var(--rd-color-border-strong);
-  }
-
-  .ant-switch-checked {
-    background-color: var(--rd-color-brand);
-  }
-
-  /* ---- Tag ---- */
-
-  .ant-tag {
-    background: var(--rd-color-surface-hover);
-    border-color: var(--rd-color-border);
-    color: var(--rd-color-text-secondary);
-  }
-
-  /* ---- Divider ---- */
-
-  .ant-divider {
-    border-top-color: var(--rd-color-divider);
-
-    &-horizontal.ant-divider-with-text::before,
-    &-horizontal.ant-divider-with-text::after {
-      border-top-color: var(--rd-color-divider);
-    }
-  }
-
-  /* ---- Empty ---- */
-
-  .ant-empty-description {
-    color: var(--rd-color-text-muted);
-  }
-
-  /* ---- Steps ----
-     Antd hardcodes rgba(0,0,0,*) text and #fff/#f0f0f0 chrome for every step
-     state; we re-target each (wait / process / finish / error) so titles,
-     descriptions, the icon disc, and the connector tail all read in dark mode. */
-
-  .ant-steps-item-title {
-    color: var(--rd-color-text);
-  }
-
-  .ant-steps-item-subtitle,
-  .ant-steps-item-description {
-    color: var(--rd-color-text-muted);
-  }
-
-  /* Connector lines (after each title and behind each step) */
-  .ant-steps-item-title::after,
-  .ant-steps-item-tail::after {
-    background-color: var(--rd-color-divider) !important;
-  }
-
-  /* "Wait" state (upcoming steps) */
-  .ant-steps-item-wait {
-    .ant-steps-item-icon {
-      background-color: var(--rd-color-surface-alt);
-      border-color: var(--rd-color-border-strong);
-
-      > .ant-steps-icon {
-        color: var(--rd-color-text-muted);
-
-        .ant-steps-icon-dot {
-          background: var(--rd-color-text-muted);
+  .paginator-container .ant-pagination {
+    .ant-pagination-item {
+      background: var(--rd-color-surface-alt);
+      border-color: var(--rd-color-border);
+
+      a {
+        color: var(--rd-color-text-secondary);
+      }
+
+      &:hover {
+        background: var(--rd-color-surface-hover);
+
+        a {
+          color: var(--rd-color-text);
+        }
+      }
+
+      &-active {
+        background: var(--rd-color-brand);
+        border-color: var(--rd-color-brand);
+
+        a {
+          color: var(--rd-color-text-inverse);
         }
       }
     }
 
-    > .ant-steps-item-container > .ant-steps-item-content > .ant-steps-item-title {
-      color: var(--rd-color-text-muted);
-    }
+    .ant-pagination-prev,
+    .ant-pagination-next {
+      .ant-pagination-item-link {
+        background: var(--rd-color-surface-alt);
+        border-color: var(--rd-color-border);
+        color: var(--rd-color-text-secondary);
+      }
 
-    > .ant-steps-item-container > .ant-steps-item-content > .ant-steps-item-description {
-      color: var(--rd-color-text-muted);
-    }
-  }
-
-  /* "Process" state (current step) */
-  .ant-steps-item-process {
-    .ant-steps-item-icon {
-      background-color: var(--rd-color-brand);
-      border-color: var(--rd-color-brand);
-
-      > .ant-steps-icon {
-        color: var(--rd-color-text-inverse);
-
-        .ant-steps-icon-dot {
-          background: var(--rd-color-brand);
-        }
+      &:hover .ant-pagination-item-link {
+        background: var(--rd-color-surface-hover);
+        color: var(--rd-color-text);
+        border-color: var(--rd-color-border);
       }
     }
 
-    > .ant-steps-item-container > .ant-steps-item-content > .ant-steps-item-title {
-      color: var(--rd-color-text);
-      font-weight: 500;
+    .ant-pagination-disabled .ant-pagination-item-link {
+      color: var(--rd-color-text-disabled);
+      background: var(--rd-color-bg-subtle);
     }
 
-    > .ant-steps-item-container > .ant-steps-item-content > .ant-steps-item-description {
+    .ant-select-selector {
+      background: var(--rd-color-surface-alt) !important;
+      color: var(--rd-color-text) !important;
+      border-color: var(--rd-color-border) !important;
+    }
+  }
+
+  .tags-list .ant-menu.ant-menu-inline {
+    color: var(--rd-color-text);
+
+    .ant-menu-item {
       color: var(--rd-color-text-secondary);
-    }
-  }
 
-  /* "Finish" state (completed steps) */
-  .ant-steps-item-finish {
-    .ant-steps-item-icon {
-      background-color: var(--rd-color-surface-alt);
-      border-color: var(--rd-color-brand);
-
-      > .ant-steps-icon {
-        color: var(--rd-color-brand);
-
-        .ant-steps-icon-dot {
-          background: var(--rd-color-brand);
-        }
+      a {
+        color: inherit;
       }
     }
 
-    > .ant-steps-item-container > .ant-steps-item-content > .ant-steps-item-title {
+    .ant-menu-item-selected {
       color: var(--rd-color-text);
-    }
-
-    > .ant-steps-item-container > .ant-steps-item-content > .ant-steps-item-title::after {
-      background-color: var(--rd-color-brand) !important;
-    }
-
-    > .ant-steps-item-container > .ant-steps-item-content > .ant-steps-item-description {
-      color: var(--rd-color-text-muted);
-    }
-
-    > .ant-steps-item-container > .ant-steps-item-tail::after {
-      background-color: var(--rd-color-brand) !important;
+      background: var(--rd-color-surface-hover);
     }
   }
 
-  /* "Error" state */
-  .ant-steps-item-error {
-    .ant-steps-item-icon {
-      background-color: var(--rd-color-surface-alt);
-      border-color: var(--rd-color-danger, #ef4444);
+  .visualization-renderer,
+  .visualization-renderer-wrapper,
+  .table-visualization-container {
+    color: var(--rd-color-text);
+  }
 
-      > .ant-steps-icon {
-        color: var(--rd-color-danger, #ef4444);
-      }
-    }
+  .query-results-wrapper,
+  .query-view-content .query-results {
+    color: var(--rd-color-text);
+  }
 
-    > .ant-steps-item-container > .ant-steps-item-content > .ant-steps-item-title,
-    > .ant-steps-item-container > .ant-steps-item-content > .ant-steps-item-description {
-      color: var(--rd-color-danger, #ef4444);
+  .query-metadata,
+  .query-metadata .query-metadata-label,
+  .query-metadata .query-metadata-value {
+    color: var(--rd-color-text-secondary);
+  }
+
+  .table-main-title,
+  .table-data a.table-main-title {
+    color: var(--rd-color-link);
+
+    &:hover,
+    &:focus {
+      color: var(--rd-color-link-hover);
     }
   }
 
-  /* Clickable steps (hover) */
-  .ant-steps-item.ant-steps-item-active > .ant-steps-item-container[role="button"]:hover,
-  .ant-steps-item.ant-steps-item-custom > .ant-steps-item-container[role="button"]:hover {
-    .ant-steps-item-title,
-    .ant-steps-item-subtitle,
-    .ant-steps-item-description {
-      color: var(--rd-color-brand);
-    }
-  }
-
-  /* Dot variant */
-  .ant-steps-dot .ant-steps-item-tail::after,
-  .ant-steps-dot.ant-steps-small .ant-steps-item-tail::after {
-    background: var(--rd-color-divider) !important;
+  .table-data .ant-typography,
+  .table-data .ant-typography-secondary {
+    color: var(--rd-color-text-secondary);
   }
 
   /* ============================================================
@@ -1697,10 +676,12 @@
       box-shadow: 0px -1px 0px var(--rd-color-divider) inset;
     }
 
+    .ant-tabs-body-holder,
     .ant-tabs-content-holder {
       border-color: var(--rd-color-divider);
 
-      .ant-tabs-tabpane {
+      .ant-tabs-tabpane,
+      .ant-tabs-tabpanel {
         background: var(--rd-color-surface);
         color: var(--rd-color-text);
       }

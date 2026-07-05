@@ -85,9 +85,11 @@ const MLModelMetricsHeader = ({ metrics }) => {
           <Col xs={24} sm={12} md={8} lg={6} key={columnName} style={{ display: 'flex' }}>
             <Card 
               title={formatMetricName(columnName)}
-              headStyle={{ 
-                backgroundColor: getCardColor(columnMetrics),
-                color: isDarkMode ? '#ffffff' : '#000000'
+              styles={{
+                header: {
+                  backgroundColor: getCardColor(columnMetrics),
+                  color: isDarkMode ? '#ffffff' : '#000000'
+                }
               }}
               style={{ width: '100%' }}
             >

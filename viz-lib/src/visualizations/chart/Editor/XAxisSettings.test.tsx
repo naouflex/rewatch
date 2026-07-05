@@ -1,16 +1,14 @@
 import React from "react";
-import enzyme from "enzyme";
+import { render } from "@testing-library/react";
+
+import { changeInputValue, clickByTestID, openSelect } from "@/testHelpers";
 
 import getOptions from "../getOptions";
 import XAxisSettings from "./XAxisSettings";
 
-function findByTestID(wrapper: any, testId: any) {
-  return wrapper.find(`[data-test="${testId}"]`);
-}
-
-function mount(options: any, done: any) {
+function renderSettings(options: any, done: any) {
   options = getOptions(options);
-  return enzyme.mount(
+  return render(
     <XAxisSettings
       visualizationName="Test"
       data={{ columns: [], rows: [] }}
@@ -25,7 +23,7 @@ function mount(options: any, done: any) {
 
 describe("Visualizations -> Chart -> Editor -> X-Axis Settings", () => {
   test("Changes axis type", done => {
-    const el = mount(
+    renderSettings(
       {
         globalSeriesType: "column",
         xAxis: { type: "-", labels: { enabled: true } },
@@ -33,16 +31,12 @@ describe("Visualizations -> Chart -> Editor -> X-Axis Settings", () => {
       done
     );
 
-    findByTestID(el, "Chart.XAxis.Type")
-      .last()
-      .simulate("mouseDown");
-    findByTestID(el, "Chart.XAxis.Type.Linear")
-      .last()
-      .simulate("click");
+    openSelect("Chart.XAxis.Type");
+    clickByTestID("Chart.XAxis.Type.Linear");
   });
 
   test("Changes axis name", done => {
-    const el = mount(
+    renderSettings(
       {
         globalSeriesType: "column",
         xAxis: { type: "-", labels: { enabled: true } },
@@ -50,27 +44,23 @@ describe("Visualizations -> Chart -> Editor -> X-Axis Settings", () => {
       done
     );
 
-    findByTestID(el, "Chart.XAxis.Name")
-      .last()
-      .simulate("change", { target: { value: "test" } });
+    changeInputValue("Chart.XAxis.Name", "test");
   });
 
   test("Changes axis tick format", done => {
-    const el = mount(
+    renderSettings(
       {
         globalSeriesType: "column",
-        xAxis: { },
+        xAxis: {},
       },
       done
     );
 
-    findByTestID(el, "Chart.XAxis.TickFormat")
-      .last()
-      .simulate("change", { target: { value: "%B" } });
+    changeInputValue("Chart.XAxis.TickFormat", "%B");
   });
 
   test("Sets Show Labels option", done => {
-    const el = mount(
+    renderSettings(
       {
         globalSeriesType: "column",
         xAxis: { type: "-", labels: { enabled: false } },
@@ -78,13 +68,11 @@ describe("Visualizations -> Chart -> Editor -> X-Axis Settings", () => {
       done
     );
 
-    findByTestID(el, "Chart.XAxis.ShowLabels")
-      .last()
-      .simulate("click");
+    clickByTestID("Chart.XAxis.ShowLabels");
   });
 
   test("Sets Sort X Values option", done => {
-    const el = mount(
+    renderSettings(
       {
         globalSeriesType: "column",
         sortX: false,
@@ -92,13 +80,11 @@ describe("Visualizations -> Chart -> Editor -> X-Axis Settings", () => {
       done
     );
 
-    findByTestID(el, "Chart.XAxis.Sort")
-      .last()
-      .simulate("click");
+    clickByTestID("Chart.XAxis.Sort");
   });
 
   test("Sets Reverse X Values option", done => {
-    const el = mount(
+    renderSettings(
       {
         globalSeriesType: "column",
         reverseX: false,
@@ -106,8 +92,6 @@ describe("Visualizations -> Chart -> Editor -> X-Axis Settings", () => {
       done
     );
 
-    findByTestID(el, "Chart.XAxis.Reverse")
-      .last()
-      .simulate("click");
+    clickByTestID("Chart.XAxis.Reverse");
   });
 });

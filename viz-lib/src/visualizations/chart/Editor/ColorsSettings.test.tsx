@@ -1,17 +1,23 @@
 import { after } from "lodash";
 import React from "react";
-import enzyme from "enzyme";
+import { render, fireEvent } from "@testing-library/react";
+
+import { changeInputValue, clickByTestID, findByTestID, openSelect } from "@/testHelpers";
 
 import getOptions from "../getOptions";
 import ColorsSettings from "./ColorsSettings";
 
-function findByTestID(wrapper: any, testId: any) {
-  return wrapper.find(`[data-test="${testId}"]`);
+function clickColorPickerTrigger(testId: string) {
+  const el = findByTestID(testId);
+  const triggers = el.matches(".color-picker-trigger")
+    ? [el]
+    : Array.from(el.querySelectorAll(".color-picker-trigger"));
+  fireEvent.click(triggers[triggers.length - 1]);
 }
 
-function mount(options: any, done: any) {
+function renderSettings(options: any, done: any) {
   options = getOptions(options);
-  return enzyme.mount(
+  return render(
     <ColorsSettings
       visualizationName="Test"
       data={{
@@ -33,7 +39,7 @@ function mount(options: any, done: any) {
 describe("Visualizations -> Chart -> Editor -> Colors Settings", () => {
   describe("for pie", () => {
     test("Changes series color", done => {
-      const el = mount(
+      renderSettings(
         {
           globalSeriesType: "pie",
           columnMapping: { a: "x", b: "y" },
@@ -41,20 +47,14 @@ describe("Visualizations -> Chart -> Editor -> Colors Settings", () => {
         done
       );
 
-      findByTestID(el, "Chart.Series.v.Color")
-        .find(".color-picker-trigger")
-        .last()
-        .simulate("click");
-      findByTestID(el, "ColorPicker")
-        .last()
-        .find("input")
-        .simulate("change", { target: { value: "red" } });
+      clickColorPickerTrigger("Chart.Series.v.Color");
+      changeInputValue("ColorPicker", "red");
     });
   });
 
   describe("for heatmap", () => {
     test("Changes color scheme", done => {
-      const el = mount(
+      renderSettings(
         {
           globalSeriesType: "heatmap",
           columnMapping: { a: "x", b: "y" },
@@ -62,16 +62,12 @@ describe("Visualizations -> Chart -> Editor -> Colors Settings", () => {
         done
       );
 
-      findByTestID(el, "Chart.Colors.Heatmap.ColorScheme")
-        .last()
-        .simulate("mouseDown");
-      findByTestID(el, "Chart.Colors.Heatmap.ColorScheme.Blues")
-        .last()
-        .simulate("click");
+      openSelect("Chart.Colors.Heatmap.ColorScheme");
+      clickByTestID("Chart.Colors.Heatmap.ColorScheme.Blues");
     });
 
     test("Sets custom color scheme", done => {
-      const el = mount(
+      renderSettings(
         {
           globalSeriesType: "heatmap",
           columnMapping: { a: "x", b: "y" },
@@ -80,29 +76,17 @@ describe("Visualizations -> Chart -> Editor -> Colors Settings", () => {
         after(2, done)
       ); // we will perform 2 actions, so call `done` after all of them completed
 
-      findByTestID(el, "Chart.Colors.Heatmap.MinColor")
-        .find(".color-picker-trigger")
-        .last()
-        .simulate("click");
-      findByTestID(el, "ColorPicker")
-        .last()
-        .find("input")
-        .simulate("change", { target: { value: "yellow" } });
+      clickColorPickerTrigger("Chart.Colors.Heatmap.MinColor");
+      changeInputValue("ColorPicker", "yellow");
 
-      findByTestID(el, "Chart.Colors.Heatmap.MaxColor")
-        .find(".color-picker-trigger")
-        .last()
-        .simulate("click");
-      findByTestID(el, "ColorPicker")
-        .last()
-        .find("input")
-        .simulate("change", { target: { value: "red" } });
+      clickColorPickerTrigger("Chart.Colors.Heatmap.MaxColor");
+      changeInputValue("ColorPicker", "red");
     });
   });
 
   describe("for all except of pie and heatmap", () => {
     test("Changes series color", done => {
-      const el = mount(
+      renderSettings(
         {
           globalSeriesType: "column",
           columnMapping: { a: "x", b: "y" },
@@ -110,15 +94,8 @@ describe("Visualizations -> Chart -> Editor -> Colors Settings", () => {
         done
       );
 
-      findByTestID(el, "Chart.Series.b.Color")
-        .find(".color-picker-trigger")
-        .last()
-        .simulate("click");
-
-      findByTestID(el, "ColorPicker")
-        .last()
-        .find("input")
-        .simulate("change", { target: { value: "red" } });
+      clickColorPickerTrigger("Chart.Series.b.Color");
+      changeInputValue("ColorPicker", "red");
     });
   });
 });

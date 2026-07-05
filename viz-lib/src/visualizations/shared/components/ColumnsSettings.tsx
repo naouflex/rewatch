@@ -54,7 +54,7 @@ export default function ColumnsSettings({ options, onOptionsChange, variant }: C
         className: containerClass,
       }}>
       {/* @ts-expect-error ts-migrate(2322) FIXME: Type 'Element' is not assignable to type 'null | u... Remove this comment to see the full error message */}
-      <Collapse bordered={false} defaultActiveKey={[]} expandIconPosition="right">
+      <Collapse variant="borderless" defaultActiveKey={[]} expandIconPlacement="end">
         {map(options.columns, (column, index) => (
           <SortableItem
             key={column.name}

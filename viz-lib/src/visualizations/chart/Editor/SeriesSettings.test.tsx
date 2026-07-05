@@ -1,16 +1,14 @@
 import React from "react";
-import enzyme from "enzyme";
+import { render } from "@testing-library/react";
+
+import { changeInputValue, clickByTestID, openSelect, toggleInput } from "@/testHelpers";
 
 import getOptions from "../getOptions";
 import SeriesSettings from "./SeriesSettings";
 
-function findByTestID(wrapper: any, testId: any) {
-  return wrapper.find(`[data-test="${testId}"]`);
-}
-
-function mount(options: any, done: any) {
+function renderSettings(options: any, done: any) {
   options = getOptions(options);
-  return enzyme.mount(
+  return render(
     <SeriesSettings
       visualizationName="Test"
       data={{ columns: [{ name: "a", type: "string" }], rows: [{ a: "test" }] }}
@@ -25,7 +23,7 @@ function mount(options: any, done: any) {
 
 describe("Visualizations -> Chart -> Editor -> Series Settings", () => {
   test("Changes series type", done => {
-    const el = mount(
+    renderSettings(
       {
         globalSeriesType: "column",
         columnMapping: { a: "y" },
@@ -36,16 +34,12 @@ describe("Visualizations -> Chart -> Editor -> Series Settings", () => {
       done
     );
 
-    findByTestID(el, "Chart.Series.a.Type")
-      .last()
-      .simulate("mouseDown");
-    findByTestID(el, "Chart.ChartType.area")
-      .last()
-      .simulate("click");
+    openSelect("Chart.Series.a.Type");
+    clickByTestID("Chart.ChartType.area");
   });
 
   test("Changes series label", done => {
-    const el = mount(
+    renderSettings(
       {
         globalSeriesType: "column",
         columnMapping: { a: "y" },
@@ -56,13 +50,11 @@ describe("Visualizations -> Chart -> Editor -> Series Settings", () => {
       done
     );
 
-    findByTestID(el, "Chart.Series.a.Label")
-      .last()
-      .simulate("change", { target: { value: "test" } });
+    changeInputValue("Chart.Series.a.Label", "test");
   });
 
   test("Changes series axis", done => {
-    const el = mount(
+    renderSettings(
       {
         globalSeriesType: "column",
         columnMapping: { a: "y" },
@@ -73,9 +65,6 @@ describe("Visualizations -> Chart -> Editor -> Series Settings", () => {
       done
     );
 
-    findByTestID(el, "Chart.Series.a.UseRightAxis")
-      .last()
-      .find("input")
-      .simulate("change", { target: { checked: true } });
+    toggleInput("Chart.Series.a.UseRightAxis");
   });
 });

@@ -1,10 +1,9 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import PropTypes from "prop-types";
 import cx from "classnames";
 
 import Modal from "antd/lib/modal";
 import Dropdown from "antd/lib/dropdown";
-import Menu from "antd/lib/menu";
 import Button from "antd/lib/button";
 
 import LoadingOutlinedIcon from "@ant-design/icons/LoadingOutlined";
@@ -58,25 +57,30 @@ export default function MenuButton({ doDelete, doArchive, doUnarchive, archived 
     });
   }, [doUnarchive, execute]);
 
+  const menuItems = useMemo(
+    () => [
+      {
+        key: "delete",
+        label: <PlainButton onClick={confirmDelete}>Delete</PlainButton>,
+      },
+      {
+        key: "archive",
+        label: archived ? (
+          <PlainButton onClick={confirmUnarchive}>Unarchive</PlainButton>
+        ) : (
+          <PlainButton onClick={confirmArchive}>Archive</PlainButton>
+        ),
+      },
+    ],
+    [archived, confirmArchive, confirmDelete, confirmUnarchive]
+  );
+
   return (
     <Dropdown
       className={cx("m-l-5", { disabled: true })}
       trigger="click" 
       placement="bottomRight"
-      overlay={
-        <Menu>
-          <Menu.Item>
-            <PlainButton onClick={confirmDelete}>Delete</PlainButton>
-          </Menu.Item>
-          <Menu.Item>
-            {archived ? (
-              <PlainButton onClick={confirmUnarchive}>Unarchive</PlainButton>
-            ) : (
-              <PlainButton onClick={confirmArchive}>Archive</PlainButton>
-            )}
-          </Menu.Item>
-        </Menu>
-      }>
+      menu={{ items: menuItems }}>
       <Button aria-label="More actions">
         {loading ? <LoadingOutlinedIcon /> : <EllipsisOutlinedIcon rotate={90} aria-hidden="true" />}
       </Button>

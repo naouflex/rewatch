@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
 import Modal from "antd/lib/modal";
-import DatePicker from "antd/lib/date-picker";
-import TimePicker from "antd/lib/time-picker";
+import DatePicker, { TimePicker } from "@/components/momentPickers";
 import Select from "antd/lib/select";
 import Radio from "antd/lib/radio";
 import { capitalize, clone, isEqual, omitBy, isNil, isEmpty } from "lodash";
@@ -203,7 +202,7 @@ class ScheduleDialog extends React.Component {
         <div className="schedule-component">
           <h5>Refresh every</h5>
           <div data-testid="interval">
-            <Select className="input" value={seconds} onChange={this.setInterval} dropdownMatchSelectWidth={false}>
+            <Select className="input" value={seconds} onChange={this.setInterval} popupMatchSelectWidth={false}>
               <Option value={null} key="never">
                 Never
               </Option>

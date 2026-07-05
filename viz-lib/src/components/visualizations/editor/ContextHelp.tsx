@@ -17,9 +17,10 @@ const contextHelpDefaultProps = {
 
 type ContextHelpProps = OwnContextHelpProps & typeof contextHelpDefaultProps;
 
-export default function ContextHelp({ icon, children, ...props }: ContextHelpProps) {
+export default function ContextHelp({ icon, children, arrowPointAtCenter, arrow, ...props }: ContextHelpProps & { arrowPointAtCenter?: boolean; arrow?: boolean | { pointAtCenter?: boolean } }) {
+  const resolvedArrow = arrow ?? (arrowPointAtCenter ? { pointAtCenter: true } : undefined);
   return (
-    <Popover {...props} content={children}>
+    <Popover {...props} arrow={resolvedArrow} content={children}>
       {icon || ContextHelp.defaultIcon}
     </Popover>
   );

@@ -1,20 +1,12 @@
 import React from "react";
-import enzyme from "enzyme";
+import { render, fireEvent } from "@testing-library/react";
+
+import { findAllByTestID, findByTestID, findInputByTestID, openSelect, clickByTestID } from "@/testHelpers";
 
 import ColumnEditor from "./ColumnEditor";
 
-function findByTestID(wrapper: any, testId: any) {
-  return wrapper.find(`[data-test="${testId}"]`);
-}
-
-function mount(column: any, variant: "table" | "details", onChange: any = jest.fn()) {
-  return enzyme.mount(
-    <ColumnEditor
-      column={column}
-      variant={variant}
-      onChange={onChange}
-    />
-  );
+function renderEditor(column: any, variant: "table" | "details", onChange: any = jest.fn()) {
+  return render(<ColumnEditor column={column} variant={variant} onChange={onChange} />);
 }
 
 const mockColumn = {
@@ -29,36 +21,39 @@ const mockColumn = {
 
 describe("Shared ColumnEditor", () => {
   describe("Common functionality", () => {
-    test.each(["table", "details"] as const)("Changes column title - %s variant", async (variant) => {
-      return new Promise<void>((resolve) => {
-        const onChange = jest.fn((changes) => {
+    test.each(["table", "details"] as const)("Changes column title - %s variant", async variant => {
+      return new Promise<void>(resolve => {
+        const onChange = jest.fn(changes => {
           expect(changes).toEqual({
             ...mockColumn,
             title: "User ID",
           });
           resolve();
         });
-        const el = mount(mockColumn, variant, onChange);
+        renderEditor(mockColumn, variant, onChange);
 
         const testPrefix = variant === "table" ? "Table" : "Details";
-        findByTestID(el, `${testPrefix}.Column.user_id.Title`)
-          .find("input")
-          .simulate("change", { target: { value: "User ID" } });
+        fireEvent.change(findInputByTestID(`${testPrefix}.Column.user_id.Title`), {
+          target: { value: "User ID" },
+        });
       });
     });
 
-    test.each(["table", "details"] as const)("Changes column alignment - %s variant", (variant) => {
+    test.each(["table", "details"] as const)("Changes column alignment - %s variant", variant => {
       const onChange = jest.fn();
-      const el = mount({
-        ...mockColumn,
-        name: "amount",
-        displayAs: "number",
-      }, variant, onChange);
+      renderEditor(
+        {
+          ...mockColumn,
+          name: "amount",
+          displayAs: "number",
+        },
+        variant,
+        onChange
+      );
 
       const testPrefix = variant === "table" ? "Table" : "Details";
-      findByTestID(el, `${testPrefix}.Column.amount.TextAlignment`)
-        .find('input[value="right"]')
-        .simulate("change", { target: { value: "right" } });
+      const alignment = findByTestID(`${testPrefix}.Column.amount.TextAlignment`);
+      fireEvent.click(alignment.querySelector('input[value="right"]') as HTMLElement);
 
       expect(onChange).toHaveBeenCalledWith({
         ...mockColumn,
@@ -68,9 +63,9 @@ describe("Shared ColumnEditor", () => {
       });
     });
 
-    test.each(["table", "details"] as const)("Changes column description - %s variant", async (variant) => {
-      return new Promise<void>((resolve) => {
-        const onChange = jest.fn((changes) => {
+    test.each(["table", "details"] as const)("Changes column description - %s variant", async variant => {
+      return new Promise<void>(resolve => {
+        const onChange = jest.fn(changes => {
           expect(changes).toEqual({
             ...mockColumn,
             name: "status",
@@ -79,34 +74,39 @@ describe("Shared ColumnEditor", () => {
           });
           resolve();
         });
-        const el = mount({
-          ...mockColumn,
-          name: "status",
-          title: "Status",
-        }, variant, onChange);
+        renderEditor(
+          {
+            ...mockColumn,
+            name: "status",
+            title: "Status",
+          },
+          variant,
+          onChange
+        );
 
         const testPrefix = variant === "table" ? "Table" : "Details";
-        findByTestID(el, `${testPrefix}.Column.status.Description`)
-          .find("input")
-          .simulate("change", { target: { value: "Current order status" } });
+        fireEvent.change(findInputByTestID(`${testPrefix}.Column.status.Description`), {
+          target: { value: "Current order status" },
+        });
       });
     });
 
-    test.each(["table", "details"] as const)("Changes display type - %s variant", (variant) => {
+    test.each(["table", "details"] as const)("Changes display type - %s variant", variant => {
       const onChange = jest.fn();
-      const el = mount({
-        ...mockColumn,
-        name: "created_at",
-        title: "Created At",
-        displayAs: "datetime",
-      }, variant, onChange);
+      renderEditor(
+        {
+          ...mockColumn,
+          name: "created_at",
+          title: "Created At",
+          displayAs: "datetime",
+        },
+        variant,
+        onChange
+      );
 
       const testPrefix = variant === "table" ? "Table" : "Details";
-      findByTestID(el, `${testPrefix}.Column.created_at.DisplayAs`)
-        .find(".ant-select-selector")
-        .simulate("mouseDown");
-      findByTestID(el, `${testPrefix}.Column.created_at.DisplayAs.string`)
-        .simulate("click");
+      openSelect(`${testPrefix}.Column.created_at.DisplayAs`);
+      clickByTestID(`${testPrefix}.Column.created_at.DisplayAs.string`);
 
       expect(onChange).toHaveBeenCalledWith({
         ...mockColumn,
@@ -119,22 +119,24 @@ describe("Shared ColumnEditor", () => {
 
   describe("Table variant specific", () => {
     test("Shows search checkbox", () => {
-      const el = mount(mockColumn, "table");
+      renderEditor(mockColumn, "table");
 
-      const searchCheckbox = findByTestID(el, "Table.Column.user_id.UseForSearch");
-      expect(searchCheckbox.find("input[type='checkbox']")).toHaveLength(1);
+      const searchCheckbox = findInputByTestID("Table.Column.user_id.UseForSearch");
+      expect(searchCheckbox.matches("input[type='checkbox']")).toBe(true);
     });
 
     test("Changes search setting", () => {
       const onChange = jest.fn();
-      const el = mount({
-        ...mockColumn,
-        allowSearch: false,
-      }, "table", onChange);
+      renderEditor(
+        {
+          ...mockColumn,
+          allowSearch: false,
+        },
+        "table",
+        onChange
+      );
 
-      findByTestID(el, "Table.Column.user_id.UseForSearch")
-        .find("input[type='checkbox']")
-        .simulate("change", { target: { checked: true } });
+      fireEvent.click(findInputByTestID("Table.Column.user_id.UseForSearch"));
 
       expect(onChange).toHaveBeenCalledWith({
         ...mockColumn,
@@ -143,83 +145,91 @@ describe("Shared ColumnEditor", () => {
     });
 
     test("Uses correct CSS class", () => {
-      const el = mount(mockColumn, "table");
-      expect(el.find(".table-visualization-editor-column")).toHaveLength(1);
+      const { container } = renderEditor(mockColumn, "table");
+      expect(container.querySelectorAll(".table-visualization-editor-column")).toHaveLength(1);
     });
   });
 
   describe("Details variant specific", () => {
     test("Hides search checkbox", () => {
-      const el = mount(mockColumn, "details");
+      const { container } = renderEditor(mockColumn, "details");
 
-      const searchCheckbox = findByTestID(el, "Details.Column.user_id.UseForSearch");
-      expect(searchCheckbox).toHaveLength(0);
+      expect(container.querySelectorAll('[data-test="Details.Column.user_id.UseForSearch"]')).toHaveLength(0);
     });
 
     test("Uses correct CSS class", () => {
-      const el = mount(mockColumn, "details");
-      expect(el.find(".details-visualization-editor-column")).toHaveLength(1);
+      const { container } = renderEditor(mockColumn, "details");
+      expect(container.querySelectorAll(".details-visualization-editor-column")).toHaveLength(1);
     });
   });
 
   describe("Props and defaults", () => {
     test("Uses default showSearch based on variant", () => {
-      const tableEl = mount(mockColumn, "table");
-      const detailsEl = mount(mockColumn, "details");
+      const { container: tableContainer } = renderEditor(mockColumn, "table");
+      const { container: detailsContainer } = renderEditor(mockColumn, "details");
 
-      expect(findByTestID(tableEl, "Table.Column.user_id.UseForSearch").find("input[type='checkbox']")).toHaveLength(1);
-      expect(findByTestID(detailsEl, "Details.Column.user_id.UseForSearch")).toHaveLength(0);
+      expect(findInputByTestID("Table.Column.user_id.UseForSearch", tableContainer)).toBeTruthy();
+      expect(detailsContainer.querySelectorAll('[data-test="Details.Column.user_id.UseForSearch"]')).toHaveLength(0);
     });
 
     test("Allows custom testPrefix", () => {
-      const el = mount(mockColumn, "table");
-      el.setProps({ testPrefix: "Custom.Prefix" });
-      el.update();
+      const { rerender } = renderEditor(mockColumn, "table");
+      rerender(<ColumnEditor column={mockColumn} variant="table" onChange={jest.fn()} testPrefix="Custom.Prefix" />);
 
-      expect(findByTestID(el, "Custom.Prefix.Title").find("input")).toHaveLength(1);
+      expect(findInputByTestID("Custom.Prefix.Title")).toBeTruthy();
     });
 
     test("Handles missing onChange gracefully", () => {
-      const el = mount(mockColumn, "table", undefined);
+      renderEditor(mockColumn, "table", undefined);
 
       expect(() => {
-        findByTestID(el, "Table.Column.user_id.Title")
-          .find("input")
-          .simulate("change", { target: { value: "New Title" } });
+        fireEvent.change(findInputByTestID("Table.Column.user_id.Title"), { target: { value: "New Title" } });
       }).not.toThrow();
     });
   });
 
   describe("Rendering", () => {
     test("Table variant renders with correct structure", () => {
-      const el = mount({
-        ...mockColumn,
-        allowSearch: true,
-        description: "Sample description",
-      }, "table");
+      const { container } = renderEditor(
+        {
+          ...mockColumn,
+          allowSearch: true,
+          description: "Sample description",
+        },
+        "table"
+      );
 
       // Verify key elements are present
-      expect(el.find('.table-visualization-editor-column')).toHaveLength(1);
-      expect(findByTestID(el, "Table.Column.user_id.Title").find("input")).toHaveLength(1);
-      expect(findByTestID(el, "Table.Column.user_id.TextAlignment").find("input[type='radio']")).toHaveLength(3);
-      expect(findByTestID(el, "Table.Column.user_id.UseForSearch").find("input[type='checkbox']")).toHaveLength(1);
-      expect(findByTestID(el, "Table.Column.user_id.Description").find("input")).toHaveLength(1);
-      expect(findByTestID(el, "Table.Column.user_id.DisplayAs")).toHaveLength(7); // Expected count based on current behavior
+      expect(container.querySelectorAll(".table-visualization-editor-column")).toHaveLength(1);
+      expect(findInputByTestID("Table.Column.user_id.Title", container)).toBeTruthy();
+      expect(
+        findByTestID("Table.Column.user_id.TextAlignment", container).querySelectorAll("input[type='radio']")
+      ).toHaveLength(3);
+      expect(findInputByTestID("Table.Column.user_id.UseForSearch", container).matches("input[type='checkbox']")).toBe(
+        true
+      );
+      expect(findInputByTestID("Table.Column.user_id.Description", container)).toBeTruthy();
+      expect(findAllByTestID("Table.Column.user_id.DisplayAs", container).length).toBeGreaterThan(0);
     });
 
     test("Details variant renders with correct structure", () => {
-      const el = mount({
-        ...mockColumn,
-        description: "Sample description",
-      }, "details");
+      const { container } = renderEditor(
+        {
+          ...mockColumn,
+          description: "Sample description",
+        },
+        "details"
+      );
 
       // Verify key elements are present
-      expect(el.find('.details-visualization-editor-column')).toHaveLength(1);
-      expect(findByTestID(el, "Details.Column.user_id.Title").find("input")).toHaveLength(1);
-      expect(findByTestID(el, "Details.Column.user_id.TextAlignment").find("input[type='radio']")).toHaveLength(3);
-      expect(findByTestID(el, "Details.Column.user_id.UseForSearch")).toHaveLength(0); // Should not exist
-      expect(findByTestID(el, "Details.Column.user_id.Description").find("input")).toHaveLength(1);
-      expect(findByTestID(el, "Details.Column.user_id.DisplayAs")).toHaveLength(7); // Expected count based on current behavior
+      expect(container.querySelectorAll(".details-visualization-editor-column")).toHaveLength(1);
+      expect(findInputByTestID("Details.Column.user_id.Title", container)).toBeTruthy();
+      expect(
+        findByTestID("Details.Column.user_id.TextAlignment", container).querySelectorAll("input[type='radio']")
+      ).toHaveLength(3);
+      expect(container.querySelectorAll('[data-test="Details.Column.user_id.UseForSearch"]')).toHaveLength(0); // Should not exist
+      expect(findInputByTestID("Details.Column.user_id.Description", container)).toBeTruthy();
+      expect(findAllByTestID("Details.Column.user_id.DisplayAs", container).length).toBeGreaterThan(0);
     });
   });
 });

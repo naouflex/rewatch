@@ -1,5 +1,5 @@
 import React from "react";
-import { mount } from "enzyme";
+import { render, fireEvent, screen, act } from "@testing-library/react";
 import moment from "moment";
 import { durationHumanize } from "@/lib/utils";
 import ScheduleDialog, { TimeEditor } from "./ScheduleDialog";
@@ -22,7 +22,7 @@ const defaultProps = {
   ],
   dialog: {
     props: {
-      visible: true,
+      open: true,
       onOk: () => {},
       onCancel: () => {},
       afterClose: () => {},
@@ -32,7 +32,7 @@ const defaultProps = {
   },
 };
 
-function getWrapper(schedule = {}, { onConfirm, onCancel, ...props } = {}) {
+function renderDialog(schedule = {}, { onConfirm, onCancel, ...props } = {}) {
   onConfirm = onConfirm || (() => {});
   onCancel = onCancel || (() => {});
 
@@ -45,7 +45,7 @@ function getWrapper(schedule = {}, { onConfirm, onCancel, ...props } = {}) {
     },
     dialog: {
       props: {
-        visible: true,
+        open: true,
         onOk: onConfirm,
         onCancel,
         afterClose: () => {},
@@ -55,47 +55,42 @@ function getWrapper(schedule = {}, { onConfirm, onCancel, ...props } = {}) {
     },
   };
 
-  return [mount(<ScheduleDialog.Component {...props} />), props];
-}
-
-function findByTestID(wrapper, id) {
-  return wrapper.find(`[data-testid="${id}"]`);
+  const ref = React.createRef();
+  render(<ScheduleDialog.Component ref={ref} {...props} />);
+  return [ref, props];
 }
 
 describe("ScheduleDialog", () => {
   describe("Sets correct schedule settings", () => {
     test('Sets to "Never"', () => {
-      const [wrapper] = getWrapper();
-      const el = findByTestID(wrapper, "interval");
-      expect(el).toMatchSnapshot();
+      renderDialog();
+      expect(screen.getByTestId("interval")).toMatchSnapshot();
     });
 
     test('Sets to "5 Minutes"', () => {
-      const [wrapper] = getWrapper({ interval: 300 });
-      const el = findByTestID(wrapper, "interval");
-      expect(el).toMatchSnapshot();
+      renderDialog({ interval: 300 });
+      expect(screen.getByTestId("interval")).toMatchSnapshot();
     });
 
     test('Sets to "2 Hours"', () => {
-      const [wrapper] = getWrapper({ interval: 7200 });
-      const el = findByTestID(wrapper, "interval");
-      expect(el).toMatchSnapshot();
+      renderDialog({ interval: 7200 });
+      expect(screen.getByTestId("interval")).toMatchSnapshot();
     });
 
     describe('Sets to "1 Day 22:15"', () => {
-      const [wrapper] = getWrapper({
+      const schedule = {
         interval: 86400,
         time: "22:15",
-      });
+      };
 
       test("Sets to correct interval", () => {
-        const el = findByTestID(wrapper, "interval");
-        expect(el).toMatchSnapshot();
+        renderDialog(schedule);
+        expect(screen.getByTestId("interval")).toMatchSnapshot();
       });
 
       test("Sets to correct time", () => {
-        const el = findByTestID(wrapper, "time");
-        expect(el).toMatchSnapshot();
+        renderDialog(schedule);
+        expect(screen.getByTestId("time")).toMatchSnapshot();
       });
     });
 
@@ -103,95 +98,61 @@ describe("ScheduleDialog", () => {
       const defaultValue = moment().hour(5).minute(25); // 05:25
 
       test("UTC set correctly on init", () => {
-        const editor = mount(<TimeEditor defaultValue={defaultValue} onChange={() => {}} />);
-        const utc = findByTestID(editor, "utc");
+        render(<TimeEditor defaultValue={defaultValue} onChange={() => {}} />);
+        const utc = screen.getByTestId("utc");
 
         // expect utc to be 2h below initial time
-        expect(utc.text()).toBe("(03:25 UTC)");
+        expect(utc.textContent).toBe("(03:25 UTC)");
       });
 
       test("UTC time should not render", () => {
         const utcValue = moment.utc(defaultValue);
-        const editor = mount(<TimeEditor defaultValue={utcValue} onChange={() => {}} />);
-        const utc = findByTestID(editor, "utc");
+        render(<TimeEditor defaultValue={utcValue} onChange={() => {}} />);
 
         // expect utc to not render
-        expect(utc.exists()).toBeFalsy();
-      });
-
-      // Disabling this test as the TimePicker wasn't setting values from here after Antd v4
-      // eslint-disable-next-line jest/no-disabled-tests
-      test.skip("onChange correct result", () => {
-        const onChangeCb = jest.fn((time) => time.format("HH:mm"));
-        const editor = mount(<TimeEditor onChange={onChangeCb} />);
-
-        // click TimePicker
-        editor.find(".ant-picker-input input").simulate("mouseDown");
-
-        const timePickerPanel = editor.find(".ant-picker-panel");
-
-        // select hour "07"
-        const hourSelector = timePickerPanel.find(".ant-picker-time-panel-column").at(0);
-        hourSelector.find("li").at(7).simulate("click");
-
-        // select minute "30"
-        const minuteSelector = timePickerPanel.find(".ant-picker-time-panel-column").at(1);
-        minuteSelector.find("li").at(6).simulate("click");
-
-        timePickerPanel.find(".ant-picker-ok").find("button").simulate("mouseDown");
-
-        // expect utc to be 2h below initial time
-        const utc = findByTestID(editor, "utc");
-        expect(utc.text()).toBe("(05:30 UTC)");
-
-        // expect 07:30 from onChange
-        const onChangeResult = onChangeCb.mock.results[1].value;
-        expect(onChangeResult).toBe("07:30");
+        expect(screen.queryByTestId("utc")).toBeNull();
       });
     });
 
     describe('Sets to "2 Weeks 22:15 Tuesday"', () => {
-      const [wrapper] = getWrapper({
+      const schedule = {
         interval: 1209600,
         time: "22:15",
         day_of_week: "Monday",
-      });
+      };
 
       test("Sets to correct interval", () => {
-        const el = findByTestID(wrapper, "interval");
-        expect(el).toMatchSnapshot();
+        renderDialog(schedule);
+        expect(screen.getByTestId("interval")).toMatchSnapshot();
       });
 
       test("Sets to correct time", () => {
-        const el = findByTestID(wrapper, "time");
-        expect(el).toMatchSnapshot();
+        renderDialog(schedule);
+        expect(screen.getByTestId("time")).toMatchSnapshot();
       });
 
       test("Sets to correct weekday", () => {
-        const el = findByTestID(wrapper, "weekday");
-        expect(el).toMatchSnapshot();
+        renderDialog(schedule);
+        expect(screen.getByTestId("weekday")).toMatchSnapshot();
       });
     });
 
     describe("Until feature", () => {
       test("Until not set", () => {
-        const [wrapper] = getWrapper({ interval: 300 });
-        const el = findByTestID(wrapper, "ends");
-        expect(el).toMatchSnapshot();
+        renderDialog({ interval: 300 });
+        expect(screen.getByTestId("ends")).toMatchSnapshot();
       });
 
       test("Until is set", () => {
-        const [wrapper] = getWrapper({ interval: 300, until: "2030-01-01" });
-        const el = findByTestID(wrapper, "ends");
-        expect(el).toMatchSnapshot();
+        renderDialog({ interval: 300, until: "2030-01-01" });
+        expect(screen.getByTestId("ends")).toMatchSnapshot();
       });
     });
 
     describe("Supports 30 days interval with no time value", () => {
       test("Time is none", () => {
-        const [wrapper] = getWrapper({ interval: 30 * 24 * 3600 });
-        const el = findByTestID(wrapper, "time");
-        expect(el).toMatchSnapshot();
+        renderDialog({ interval: 30 * 24 * 3600 });
+        expect(screen.queryByTestId("time")).toMatchSnapshot();
       });
     });
   });
@@ -199,17 +160,16 @@ describe("ScheduleDialog", () => {
   describe("Adheres to user permissions", () => {
     test("Shows correct interval options", () => {
       const refreshOptions = [60, 300, 3600, 7200]; // 1 min, 5 min, 1 hour, 2 hours
-      const [wrapper] = getWrapper(null, { refreshOptions });
+      const [ref] = renderDialog(null, { refreshOptions });
 
-      // Get the ScheduleDialog component instance and verify its computed intervals
-      const component = wrapper.find("ScheduleDialog").instance();
-      const intervals = component.intervals;
+      // Verify the dialog component instance's computed intervals
+      const intervals = ref.current.intervals;
 
       // Flatten all interval options to [label, seconds] pairs, prepend "Never"
       const allOptions = ["Never"];
       Object.keys(intervals)
-        .filter((key) => intervals[key].length > 0)
-        .forEach((key) => {
+        .filter(key => intervals[key].length > 0)
+        .forEach(key => {
           intervals[key].forEach(([, secs]) => {
             allOptions.push(durationHumanize(secs));
           });
@@ -230,17 +190,24 @@ describe("ScheduleDialog", () => {
       jest.clearAllMocks();
     });
 
+    function clickModalButton(selector) {
+      const footer = document.querySelector(".ant-modal-footer");
+      fireEvent.click(footer.querySelector(selector));
+    }
+
     test("Query saved on confirm if state changed", () => {
       // init
-      const [wrapper, props] = getWrapper(null, initProps);
+      const [ref, props] = renderDialog(null, initProps);
 
       // change state
       const change = { time: "22:15" };
       const newSchedule = Object.assign({}, props.schedule, change);
-      wrapper.setState({ newSchedule });
+      act(() => {
+        ref.current.setState({ newSchedule });
+      });
 
       // click confirm button
-      wrapper.find(".ant-modal-footer").find(".ant-btn-primary").simulate("click");
+      clickModalButton(".ant-btn-primary");
 
       // expect calls
       expect(confirmCb).toHaveBeenCalled();
@@ -249,10 +216,10 @@ describe("ScheduleDialog", () => {
 
     test("Query not saved on confirm if state unchanged", () => {
       // init
-      const [wrapper] = getWrapper(null, initProps);
+      renderDialog(null, initProps);
 
       // click confirm button
-      wrapper.find(".ant-modal-footer").find(".ant-btn-primary").simulate("click");
+      clickModalButton(".ant-btn-primary");
 
       // expect calls
       expect(confirmCb).not.toHaveBeenCalled();
@@ -261,15 +228,17 @@ describe("ScheduleDialog", () => {
 
     test("Cancel closes modal and query unsaved", () => {
       // init
-      const [wrapper, props] = getWrapper(null, initProps);
+      const [ref, props] = renderDialog(null, initProps);
 
       // change state
       const change = { time: "22:15" };
       const newSchedule = Object.assign({}, props.schedule, change);
-      wrapper.setState({ newSchedule });
+      act(() => {
+        ref.current.setState({ newSchedule });
+      });
 
       // click cancel button
-      wrapper.find(".ant-modal-footer").find("button:not(.ant-btn-primary)").simulate("click");
+      clickModalButton("button:not(.ant-btn-primary)");
 
       // expect calls
       expect(confirmCb).not.toHaveBeenCalled();

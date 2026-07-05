@@ -121,7 +121,7 @@ function RearmEditor({ value, onChange, sendForEachRow, onSendForEachRowChange }
       <Select
         optionLabelProp="label"
         value={selected}
-        dropdownMatchSelectWidth={false}
+        popupMatchSelectWidth={false}
         onChange={_onChange}>
         <Select.Option value={0} label="Just once">
           Just once <em>until back to normal</em>

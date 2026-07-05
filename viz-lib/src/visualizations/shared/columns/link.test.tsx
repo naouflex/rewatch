@@ -1,19 +1,17 @@
 import React from "react";
-import enzyme from "enzyme";
+import { render } from "@testing-library/react";
+
+import { changeInputValue, toggleInput } from "@/testHelpers";
 
 import Column from "./link";
 
-function findByTestID(wrapper: any, testId: any) {
-  return wrapper.find(`[data-test="${testId}"]`);
-}
-
-function mount(column: any, done: any) {
-  return enzyme.mount(
+function renderEditor(column: any, done: any) {
+  return render(
     <Column.Editor
       // @ts-expect-error ts-migrate(2322) FIXME: Type '{ visualizationName: string; column: any; on... Remove this comment to see the full error message
       visualizationName="Test"
       column={column}
-      onChange={changedColumn => {
+      onChange={(changedColumn: any) => {
         expect(changedColumn).toMatchSnapshot();
         done();
       }}
@@ -24,7 +22,7 @@ function mount(column: any, done: any) {
 describe("Visualizations -> Table -> Columns -> Link", () => {
   describe("Editor", () => {
     test("Changes URL template", done => {
-      const el = mount(
+      renderEditor(
         {
           name: "a",
           linkUrlTemplate: "{{ @ }}",
@@ -32,14 +30,11 @@ describe("Visualizations -> Table -> Columns -> Link", () => {
         done
       );
 
-      findByTestID(el, "Table.ColumnEditor.Link.UrlTemplate")
-        .last()
-        .find("input")
-        .simulate("change", { target: { value: "http://{{ @ }}/index.html" } });
+      changeInputValue("Table.ColumnEditor.Link.UrlTemplate", "http://{{ @ }}/index.html");
     });
 
     test("Changes text template", done => {
-      const el = mount(
+      renderEditor(
         {
           name: "a",
           linkTextTemplate: "{{ @ }}",
@@ -47,14 +42,11 @@ describe("Visualizations -> Table -> Columns -> Link", () => {
         done
       );
 
-      findByTestID(el, "Table.ColumnEditor.Link.TextTemplate")
-        .last()
-        .find("input")
-        .simulate("change", { target: { value: "Text of {{ @ }}" } });
+      changeInputValue("Table.ColumnEditor.Link.TextTemplate", "Text of {{ @ }}");
     });
 
     test("Changes title template", done => {
-      const el = mount(
+      renderEditor(
         {
           name: "a",
           linkTitleTemplate: "{{ @ }}",
@@ -62,14 +54,11 @@ describe("Visualizations -> Table -> Columns -> Link", () => {
         done
       );
 
-      findByTestID(el, "Table.ColumnEditor.Link.TitleTemplate")
-        .last()
-        .find("input")
-        .simulate("change", { target: { value: "Title of {{ @ }}" } });
+      changeInputValue("Table.ColumnEditor.Link.TitleTemplate", "Title of {{ @ }}");
     });
 
     test("Makes link open in new tab ", done => {
-      const el = mount(
+      renderEditor(
         {
           name: "a",
           linkOpenInNewTab: false,
@@ -77,10 +66,7 @@ describe("Visualizations -> Table -> Columns -> Link", () => {
         done
       );
 
-      findByTestID(el, "Table.ColumnEditor.Link.OpenInNewTab")
-        .last()
-        .find("input")
-        .simulate("change", { target: { checked: true } });
+      toggleInput("Table.ColumnEditor.Link.OpenInNewTab");
     });
   });
 });

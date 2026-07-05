@@ -66,7 +66,7 @@ function getTableColumns(options: any, updateSeriesOption: any, debouncedUpdateS
       render: (unused, item) => (
         <ChartTypeSelect
           data-test={`Chart.Series.${item.key}.Type`}
-          dropdownMatchSelectWidth={false}
+          popupMatchSelectWidth={false}
           value={item.type}
           // @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type 'never'.
           hiddenChartTypes={["pie", "heatmap", "bubble", "box"]}
@@ -91,7 +91,7 @@ export default function SeriesSettings({ options, data, onOptionsChange }: any) 
   );
 
   const handleSortEnd = useCallback(
-    ({ oldIndex, newIndex }) => {
+    ({ oldIndex, newIndex }: any) => {
       const seriesOptions = [...series];
       seriesOptions.splice(newIndex, 0, ...seriesOptions.splice(oldIndex, 1));
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'key' does not exist on type 'Boolean'.
@@ -101,7 +101,7 @@ export default function SeriesSettings({ options, data, onOptionsChange }: any) 
   );
 
   const updateSeriesOption = useCallback(
-    (key, prop, value) => {
+    (key: any, prop: any, value: any) => {
       onOptionsChange({
         seriesOptions: {
           [key]: {

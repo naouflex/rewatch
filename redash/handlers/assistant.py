@@ -9,6 +9,7 @@ from redash import models, settings
 from redash.assistant import storage
 from redash.assistant.previews import render_dashboard_svg, render_query_svg, render_visualization_svg
 from redash.assistant.service import chat
+from redash.assistant.query_generation import generate_query
 from redash.handlers.base import BaseResource, get_object_or_404
 from redash.models import db
 from redash.permissions import require_access, view_only
@@ -115,6 +116,52 @@ class AssistantThreadMessagesResource(BaseResource):
     def get(self, thread_id):
         _ensure_assistant_enabled(self.current_user)
         return storage.list_messages(thread_id, self.current_user, self.current_org)
+
+
+class AssistantGenerateQueryResource(BaseResource):
+    def post(self):
+        _ensure_assistant_enabled(self.current_user)
+
+        payload = request.get_json(force=True) or {}
+        prompt = (payload.get("prompt") or "").strip()
+        if not prompt:
+            abort(400, message="prompt is required.")
+
+        data_source_id = payload.get("data_source_id")
+        if not data_source_id:
+            abort(400, message="data_source_id is required.")
+
+        data_source = get_object_or_404(models.DataSource.get_by_id_and_org, data_source_id, self.current_org)
+        require_access(data_source, self.current_user, view_only)
+
+        data_source_type = payload.get("data_source_type") or data_source.type
+        data_source_name = payload.get("data_source_name") or data_source.name
+        syntax = payload.get("syntax") or data_source.syntax or "sql"
+        schema = payload.get("schema")
+        existing_query = payload.get("existing_query")
+
+        try:
+            query_text = generate_query(
+                prompt=prompt,
+                data_source_type=data_source_type,
+                data_source_name=data_source_name,
+                syntax=syntax,
+                schema=schema if isinstance(schema, list) else None,
+                existing_query=existing_query,
+            )
+        except ValueError as exc:
+            abort(400, message=str(exc))
+        except Exception as exc:
+            abort(500, message=str(exc))
+
+        self.record_event(
+            {
+                "action": "assistant_generate_query",
+                "object_id": data_source_id,
+                "object_type": "data_source",
+            }
+        )
+        return {"query": query_text}
 
 
 class AssistantChatResource(BaseResource):

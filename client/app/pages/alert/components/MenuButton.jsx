@@ -1,10 +1,9 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import PropTypes from "prop-types";
 import cx from "classnames";
 
 import Modal from "antd/lib/modal";
 import Dropdown from "antd/lib/dropdown";
-import Menu from "antd/lib/menu";
 import Button from "antd/lib/button";
 
 import LoadingOutlinedIcon from "@ant-design/icons/LoadingOutlined";
@@ -38,28 +37,34 @@ export default function MenuButton({ doDelete, canEdit, mute, unmute, evaluate, 
     });
   }, [doDelete]);
 
+  const menuItems = useMemo(
+    () => [
+      {
+        key: "mute",
+        label: muted ? (
+          <PlainButton onClick={() => execute(unmute)}>Unmute Notifications</PlainButton>
+        ) : (
+          <PlainButton onClick={() => execute(mute)}>Mute Notifications</PlainButton>
+        ),
+      },
+      {
+        key: "delete",
+        label: <PlainButton onClick={confirmDelete}>Delete</PlainButton>,
+      },
+      {
+        key: "evaluate",
+        label: <PlainButton onClick={() => execute(evaluate)}>Evaluate</PlainButton>,
+      },
+    ],
+    [confirmDelete, evaluate, execute, mute, muted, unmute]
+  );
+
   return (
     <Dropdown
       className={cx("m-l-5", { disabled: !canEdit })}
       trigger={[canEdit ? "click" : undefined]}
       placement="bottomRight"
-      overlay={
-        <Menu>
-          <Menu.Item>
-            {muted ? (
-              <PlainButton onClick={() => execute(unmute)}>Unmute Notifications</PlainButton>
-            ) : (
-              <PlainButton onClick={() => execute(mute)}>Mute Notifications</PlainButton>
-            )}
-          </Menu.Item>
-          <Menu.Item>
-            <PlainButton onClick={confirmDelete}>Delete</PlainButton>
-          </Menu.Item>
-          <Menu.Item>
-            <PlainButton onClick={() => execute(evaluate)}>Evaluate</PlainButton>
-          </Menu.Item>
-        </Menu>
-      }>
+      menu={{ items: menuItems }}>
       <Button aria-label="More actions">
         {loading ? <LoadingOutlinedIcon /> : <EllipsisOutlinedIcon rotate={90} aria-hidden="true" />}
       </Button>

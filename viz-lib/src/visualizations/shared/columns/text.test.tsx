@@ -1,19 +1,17 @@
 import React from "react";
-import enzyme from "enzyme";
+import { render } from "@testing-library/react";
+
+import { toggleInput } from "@/testHelpers";
 
 import Column from "./text";
 
-function findByTestID(wrapper: any, testId: any) {
-  return wrapper.find(`[data-test="${testId}"]`);
-}
-
-function mount(column: any, done: any) {
-  return enzyme.mount(
+function renderEditor(column: any, done: any) {
+  return render(
     <Column.Editor
       // @ts-expect-error ts-migrate(2322) FIXME: Type '{ visualizationName: string; column: any; on... Remove this comment to see the full error message
       visualizationName="Test"
       column={column}
-      onChange={changedColumn => {
+      onChange={(changedColumn: any) => {
         expect(changedColumn).toMatchSnapshot();
         done();
       }}
@@ -24,7 +22,7 @@ function mount(column: any, done: any) {
 describe("Visualizations -> Table -> Columns -> Text", () => {
   describe("Editor", () => {
     test("Enables HTML content", done => {
-      const el = mount(
+      renderEditor(
         {
           name: "a",
           allowHTML: false,
@@ -33,14 +31,11 @@ describe("Visualizations -> Table -> Columns -> Text", () => {
         done
       );
 
-      findByTestID(el, "Table.ColumnEditor.Text.AllowHTML")
-        .last()
-        .find("input")
-        .simulate("change", { target: { checked: true } });
+      toggleInput("Table.ColumnEditor.Text.AllowHTML");
     });
 
     test("Enables highlight links option", done => {
-      const el = mount(
+      renderEditor(
         {
           name: "a",
           allowHTML: true,
@@ -49,10 +44,7 @@ describe("Visualizations -> Table -> Columns -> Text", () => {
         done
       );
 
-      findByTestID(el, "Table.ColumnEditor.Text.HighlightLinks")
-        .last()
-        .find("input")
-        .simulate("change", { target: { checked: true } });
+      toggleInput("Table.ColumnEditor.Text.HighlightLinks");
     });
   });
 });

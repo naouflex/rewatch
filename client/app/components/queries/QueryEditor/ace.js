@@ -9,6 +9,7 @@ import "ace-builds/src-noconflict/mode-python";
 import "ace-builds/src-noconflict/mode-sql";
 import "ace-builds/src-noconflict/mode-yaml";
 import "ace-builds/src-noconflict/theme-textmate";
+import "ace-builds/src-noconflict/theme-tomorrow_night";
 import "ace-builds/src-noconflict/ext-searchbox";
 
 ace.define("ace/mode/graphql", ["require", "exports", "module", "ace/mode/graphqlschema"], (require, exports) => {
@@ -32,6 +33,7 @@ defineDummySnippets("sql");
 defineDummySnippets("json");
 defineDummySnippets("yaml");
 defineDummySnippets("graphql");
+defineDummySnippets("graphqlschema");
 
 // without this line, ace will try to load a non-existent mode-custom.js file
 // for data sources with syntax = "custom"

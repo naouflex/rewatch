@@ -1,19 +1,17 @@
 import React from "react";
-import enzyme from "enzyme";
+import { render } from "@testing-library/react";
+
+import { changeInputValue } from "@/testHelpers";
 
 import Column from "./datetime";
 
-function findByTestID(wrapper: any, testId: any) {
-  return wrapper.find(`[data-test="${testId}"]`);
-}
-
-function mount(column: any, done: any) {
-  return enzyme.mount(
+function renderEditor(column: any, done: any) {
+  return render(
     <Column.Editor
       // @ts-expect-error ts-migrate(2322) FIXME: Type '{ visualizationName: string; column: any; on... Remove this comment to see the full error message
       visualizationName="Test"
       column={column}
-      onChange={changedColumn => {
+      onChange={(changedColumn: any) => {
         expect(changedColumn).toMatchSnapshot();
         done();
       }}
@@ -24,7 +22,7 @@ function mount(column: any, done: any) {
 describe("Visualizations -> Table -> Columns -> Date/Time", () => {
   describe("Editor", () => {
     test("Changes format", done => {
-      const el = mount(
+      renderEditor(
         {
           name: "a",
           dateTimeFormat: "YYYY-MM-DD HH:mm:ss",
@@ -32,10 +30,7 @@ describe("Visualizations -> Table -> Columns -> Date/Time", () => {
         done
       );
 
-      findByTestID(el, "Table.ColumnEditor.DateTime.Format")
-        .last()
-        .find("input")
-        .simulate("change", { target: { value: "YYYY/MM/DD HH:ss" } });
+      changeInputValue("Table.ColumnEditor.DateTime.Format", "YYYY/MM/DD HH:ss");
     });
   });
 });

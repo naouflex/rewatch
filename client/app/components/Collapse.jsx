@@ -8,11 +8,16 @@ export default function Collapse({ collapsed, children, className, ...props }) {
     <AntCollapse
       {...props}
       activeKey={collapsed ? null : "content"}
-      className={cx(className, "ant-collapse-headerless")}>
-      <AntCollapse.Panel key="content" header="">
-        {children}
-      </AntCollapse.Panel>
-    </AntCollapse>
+      className={cx(className, "ant-collapse-headerless")}
+      items={[
+        {
+          key: "content",
+          label: "",
+          showArrow: false,
+          children,
+        },
+      ]}
+    />
   );
 }
 

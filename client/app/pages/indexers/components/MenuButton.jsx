@@ -1,10 +1,9 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import PropTypes from "prop-types";
 import cx from "classnames";
 
 import Modal from "antd/lib/modal";
 import Dropdown from "antd/lib/dropdown";
-import Menu from "antd/lib/menu";
 import Button from "antd/lib/button";
 
 import LoadingOutlinedIcon from "@ant-design/icons/LoadingOutlined";
@@ -38,27 +37,31 @@ export default function MenuButton({ doDelete, canEdit, archived, doArchive, doU
     });
   }, [doDelete]);
 
+  const menuItems = useMemo(
+    () => [
+      archived
+        ? {
+            key: "unarchive",
+            label: <PlainButton onClick={() => execute(doUnarchive)}>Unarchive</PlainButton>,
+          }
+        : {
+            key: "archive",
+            label: <PlainButton onClick={() => execute(doArchive)}>Archive</PlainButton>,
+          },
+      {
+        key: "delete",
+        label: <PlainButton onClick={confirmDelete}>Delete</PlainButton>,
+      },
+    ],
+    [archived, confirmDelete, doArchive, doUnarchive, execute]
+  );
+
   return (
     <Dropdown
       className={cx("m-l-5", { disabled: !canEdit })}
       trigger={[canEdit ? "click" : undefined]}
       placement="bottomRight"
-      overlay={
-        <Menu>
-          {archived ? (
-            <Menu.Item>
-              <PlainButton onClick={() => execute(doUnarchive)}>Unarchive</PlainButton>
-            </Menu.Item>
-          ) : (
-            <Menu.Item>
-              <PlainButton onClick={() => execute(doArchive)}>Archive</PlainButton>
-            </Menu.Item>
-          )}
-          <Menu.Item>
-            <PlainButton onClick={confirmDelete}>Delete</PlainButton>
-          </Menu.Item>
-        </Menu>
-      }>
+      menu={{ items: menuItems }}>
       <Button aria-label="More actions">
         {loading ? <LoadingOutlinedIcon /> : <EllipsisOutlinedIcon rotate={90} aria-hidden="true" />}
       </Button>

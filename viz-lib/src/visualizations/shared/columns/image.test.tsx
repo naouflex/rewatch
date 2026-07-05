@@ -1,19 +1,17 @@
 import React from "react";
-import enzyme from "enzyme";
+import { render } from "@testing-library/react";
+
+import { changeInputValue } from "@/testHelpers";
 
 import Column from "./image";
 
-function findByTestID(wrapper: any, testId: any) {
-  return wrapper.find(`[data-test="${testId}"]`);
-}
-
-function mount(column: any, done: any) {
-  return enzyme.mount(
+function renderEditor(column: any, done: any) {
+  return render(
     <Column.Editor
       // @ts-expect-error ts-migrate(2322) FIXME: Type '{ visualizationName: string; column: any; on... Remove this comment to see the full error message
       visualizationName="Test"
       column={column}
-      onChange={changedColumn => {
+      onChange={(changedColumn: any) => {
         expect(changedColumn).toMatchSnapshot();
         done();
       }}
@@ -24,7 +22,7 @@ function mount(column: any, done: any) {
 describe("Visualizations -> Table -> Columns -> Image", () => {
   describe("Editor", () => {
     test("Changes URL template", done => {
-      const el = mount(
+      renderEditor(
         {
           name: "a",
           imageUrlTemplate: "{{ @ }}",
@@ -32,14 +30,11 @@ describe("Visualizations -> Table -> Columns -> Image", () => {
         done
       );
 
-      findByTestID(el, "Table.ColumnEditor.Image.UrlTemplate")
-        .last()
-        .find("input")
-        .simulate("change", { target: { value: "http://{{ @ }}.jpeg" } });
+      changeInputValue("Table.ColumnEditor.Image.UrlTemplate", "http://{{ @ }}.jpeg");
     });
 
     test("Changes width", done => {
-      const el = mount(
+      renderEditor(
         {
           name: "a",
           imageWidth: null,
@@ -47,14 +42,11 @@ describe("Visualizations -> Table -> Columns -> Image", () => {
         done
       );
 
-      findByTestID(el, "Table.ColumnEditor.Image.Width")
-        .last()
-        .find("input")
-        .simulate("change", { target: { value: "400" } });
+      changeInputValue("Table.ColumnEditor.Image.Width", "400");
     });
 
     test("Changes height", done => {
-      const el = mount(
+      renderEditor(
         {
           name: "a",
           imageHeight: null,
@@ -62,14 +54,11 @@ describe("Visualizations -> Table -> Columns -> Image", () => {
         done
       );
 
-      findByTestID(el, "Table.ColumnEditor.Image.Height")
-        .last()
-        .find("input")
-        .simulate("change", { target: { value: "300" } });
+      changeInputValue("Table.ColumnEditor.Image.Height", "300");
     });
 
     test("Changes title template", done => {
-      const el = mount(
+      renderEditor(
         {
           name: "a",
           imageUrlTemplate: "{{ @ }}",
@@ -77,10 +66,7 @@ describe("Visualizations -> Table -> Columns -> Image", () => {
         done
       );
 
-      findByTestID(el, "Table.ColumnEditor.Image.TitleTemplate")
-        .last()
-        .find("input")
-        .simulate("change", { target: { value: "Image {{ @ }}" } });
+      changeInputValue("Table.ColumnEditor.Image.TitleTemplate", "Image {{ @ }}");
     });
   });
 });

@@ -18,5 +18,14 @@
 }
 
 .plain-button-link {
-  .btn-link();
+  color: @primary-color;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+
+  &:hover,
+  &:focus {
+    color: darken(@primary-color, 8%);
+    text-decoration: underline;
+  }
 }

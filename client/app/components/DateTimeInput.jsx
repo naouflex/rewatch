@@ -1,6 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
-import DatePicker from "antd/lib/date-picker";
+import DatePicker from "@/components/momentPickers";
 import { clientConfig } from "@/services/auth";
 import { Moment } from "@/components/proptypes";
 

@@ -17,27 +17,27 @@ const SwappedMappingTypes = {
   y: { label: "X Columns", multiple: true },
 };
 
-type OwnProps = {
-  value?: string | string[];
+type Props = {
+  value?: string | string[] | null;
   availableColumns?: string[];
   type?: any; // TODO: PropTypes.oneOf(keys(MappingTypes))
   onChange?: (...args: any[]) => any;
+  areAxesSwapped?: boolean;
 };
 
-const columnMappingSelectDefaultProps = {
-  value: null,
-  availableColumns: [],
-  type: null,
-  onChange: () => {},
-};
-
-type Props = OwnProps & typeof columnMappingSelectDefaultProps;
-
-export default function ColumnMappingSelect({ value, availableColumns, type, onChange, areAxesSwapped }: Props) {
+export default function ColumnMappingSelect({
+  value = null,
+  availableColumns = [],
+  type = null,
+  onChange = () => {},
+  areAxesSwapped = false,
+}: Props) {
   const options = sortBy(filter(uniq(flatten([availableColumns, value])), v => isString(v) && v !== ""));
 
   // this swaps the ui, as the data will be swapped on render
-  const { label, multiple } = !areAxesSwapped ? MappingTypes[type] : SwappedMappingTypes[type];
+  const { label, multiple } = !areAxesSwapped
+    ? (MappingTypes as Record<string, any>)[type]
+    : (SwappedMappingTypes as Record<string, any>)[type];
 
   return (
     // @ts-expect-error ts-migrate(2745) FIXME: This JSX tag's 'children' prop expects type 'never... Remove this comment to see the full error message
@@ -50,7 +50,6 @@ export default function ColumnMappingSelect({ value, availableColumns, type, onC
         showSearch
         placeholder={multiple ? "Choose columns..." : "Choose column..."}
         value={value || undefined}
-        // @ts-expect-error ts-migrate(2349) FIXME: This expression is not callable.
         onChange={(column: any) => onChange(column || null, type)}>
         {map(options, c => (
           // @ts-expect-error ts-migrate(2339) FIXME: Property 'Option' does not exist on type '({ class... Remove this comment to see the full error message
@@ -63,7 +62,5 @@ export default function ColumnMappingSelect({ value, availableColumns, type, onC
     </Section>
   );
 }
-
-ColumnMappingSelect.defaultProps = columnMappingSelectDefaultProps;
 
 ColumnMappingSelect.MappingTypes = MappingTypes;

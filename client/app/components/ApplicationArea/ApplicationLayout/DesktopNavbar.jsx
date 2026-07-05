@@ -8,27 +8,23 @@ import CreateDashboardDialog from "@/components/dashboards/CreateDashboardDialog
 import { useCurrentRoute } from "@/components/ApplicationArea/Router";
 import { Auth, clientConfig, currentUser, subscribeToCurrentUser } from "@/services/auth";
 import settingsMenu from "@/services/settingsMenu";
+import { APPLICATION_TITLE, getApiDocsUrl } from "@/config/brand";
 import logoUrl from "@/assets/images/icon_small.png";
 
-import DesktopOutlinedIcon from "@ant-design/icons/DesktopOutlined";
-import CodeOutlinedIcon from "@ant-design/icons/CodeOutlined";
-import AlertOutlinedIcon from "@ant-design/icons/AlertOutlined";
-import DatabaseOutlinedIcon from "@ant-design/icons/DatabaseOutlined";
-import ExperimentOutlinedIcon from "@ant-design/icons/ExperimentOutlined";
-import MessageOutlinedIcon from "@ant-design/icons/MessageOutlined";
-import PlusOutlinedIcon from "@ant-design/icons/PlusOutlined";
-import QuestionCircleOutlinedIcon from "@ant-design/icons/QuestionCircleOutlined";
-import SettingOutlinedIcon from "@ant-design/icons/SettingOutlined";
 import ThemeToggle from "@/components/ThemeToggle";
 import VersionInfo from "./VersionInfo";
 
 import "./DesktopNavbar.less";
 
-function NavbarSection({ children, ...props }) {
+function NavbarSection({ items, className, ...props }) {
   return (
-    <Menu selectable={false} mode="vertical" {...props}>
-      {children}
-    </Menu>
+    <Menu
+      selectable={false}
+      mode="horizontal"
+      className={`desktop-navbar-menu ${className || ""}`}
+      items={items}
+      {...props}
+    />
   );
 }
 
@@ -144,226 +140,328 @@ export default function DesktopNavbar() {
   const canCreateModel = currentUser.hasPermission("create_model");
   const canListModels = currentUser.hasPermission("list_models");
 
-  return (
-    <nav className="desktop-navbar">
-      <NavbarSection className="desktop-navbar-logo">
-        <div role="menuitem">
-          <Link href="./">
-            <img src={logoUrl} alt="Redash" />
+  const mainNavItems = useMemo(() => {
+    const items = [];
+
+    if (currentUser.hasPermission("list_dashboards")) {
+      items.push({
+        key: "dashboards",
+        className: activeState.dashboards ? "navbar-active-item" : null,
+        label: (
+          <Link href="dashboards">
+            <span className="desktop-navbar-label">Dashboards</span>
           </Link>
-        </div>
-      </NavbarSection>
+        ),
+      });
+    }
 
-      <NavbarSection className="desktop-navbar-scroll">
-        {currentUser.hasPermission("list_dashboards") && (
-          <Menu.Item key="dashboards" className={activeState.dashboards ? "navbar-active-item" : null}>
-            <Link href="dashboards">
-              <DesktopOutlinedIcon aria-label="Dashboard navigation button" />
-              <span className="desktop-navbar-label">Dashboards</span>
-            </Link>
-          </Menu.Item>
-        )}
-        {currentUser.hasPermission("view_query") && (
-          <Menu.SubMenu
-            key="queries"
-            popupClassName="desktop-navbar-submenu"
-            className={activeState.queries ? "navbar-active-item" : null}
-            title={
-              <Link href="queries" className="navbar-submenu-title">
-                <CodeOutlinedIcon aria-label="Queries navigation button" />
-                <span className="desktop-navbar-label">Queries</span>
-              </Link>
-            }>
-            <Menu.Item key="queries-list">
-              <Link href="queries">Queries</Link>
-            </Menu.Item>
-            {currentUser.hasPermission("list_query_snippets") && (
-              <Menu.Item key="query-snippets">
-                <Link href="query_snippets">Query Snippets</Link>
-              </Menu.Item>
-            )}
-          </Menu.SubMenu>
-        )}
-        {currentUser.hasPermission("list_alerts") && (
-          <Menu.SubMenu
-            key="alerts"
-            popupClassName="desktop-navbar-submenu"
-            className={activeState.alerts ? "navbar-active-item" : null}
-            title={
-              <Link href="alerts" className="navbar-submenu-title">
-                <AlertOutlinedIcon aria-label="Alerts navigation button" />
-                <span className="desktop-navbar-label">Alerts</span>
-              </Link>
-            }>
-            <Menu.Item key="alerts-list">
-              <Link href="alerts">Alerts</Link>
-            </Menu.Item>
-            <Menu.Item key="alerts-history">
-              <Link href="alert_events">Alerts History</Link>
-            </Menu.Item>
-            {currentUser.hasPermission("list_destinations") && (
-              <Menu.Item key="alert-destinations">
-                <Link href="destinations">Destinations</Link>
-              </Menu.Item>
-            )}
-          </Menu.SubMenu>
-        )}
-        {currentUser.hasPermission("list_indexers") && (
-          <Menu.Item key="indexers" className={activeState.indexers ? "navbar-active-item" : null}>
-            <Link href="indexers">
-              <DatabaseOutlinedIcon aria-label="Indexers navigation button" />
-              <span className="desktop-navbar-label">Indexers</span>
-            </Link>
-          </Menu.Item>
-        )}
-        {canListModels && (
-          <Menu.SubMenu
-            key="models"
-            popupClassName="desktop-navbar-submenu"
-            className={activeState.models ? "navbar-active-item" : null}
-            title={
-              <Link href="ml_models" className="navbar-submenu-title">
-                <ExperimentOutlinedIcon aria-label="Models navigation button" />
-                <span className="desktop-navbar-label">Models</span>
-              </Link>
-            }>
-            <Menu.Item key="models-list">
-              <Link href="ml_models">Models</Link>
-            </Menu.Item>
-            <Menu.Item key="models-versions">
-              <Link href="ml_models_versions">Versions</Link>
-            </Menu.Item>
-            <Menu.Item key="predictions-list">
-              <Link href="predictions">Predictions</Link>
-            </Menu.Item>
-          </Menu.SubMenu>
-        )}
-        {clientConfig.assistantEnabled && (
-          <Menu.Item key="assistant" className={activeState.assistant ? "navbar-active-item" : null}>
-            <Link href="assistant">
-              <MessageOutlinedIcon aria-label="Assistant navigation button" />
-              <span className="desktop-navbar-label">Assistant</span>
-            </Link>
-          </Menu.Item>
-        )}
-      </NavbarSection>
+    if (currentUser.hasPermission("view_query")) {
+      items.push({
+        key: "queries",
+        popupClassName: "desktop-navbar-submenu",
+        className: activeState.queries ? "navbar-active-item" : null,
+        label: (
+          <Link href="queries" className="navbar-submenu-title">
+            <span className="desktop-navbar-label">Queries</span>
+          </Link>
+        ),
+        children: [
+          {
+            key: "queries-list",
+            label: <Link href="queries">Queries</Link>,
+          },
+          ...(currentUser.hasPermission("list_query_snippets")
+            ? [
+                {
+                  key: "query-snippets",
+                  label: <Link href="query_snippets">Query Snippets</Link>,
+                },
+              ]
+            : []),
+        ],
+      });
+    }
 
-      <NavbarSection>
-        {(canCreateQuery ||
-          canCreateDashboard ||
-          canCreateAlert ||
-          canCreateDestination ||
-          canCreateIndexer ||
-          canCreateModel) && (
-          <Menu.SubMenu
-            key="create"
-            popupClassName="desktop-navbar-submenu"
-            data-test="CreateButton"
-            tabIndex={0}
-            title={
-              <React.Fragment>
-                <PlusOutlinedIcon />
-                <span className="desktop-navbar-label">Create</span>
-              </React.Fragment>
-            }>
-            {canCreateQuery && (
-              <Menu.Item key="new-query">
-                <Link href="queries/new" data-test="CreateQueryMenuItem">
-                  New Query
-                </Link>
-              </Menu.Item>
-            )}
-            {canCreateDashboard && (
-              <Menu.Item key="new-dashboard">
-                <PlainButton data-test="CreateDashboardMenuItem" onClick={() => CreateDashboardDialog.showModal()}>
-                  New Dashboard
-                </PlainButton>
-              </Menu.Item>
-            )}
-            {canCreateAlert && (
-              <Menu.Item key="new-alert">
-                <Link data-test="CreateAlertMenuItem" href="alerts/new">
-                  New Alert
-                </Link>
-              </Menu.Item>
-            )}
-            {canCreateDestination && (
-              <Menu.Item key="new-destination">
-                <Link data-test="CreateDestinationMenuItem" href="destinations/new">
-                  New Alert Destination
-                </Link>
-              </Menu.Item>
-            )}
-            {canCreateIndexer && (
-              <Menu.Item key="new-indexer">
-                <Link data-test="CreateIndexerMenuItem" href="indexers/new">
-                  New Indexer
-                </Link>
-              </Menu.Item>
-            )}
-            {canCreateModel && (
-              <Menu.Item key="new-model">
-                <Link data-test="CreateMLModelMenuItem" href="ml_models/new">
-                  New Model
-                </Link>
-              </Menu.Item>
-            )}
-          </Menu.SubMenu>
-        )}
-      </NavbarSection>
+    if (currentUser.hasPermission("list_alerts")) {
+      items.push({
+        key: "alerts",
+        popupClassName: "desktop-navbar-submenu",
+        className: activeState.alerts ? "navbar-active-item" : null,
+        label: (
+          <Link href="alerts" className="navbar-submenu-title">
+            <span className="desktop-navbar-label">Alerts</span>
+          </Link>
+        ),
+        children: [
+          {
+            key: "alerts-list",
+            label: <Link href="alerts">Alerts</Link>,
+          },
+          {
+            key: "alerts-history",
+            label: <Link href="alert_events">Alerts History</Link>,
+          },
+          ...(currentUser.hasPermission("list_destinations")
+            ? [
+                {
+                  key: "alert-destinations",
+                  label: <Link href="destinations">Destinations</Link>,
+                },
+              ]
+            : []),
+        ],
+      });
+    }
 
-      <NavbarSection>
-        <Menu.Item key="help">
-          <HelpTrigger showTooltip={false} type="HOME" tabIndex={0}>
-            <QuestionCircleOutlinedIcon />
-            <span className="desktop-navbar-label">Help</span>
-          </HelpTrigger>
-        </Menu.Item>
-        {firstSettingsTab && (
-          <Menu.Item key="settings" className={activeState.dataSources ? "navbar-active-item" : null}>
-            <Link href={firstSettingsTab.path} data-test="SettingsLink">
-              <SettingOutlinedIcon />
-              <span className="desktop-navbar-label">Settings</span>
-            </Link>
-          </Menu.Item>
-        )}
-        
+    if (currentUser.hasPermission("list_indexers")) {
+      items.push({
+        key: "indexers",
+        className: activeState.indexers ? "navbar-active-item" : null,
+        label: (
+          <Link href="indexers">
+            <span className="desktop-navbar-label">Indexers</span>
+          </Link>
+        ),
+      });
+    }
 
-        <Menu.Item key="theme" className="desktop-navbar-theme-item" data-test="ThemeToggle">
-          <ThemeToggle />
-        </Menu.Item>
-      </NavbarSection>
+    if (canListModels) {
+      items.push({
+        key: "models",
+        popupClassName: "desktop-navbar-submenu",
+        className: activeState.models ? "navbar-active-item" : null,
+        label: (
+          <Link href="ml_models" className="navbar-submenu-title">
+            <span className="desktop-navbar-label">Models</span>
+          </Link>
+        ),
+        children: [
+          {
+            key: "models-list",
+            label: <Link href="ml_models">Models</Link>,
+          },
+          {
+            key: "models-versions",
+            label: <Link href="ml_models_versions">Versions</Link>,
+          },
+          {
+            key: "predictions-list",
+            label: <Link href="predictions">Predictions</Link>,
+          },
+        ],
+      });
+    }
 
-      <NavbarSection className="desktop-navbar-profile-menu">
-        <Menu.SubMenu
-          key="profile"
-          popupClassName="desktop-navbar-submenu"
-          tabIndex={0}
-          title={
-            <span data-test="ProfileDropdown" className="desktop-navbar-profile-menu-title">
-              <img className="profile__image_thumb" src={currentUser.profile_image_url} alt={currentUser.name} />
-            </span>
-          }>
-          <Menu.Item key="profile">
-            <Link href="users/me">Profile</Link>
-          </Menu.Item>
-          {currentUser.hasPermission("super_admin") && (
-            <Menu.Item key="status">
-              <Link href="admin/status">System Status</Link>
-            </Menu.Item>
-          )}
-          <Menu.Divider />
-          <Menu.Item key="logout">
+    if (clientConfig.assistantEnabled) {
+      items.push({
+        key: "assistant",
+        className: activeState.assistant ? "navbar-active-item" : null,
+        label: (
+          <Link href="assistant">
+            <span className="desktop-navbar-label">Assistant</span>
+          </Link>
+        ),
+      });
+    }
+
+    return items;
+  }, [activeState, canListModels]);
+
+  const utilityNavItems = useMemo(() => {
+    const items = [];
+
+    if (canCreateQuery || canCreateDashboard || canCreateAlert || canCreateDestination || canCreateIndexer || canCreateModel) {
+      items.push({
+        key: "create",
+        popupClassName: "desktop-navbar-submenu",
+        className: "desktop-navbar-create-item",
+        "data-test": "CreateButton",
+        tabIndex: 0,
+        label: <span className="desktop-navbar-label">Create</span>,
+        children: [
+          ...(canCreateQuery
+            ? [
+                {
+                  key: "new-query",
+                  label: (
+                    <Link href="queries/new" data-test="CreateQueryMenuItem">
+                      New Query
+                    </Link>
+                  ),
+                },
+              ]
+            : []),
+          ...(canCreateDashboard
+            ? [
+                {
+                  key: "new-dashboard",
+                  label: (
+                    <PlainButton data-test="CreateDashboardMenuItem" onClick={() => CreateDashboardDialog.showModal()}>
+                      New Dashboard
+                    </PlainButton>
+                  ),
+                },
+              ]
+            : []),
+          ...(canCreateAlert
+            ? [
+                {
+                  key: "new-alert",
+                  label: (
+                    <Link data-test="CreateAlertMenuItem" href="alerts/new">
+                      New Alert
+                    </Link>
+                  ),
+                },
+              ]
+            : []),
+          ...(canCreateDestination
+            ? [
+                {
+                  key: "new-destination",
+                  label: (
+                    <Link data-test="CreateDestinationMenuItem" href="destinations/new">
+                      New Alert Destination
+                    </Link>
+                  ),
+                },
+              ]
+            : []),
+          ...(canCreateIndexer
+            ? [
+                {
+                  key: "new-indexer",
+                  label: (
+                    <Link data-test="CreateIndexerMenuItem" href="indexers/new">
+                      New Indexer
+                    </Link>
+                  ),
+                },
+              ]
+            : []),
+          ...(canCreateModel
+            ? [
+                {
+                  key: "new-model",
+                  label: (
+                    <Link data-test="CreateMLModelMenuItem" href="ml_models/new">
+                      New Model
+                    </Link>
+                  ),
+                },
+              ]
+            : []),
+        ],
+      });
+    }
+
+    items.push({
+      key: "api-docs",
+      label: (
+        /* eslint-disable-next-line react/jsx-no-target-blank */
+        <a href={getApiDocsUrl(clientConfig.basePath)} target="_blank" rel="noopener noreferrer">
+          <span className="desktop-navbar-label">API Docs</span>
+        </a>
+      ),
+    });
+
+    items.push({
+      key: "help",
+      label: (
+        <HelpTrigger showTooltip={false} type="HOME" tabIndex={0}>
+          <span className="desktop-navbar-label">Help</span>
+        </HelpTrigger>
+      ),
+    });
+
+    if (firstSettingsTab) {
+      items.push({
+        key: "settings",
+        className: activeState.dataSources ? "navbar-active-item" : null,
+        label: (
+          <Link href={firstSettingsTab.path} data-test="SettingsLink">
+            <span className="desktop-navbar-label">Settings</span>
+          </Link>
+        ),
+      });
+    }
+
+    items.push({
+      key: "theme",
+      className: "desktop-navbar-theme-item",
+      "data-test": "ThemeToggle",
+      label: <ThemeToggle />,
+    });
+
+    items.push({
+      key: "profile",
+      popupClassName: "desktop-navbar-submenu",
+      className: "desktop-navbar-profile-menu",
+      tabIndex: 0,
+      label: (
+        <span data-test="ProfileDropdown" className="desktop-navbar-profile-menu-title">
+          <img className="profile__image_thumb" src={currentUser.profile_image_url} alt={currentUser.name} />
+        </span>
+      ),
+      children: [
+        {
+          key: "profile",
+          label: <Link href="users/me">Profile</Link>,
+        },
+        ...(currentUser.hasPermission("super_admin")
+          ? [
+              {
+                key: "status",
+                label: <Link href="admin/status">System Status</Link>,
+              },
+            ]
+          : []),
+        { type: "divider" },
+        {
+          key: "logout",
+          label: (
             <PlainButton data-test="LogOutButton" onClick={() => Auth.logout()}>
               Log out
             </PlainButton>
-          </Menu.Item>
-          <Menu.Divider />
-          <Menu.Item key="version" role="presentation" disabled className="version-info">
-            <VersionInfo />
-          </Menu.Item>
-        </Menu.SubMenu>
-      </NavbarSection>
+          ),
+        },
+        { type: "divider" },
+        {
+          key: "version",
+          role: "presentation",
+          disabled: true,
+          className: "version-info",
+          label: <VersionInfo />,
+        },
+      ],
+    });
+
+    return items;
+  }, [
+    activeState.dataSources,
+    canCreateAlert,
+    canCreateDashboard,
+    canCreateDestination,
+    canCreateIndexer,
+    canCreateModel,
+    canCreateQuery,
+    firstSettingsTab,
+  ]);
+
+  return (
+    <nav className="desktop-navbar">
+      <div className="desktop-navbar-logo">
+        <Link href="./" className="desktop-navbar-logo-link">
+          <img src={logoUrl} alt="" />
+          <span className="desktop-navbar-logo-title">{APPLICATION_TITLE}</span>
+        </Link>
+      </div>
+
+      <NavbarSection className="desktop-navbar-main" items={mainNavItems} />
+
+      <div className="desktop-navbar-spacer" />
+
+      <NavbarSection className="desktop-navbar-utilities" items={utilityNavItems} />
     </nav>
   );
 }

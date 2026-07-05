@@ -1,19 +1,17 @@
 import React from "react";
-import enzyme from "enzyme";
+import { render } from "@testing-library/react";
+
+import { changeInputValue } from "@/testHelpers";
 
 import Column from "./number";
 
-function findByTestID(wrapper: any, testId: any) {
-  return wrapper.find(`[data-test="${testId}"]`);
-}
-
-function mount(column: any, done: any) {
-  return enzyme.mount(
+function renderEditor(column: any, done: any) {
+  return render(
     <Column.Editor
       // @ts-expect-error ts-migrate(2322) FIXME: Type '{ visualizationName: string; column: any; on... Remove this comment to see the full error message
       visualizationName="Test"
       column={column}
-      onChange={changedColumn => {
+      onChange={(changedColumn: any) => {
         expect(changedColumn).toMatchSnapshot();
         done();
       }}
@@ -24,7 +22,7 @@ function mount(column: any, done: any) {
 describe("Visualizations -> Table -> Columns -> Number", () => {
   describe("Editor", () => {
     test("Changes format", done => {
-      const el = mount(
+      renderEditor(
         {
           name: "a",
           numberFormat: "0[.]0000",
@@ -32,10 +30,7 @@ describe("Visualizations -> Table -> Columns -> Number", () => {
         done
       );
 
-      findByTestID(el, "Table.ColumnEditor.Number.Format")
-        .last()
-        .find("input")
-        .simulate("change", { target: { value: "0.00%" } });
+      changeInputValue("Table.ColumnEditor.Number.Format", "0.00%");
     });
   });
 });

@@ -1,26 +1,16 @@
 @mobileBreakpoint: ~"(max-width: 767px)";
 
 body #application-root {
-  @topMenuHeight: 49px;
+  @topMenuHeight: 48px;
 
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   justify-content: stretch;
   padding-bottom: 0 !important;
   height: 100%;
 
-  .application-layout-side-menu {
-    height: 100%;
-    position: relative;
-
-    @media @mobileBreakpoint {
-      display: none;
-    }
-  }
-
   .application-layout-top-menu {
     height: @topMenuHeight;
-    display: none;
     position: fixed;
     top: 0;
     left: 0;
@@ -28,8 +18,21 @@ body #application-root {
     box-sizing: border-box;
     z-index: 1000;
 
-    @media @mobileBreakpoint {
-      display: block;
+    .application-layout-desktop-nav {
+      height: 100%;
+
+      @media @mobileBreakpoint {
+        display: none;
+      }
+    }
+
+    .application-layout-mobile-nav {
+      display: none;
+      height: 100%;
+
+      @media @mobileBreakpoint {
+        display: block;
+      }
     }
   }
 
@@ -40,10 +43,7 @@ body #application-root {
 
     flex: 1 1 auto;
     padding-bottom: 15px;
-
-    @media @mobileBreakpoint {
-      margin-top: @topMenuHeight; // compensate for app header fixed position
-    }
+    margin-top: @topMenuHeight; // compensate for fixed app header
   }
 }
 
@@ -58,7 +58,6 @@ body.fixed-layout #application-root {
 }
 
 body.headless #application-root {
-  .application-layout-side-menu,
   .application-layout-top-menu {
     display: none !important;
   }
@@ -73,10 +72,6 @@ body.headless #application-root {
 @media only percy {
   body #application-root {
     height: auto;
-
-    .application-layout-side-menu {
-      height: auto;
-    }
 
     .application-layout-content {
       overflow: visible;

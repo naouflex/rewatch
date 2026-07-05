@@ -1,12 +1,11 @@
 import { find, has } from "lodash";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import PropTypes from "prop-types";
 import moment from "moment";
 import { markdown } from "markdown";
 
 import Button from "antd/lib/button";
 import Dropdown from "antd/lib/dropdown";
-import Menu from "antd/lib/menu";
 import Tooltip from "@/components/Tooltip";
 import Link from "@/components/Link";
 import routeWithApiKeySession from "@/components/ApplicationArea/routeWithApiKeySession";
@@ -65,42 +64,52 @@ function VisualizationEmbedFooter({
   hideTimestamp,
   apiKey,
 }) {
-  const downloadMenu = (
-    <Menu>
-      <Menu.Item>
-        <QueryResultsLink
-          fileType="csv"
-          query={query}
-          queryResult={queryResults}
-          apiKey={apiKey}
-          disabled={!queryResults || !queryResults.getData || !queryResults.getData()}
-          embed>
-          <FileOutlinedIcon /> Download as CSV File
-        </QueryResultsLink>
-      </Menu.Item>
-      <Menu.Item>
-        <QueryResultsLink
-          fileType="tsv"
-          query={query}
-          queryResult={queryResults}
-          apiKey={apiKey}
-          disabled={!queryResults || !queryResults.getData || !queryResults.getData()}
-          embed>
-          <FileOutlinedIcon /> Download as TSV File
-        </QueryResultsLink>
-      </Menu.Item>
-      <Menu.Item>
-        <QueryResultsLink
-          fileType="xlsx"
-          query={query}
-          queryResult={queryResults}
-          apiKey={apiKey}
-          disabled={!queryResults || !queryResults.getData || !queryResults.getData()}
-          embed>
-          <FileExcelOutlinedIcon /> Download as Excel File
-        </QueryResultsLink>
-      </Menu.Item>
-    </Menu>
+  const downloadMenuItems = useMemo(
+    () => [
+      {
+        key: "csv",
+        label: (
+          <QueryResultsLink
+            fileType="csv"
+            query={query}
+            queryResult={queryResults}
+            apiKey={apiKey}
+            disabled={!queryResults || !queryResults.getData || !queryResults.getData()}
+            embed>
+            <FileOutlinedIcon /> Download as CSV File
+          </QueryResultsLink>
+        ),
+      },
+      {
+        key: "tsv",
+        label: (
+          <QueryResultsLink
+            fileType="tsv"
+            query={query}
+            queryResult={queryResults}
+            apiKey={apiKey}
+            disabled={!queryResults || !queryResults.getData || !queryResults.getData()}
+            embed>
+            <FileOutlinedIcon /> Download as TSV File
+          </QueryResultsLink>
+        ),
+      },
+      {
+        key: "xlsx",
+        label: (
+          <QueryResultsLink
+            fileType="xlsx"
+            query={query}
+            queryResult={queryResults}
+            apiKey={apiKey}
+            disabled={!queryResults || !queryResults.getData || !queryResults.getData()}
+            embed>
+            <FileExcelOutlinedIcon /> Download as Excel File
+          </QueryResultsLink>
+        ),
+      },
+    ],
+    [apiKey, query, queryResults]
   );
 
   return (
@@ -125,7 +134,7 @@ function VisualizationEmbedFooter({
             </Link.Button>
           </Tooltip>
           {!query.hasParameters() && (
-            <Dropdown overlay={downloadMenu} disabled={!queryResults} trigger={["click"]} placement="topLeft">
+            <Dropdown menu={{ items: downloadMenuItems }} disabled={!queryResults} trigger={["click"]} placement="topLeft">
               <Button loading={!queryResults && !!refreshStartedAt} className="m-l-5">
                 Download Dataset
                 <i className="fa fa-caret-up m-l-5" aria-hidden="true" />

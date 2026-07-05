@@ -11,6 +11,7 @@ from redash.handlers.assistant import (
     AssistantChatResource,
     AssistantChatStreamResource,
     AssistantDashboardPreviewResource,
+    AssistantGenerateQueryResource,
     AssistantQueryPreviewResource,
     AssistantStatusResource,
     AssistantThreadListResource,
@@ -594,6 +595,11 @@ api.add_org_resource(
     endpoint="assistant_thread",
 )
 api.add_org_resource(AssistantChatResource, "/api/assistant/chat", endpoint="assistant_chat")
+api.add_org_resource(
+    AssistantGenerateQueryResource,
+    "/api/assistant/generate-query",
+    endpoint="assistant_generate_query",
+)
 api.add_org_resource(
     AssistantChatStreamResource,
     "/api/assistant/chat/stream",

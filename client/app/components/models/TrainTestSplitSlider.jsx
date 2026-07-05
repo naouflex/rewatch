@@ -3,7 +3,6 @@ import PropTypes from "prop-types";
 import Slider from "antd/lib/slider";
 import moment from "moment";
 
-import "antd/dist/antd.css";
 import "./TrainTestSplitSlider.less";
 
 class TrainTestSplitSlider extends React.Component {

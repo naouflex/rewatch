@@ -51,6 +51,24 @@ const Assistant = {
   deleteThread: threadId => axios.delete(`api/assistant/threads/${threadId}`),
   getMessages: threadId => axios.get(`api/assistant/threads/${threadId}/messages`),
   chat: ({ threadId, message }) => axios.post("api/assistant/chat", { thread_id: threadId, message }),
+  generateQuery: ({
+    prompt,
+    dataSourceId,
+    dataSourceType,
+    dataSourceName,
+    syntax,
+    schema,
+    existingQuery,
+  }) =>
+    axios.post("api/assistant/generate-query", {
+      prompt,
+      data_source_id: dataSourceId,
+      data_source_type: dataSourceType,
+      data_source_name: dataSourceName,
+      syntax,
+      schema,
+      existing_query: existingQuery,
+    }),
   chatStream: async ({ threadId, message, onEvent }) => {
     const response = await fetch("api/assistant/chat/stream", {
       method: "POST",

@@ -1,10 +1,9 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import PropTypes from "prop-types";
 import cx from "classnames";
 
 import Modal from "antd/lib/modal";
 import Dropdown from "antd/lib/dropdown";
-import Menu from "antd/lib/menu";
 import Button from "antd/lib/button";
 import Select from "antd/lib/select";
 import notification from "antd/lib/notification";
@@ -199,62 +198,100 @@ export default function MenuButton({
   const canTrain = stateTrain !== 'training';
   const canPredict = statePredict !== 'predicting' && stateTrain !== 'training';
 
+  const menuItems = useMemo(() => {
+    const items = [
+      {
+        key: "mute",
+        label: muted ? (
+          <PlainButton onClick={() => execute(unmute)}>Unmute Notifications</PlainButton>
+        ) : (
+          <PlainButton onClick={() => execute(mute)}>Mute Notifications</PlainButton>
+        ),
+      },
+      {
+        key: "delete",
+        label: <PlainButton onClick={confirmDelete}>Delete</PlainButton>,
+      },
+      {
+        key: "archive",
+        label: archived ? (
+          <PlainButton onClick={confirmUnarchive}>Unarchive</PlainButton>
+        ) : (
+          <PlainButton onClick={confirmArchive}>Archive</PlainButton>
+        ),
+      },
+    ];
+
+    if (canTrain) {
+      items.push({
+        key: "train",
+        label: <PlainButton onClick={() => execute(trainModel)}>Train Model</PlainButton>,
+      });
+    }
+    if (isTraining) {
+      items.push({
+        key: "stop-training",
+        label: <PlainButton onClick={handleStopTraining}>Stop Training</PlainButton>,
+      });
+    }
+    if (canPredict) {
+      items.push({
+        key: "predict",
+        label: <PlainButton onClick={() => execute(predict)}>Predict</PlainButton>,
+      });
+    }
+    if (isPredicting) {
+      items.push({
+        key: "stop-prediction",
+        label: <PlainButton onClick={handleStopPrediction}>Stop Prediction</PlainButton>,
+      });
+    }
+
+    items.push(
+      {
+        key: "revert",
+        label: <PlainButton onClick={showRevertModal}>Revert to Version</PlainButton>,
+      },
+      {
+        key: "create-from-version",
+        label: <PlainButton onClick={showCreateModal}>Create from Version</PlainButton>,
+      },
+      {
+        key: "copy",
+        label: <PlainButton onClick={showCopyModal}>Copy Model</PlainButton>,
+      }
+    );
+
+    return items;
+  }, [
+    archived,
+    canPredict,
+    canTrain,
+    confirmArchive,
+    confirmDelete,
+    confirmUnarchive,
+    execute,
+    handleStopPrediction,
+    handleStopTraining,
+    isPredicting,
+    isTraining,
+    mute,
+    muted,
+    predict,
+    showCopyModal,
+    showCreateModal,
+    showRevertModal,
+    trainModel,
+    unmute,
+  ]);
+
   return (
     <>
       <Dropdown
         className={cx("m-l-5", { disabled: !canEdit })}
         trigger={[canEdit ? "click" : undefined]}
         placement="bottomRight"
-        overlay={
-          <Menu>
-            <Menu.Item>
-              {muted ? (
-                <PlainButton onClick={() => execute(unmute)}>Unmute Notifications</PlainButton>
-              ) : (
-                <PlainButton onClick={() => execute(mute)}>Mute Notifications</PlainButton>
-              )}
-            </Menu.Item>
-            <Menu.Item>
-              <PlainButton onClick={confirmDelete}>Delete</PlainButton>
-            </Menu.Item>
-            <Menu.Item>
-              {archived ? (
-                <PlainButton onClick={confirmUnarchive}>Unarchive</PlainButton>
-              ) : (
-                <PlainButton onClick={confirmArchive}>Archive</PlainButton>
-              )}
-            </Menu.Item>
-            {canTrain && (
-              <Menu.Item>
-                <PlainButton onClick={() => execute(trainModel)}>Train Model</PlainButton>
-              </Menu.Item>
-            )}
-            {isTraining && (
-              <Menu.Item>
-                <PlainButton onClick={handleStopTraining}>Stop Training</PlainButton>
-              </Menu.Item>
-            )}
-            {canPredict && (
-              <Menu.Item>
-                <PlainButton onClick={() => execute(predict)}>Predict</PlainButton>
-              </Menu.Item>
-            )}
-            {isPredicting && (
-              <Menu.Item>
-                <PlainButton onClick={handleStopPrediction}>Stop Prediction</PlainButton>
-              </Menu.Item>
-            )}
-            <Menu.Item>
-              <PlainButton onClick={showRevertModal}>Revert to Version</PlainButton>
-            </Menu.Item>
-            <Menu.Item>
-              <PlainButton onClick={showCreateModal}>Create from Version</PlainButton>
-            </Menu.Item>
-            <Menu.Item>
-              <PlainButton onClick={showCopyModal}>Copy Model</PlainButton>
-            </Menu.Item>
-          </Menu>
-        }>
+        menu={{ items: menuItems }}>
         <Button aria-label="More actions">
           {loading ? <LoadingOutlinedIcon /> : <EllipsisOutlinedIcon rotate={90} aria-hidden="true" />}
         </Button>
@@ -262,7 +299,7 @@ export default function MenuButton({
 
       <Modal
         title="Revert Model Version"
-        visible={isRevertModalVisible}
+        open={isRevertModalVisible}
         onOk={handleRevertOk}
         onCancel={handleRevertCancel}
       >
@@ -287,7 +324,7 @@ export default function MenuButton({
 
       <Modal
         title="Create Model from Version"
-        visible={isCreateModalVisible}
+        open={isCreateModalVisible}
         onOk={handleCreateOk}
         onCancel={handleCreateCancel}
       >
@@ -312,7 +349,7 @@ export default function MenuButton({
 
       <Modal
         title="Copy Model"
-        visible={isCopyModalVisible}
+        open={isCopyModalVisible}
         onOk={handleCopyOk}
         onCancel={handleCopyCancel}
       >

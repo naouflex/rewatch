@@ -65,9 +65,15 @@ export function Menu({ items, selected }) {
   }
   return (
     <div className="m-b-10 tags-list tiled">
-      <AntdMenu className="invert-stripe-position" mode="inline" selectable={false} selectedKeys={[selected]}>
-        {map(items, item => (
-          <AntdMenu.Item key={item.key} className="m-0">
+      <AntdMenu
+        className="invert-stripe-position"
+        mode="inline"
+        selectable={false}
+        selectedKeys={[selected]}
+        items={map(items, item => ({
+          key: item.key,
+          className: "m-0",
+          label: (
             <Link href={item.href}>
               {isString(item.icon) && item.icon !== "" && (
                 <span className="btn-favorite m-r-5">
@@ -77,9 +83,9 @@ export function Menu({ items, selected }) {
               {isFunction(item.icon) && (item.icon(item) || null)}
               {item.title}
             </Link>
-          </AntdMenu.Item>
-        ))}
-      </AntdMenu>
+          ),
+        }))}
+      />
     </div>
   );
 }

@@ -1,14 +1,12 @@
 import React from "react";
-import enzyme from "enzyme";
+import { render, fireEvent } from "@testing-library/react";
+
+import { changeInputValue, clickByTestID, findByTestID, findInputByTestID, openSelect } from "@/testHelpers";
 
 import getOptions from "../getOptions";
 import ColumnsSettings from "./ColumnsSettings";
 
-function findByTestID(wrapper: any, testId: any) {
-  return wrapper.find(`[data-test="${testId}"]`);
-}
-
-function mount(options: any, done: any) {
+function renderSettings(options: any, done: any) {
   const data = {
     columns: [
       { name: "id", type: "integer" },
@@ -18,7 +16,7 @@ function mount(options: any, done: any) {
     rows: [{ id: 1, name: "test", created_at: "2023-01-01T00:00:00Z" }],
   };
   options = getOptions(options, data);
-  return enzyme.mount(
+  return render(
     <ColumnsSettings
       visualizationName="Details"
       data={data}
@@ -33,66 +31,44 @@ function mount(options: any, done: any) {
 
 describe("Visualizations -> Details -> Editor -> Columns Settings", () => {
   test("Toggles column visibility", done => {
-    const el = mount({}, done);
+    renderSettings({}, done);
 
-    findByTestID(el, "Details.Column.id.Visibility")
-      .last()
-      .simulate("click");
+    clickByTestID("Details.Column.id.Visibility");
   });
 
   test("Changes column title", done => {
-    const el = mount({}, done);
-    findByTestID(el, "Details.Column.name.Name")
-      .last()
-      .simulate("click"); // expand settings
+    renderSettings({}, done);
+    clickByTestID("Details.Column.name.Name"); // expand settings
 
-    findByTestID(el, "Details.Column.name.Title")
-      .last()
-      .simulate("change", { target: { value: "Full Name" } });
+    changeInputValue("Details.Column.name.Title", "Full Name");
   });
 
   test("Changes column alignment", done => {
-    const el = mount({}, done);
-    findByTestID(el, "Details.Column.id.Name")
-      .last()
-      .simulate("click"); // expand settings
+    renderSettings({}, done);
+    clickByTestID("Details.Column.id.Name"); // expand settings
 
-    findByTestID(el, "Details.Column.id.TextAlignment")
-      .last()
-      .find('[data-test="TextAlignmentSelect.Center"] input')
-      .simulate("change", { target: { checked: true } });
+    const alignment = findByTestID("Details.Column.id.TextAlignment");
+    fireEvent.click(findInputByTestID("TextAlignmentSelect.Center", alignment));
   });
 
   test("Changes column description", done => {
-    const el = mount({}, done);
-    findByTestID(el, "Details.Column.name.Name")
-      .last()
-      .simulate("click"); // expand settings
+    renderSettings({}, done);
+    clickByTestID("Details.Column.name.Name"); // expand settings
 
-    findByTestID(el, "Details.Column.name.Description")
-      .last()
-      .simulate("change", { target: { value: "User full name" } });
+    changeInputValue("Details.Column.name.Description", "User full name");
   });
 
   test("Changes column display type", done => {
-    const el = mount({}, done);
-    findByTestID(el, "Details.Column.created_at.Name")
-      .last()
-      .simulate("click"); // expand settings
+    renderSettings({}, done);
+    clickByTestID("Details.Column.created_at.Name"); // expand settings
 
-    findByTestID(el, "Details.Column.created_at.DisplayAs")
-      .last()
-      .simulate("mouseDown");
-    findByTestID(el, "Details.Column.created_at.DisplayAs.string")
-      .last()
-      .simulate("click");
+    openSelect("Details.Column.created_at.DisplayAs");
+    clickByTestID("Details.Column.created_at.DisplayAs.string");
   });
 
   test("Hides multiple columns", done => {
-    const el = mount({}, done);
+    renderSettings({}, done);
 
-    findByTestID(el, "Details.Column.id.Visibility")
-      .last()
-      .simulate("click");
+    clickByTestID("Details.Column.id.Visibility");
   });
 });

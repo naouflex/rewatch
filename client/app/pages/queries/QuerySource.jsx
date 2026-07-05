@@ -15,6 +15,7 @@ import { ExecutionStatus } from "@/services/query-result";
 import routes from "@/services/routes";
 import notification from "@/services/notification";
 import * as queryFormat from "@/lib/queryFormat";
+import { clientConfig } from "@/services/auth";
 
 import QueryPageHeader from "./components/QueryPageHeader";
 import QueryMetadata from "./components/QueryMetadata";
@@ -266,6 +267,10 @@ function QuerySource(props) {
                       autocompleteEnabled={autocompleteAvailable && autocompleteEnabled}
                       onChange={handleQueryEditorChange}
                       onSelectionChange={setSelectedText}
+                      promptLineEnabled={clientConfig.assistantEnabled}
+                      dataSourceId={dataSource ? dataSource.id : null}
+                      dataSourceType={dataSource ? dataSource.type : null}
+                      dataSourceName={dataSource ? dataSource.name : null}
                     />
 
                     <QueryEditor.Controls

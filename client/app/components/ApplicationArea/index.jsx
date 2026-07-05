@@ -1,5 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import ConfigProvider from "antd/lib/config-provider";
+
+import { buildAntdTheme } from "@/config/antdTheme";
 import routes from "@/services/routes";
+import { getResolvedTheme, subscribeToTheme } from "@/services/theme";
 import Router from "./Router";
 import handleNavigationIntent from "./handleNavigationIntent";
 import ErrorMessage from "./ErrorMessage";
@@ -7,6 +11,15 @@ import ErrorMessage from "./ErrorMessage";
 export default function ApplicationArea() {
   const [currentRoute, setCurrentRoute] = useState(null);
   const [unhandledError, setUnhandledError] = useState(null);
+  const [resolvedTheme, setResolvedTheme] = useState(getResolvedTheme);
+
+  const antdTheme = useMemo(() => buildAntdTheme(resolvedTheme), [resolvedTheme]);
+
+  useEffect(() => {
+    return subscribeToTheme(({ resolved }) => {
+      setResolvedTheme(resolved);
+    });
+  }, []);
 
   useEffect(() => {
     if (currentRoute && currentRoute.title) {
@@ -37,8 +50,16 @@ export default function ApplicationArea() {
   }, []);
 
   if (unhandledError) {
-    return <ErrorMessage error={unhandledError} />;
+    return (
+      <ConfigProvider theme={antdTheme}>
+        <ErrorMessage error={unhandledError} />
+      </ConfigProvider>
+    );
   }
 
-  return <Router routes={routes.items} onRouteChange={setCurrentRoute} />;
+  return (
+    <ConfigProvider theme={antdTheme}>
+      <Router routes={routes.items} onRouteChange={setCurrentRoute} />
+    </ConfigProvider>
+  );
 }

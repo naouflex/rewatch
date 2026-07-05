@@ -351,8 +351,8 @@ class MappingEditor extends React.Component {
         placement="left"
         trigger="click"
         content={this.renderContent()}
-        visible={visible}
-        onVisibleChange={this.onVisibleChange}
+        open={visible}
+        onOpenChange={this.onVisibleChange}
       >
         <Button size="small" type="dashed" data-test={`EditParamMappingButton-${mapping.param.name}`}>
           <EditOutlinedIcon />
@@ -461,8 +461,8 @@ class TitleEditor extends React.Component {
         placement="right"
         trigger="click"
         content={this.renderPopover()}
-        visible={this.state.showPopup}
-        onVisibleChange={this.onPopupVisibleChange}
+        open={this.state.showPopup}
+        onOpenChange={this.onPopupVisibleChange}
       >
         <Button size="small" type="dashed">
           <EditOutlinedIcon />
@@ -581,7 +581,7 @@ export class ParameterMappingListInput extends React.Component {
 
     return (
       <div className="parameters-mapping-list">
-        <Table dataSource={dataSource} size="middle" pagination={false} rowKey={(record, idx) => `row${idx}`}>
+        <Table dataSource={dataSource} size="medium" pagination={false} rowKey={(record, idx) => `row${idx}`}>
           <Table.Column
             title="Title"
             dataIndex="mapping"

@@ -1,17 +1,15 @@
 import React from "react";
-import enzyme from "enzyme";
+import { render } from "@testing-library/react";
+
+import { clickByTestID, openSelect } from "@/testHelpers";
 
 import getOptions from "../getOptions";
 import GridSettings from "./GridSettings";
 
-function findByTestID(wrapper: any, testId: any) {
-  return wrapper.find(`[data-test="${testId}"]`);
-}
-
-function mount(options: any, done: any) {
+function renderSettings(options: any, done: any) {
   const data = { columns: [], rows: [] };
   options = getOptions(options, data);
-  return enzyme.mount(
+  return render(
     <GridSettings
       visualizationName="Test"
       data={data}
@@ -26,18 +24,14 @@ function mount(options: any, done: any) {
 
 describe("Visualizations -> Table -> Editor -> Grid Settings", () => {
   test("Changes items per page", done => {
-    const el = mount(
+    renderSettings(
       {
         itemsPerPage: 25,
       },
       done
     );
 
-    findByTestID(el, "Table.ItemsPerPage")
-      .last()
-      .simulate("mouseDown");
-    findByTestID(el, "Table.ItemsPerPage.100")
-      .last()
-      .simulate("click");
+    openSelect("Table.ItemsPerPage");
+    clickByTestID("Table.ItemsPerPage.100");
   });
 });

@@ -16,7 +16,7 @@ import { validateColor } from "./utils";
 
 import "./index.less";
 
-type OwnProps = {
+type Props = {
   color?: string;
   placement?:
     | "top"
@@ -35,42 +35,30 @@ type OwnProps = {
     | string[]
     | {
         [key: string]: string;
-      };
+      }
+    | null;
   presetColumns?: number;
   interactive?: boolean;
-  triggerProps?: any;
+  triggerProps?: Record<string, any>;
   children?: React.ReactNode;
   addonBefore?: React.ReactNode;
   addonAfter?: React.ReactNode;
   onChange?: (...args: any[]) => any;
+  [key: string]: any;
 };
-
-const colorPickerDefaultProps = {
-  color: "#FFFFFF",
-  placement: "top",
-  presetColors: null,
-  presetColumns: 8,
-  interactive: false,
-  triggerProps: {} as Record<string, any>,
-  children: null,
-  addonBefore: null,
-  addonAfter: null,
-  onChange: () => {},
-};
-
-type Props = OwnProps & typeof colorPickerDefaultProps;
 
 export default function ColorPicker({
-  color,
-  placement,
-  presetColors,
-  presetColumns,
-  interactive,
-  children,
-  onChange,
-  triggerProps,
-  addonBefore,
-  addonAfter,
+  color = "#FFFFFF",
+  placement = "top",
+  presetColors = null,
+  presetColumns = 8,
+  interactive = false,
+  children = null,
+  onChange = () => {},
+  triggerProps = {},
+  addonBefore = null,
+  addonAfter = null,
+  ...props
 }: Props) {
   const [visible, setVisible] = useState(false);
   const validatedColor = useMemo(() => validateColor(color), [color]);
@@ -79,7 +67,6 @@ export default function ColorPicker({
   function handleApply() {
     setVisible(false);
     if (!interactive) {
-      // @ts-expect-error ts-migrate(2349) FIXME: This expression is not callable.
       onChange(currentColor);
     }
   }
@@ -105,7 +92,6 @@ export default function ColorPicker({
   function handleInputChange(newColor: any) {
     setCurrentColor(newColor);
     if (interactive) {
-      // @ts-expect-error ts-migrate(2349) FIXME: This expression is not callable.
       onChange(newColor);
     }
   }
@@ -118,42 +104,42 @@ export default function ColorPicker({
   }, [validatedColor, visible]);
 
   return (
-    <span className="color-picker-wrapper">
+    <span className="color-picker-wrapper" {...props}>
       {addonBefore}
       <Popover
-        arrowPointAtCenter
-        overlayClassName={`color-picker ${interactive ? "color-picker-interactive" : "color-picker-with-actions"}`}
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ "--color-picker-selected-color": string; }... Remove this comment to see the full error message
-        overlayStyle={{ "--color-picker-selected-color": currentColor }}
+        arrow={{ pointAtCenter: true }}
+        classNames={{
+          root: `color-picker ${interactive ? "color-picker-interactive" : "color-picker-with-actions"}`,
+        }}
+        styles={{ root: { "--color-picker-selected-color": currentColor } as React.CSSProperties }}
         content={
           <Card
             data-test="ColorPicker"
             className="color-picker-panel"
-            bordered={false}
+            variant="borderless"
             title={toString(currentColor).toUpperCase()}
-            headStyle={{
-              backgroundColor: currentColor,
-              // @ts-expect-error ts-migrate(2322) FIXME: Type 'string | null | undefined' is not assignable... Remove this comment to see the full error message
-              color: chooseTextColorForBackground(currentColor),
+            styles={{
+              header: {
+                backgroundColor: currentColor,
+                // @ts-expect-error ts-migrate(2322) FIXME: Type 'string | null | undefined' is not assignable... Remove this comment to see the full error message
+                color: chooseTextColorForBackground(currentColor),
+              },
             }}
             actions={actions}>
             <ColorInput
-              // @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type 'never'.
               color={currentColor}
               presetColors={presetColors}
               presetColumns={presetColumns}
-              // @ts-expect-error ts-migrate(2322) FIXME: Type '(newColor: any) => void' is not assignable t... Remove this comment to see the full error message
               onChange={handleInputChange}
-              // @ts-expect-error ts-migrate(2322) FIXME: Type '() => void' is not assignable to type 'never... Remove this comment to see the full error message
               onPressEnter={handleApply}
             />
           </Card>
         }
         trigger="click"
         placement={placement}
-        visible={visible}
-        onVisibleChange={setVisible}>
-        {children || (
+        open={visible}
+        onOpenChange={setVisible}>
+        {(children as any) || (
           <Swatch
             color={validatedColor}
             size={30}
@@ -166,8 +152,6 @@ export default function ColorPicker({
     </span>
   );
 }
-
-ColorPicker.defaultProps = colorPickerDefaultProps;
 
 ColorPicker.Input = ColorInput;
 ColorPicker.Swatch = Swatch;

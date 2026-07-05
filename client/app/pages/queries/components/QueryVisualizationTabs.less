@@ -70,7 +70,8 @@
     box-sizing: border-box;
     border-radius: 0px var(--rd-radius-xs) 0px 0px;
 
-    .ant-tabs-tabpane {
+    .ant-tabs-tabpane,
+    .ant-tabs-tabpanel {
       padding: 16px;
       background: var(--rd-color-surface);
       color: var(--rd-color-text);
@@ -114,6 +115,93 @@
   display: none;
 }
 
-.query-fixed-layout .query-visualization-tabs .visualization-renderer {
-  padding: 15px;
+.query-fixed-layout .query-visualization-tabs {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+
+  .ant-tabs-nav {
+    flex: 0 0 auto;
+  }
+
+  .ant-tabs-content-holder {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+
+    .ant-tabs-content {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .ant-tabs-tabpane,
+    .ant-tabs-tabpanel {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: auto;
+    }
+  }
+
+  .visualization-renderer {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    left: auto;
+    top: auto;
+    right: auto;
+    bottom: auto;
+    padding: 15px;
+  }
+
+  .visualization-renderer-wrapper {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  .table-visualization-container,
+  .chart-visualization-container,
+  .sunburst-visualization-container,
+  .sankey-visualization-container,
+  .map-visualization-container,
+  .word-cloud-visualization-container,
+  .box-plot-deprecated-visualization-container {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    height: auto;
+    left: auto;
+    top: auto;
+    right: auto;
+    bottom: auto;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .table-visualization-container {
+    div {
+      height: auto;
+    }
+
+    .ant-spin-container {
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 auto;
+      min-height: 0;
+
+      .ant-table {
+        flex: 1 1 auto;
+      }
+    }
+  }
 }

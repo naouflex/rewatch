@@ -42,7 +42,7 @@ function getSearchColumns(columns: any, { limit = Infinity, renderColumn = (col:
 function SearchInputInfoIcon({ searchColumns }: any) {
   return (
     <Popover
-      arrowPointAtCenter
+      arrow={{ pointAtCenter: true }}
       placement="topRight"
       content={
         <div className="table-visualization-search-info-content">
@@ -124,7 +124,6 @@ export default function Renderer({ options, data }: any) {
         className="table-fixed-header"
         data-percy="show-scrollbars"
         data-test="TableVisualization"
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ key: any; dataIndex: string; align: any; s... Remove this comment to see the full error message
         columns={tableColumns}
         dataSource={preparedRows}
         pagination={{

@@ -1,11 +1,9 @@
 import { isArray } from "lodash";
 import React from "react";
 import PropTypes from "prop-types";
-import DatePicker from "antd/lib/date-picker";
+import { RangePicker } from "@/components/momentPickers";
 import { clientConfig } from "@/services/auth";
 import { Moment } from "@/components/proptypes";
-
-const { RangePicker } = DatePicker;
 
 const DateTimeRangeInput = React.forwardRef(
   ({ defaultValue, value, withSeconds, onSelect, className, ...props }, ref) => {

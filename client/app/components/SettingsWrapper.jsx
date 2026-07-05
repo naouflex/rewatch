@@ -15,15 +15,19 @@ function wrapSettingsTab(id, options, WrappedComponent) {
         <div className="container">
           <PageHeader title="Settings" />
           <div className="bg-white tiled">
-            <Menu selectedKeys={[activeItem && activeItem.title]} selectable={false} mode="horizontal">
-              {settingsMenu.getAvailableItems().map(item => (
-                <Menu.Item key={item.title}>
+            <Menu
+              selectedKeys={[activeItem && activeItem.title]}
+              selectable={false}
+              mode="horizontal"
+              items={settingsMenu.getAvailableItems().map(item => ({
+                key: item.title,
+                label: (
                   <Link href={item.path} data-test="SettingsScreenItem">
                     {item.title}
                   </Link>
-                </Menu.Item>
-              ))}
-            </Menu>
+                ),
+              }))}
+            />
             <div className="p-15">
               <div>
                 <WrappedComponent {...props} />
