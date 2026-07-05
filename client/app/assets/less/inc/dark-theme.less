@@ -303,14 +303,15 @@
   }
 
   /* Inline menus used inside light tiles (e.g. sidebar tags-list,
-     settings/admin tabs). Antd defaults the inline menu to white. */
+     settings/admin tabs). Antd defaults the inline menu to white.
+     Exclude floating dropdown/submenu panels — they need a solid surface. */
 
-  .ant-menu,
+  .ant-menu:not(.ant-dropdown-menu),
   .ant-menu-inline,
-  .ant-menu-vertical,
-  .ant-menu-horizontal,
-  .ant-menu-light,
-  .ant-menu-root {
+  .ant-menu-vertical:not(.ant-dropdown-menu):not(.ant-menu-sub),
+  .ant-menu-horizontal:not(.ant-dropdown-menu),
+  .ant-menu-light:not(.ant-dropdown-menu),
+  .ant-menu-root:not(.ant-dropdown-menu) {
     background-color: transparent;
     color: var(--rd-color-text);
     border-color: var(--rd-color-divider);
@@ -1480,6 +1481,80 @@
   .settings-screen,
   .profile-page {
     background-color: transparent;
+    color: var(--rd-color-text);
+  }
+
+  /* Assistant — reinforce token-based surfaces in dark mode */
+
+  .assistant-chat,
+  .assistant-bubble-panel,
+  .assistant-thread-sidebar,
+  .assistant-page-layout {
+    background-color: var(--rd-color-surface);
+    color: var(--rd-color-text);
+    border-color: var(--rd-color-divider);
+  }
+
+  .assistant-chat-header,
+  .assistant-thread-sidebar {
+    background-color: var(--rd-color-surface-alt);
+  }
+
+  .assistant-chat-messages {
+    background-color: var(--rd-color-bg);
+  }
+
+  .assistant-chat-message {
+    &.user {
+      background-color: var(--rd-color-brand-soft);
+      color: var(--rd-color-text);
+    }
+
+    &.assistant {
+      background-color: var(--rd-color-bg-subtle);
+      color: var(--rd-color-text);
+      border-color: var(--rd-color-divider);
+    }
+  }
+
+  .assistant-chat-input {
+    background-color: var(--rd-color-surface);
+
+    textarea {
+      background-color: var(--rd-color-surface-alt);
+      color: var(--rd-color-text);
+      border-color: var(--rd-color-border);
+    }
+  }
+
+  .assistant-chat-empty .prompt-chip {
+    background-color: var(--rd-color-surface);
+    color: var(--rd-color-text);
+    border-color: var(--rd-color-border);
+  }
+
+  .assistant-thread-item {
+    &:hover,
+    &.active {
+      background-color: var(--rd-color-surface);
+    }
+  }
+
+  .assistant-header-btn {
+    background-color: var(--rd-color-surface);
+    color: var(--rd-color-text);
+    border-color: var(--rd-color-border);
+
+    &:hover,
+    &:focus {
+      background-color: var(--rd-color-surface-hover);
+      color: var(--rd-color-text);
+    }
+  }
+
+  .assistant-thinking {
+    background-color: var(--rd-color-bg-subtle);
+    border-color: var(--rd-color-divider);
     color: var(--rd-color-text);
   }
 

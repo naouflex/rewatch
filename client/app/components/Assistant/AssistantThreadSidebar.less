@@ -1,10 +1,9 @@
-@import (reference, less) "~@/assets/less/ant";
-
 .assistant-thread-sidebar {
   width: 280px;
   min-width: 280px;
-  border-right: 1px solid @border-color-split;
-  background: @background-color-light;
+  border-right: 1px solid var(--rd-color-divider);
+  background: var(--rd-color-surface-alt);
+  color: var(--rd-color-text);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -15,12 +14,30 @@
   align-items: center;
   justify-content: space-between;
   padding: 14px 12px;
-  border-bottom: 1px solid @border-color-split;
+  border-bottom: 1px solid var(--rd-color-divider);
 
   h3 {
     margin: 0;
     font-size: 14px;
     font-weight: 600;
+    color: var(--rd-color-text);
+  }
+
+  .plain-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: var(--rd-radius-sm);
+    color: var(--rd-color-text-secondary);
+    cursor: pointer;
+
+    &:hover,
+    &:focus {
+      color: var(--rd-color-text);
+      background: var(--rd-color-surface-hover);
+    }
   }
 }
 
@@ -32,7 +49,7 @@
 
 .assistant-thread-sidebar-empty {
   padding: 16px 12px;
-  color: @text-color-secondary;
+  color: var(--rd-color-text-secondary);
   font-size: 13px;
 }
 
@@ -41,19 +58,19 @@
   align-items: flex-start;
   gap: 4px;
   padding: 10px;
-  border-radius: 8px;
+  border-radius: var(--rd-radius-sm);
   cursor: pointer;
   margin-bottom: 4px;
   border: 1px solid transparent;
 
   &:hover,
   &.active {
-    background: @component-background;
-    border-color: @border-color-split;
+    background: var(--rd-color-surface);
+    border-color: var(--rd-color-divider);
   }
 
   &.active {
-    border-color: fade(@primary-color, 35%);
+    border-color: rgba(var(--rd-brand-rgb), 0.35);
   }
 }
 
@@ -65,6 +82,7 @@
 .assistant-thread-item-title {
   font-size: 13px;
   font-weight: 600;
+  color: var(--rd-color-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -72,7 +90,7 @@
 
 .assistant-thread-item-preview {
   font-size: 12px;
-  color: @text-color-secondary;
+  color: var(--rd-color-text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -81,13 +99,19 @@
 
 .assistant-thread-item-time {
   font-size: 11px;
-  color: @text-color-secondary;
+  color: var(--rd-color-text-muted);
   margin-top: 4px;
 }
 
 .assistant-thread-item-delete {
   opacity: 0;
-  color: @text-color-secondary;
+  color: var(--rd-color-text-secondary);
+
+  &:hover,
+  &:focus {
+    color: var(--rd-color-danger);
+    background: var(--rd-color-danger-soft);
+  }
 
   .assistant-thread-item:hover &,
   .assistant-thread-item.active & {
@@ -100,7 +124,7 @@
     width: 100%;
     min-width: 0;
     border-right: none;
-    border-bottom: 1px solid @border-color-split;
+    border-bottom: 1px solid var(--rd-color-divider);
     max-height: 220px;
   }
 }

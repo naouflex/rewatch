@@ -1,4 +1,8 @@
-from flask import request
+import json
+import queue
+import threading
+
+from flask import Response, request, stream_with_context
 from flask_restful import abort
 
 from redash import settings
@@ -25,6 +29,47 @@ def _ensure_assistant_enabled(current_user):
         abort(503, message="OpenAI API key is not configured.")
     if current_user.is_api_user():
         abort(403, message="Assistant is not available for API key sessions.")
+
+
+def _parse_chat_payload(payload):
+    thread_id = payload.get("thread_id")
+    message = (payload.get("message") or "").strip()
+
+    if not message and payload.get("messages"):
+        for item in reversed(payload["messages"]):
+            if item.get("role") == "user" and item.get("content"):
+                message = item["content"].strip()
+                break
+
+    if not message:
+        abort(400, message="message is required.")
+    return thread_id, message
+
+
+def _prepare_thread(current_user, current_org, thread_id, message):
+    if thread_id:
+        thread = storage.get_thread(thread_id, current_user, current_org)
+    else:
+        thread = storage.create_thread(current_user, current_org)
+        thread_id = thread.id
+
+    storage.add_message(thread_id, "user", message)
+    history = storage.list_messages(thread_id, current_user, current_org)
+    llm_messages = storage.fit_messages_for_llm(history)
+    return thread, thread_id, llm_messages
+
+
+def _finalize_chat(current_user, current_org, thread, thread_id, message, result, resource):
+    storage.add_message(thread_id, "assistant", result["reply"])
+    storage.touch_thread(thread, user_message=message)
+    db.session.refresh(thread)
+    resource.record_event({"action": "assistant_chat", "object_id": thread_id, "object_type": "assistant"})
+    return {
+        "thread_id": thread_id,
+        "title": thread.title,
+        "reply": result["reply"],
+        "messages": storage.list_messages(thread_id, current_user, current_org),
+    }
 
 
 class AssistantStatusResource(BaseResource):
@@ -66,28 +111,8 @@ class AssistantChatResource(BaseResource):
         _ensure_assistant_enabled(self.current_user)
 
         payload = request.get_json(force=True) or {}
-        thread_id = payload.get("thread_id")
-        message = (payload.get("message") or "").strip()
-
-        # Legacy bubble payload: last user turn from a messages array.
-        if not message and payload.get("messages"):
-            for item in reversed(payload["messages"]):
-                if item.get("role") == "user" and item.get("content"):
-                    message = item["content"].strip()
-                    break
-
-        if not message:
-            abort(400, message="message is required.")
-
-        if thread_id:
-            thread = storage.get_thread(thread_id, self.current_user, self.current_org)
-        else:
-            thread = storage.create_thread(self.current_user, self.current_org)
-            thread_id = thread.id
-
-        storage.add_message(thread_id, "user", message)
-        history = storage.list_messages(thread_id, self.current_user, self.current_org)
-        llm_messages = storage.fit_messages_for_llm(history)
+        thread_id, message = _parse_chat_payload(payload)
+        thread, thread_id, llm_messages = _prepare_thread(self.current_user, self.current_org, thread_id, message)
 
         try:
             result = chat(
@@ -100,14 +125,77 @@ class AssistantChatResource(BaseResource):
             db.session.rollback()
             abort(500, message=str(exc))
 
-        storage.add_message(thread_id, "assistant", result["reply"])
-        storage.touch_thread(thread, user_message=message)
-        db.session.refresh(thread)
+        return _finalize_chat(self.current_user, self.current_org, thread, thread_id, message, result, self)
 
-        self.record_event({"action": "assistant_chat", "object_id": thread_id, "object_type": "assistant"})
-        return {
-            "thread_id": thread_id,
-            "title": thread.title,
-            "reply": result["reply"],
-            "messages": storage.list_messages(thread_id, self.current_user, self.current_org),
-        }
+
+class AssistantChatStreamResource(BaseResource):
+    def post(self):
+        _ensure_assistant_enabled(self.current_user)
+
+        payload = request.get_json(force=True) or {}
+        thread_id, message = _parse_chat_payload(payload)
+        thread, thread_id, llm_messages = _prepare_thread(self.current_user, self.current_org, thread_id, message)
+
+        events: queue.Queue = queue.Queue()
+        result_holder: dict = {}
+        error_holder: dict = {}
+
+        def on_activity(event):
+            events.put(event)
+
+        def run_chat():
+            try:
+                result_holder["result"] = chat(
+                    messages=llm_messages,
+                    base_url=_assistant_base_url(),
+                    api_key=self.current_user.api_key,
+                    help_base_url=_help_base_url(),
+                    on_activity=on_activity,
+                )
+            except Exception as exc:
+                error_holder["error"] = exc
+            finally:
+                events.put({"type": "_done"})
+
+        worker = threading.Thread(target=run_chat, daemon=True)
+        worker.start()
+
+        def generate():
+            while True:
+                event = events.get()
+                if event.get("type") == "_done":
+                    break
+                yield f"data: {json.dumps(event)}\n\n"
+
+            if error_holder.get("error"):
+                db.session.rollback()
+                payload = {"type": "error", "message": str(error_holder["error"])}
+                yield f"data: {json.dumps(payload)}\n\n"
+                return
+
+            try:
+                response = _finalize_chat(
+                    self.current_user,
+                    self.current_org,
+                    thread,
+                    thread_id,
+                    message,
+                    result_holder["result"],
+                    self,
+                )
+            except Exception as exc:
+                db.session.rollback()
+                payload = {"type": "error", "message": str(exc)}
+                yield f"data: {json.dumps(payload)}\n\n"
+                return
+
+            yield f"data: {json.dumps({'type': 'complete', **response})}\n\n"
+
+        return Response(
+            stream_with_context(generate()),
+            mimetype="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "X-Accel-Buffering": "no",
+            },
+        )

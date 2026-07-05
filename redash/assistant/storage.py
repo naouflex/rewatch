@@ -28,21 +28,31 @@ def _preview(content: str, limit: int = 120) -> str:
 
 
 def create_thread(user, org) -> AssistantThread:
-    thread = AssistantThread(id=str(uuid.uuid4()), user=user, org=org, title=DEFAULT_TITLE)
+    thread = AssistantThread(
+        id=str(uuid.uuid4()),
+        user_id=user.id,
+        org_id=org.id,
+        title=DEFAULT_TITLE,
+    )
     db.session.add(thread)
     db.session.commit()
     return thread
 
 
 def get_thread(thread_id: str, user, org) -> AssistantThread:
-    return (
+    thread = (
         AssistantThread.query.filter(
             AssistantThread.id == thread_id,
             AssistantThread.user_id == user.id,
             AssistantThread.org_id == org.id,
         )
-        .one()
+        .one_or_none()
     )
+    if thread is None:
+        from flask_restful import abort
+
+        abort(404, message="Thread not found.")
+    return thread
 
 
 def list_threads(user, org, limit: int = MAX_THREADS) -> list[dict[str, Any]]:

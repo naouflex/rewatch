@@ -9,12 +9,19 @@ from typing import Any, Callable, Optional
 import requests
 
 from redash.assistant import docs as docs_catalog
+from redash.assistant import web as web_tools
 
 JOB_FINISHED = 3
 JOB_FAILED = 4
 JOB_CANCELED = 5
 
+
+def _merge_body(**kwargs) -> dict:
+    return {k: v for k, v in kwargs.items() if v is not None}
+
+
 TOOL_DEFINITIONS: list[dict[str, Any]] = [
+    # --- Queries ---
     {
         "type": "function",
         "function": {
@@ -34,7 +41,7 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
         "type": "function",
         "function": {
             "name": "get_query",
-            "description": "Get a saved query including its SQL, data source, parameters, and schedule.",
+            "description": "Get a saved query including SQL, data source, parameters, schedule, and visualizations.",
             "parameters": {
                 "type": "object",
                 "properties": {"query_id": {"type": "integer"}},
@@ -68,7 +75,7 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
         "type": "function",
         "function": {
             "name": "create_query",
-            "description": "Create a new saved query (starts as draft).",
+            "description": "Create a new saved query (starts as draft). A default Table visualization is added automatically.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -106,6 +113,72 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
     {
         "type": "function",
         "function": {
+            "name": "archive_query",
+            "description": "Archive (soft-delete) a saved query.",
+            "parameters": {
+                "type": "object",
+                "properties": {"query_id": {"type": "integer"}},
+                "required": ["query_id"],
+            },
+        },
+    },
+    # --- Visualizations ---
+    {
+        "type": "function",
+        "function": {
+            "name": "create_visualization",
+            "description": (
+                "Add a visualization to a query. Types: TABLE, CHART, COUNTER, DETAILS, PIVOT, MAP, etc. "
+                "For CHART, set options.columnMapping mapping column names to x/y (e.g. {\"date\": \"x\", \"count\": \"y\"}) "
+                "and options.globalSeriesType (column, line, bar, area, pie, scatter)."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query_id": {"type": "integer"},
+                    "type": {"type": "string", "description": "Visualization type, e.g. CHART, COUNTER, TABLE"},
+                    "name": {"type": "string"},
+                    "options": {"type": "object", "description": "Visualization-specific options"},
+                    "description": {"type": "string"},
+                },
+                "required": ["query_id", "type", "name"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "update_visualization",
+            "description": "Update a visualization's name, type, or options.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "visualization_id": {"type": "integer"},
+                    "name": {"type": "string"},
+                    "type": {"type": "string"},
+                    "options": {"type": "object"},
+                    "description": {"type": "string"},
+                },
+                "required": ["visualization_id"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "delete_visualization",
+            "description": "Delete a visualization from a query.",
+            "parameters": {
+                "type": "object",
+                "properties": {"visualization_id": {"type": "integer"}},
+                "required": ["visualization_id"],
+            },
+        },
+    },
+    # --- Data sources ---
+    {
+        "type": "function",
+        "function": {
             "name": "list_data_sources",
             "description": "List connected data sources (id, name, type).",
             "parameters": {"type": "object", "properties": {}},
@@ -118,11 +191,15 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
             "description": "Get tables and columns for a data source.",
             "parameters": {
                 "type": "object",
-                "properties": {"data_source_id": {"type": "integer"}},
+                "properties": {
+                    "data_source_id": {"type": "integer"},
+                    "refresh": {"type": "boolean", "description": "Bypass schema cache"},
+                },
                 "required": ["data_source_id"],
             },
         },
     },
+    # --- Dashboards & widgets ---
     {
         "type": "function",
         "function": {
@@ -141,7 +218,7 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
         "type": "function",
         "function": {
             "name": "get_dashboard",
-            "description": "Get a dashboard with widgets and linked queries.",
+            "description": "Get a dashboard with widgets and linked queries/visualizations.",
             "parameters": {
                 "type": "object",
                 "properties": {"dashboard_id": {"type": "integer"}},
@@ -153,7 +230,7 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
         "type": "function",
         "function": {
             "name": "create_dashboard",
-            "description": "Create a new dashboard.",
+            "description": "Create a new dashboard (starts as draft with empty layout).",
             "parameters": {
                 "type": "object",
                 "properties": {"name": {"type": "string"}},
@@ -171,14 +248,65 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
                 "properties": {
                     "dashboard_id": {"type": "integer"},
                     "name": {"type": "string"},
-                    "layout": {"type": "array"},
+                    "layout": {"type": "array", "description": "Grid layout array from get_dashboard"},
                     "tags": {"type": "array", "items": {"type": "string"}},
                     "is_draft": {"type": "boolean"},
+                    "is_archived": {"type": "boolean"},
                 },
                 "required": ["dashboard_id"],
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "add_widget_to_dashboard",
+            "description": (
+                "Add a widget to a dashboard. Pass visualization_id for a chart/table widget, "
+                "or text for a markdown text box. Use get_dashboard layout to place widgets."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "dashboard_id": {"type": "integer"},
+                    "visualization_id": {"type": "integer"},
+                    "text": {"type": "string", "description": "Text box content (markdown supported)"},
+                    "options": {"type": "object", "description": "Position: col, row, sizeX, sizeY"},
+                    "width": {"type": "integer", "default": 1},
+                },
+                "required": ["dashboard_id"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "update_widget",
+            "description": "Update a text-box widget on a dashboard.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "widget_id": {"type": "integer"},
+                    "text": {"type": "string"},
+                    "options": {"type": "object"},
+                },
+                "required": ["widget_id", "text"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "delete_widget",
+            "description": "Remove a widget from a dashboard.",
+            "parameters": {
+                "type": "object",
+                "properties": {"widget_id": {"type": "integer"}},
+                "required": ["widget_id"],
+            },
+        },
+    },
+    # --- Alerts ---
     {
         "type": "function",
         "function": {
@@ -238,6 +366,265 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "delete_alert",
+            "description": "Permanently delete an alert.",
+            "parameters": {
+                "type": "object",
+                "properties": {"alert_id": {"type": "integer"}},
+                "required": ["alert_id"],
+            },
+        },
+    },
+    # --- Destinations ---
+    {
+        "type": "function",
+        "function": {
+            "name": "list_destinations",
+            "description": "List notification destinations (Slack, email, webhooks, etc.).",
+            "parameters": {"type": "object", "properties": {}},
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "list_destination_types",
+            "description": "List available destination types and their configuration schemas.",
+            "parameters": {"type": "object", "properties": {}},
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "create_destination",
+            "description": "Create a notification destination. Use list_destination_types for valid type values.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string"},
+                    "type": {"type": "string"},
+                    "options": {"type": "object"},
+                    "tags": {"type": "array", "items": {"type": "string"}},
+                },
+                "required": ["name", "type", "options"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "update_destination",
+            "description": "Update a notification destination.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "destination_id": {"type": "integer"},
+                    "name": {"type": "string"},
+                    "type": {"type": "string"},
+                    "options": {"type": "object"},
+                    "tags": {"type": "array", "items": {"type": "string"}},
+                },
+                "required": ["destination_id"],
+            },
+        },
+    },
+    # --- ML models (Rewatch extension) ---
+    {
+        "type": "function",
+        "function": {
+            "name": "list_ml_models",
+            "description": "List or search ML models with training state.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "q": {"type": "string"},
+                    "page_size": {"type": "integer", "default": 10},
+                },
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_ml_model",
+            "description": "Get an ML model: configuration, linked query, training state.",
+            "parameters": {
+                "type": "object",
+                "properties": {"model_id": {"type": "integer"}},
+                "required": ["model_id"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "create_ml_model",
+            "description": (
+                "Create an ML model bound to a query. options must include regressor, features, and targets."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string"},
+                    "query_id": {"type": "integer"},
+                    "options": {"type": "object"},
+                    "description": {"type": "string"},
+                    "tags": {"type": "array", "items": {"type": "string"}},
+                },
+                "required": ["name", "query_id", "options"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "update_ml_model",
+            "description": "Update an ML model definition.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "model_id": {"type": "integer"},
+                    "name": {"type": "string"},
+                    "description": {"type": "string"},
+                    "options": {"type": "object"},
+                    "tags": {"type": "array", "items": {"type": "string"}},
+                },
+                "required": ["model_id"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "train_ml_model",
+            "description": "Start training for an ML model (asynchronous).",
+            "parameters": {
+                "type": "object",
+                "properties": {"model_id": {"type": "integer"}},
+                "required": ["model_id"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "predict_ml_model",
+            "description": "Start a prediction run for a trained ML model (asynchronous).",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "model_id": {"type": "integer"},
+                    "body": {"type": "object", "description": "Optional prediction parameters"},
+                },
+                "required": ["model_id"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_predictions",
+            "description": "List prediction results, optionally for one ML model.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "model_id": {"type": "integer"},
+                    "page_size": {"type": "integer", "default": 10},
+                },
+            },
+        },
+    },
+    # --- Indexers (Rewatch extension) ---
+    {
+        "type": "function",
+        "function": {
+            "name": "list_indexers",
+            "description": "List indexers (ingestion jobs that materialize query results).",
+            "parameters": {"type": "object", "properties": {}},
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_indexer",
+            "description": "Get one indexer by id.",
+            "parameters": {
+                "type": "object",
+                "properties": {"indexer_id": {"type": "integer"}},
+                "required": ["indexer_id"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "create_indexer",
+            "description": "Create an indexer that runs a query and writes to a target data source.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string"},
+                    "query_id": {"type": "integer"},
+                    "data_source_id": {"type": "integer"},
+                    "options": {"type": "object"},
+                    "tags": {"type": "array", "items": {"type": "string"}},
+                },
+                "required": ["name", "query_id", "data_source_id"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "update_indexer",
+            "description": "Update an indexer definition.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "indexer_id": {"type": "integer"},
+                    "name": {"type": "string"},
+                    "query_id": {"type": "integer"},
+                    "data_source_id": {"type": "integer"},
+                    "options": {"type": "object"},
+                    "tags": {"type": "array", "items": {"type": "string"}},
+                },
+                "required": ["indexer_id"],
+            },
+        },
+    },
+    # --- Web ---
+    {
+        "type": "function",
+        "function": {
+            "name": "web_search",
+            "description": "Search the public internet for documentation, APIs, SQL syntax, libraries, or current information.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "q": {"type": "string", "description": "Search query"},
+                    "max_results": {"type": "integer", "default": 5},
+                },
+                "required": ["q"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "fetch_url",
+            "description": "Fetch a public web page and return its readable text content.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "url": {"type": "string", "description": "http or https URL"},
+                },
+                "required": ["url"],
+            },
+        },
+    },
+    # --- Docs ---
     {
         "type": "function",
         "function": {
@@ -339,14 +726,13 @@ class ToolContext:
         }
 
     def create_query_tool(self, args: dict) -> Any:
-        body = {k: v for k, v in args.items() if v is not None}
-        return self.request("POST", "/api/queries", body=body)
+        return self.request("POST", "/api/queries", body=_merge_body(**args))
 
     def update_query_tool(self, args: dict) -> Any:
         args = dict(args)
         query_id = args.pop("query_id")
         current = self.request("GET", f"/api/queries/{query_id}")
-        body = {k: v for k, v in args.items() if v is not None}
+        body = _merge_body(**args)
         body.setdefault("version", current.get("version"))
         return self.request("POST", f"/api/queries/{query_id}", body=body)
 
@@ -354,22 +740,53 @@ class ToolContext:
         args = dict(args)
         dashboard_id = args.pop("dashboard_id")
         current = self.request("GET", f"/api/dashboards/{dashboard_id}")
-        body = {k: v for k, v in args.items() if v is not None}
+        body = _merge_body(**args)
         body.setdefault("version", current.get("version"))
         return self.request("POST", f"/api/dashboards/{dashboard_id}", body=body)
 
+    def update_ml_model_tool(self, args: dict) -> Any:
+        args = dict(args)
+        model_id = args.pop("model_id")
+        current = self.request("GET", f"/api/ml_models/{model_id}")
+        body = _merge_body(**args)
+        body.setdefault("version", current.get("version"))
+        return self.request("POST", f"/api/ml_models/{model_id}", body=body)
+
     def create_alert_tool(self, args: dict) -> Any:
         options = {"column": args["column"], "op": args["op"], "value": args["value"]}
-        body = {
-            "name": args["name"],
-            "query_id": args["query_id"],
-            "options": options,
-        }
-        if args.get("rearm") is not None:
-            body["rearm"] = args["rearm"]
-        if args.get("tags"):
-            body["tags"] = args["tags"]
+        body = _merge_body(
+            name=args["name"],
+            query_id=args["query_id"],
+            options=options,
+            rearm=args.get("rearm"),
+            tags=args.get("tags"),
+        )
         return self.request("POST", "/api/alerts", body=body)
+
+    def create_visualization_tool(self, args: dict) -> Any:
+        body = _merge_body(
+            query_id=args["query_id"],
+            type=args["type"],
+            name=args["name"],
+            options=args.get("options") or {},
+            description=args.get("description"),
+        )
+        return self.request("POST", "/api/visualizations", body=body)
+
+    def update_visualization_tool(self, args: dict) -> Any:
+        args = dict(args)
+        visualization_id = args.pop("visualization_id")
+        return self.request("POST", f"/api/visualizations/{visualization_id}", body=_merge_body(**args))
+
+    def add_widget_tool(self, args: dict) -> Any:
+        body = _merge_body(
+            dashboard_id=args["dashboard_id"],
+            visualization_id=args.get("visualization_id"),
+            text=args.get("text"),
+            options=args.get("options") or {},
+            width=args.get("width", 1),
+        )
+        return self.request("POST", "/api/widgets", body=body)
 
 
 def _compact(value: Any) -> str:
@@ -385,14 +802,31 @@ def execute_tool(ctx: ToolContext, name: str, arguments: dict) -> str:
         "run_query": ctx.run_query_tool,
         "create_query": ctx.create_query_tool,
         "update_query": ctx.update_query_tool,
+        "archive_query": lambda a: ctx.request("DELETE", f"/api/queries/{a['query_id']}"),
+        "create_visualization": ctx.create_visualization_tool,
+        "update_visualization": ctx.update_visualization_tool,
+        "delete_visualization": lambda a: ctx.request("DELETE", f"/api/visualizations/{a['visualization_id']}"),
         "list_data_sources": lambda a: ctx.request("GET", "/api/data_sources"),
-        "get_data_source_schema": lambda a: ctx.request("GET", f"/api/data_sources/{a['data_source_id']}/schema"),
+        "get_data_source_schema": lambda a: ctx.request(
+            "GET",
+            f"/api/data_sources/{a['data_source_id']}/schema",
+            params={"refresh": "true"} if a.get("refresh") else None,
+        ),
         "list_dashboards": lambda a: ctx.request(
-            "GET", "/api/dashboards", params={k: v for k, v in {"q": a.get("q"), "page_size": a.get("page_size", 10)}.items() if v}
+            "GET",
+            "/api/dashboards",
+            params={k: v for k, v in {"q": a.get("q"), "page_size": a.get("page_size", 10)}.items() if v},
         ),
         "get_dashboard": lambda a: ctx.request("GET", f"/api/dashboards/{a['dashboard_id']}"),
         "create_dashboard": lambda a: ctx.request("POST", "/api/dashboards", body={"name": a["name"]}),
         "update_dashboard": ctx.update_dashboard_tool,
+        "add_widget_to_dashboard": ctx.add_widget_tool,
+        "update_widget": lambda a: ctx.request(
+            "POST",
+            f"/api/widgets/{a['widget_id']}",
+            body=_merge_body(text=a["text"], options=a.get("options") or {}),
+        ),
+        "delete_widget": lambda a: ctx.request("DELETE", f"/api/widgets/{a['widget_id']}"),
         "list_alerts": lambda a: ctx.request("GET", "/api/alerts"),
         "get_alert": lambda a: ctx.request("GET", f"/api/alerts/{a['alert_id']}"),
         "create_alert": ctx.create_alert_tool,
@@ -401,8 +835,44 @@ def execute_tool(ctx: ToolContext, name: str, arguments: dict) -> str:
             f"/api/alerts/{a['alert_id']}",
             body={k: v for k, v in a.items() if k != "alert_id" and v is not None},
         ),
+        "delete_alert": lambda a: ctx.request("DELETE", f"/api/alerts/{a['alert_id']}"),
+        "list_destinations": lambda a: ctx.request("GET", "/api/destinations"),
+        "list_destination_types": lambda a: ctx.request("GET", "/api/destinations/types"),
+        "create_destination": lambda a: ctx.request("POST", "/api/destinations", body=_merge_body(**a)),
+        "update_destination": lambda a: ctx.request(
+            "POST",
+            f"/api/destinations/{a['destination_id']}",
+            body={k: v for k, v in a.items() if k != "destination_id" and v is not None},
+        ),
+        "list_ml_models": lambda a: ctx.request(
+            "GET",
+            "/api/ml_models",
+            params={k: v for k, v in {"q": a.get("q"), "page_size": a.get("page_size", 10)}.items() if v},
+        ),
+        "get_ml_model": lambda a: ctx.request("GET", f"/api/ml_models/{a['model_id']}"),
+        "create_ml_model": lambda a: ctx.request("POST", "/api/ml_models", body=_merge_body(**a)),
+        "update_ml_model": ctx.update_ml_model_tool,
+        "train_ml_model": lambda a: ctx.request("POST", f"/api/ml_models/{a['model_id']}/train"),
+        "predict_ml_model": lambda a: ctx.request(
+            "POST", f"/api/ml_models/{a['model_id']}/predict", body=a.get("body")
+        ),
+        "get_predictions": lambda a: (
+            ctx.request("GET", f"/api/ml_models/{a['model_id']}/predictions")
+            if a.get("model_id")
+            else ctx.request("GET", "/api/predictions", params={"page_size": a.get("page_size", 10)})
+        ),
+        "list_indexers": lambda a: ctx.request("GET", "/api/indexers"),
+        "get_indexer": lambda a: ctx.request("GET", f"/api/indexers/{a['indexer_id']}"),
+        "create_indexer": lambda a: ctx.request("POST", "/api/indexers", body=_merge_body(**a)),
+        "update_indexer": lambda a: ctx.request(
+            "POST",
+            f"/api/indexers/{a['indexer_id']}",
+            body={k: v for k, v in a.items() if k != "indexer_id" and v is not None},
+        ),
         "search_docs": lambda a: docs_catalog.search_docs(a["q"], ctx.help_base_url),
         "get_docs_topic": lambda a: docs_catalog.get_docs_topic(a["topic_id"], ctx.help_base_url),
+        "web_search": lambda a: web_tools.web_search(a["q"], a.get("max_results", 5)),
+        "fetch_url": lambda a: web_tools.fetch_url(a["url"]),
     }
     handler = handlers.get(name)
     if not handler:

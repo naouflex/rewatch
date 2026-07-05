@@ -1,0 +1,136 @@
+.assistant-thinking {
+  align-self: flex-start;
+  max-width: 92%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--rd-color-divider);
+  border-bottom-left-radius: 4px;
+  background: var(--rd-color-bg-subtle);
+  color: var(--rd-color-text);
+  animation: assistant-thinking-enter var(--rd-duration-base) var(--rd-ease);
+}
+
+@keyframes assistant-thinking-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.assistant-thinking-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.assistant-thinking-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 28px;
+
+  span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--rd-color-brand);
+    animation: assistant-dot-bounce 1.2s infinite ease-in-out;
+
+    &:nth-child(2) {
+      animation-delay: 0.15s;
+    }
+
+    &:nth-child(3) {
+      animation-delay: 0.3s;
+    }
+  }
+}
+
+@keyframes assistant-dot-bounce {
+  0%,
+  80%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.45;
+  }
+
+  40% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+
+.assistant-thinking-status {
+  font-size: 13px;
+  font-weight: var(--rd-font-weight-medium);
+  color: var(--rd-color-text);
+}
+
+.assistant-thinking-steps {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.assistant-thinking-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--rd-color-text-secondary);
+  animation: assistant-step-enter var(--rd-duration-base) var(--rd-ease);
+
+  &.running {
+    color: var(--rd-color-text);
+  }
+
+  &.done {
+    color: var(--rd-color-text-muted);
+  }
+
+  &.is-web.running {
+    color: var(--rd-color-accent);
+  }
+}
+
+@keyframes assistant-step-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.assistant-thinking-step-icon {
+  flex: 0 0 auto;
+  width: 16px;
+  margin-top: 1px;
+  color: var(--rd-color-brand);
+
+  .done & {
+    color: var(--rd-color-success);
+  }
+
+  .is-web.running & {
+    color: var(--rd-color-accent);
+  }
+}
+
+.assistant-thinking-step-label {
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
+}

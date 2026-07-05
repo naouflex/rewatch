@@ -7,6 +7,7 @@ import Link from "@/components/Link";
 import PlainButton from "@/components/PlainButton";
 import CloseOutlined from "@ant-design/icons/CloseOutlined";
 import Assistant from "@/services/assistant";
+import AssistantThinking from "@/components/Assistant/AssistantThinking";
 
 import "./AssistantChat.less";
 
@@ -19,8 +20,8 @@ const WELCOME = {
 const SUGGESTIONS = [
   "List my data sources",
   "Search my queries",
-  "How do I set up an alert?",
-  "Explain query 1",
+  "Search the web for Postgres window functions",
+  "Create a line chart dashboard",
 ];
 
 function renderMarkdown(text) {
@@ -42,19 +43,34 @@ export default function AssistantChat({
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [thinkingStatus, setThinkingStatus] = useState("Thinking…");
+  const [thinkingActivities, setThinkingActivities] = useState([]);
   const [bootstrapping, setBootstrapping] = useState(true);
   const [error, setError] = useState(null);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
-  const loadThread = useCallback(async id => {
-    if (!id) {
-      setMessages([WELCOME]);
-      return;
-    }
-    const history = await Assistant.getMessages(id);
-    setMessages(history.length ? history : [WELCOME]);
-  }, []);
+  const loadThread = useCallback(
+    async id => {
+      if (!id) {
+        setMessages([WELCOME]);
+        return;
+      }
+      try {
+        const history = await Assistant.getMessages(id);
+        setMessages(history.length ? history : [WELCOME]);
+      } catch (err) {
+        const status = err?.response?.status;
+        if (status === 404) {
+          Assistant.setStoredThreadId(null);
+          onThreadIdChange(null);
+        }
+        setMessages([WELCOME]);
+        throw err;
+      }
+    },
+    [onThreadIdChange]
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -79,7 +95,32 @@ export default function AssistantChat({
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [messages, loading]);
+  }, [messages, loading, thinkingActivities]);
+
+  const handleStreamEvent = useCallback(event => {
+    if (event.type === "status") {
+      setThinkingStatus(event.message);
+      return;
+    }
+    if (event.type === "tool_start") {
+      setThinkingActivities(prev => {
+        const next = prev.filter(item => item.id !== event.id);
+        return [...next, { id: event.id, tool: event.tool, label: event.label, status: "running" }];
+      });
+      return;
+    }
+    if (event.type === "tool_done") {
+      setThinkingActivities(prev =>
+        prev.map(item => (item.id === event.id ? { ...item, status: "done" } : item))
+      );
+    }
+  }, []);
+
+  const runChat = useCallback(
+    async ({ threadId: currentThreadId, message }) =>
+      Assistant.chatStream({ threadId: currentThreadId, message, onEvent: handleStreamEvent }),
+    [handleStreamEvent]
+  );
 
   useEffect(() => {
     if (inputRef.current && !compact) {
@@ -96,11 +137,25 @@ export default function AssistantChat({
 
       setError(null);
       setInput("");
+      setThinkingStatus("Analyzing your request…");
+      setThinkingActivities([]);
       setMessages(prev => [...prev, { role: "user", content: text }]);
       setLoading(true);
 
       try {
-        const response = await Assistant.chat({ threadId, message: text });
+        let response;
+        try {
+          response = await runChat({ threadId, message: text });
+        } catch (err) {
+          const detail = err?.message || "";
+          if (threadId && detail.toLowerCase().includes("thread not found")) {
+            Assistant.setStoredThreadId(null);
+            onThreadIdChange(null);
+            response = await runChat({ message: text });
+          } else {
+            throw err;
+          }
+        }
         if (response.thread_id && response.thread_id !== threadId) {
           onThreadIdChange(response.thread_id);
           Assistant.setStoredThreadId(response.thread_id);
@@ -115,9 +170,11 @@ export default function AssistantChat({
         setMessages(prev => [...prev, { role: "assistant", content: `Sorry, I ran into an error: ${detail}` }]);
       } finally {
         setLoading(false);
+        setThinkingActivities([]);
+        setThinkingStatus("Thinking…");
       }
     },
-    [input, loading, onThreadIdChange, onThreadsChanged, threadId]
+    [input, loading, onThreadIdChange, onThreadsChanged, runChat, threadId]
   );
 
   const onKeyDown = useCallback(
@@ -137,11 +194,11 @@ export default function AssistantChat({
       <div className="assistant-chat-header">
         <div>
           <h4>Rewatch Assistant</h4>
-          <div className="subtitle">Queries · Dashboards · Alerts · Docs</div>
+          <div className="subtitle">Queries · Charts · Dashboards · Alerts · Web · ML</div>
         </div>
         <div className="assistant-chat-header-actions">
           {showOpenFullPage && (
-            <Link href="assistant" className="btn btn-default btn-sm">
+            <Link href="assistant" className="assistant-header-btn">
               Open full page
             </Link>
           )}
@@ -183,7 +240,7 @@ export default function AssistantChat({
             </div>
           ))
         )}
-        {loading && <div className="assistant-chat-message assistant loading">Thinking…</div>}
+        {loading && <AssistantThinking status={thinkingStatus} activities={thinkingActivities} />}
         <div ref={messagesEndRef} />
       </div>
 

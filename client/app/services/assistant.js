@@ -2,6 +2,48 @@ import { axios } from "@/services/axios";
 
 const THREAD_STORAGE_KEY = "rewatch_assistant_thread";
 
+function readCookie(name) {
+  const match = document.cookie.match(new RegExp(`(?:^|; )${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}=([^;]*)`));
+  return match ? decodeURIComponent(match[1]) : "";
+}
+
+async function consumeSseStream(response, onEvent) {
+  if (!response.ok) {
+    let message = `Request failed (${response.status})`;
+    try {
+      const payload = await response.json();
+      message = payload.message || message;
+    } catch (e) {
+      // ignore parse errors
+    }
+    throw new Error(message);
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) {
+      break;
+    }
+    buffer += decoder.decode(value, { stream: true });
+    const chunks = buffer.split("\n\n");
+    buffer = chunks.pop() || "";
+
+    chunks.forEach(chunk => {
+      const line = chunk
+        .split("\n")
+        .find(entry => entry.startsWith("data: "));
+      if (!line) {
+        return;
+      }
+      onEvent(JSON.parse(line.slice(6)));
+    });
+  }
+}
+
 const Assistant = {
   status: () => axios.get("api/assistant/status"),
   listThreads: () => axios.get("api/assistant/threads"),
@@ -9,6 +51,34 @@ const Assistant = {
   deleteThread: threadId => axios.delete(`api/assistant/threads/${threadId}`),
   getMessages: threadId => axios.get(`api/assistant/threads/${threadId}/messages`),
   chat: ({ threadId, message }) => axios.post("api/assistant/chat", { thread_id: threadId, message }),
+  chatStream: async ({ threadId, message, onEvent }) => {
+    const response = await fetch("api/assistant/chat/stream", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "text/event-stream",
+        "X-CSRF-TOKEN": readCookie("csrf_token"),
+      },
+      body: JSON.stringify({ thread_id: threadId, message }),
+    });
+
+    let result = null;
+    await consumeSseStream(response, event => {
+      if (event.type === "complete") {
+        result = event;
+      } else if (event.type === "error") {
+        throw new Error(event.message || "Assistant request failed.");
+      } else if (onEvent) {
+        onEvent(event);
+      }
+    });
+
+    if (!result) {
+      throw new Error("Assistant stream ended without a response.");
+    }
+    return result;
+  },
   getStoredThreadId: () => window.sessionStorage.getItem(THREAD_STORAGE_KEY),
   setStoredThreadId: threadId => {
     if (threadId) {

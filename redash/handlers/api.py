@@ -9,6 +9,7 @@ from redash.handlers.alert_events import (
 )
 from redash.handlers.assistant import (
     AssistantChatResource,
+    AssistantChatStreamResource,
     AssistantStatusResource,
     AssistantThreadListResource,
     AssistantThreadMessagesResource,
@@ -590,3 +591,8 @@ api.add_org_resource(
     endpoint="assistant_thread",
 )
 api.add_org_resource(AssistantChatResource, "/api/assistant/chat", endpoint="assistant_chat")
+api.add_org_resource(
+    AssistantChatStreamResource,
+    "/api/assistant/chat/stream",
+    endpoint="assistant_chat_stream",
+)

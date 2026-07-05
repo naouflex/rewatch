@@ -15,12 +15,18 @@ class AssistantThread(TimestampMixin, BelongsToOrgMixin, db.Model):
 
     id = Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     user_id = Column(key_type("User"), db.ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    org_id = Column(key_type("Organization"), db.ForeignKey("organizations.id"), nullable=False, index=True)
     title = Column(db.String(80), default="New chat")
 
     user = db.relationship(
         "User",
         backref=backref("assistant_threads", lazy="dynamic"),
         foreign_keys=[user_id],
+    )
+    org = db.relationship(
+        "Organization",
+        backref=backref("assistant_threads", lazy="dynamic"),
+        foreign_keys=[org_id],
     )
     messages = db.relationship(
         "AssistantMessage",
