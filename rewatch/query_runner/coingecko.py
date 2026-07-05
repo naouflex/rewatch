@@ -26,8 +26,6 @@ from rewatch.query_runner import (
     BaseHTTPQueryRunner,
     register,
 )
-from rewatch.utils import json_dumps
-
 logger = logging.getLogger(__name__)
 
 
@@ -521,7 +519,7 @@ class CoinGecko(BaseHTTPQueryRunner):
                     activation_map[cid]
                 ).isoformat()
 
-        return json_dumps(parse_coingecko_response(all_market_data, "coins_markets")), None
+        return parse_coingecko_response(all_market_data, "coins_markets"), None
 
     def _fetch_top_coins_schema(self):
         """Return schema entries for top coins by market cap (for schema browser)."""
@@ -682,7 +680,7 @@ class CoinGecko(BaseHTTPQueryRunner):
                 return None, "Failed to parse JSON response: {0}".format(e)
 
             parsed_data = parse_coingecko_response(data, endpoint_type)
-            return json_dumps(parsed_data), None
+            return parsed_data, None
 
         except QueryParseError as e:
             return None, str(e)

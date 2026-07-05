@@ -27,8 +27,6 @@ from rewatch.query_runner.coingecko import (
     parse_coingecko_response,
     parse_query,
 )
-from rewatch.utils import json_dumps
-
 logger = logging.getLogger(__name__)
 
 FREE_BASE_URL = "https://api.llama.fi"
@@ -682,7 +680,7 @@ class DefiLlama(BaseHTTPQueryRunner):
                 rows_data = data
 
             parsed = parse_coingecko_response(rows_data, "generic")
-            return json_dumps(parsed), None
+            return parsed, None
 
         except QueryParseError as e:
             return None, str(e)

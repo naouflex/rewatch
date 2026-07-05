@@ -101,9 +101,8 @@ class TestCoinGeckoRunner(TestCase):
             data, error = self.runner.run_query("endpoint: simple-price\ncoingeckoID: bitcoin", None)
 
         self.assertIsNone(error)
-        payload = json.loads(data)
-        self.assertEqual(payload["rows"][0]["coin_id"], "bitcoin")
-        self.assertEqual(payload["rows"][0]["price_usd"], 60000)
+        self.assertEqual(data["rows"][0]["coin_id"], "bitcoin")
+        self.assertEqual(data["rows"][0]["price_usd"], 60000)
 
     def test_run_query_returns_error_on_non_dict_yaml(self):
         data, error = self.runner.run_query("just a string", None)

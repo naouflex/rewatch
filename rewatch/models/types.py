@@ -33,16 +33,33 @@ class EncryptedConfiguration(EncryptedType):
 class JSONText(TypeDecorator):
     impl = db.Text
 
+    @staticmethod
+    def _coerce_json(value):
+        """Accept dict/list or a JSON string from query runners that pre-serialize."""
+        if isinstance(value, str):
+            try:
+                return json_loads(value)
+            except (ValueError, TypeError):
+                return value
+        return value
+
     def process_bind_param(self, value, dialect):
         if value is None:
             return value
 
-        return json_dumps(value)
+        return json_dumps(self._coerce_json(value))
 
     def process_result_value(self, value, dialect):
         if not value:
             return value
-        return json_loads(value)
+        result = json_loads(value)
+        # Legacy rows stored when runners returned json_dumps(...) strings.
+        if isinstance(result, str):
+            try:
+                result = json_loads(result)
+            except (ValueError, TypeError):
+                pass
+        return result
 
 
 class MutableDict(Mutable, dict):
