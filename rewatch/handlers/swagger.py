@@ -17,16 +17,16 @@ Two pieces here:
    Auto-generation means new endpoints are documented the moment they're
    registered with Flask — no manual swagger annotation required.
 
-2. **Docs UI** (Scalar). The rendered spec is consumed by a vendored
-   Scalar bundle (see ``api_docs_static/``) served at ``/api/docs/``. Scalar
-   fetches the spec from ``/api/spec`` at runtime — same origin, so no CSP
-   relaxation is required.
+2. **Docs UI** (Scalar). The in-app route ``/api-docs`` embeds a vendored Scalar
+   bundle (see ``api_docs_static/``) that fetches the spec from ``/api/spec``.
+   The legacy ``/api/docs`` URL redirects there. Scalar assets stay under
+   ``/api/docs/scalar.standalone.js`` — same origin, no CSP relaxation.
 
 Routes added by this module
 ---------------------------
 
 * ``GET /api/spec``   — OpenAPI 2.0 JSON, generated on demand.
-* ``GET /api/docs/``  — Scalar UI (HTML shell, no inline scripts).
+* ``GET /api/docs``   — redirects to ``/api-docs`` (in-app Scalar UI).
 * ``GET /api/docs/scalar.standalone.js`` — vendored Scalar runtime.
 """
 
@@ -40,7 +40,7 @@ from collections import OrderedDict
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 import yaml
-from flask import Blueprint, current_app, jsonify, render_template_string, send_from_directory
+from flask import Blueprint, current_app, jsonify, redirect, send_from_directory
 
 logger = logging.getLogger(__name__)
 
@@ -471,37 +471,8 @@ def _make_operation_id(used: Dict[str, int], endpoint: str, http_method: str) ->
 
 
 # ---------------------------------------------------------------------------
-# Docs UI (Scalar)
+# Docs UI (Scalar assets + legacy redirect)
 # ---------------------------------------------------------------------------
-
-# CSP-safe HTML shell for Scalar. Notes on the design:
-#   * The ``<script id="api-reference">`` mounting element is declared with
-#     ``type="application/json"`` so the browser doesn't treat it as inline
-#     code — Scalar reads its attributes (``data-url``, ``data-configuration``)
-#     to discover the spec.
-#   * The Scalar runtime is loaded from the same origin, so a strict
-#     ``script-src 'self'`` CSP is enough — no relaxation needed.
-#   * Scalar attempts to fetch its own webfonts from ``fonts.scalar.com``;
-#     CSP blocks them and Scalar gracefully falls back to the system font
-#     stack.
-_SCALAR_TEMPLATE = """<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Rewatch API</title>
-  <link rel="icon" type="image/png" href="/static/images/favicon-32x32.png">
-</head>
-<body>
-  <script
-    id="api-reference"
-    type="application/json"
-    data-url="/api/spec"
-    data-configuration='{"theme":"default","layout":"modern","defaultOpenAllTags":false,"hideClientButton":false,"hideDownloadButton":false,"hideSearch":false,"metaData":{"title":"Rewatch API"}}'></script>
-  <script src="/api/docs/scalar.standalone.js"></script>
-</body>
-</html>
-"""
 
 
 def _build_blueprint() -> Blueprint:
@@ -525,7 +496,7 @@ def _build_blueprint() -> Blueprint:
     @bp.route("/api/docs/", methods=["GET"])
     @bp.route("/api/docs", methods=["GET"])
     def docs_ui():
-        return render_template_string(_SCALAR_TEMPLATE)
+        return redirect("/api-docs", code=301)
 
     return bp
 

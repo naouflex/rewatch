@@ -1,6 +1,8 @@
 # API docs static assets
 
-These files are vendored to keep `/api/docs/` Content-Security-Policy friendly:
+These files are vendored for the in-app API reference at ``/api-docs`` (Scalar
+embed). The bundle is served from ``/api/docs/scalar.standalone.js`` so
+Content-Security-Policy stays strict:
 no inline scripts, no external CDN fetches.
 
 ## Files
