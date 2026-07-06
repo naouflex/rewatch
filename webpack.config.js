@@ -92,6 +92,10 @@ const config = {
       extensions: extensionPath,
       "@rewatch/viz/lib": path.join(__dirname, "viz-lib/lib"),
       "@rewatch/viz": path.join(__dirname, "viz-lib/lib"),
+      react: path.join(__dirname, "node_modules/react"),
+      "react-dom": path.join(__dirname, "node_modules/react-dom"),
+      "react/jsx-runtime": path.join(__dirname, "node_modules/react/jsx-runtime"),
+      "react/jsx-dev-runtime": path.join(__dirname, "node_modules/react/jsx-dev-runtime"),
     },
     fallback: {
       fs: false,

@@ -78,6 +78,28 @@
         min-height: 320px;
         padding: 12px;
         overflow: auto;
+        display: flex;
+        flex-direction: column;
+
+        .visualization-renderer,
+        .visualization-renderer-wrapper {
+          flex: 1 1 auto;
+          min-height: 280px;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .chart-visualization-container,
+        .sankey-visualization-container,
+        .sunburst-visualization-container,
+        .funnel-visualization-container,
+        .map-visualization-container,
+        .word-cloud-visualization-container {
+          flex: 1 1 auto;
+          min-height: 280px;
+          height: 100%;
+          width: 100%;
+        }
       }
     }
   }
@@ -102,6 +124,28 @@
         border-radius: var(--rd-radius-md);
         min-height: 240px;
         padding: 12px;
+        display: flex;
+        flex-direction: column;
+
+        .visualization-renderer,
+        .visualization-renderer-wrapper {
+          flex: 1 1 auto;
+          min-height: 200px;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .chart-visualization-container,
+        .sankey-visualization-container,
+        .sunburst-visualization-container,
+        .funnel-visualization-container,
+        .map-visualization-container,
+        .word-cloud-visualization-container {
+          flex: 1 1 auto;
+          min-height: 200px;
+          height: 100%;
+          width: 100%;
+        }
       }
     }
   }

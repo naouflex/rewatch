@@ -73,6 +73,8 @@ module.exports = {
       lodash: "lodash",
       react: "react",
       "react-dom": "react-dom",
+      "react/jsx-runtime": "react/jsx-runtime",
+      "react/jsx-dev-runtime": "react/jsx-dev-runtime",
     },
     /^antd/i,
   ],

@@ -31,7 +31,7 @@ export default function Renderer({ data }: any) {
   }
 
   return (
-    <div className="sunburst-sequence-visualization-container" style={{ height: "100%", width: "100%" }}>
+    <div className="sunburst-visualization-container" style={{ height: "100%", width: "100%" }}>
       <ResponsiveSunburst
         data={hierarchy}
         margin={{ top: 10, right: 10, bottom: 10, left: 10 }}

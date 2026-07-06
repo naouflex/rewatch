@@ -3,25 +3,43 @@ import getThemePalette from "./getThemePalette";
 import resizeObserver from "@/services/resizeObserver";
 
 export type ChartHandle = {
-  chart: echarts.ECharts;
   destroy: () => void;
 };
 
 export function createChartInstance(container: HTMLElement, option: any): ChartHandle {
   const palette = getThemePalette();
-  const chart = echarts.init(container, undefined, { renderer: "canvas" });
-  chart.setOption({
-    textStyle: { color: palette.text, fontFamily: palette.fontFamily },
-    ...option,
-  });
+  let chart: echarts.ECharts | null = null;
+  let destroyed = false;
 
-  const unwatch = resizeObserver(container, () => chart.resize());
+  const ensureChart = () => {
+    if (destroyed) {
+      return;
+    }
+
+    if (!chart) {
+      if (container.clientWidth === 0 && container.clientHeight === 0) {
+        return;
+      }
+      chart = echarts.init(container, undefined, { renderer: "canvas" });
+      chart.setOption({
+        textStyle: { color: palette.text, fontFamily: palette.fontFamily },
+        ...option,
+      });
+      return;
+    }
+
+    chart.resize();
+  };
+
+  ensureChart();
+  const unwatch = resizeObserver(container, ensureChart);
 
   return {
-    chart,
     destroy: () => {
+      destroyed = true;
       unwatch();
-      chart.dispose();
+      chart?.dispose();
+      chart = null;
     },
   };
 }

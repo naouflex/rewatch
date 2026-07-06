@@ -28,10 +28,6 @@ export default function Renderer({ data, options }: any) {
 
   const features = (geoJson as any)?.features ?? [];
 
-  const values = nivoData.map(d => d.value).filter((v: number) => Number.isFinite(v));
-  const domainMin = Number.isFinite(options.domainMin) ? options.domainMin : (values.length ? Math.min(...values) : 0);
-  const domainMax = Number.isFinite(options.domainMax) ? options.domainMax : (values.length ? Math.max(...values) : 1);
-
   if (!geoJson || features.length === 0) {
     return (
       <div
@@ -51,17 +47,16 @@ export default function Renderer({ data, options }: any) {
         match={(feature: any) => feature.properties?.[options.targetField] ?? feature.id}
         margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
         colors={[options.colors?.min ?? "#deebf7", options.colors?.max ?? "#3182bd"]}
-        domain={[domainMin, domainMax]}
+        domain={[options.domainMin ?? "auto", options.domainMax ?? "auto"]}
         unknownColor={options.colors?.noValue ?? palette.divider}
         label="properties.name"
-        valueFormat=".2s"
+        valueFormat={options.valueFormat ?? ".2s"}
         projectionTranslation={[0.5, 0.5]}
         projectionRotation={[0, 0, 0]}
         enableGraticule={false}
         borderWidth={0.5}
         borderColor={palette.border}
         theme={theme}
-        legends={[]}
         tooltip={({ feature }: any) => (
           <div
             style={{
@@ -76,6 +71,25 @@ export default function Renderer({ data, options }: any) {
             <strong>{feature.properties?.name ?? feature.id}</strong>
           </div>
         )}
+        legends={
+          options.legend?.visible !== false
+            ? [
+                {
+                  anchor: "bottom-left",
+                  direction: "column",
+                  translateX: 20,
+                  translateY: -20,
+                  itemsSpacing: 0,
+                  itemWidth: 94,
+                  itemHeight: 18,
+                  itemDirection: "left-to-right",
+                  itemTextColor: palette.textMuted,
+                  itemOpacity: 0.85,
+                  symbolSize: 18,
+                },
+              ]
+            : []
+        }
       />
     </div>
   );
