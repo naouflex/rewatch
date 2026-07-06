@@ -30,6 +30,11 @@ DEFAULT_SOURCE = REPO_ROOT / "client/app/assets/images/icon_small.png"
 DEFAULT_OUTPUT_DIR = REPO_ROOT / "client/app/assets/images"
 
 FAVICON_SIZES = (16, 32, 96)
+PWA_ICON_SIZES = {
+    "apple-touch-icon.png": 180,
+    "icon-192.png": 192,
+    "icon-512.png": 512,
+}
 
 
 def generate_favicons(source: Path, output_dir: Path) -> list[Path]:
@@ -46,6 +51,13 @@ def generate_favicons(source: Path, output_dir: Path) -> list[Path]:
         for size in FAVICON_SIZES:
             resized = rgba.resize((size, size), Image.Resampling.LANCZOS)
             target = output_dir / f"favicon-{size}x{size}.png"
+            resized.save(target, format="PNG", optimize=True)
+            written.append(target)
+            print(f"Wrote {target} ({size}x{size})")
+
+        for filename, size in PWA_ICON_SIZES.items():
+            resized = rgba.resize((size, size), Image.Resampling.LANCZOS)
+            target = output_dir / filename
             resized.save(target, format="PNG", optimize=True)
             written.append(target)
             print(f"Wrote {target} ({size}x{size})")

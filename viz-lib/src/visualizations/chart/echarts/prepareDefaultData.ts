@@ -117,11 +117,19 @@ function prepareSeries(series: any, options: any, numSeries: any, additionalOpti
   const yValues: any[] = [];
 
   const yErrorValues: any = [];
+  const openValues: any = [];
+  const highValues: any = [];
+  const lowValues: any = [];
+  const closeValues: any = [];
   each(data, (row) => {
     const x = normalizeValue(row.x, options.xAxis.type); // number/datetime/category
     const y = cleanYValue(row.y, seriesYAxis === "y2" ? options.yAxis[1].type : options.yAxis[0].type); // depends on series type!
     const yError = cleanNumber(row.yError); // always number
     const size = cleanNumber(row.size); // always number
+    const open = cleanNumber(row.open);
+    const high = cleanNumber(row.high);
+    const low = cleanNumber(row.low);
+    const close = cleanNumber(row.close);
 
     // aggregate y value for the same x
     if (!isNil(x) && ["column", "line", "area"].includes(seriesOptions.type)) {
@@ -145,6 +153,10 @@ function prepareSeries(series: any, options: any, numSeries: any, additionalOpti
       y,
       yError,
       size,
+      open,
+      high,
+      low,
+      close,
       yPercent: null, // will be updated later
       row,
       index: xValues.length,
@@ -152,9 +164,13 @@ function prepareSeries(series: any, options: any, numSeries: any, additionalOpti
     xValues.push(x);
     yValues.push(y);
     yErrorValues.push(yError);
+    openValues.push(open);
+    highValues.push(high);
+    lowValues.push(low);
+    closeValues.push(close);
   });
 
-  const plotlySeries = {
+  const plotlySeries: any = {
     visible: true,
     hoverinfo: hoverInfoPattern,
     x: xValues,
@@ -171,6 +187,13 @@ function prepareSeries(series: any, options: any, numSeries: any, additionalOpti
     yaxis: seriesYAxis,
     sourceData,
   };
+
+  if (seriesOptions.type === "candlestick") {
+    plotlySeries.open = openValues;
+    plotlySeries.high = highValues;
+    plotlySeries.low = lowValues;
+    plotlySeries.close = closeValues;
+  }
 
   additionalOptions = { ...additionalOptions, seriesColor, data };
 
@@ -190,6 +213,15 @@ function prepareSeries(series: any, options: any, numSeries: any, additionalOpti
       return prepareBubbleSeries(plotlySeries, options, additionalOptions);
     case "box":
       return prepareBoxSeries(plotlySeries, options, additionalOptions);
+    case "effectScatter":
+    case "pictorialBar":
+    case "candlestick":
+    case "radar":
+    case "treemap":
+    case "gauge":
+    case "themeRiver":
+    case "parallel":
+      return prepareScatterSeries(plotlySeries, options);
     default:
       return plotlySeries;
   }

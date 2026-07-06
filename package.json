@@ -22,10 +22,9 @@
     "type-check": "tsc --noEmit --project client/tsconfig.json",
     "type-check:watch": "pnpm run type-check --watch",
     "jest": "TZ=Africa/Khartoum jest",
-    "test": "run-s type-check jest",
+    "test": "run-s build:viz type-check jest",
     "test:watch": "jest --watch",
-    "cypress": "node client/cypress/cypress.js",
-    "postinstall": "pnpm run build:viz"
+    "cypress": "node client/cypress/cypress.js"
   },
   "repository": {
     "type": "git",
@@ -53,7 +52,6 @@
     "classnames": "^2.2.6",
     "debug": "^3.2.7",
     "dompurify": "^2.0.17",
-    "echarts": "^6.1.0",
     "echarts": "^6.1.0",
     "elliptic": "^6.6.0",
     "font-awesome": "^4.7.0",

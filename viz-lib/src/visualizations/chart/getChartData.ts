@@ -25,6 +25,10 @@ export default function getChartData(data: any, options: any) {
     let eValue: any = null;
     let sizeValue: any = null;
     let zValue: any = null;
+    let openValue: any = null;
+    let highValue: any = null;
+    let lowValue: any = null;
+    let closeValue: any = null;
 
     forOwn(row, (value, definition) => {
       definition = "" + definition;
@@ -69,6 +73,27 @@ export default function getChartData(data: any, options: any) {
         zValue = value;
       }
 
+      if (type === "open") {
+        // @ts-expect-error dynamic column mapping field
+        point.open = value;
+        openValue = value;
+      }
+      if (type === "high") {
+        // @ts-expect-error dynamic column mapping field
+        point.high = value;
+        highValue = value;
+      }
+      if (type === "low") {
+        // @ts-expect-error dynamic column mapping field
+        point.low = value;
+        lowValue = value;
+      }
+      if (type === "close") {
+        // @ts-expect-error dynamic column mapping field
+        point.close = value;
+        closeValue = value;
+      }
+
       if (type === "multiFilter" || type === "multi-filter") {
         seriesName = String(value);
       }
@@ -91,6 +116,22 @@ export default function getChartData(data: any, options: any) {
         if (zValue !== null) {
           // @ts-expect-error ts-migrate(2339) FIXME: Property 'zVal' does not exist on type '{ $raw: an... Remove this comment to see the full error message
           point.zVal = zValue;
+        }
+        if (openValue !== null) {
+          // @ts-expect-error dynamic column mapping field
+          point.open = openValue;
+        }
+        if (highValue !== null) {
+          // @ts-expect-error dynamic column mapping field
+          point.high = highValue;
+        }
+        if (lowValue !== null) {
+          // @ts-expect-error dynamic column mapping field
+          point.low = lowValue;
+        }
+        if (closeValue !== null) {
+          // @ts-expect-error dynamic column mapping field
+          point.close = closeValue;
         }
         addPointToSeries(point, series, ySeriesName);
       });

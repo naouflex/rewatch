@@ -7,12 +7,52 @@
       padding-right: 12px;
       width: 40%;
       overflow: auto;
+      color: var(--rd-color-text);
     }
 
     .visualization-preview {
       padding-left: 12px;
       width: 60%;
       overflow: auto;
+      color: var(--rd-color-text);
+
+      .scrollbox {
+        background: var(--rd-color-bg-subtle);
+        border: 1px solid var(--rd-color-divider);
+        border-radius: var(--rd-radius-sm);
+        min-height: 280px;
+      }
     }
+
+    label {
+      color: var(--rd-color-text-secondary);
+      font-weight: var(--rd-font-weight-medium);
+    }
+  }
+}
+
+.edit-visualization-dialog {
+  .ant-tabs {
+    color: var(--rd-color-text);
+
+    .ant-tabs-tab {
+      color: var(--rd-color-text-secondary);
+
+      &:hover {
+        color: var(--rd-color-text);
+      }
+
+      &.ant-tabs-tab-active .ant-tabs-tab-btn {
+        color: var(--rd-color-brand);
+      }
+    }
+
+    .ant-tabs-ink-bar {
+      background: var(--rd-color-brand);
+    }
+  }
+
+  .visualization-editor-section-title {
+    color: var(--rd-color-text);
   }
 }

@@ -1,6 +1,7 @@
 /* eslint-disable react/prop-types */
 import React from "react";
 import createTabbedEditor from "@/components/visualizations/editor/createTabbedEditor";
+import { chartTypeHasAxes, chartTypeHasSeriesTab } from "../chartTypes";
 
 import GeneralSettings from "./GeneralSettings";
 import XAxisSettings from "./XAxisSettings";
@@ -14,6 +15,8 @@ import "./editor.less";
 
 const isCustomChart = (options: any) => options.globalSeriesType === "custom";
 const isPieChart = (options: any) => options.globalSeriesType === "pie";
+const hasAxisTabs = (options: any) => chartTypeHasAxes(options.globalSeriesType) && !isCustomChart(options);
+const hasSeriesTab = (options: any) => chartTypeHasSeriesTab(options.globalSeriesType) && !isCustomChart(options);
 
 export default createTabbedEditor([
   {
@@ -30,19 +33,19 @@ export default createTabbedEditor([
     key: "XAxis",
     title: ({ swappedAxes }: any) => (!swappedAxes ? "X Axis" : "Y Axis"),
     component: XAxisSettings,
-    isAvailable: (options: any) => !isCustomChart(options) && !isPieChart(options),
+    isAvailable: (options: any) => hasAxisTabs(options) && !isPieChart(options),
   },
   {
     key: "YAxis",
     title: ({ swappedAxes }: any) => (!swappedAxes ? "Y Axis" : "X Axis"),
     component: YAxisSettings,
-    isAvailable: (options: any) => !isCustomChart(options) && !isPieChart(options),
+    isAvailable: (options: any) => hasAxisTabs(options) && !isPieChart(options),
   },
   {
     key: "Series",
     title: "Series",
     component: SeriesSettings,
-    isAvailable: (options: any) => !isCustomChart(options),
+    isAvailable: (options: any) => hasSeriesTab(options),
   },
   {
     key: "Colors",

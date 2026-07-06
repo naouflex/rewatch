@@ -9,6 +9,10 @@ const MappingTypes = {
   yError: { label: "Errors column" },
   size: { label: "Bubble Size Column" },
   zVal: { label: "Color Column" },
+  open: { label: "Open Column" },
+  high: { label: "High Column" },
+  low: { label: "Low Column" },
+  close: { label: "Close Column" },
 };
 
 const SwappedMappingTypes = {

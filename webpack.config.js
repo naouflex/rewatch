@@ -63,6 +63,12 @@ function maybeApplyOverrides(config) {
 
 const config = {
   mode: isProduction ? "production" : "development",
+  cache: {
+    type: "filesystem",
+    buildDependencies: {
+      config: [__filename],
+    },
+  },
   entry: {
     app: [
       "./client/app/index.js",
@@ -128,7 +134,15 @@ const config = {
         { from: "client/app/unsupported.html" },
         { from: "client/app/unsupportedRedirect.js" },
         { from: "client/app/assets/css/*.css", to: "styles/[name][ext]" },
-        { from: "client/app/assets/fonts", to: "fonts/" }
+        { from: "client/app/assets/fonts", to: "fonts/" },
+        {
+          from: "client/app/service-worker.js",
+          transform(content) {
+            return content
+              .toString()
+              .replace("__CACHE_VERSION__", process.env.BUILD_VERSION || "dev");
+          },
+        },
       ],
     }),
     isHotReloadingEnabled && new ReactRefreshWebpackPlugin({ overlay: false }),
@@ -169,7 +183,7 @@ const config = {
         resolve: {
           fullySpecified: false
         },
-        exclude: [],
+        exclude: /node_modules/,
       },
       {
         test: /\.(t|j)sx?$/,
@@ -178,6 +192,8 @@ const config = {
           {
             loader: require.resolve("babel-loader"),
             options: {
+              cacheDirectory: path.join(__dirname, "node_modules/.cache/babel-loader"),
+              cacheCompression: false,
               plugins: [
                 isHotReloadingEnabled && require.resolve("react-refresh/babel")
               ].filter(Boolean)
@@ -260,7 +276,13 @@ const config = {
       }
     ]
   },
-  devtool: isProduction ? "source-map" : "eval-cheap-module-source-map",
+  // Full source maps are expensive (~20–40% of prod build time). Set SOURCE_MAP=true
+  // when you need them locally; Docker builds disable them via SOURCE_MAP=false.
+  devtool: isProduction
+    ? process.env.SOURCE_MAP === "true"
+      ? "hidden-source-map"
+      : false
+    : "eval-cheap-module-source-map",
   stats: {
     children: false,
     modules: false,

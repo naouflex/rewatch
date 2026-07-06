@@ -403,6 +403,88 @@
     border-color: var(--rd-color-border);
   }
 
+  /* Full-screen visualization editor dialog */
+
+  .ant-modal-fullscreen {
+    .ant-modal-content {
+      background: var(--rd-color-surface);
+      color: var(--rd-color-text);
+    }
+
+    .ant-modal-header {
+      background: var(--rd-color-surface);
+      border-bottom-color: var(--rd-color-divider);
+    }
+
+    .ant-modal-title {
+      color: var(--rd-color-text);
+    }
+
+    .ant-modal-body {
+      background: var(--rd-color-surface);
+      color: var(--rd-color-text);
+    }
+
+    .ant-modal-footer {
+      background: var(--rd-color-surface);
+      border-top-color: var(--rd-color-divider);
+    }
+  }
+
+  .edit-visualization-dialog {
+    color: var(--rd-color-text);
+
+    label {
+      color: var(--rd-color-text-secondary);
+    }
+
+    .visualization-preview .scrollbox {
+      background: var(--rd-color-bg-subtle);
+      border-color: var(--rd-color-divider);
+    }
+
+    .ant-tabs-tab {
+      color: var(--rd-color-text-secondary);
+
+      &:hover {
+        color: var(--rd-color-text);
+      }
+
+      &.ant-tabs-tab-active .ant-tabs-tab-btn {
+        color: var(--rd-color-brand);
+      }
+    }
+
+    .ant-tabs-ink-bar {
+      background: var(--rd-color-brand);
+    }
+
+    .visualization-editor-control-label label,
+    .visualization-editor-section-title {
+      color: var(--rd-color-text);
+    }
+
+    .ant-table {
+      background: transparent;
+      color: var(--rd-color-text);
+
+      .ant-table-thead > tr > th {
+        background: var(--rd-color-surface-alt);
+        color: var(--rd-color-text);
+        border-bottom-color: var(--rd-color-divider);
+      }
+
+      .ant-table-tbody > tr > td {
+        border-bottom-color: var(--rd-color-divider);
+        color: var(--rd-color-text);
+      }
+
+      .ant-table-tbody > tr:hover > td {
+        background: var(--rd-color-surface-hover);
+      }
+    }
+  }
+
   .query__vis table {
     border-color: var(--rd-color-divider);
   }

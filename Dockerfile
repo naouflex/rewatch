@@ -7,6 +7,7 @@ ARG skip_frontend_build
 
 ENV CYPRESS_INSTALL_BINARY=0
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1
+ENV SOURCE_MAP=false
 
 RUN useradd -m -d /frontend rewatch
 USER rewatch

@@ -106,7 +106,7 @@ vm_build_frontend() {
   log "Building frontend on $INSTANCE in a node:24 container (pnpm install + build)..."
   # Install pnpm into a project-local prefix so the container can run as the VM
   # user (-u) without needing root for a global npm install.
-  ssh_vm "cd ~/$REMOTE_DIR && docker run --rm -u \"\$(id -u):\$(id -g)\" -v \"\$PWD\":/app -w /app node:24-bookworm \
+  ssh_vm "cd ~/$REMOTE_DIR && docker run --rm -u \"\$(id -u):\$(id -g)\" -v \"\$PWD\":/app -w /app -e SOURCE_MAP=false node:24-bookworm \
     bash -lc 'mkdir -p .npm-global && npm config set prefix \"\$PWD/.npm-global\" && npm install -g pnpm@10.30.3 && export PATH=\"\$PWD/.npm-global/bin:\$PATH\" && pnpm install --frozen-lockfile && pnpm run build'"
   ok "Frontend built into ~/$REMOTE_DIR/client/dist."
 }

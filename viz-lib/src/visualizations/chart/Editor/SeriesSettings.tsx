@@ -10,6 +10,7 @@ import { SortableContainer, DragHandle } from "@/components/sortable";
 import { EditorPropTypes } from "@/visualizations/prop-types";
 import ChartTypeSelect from "./ChartTypeSelect";
 import getChartData from "../getChartData";
+import { PER_SERIES_HIDDEN_TYPES } from "../chartTypes";
 
 const SortableBodyRow = sortableElement((props: any) => <tr {...props} />);
 
@@ -69,7 +70,7 @@ function getTableColumns(options: any, updateSeriesOption: any, debouncedUpdateS
           popupMatchSelectWidth={false}
           value={item.type}
           // @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type 'never'.
-          hiddenChartTypes={["pie", "heatmap", "bubble", "box"]}
+          hiddenChartTypes={PER_SERIES_HIDDEN_TYPES}
           onChange={(value: any) => updateSeriesOption(item.key, "type", value)}
         />
       ),

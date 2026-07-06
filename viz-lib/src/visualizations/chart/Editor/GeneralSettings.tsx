@@ -3,28 +3,45 @@ import React, { useMemo } from "react";
 import { Section, Select, Checkbox, InputNumber, ContextHelp, Input } from "@/components/visualizations/editor";
 import { UpdateOptionsStrategy } from "@/components/visualizations/editor/createTabbedEditor";
 import { EditorPropTypes } from "@/visualizations/prop-types";
-import { AllColorPalettes } from "@/visualizations/ColorPalette";
 import ChartTypeSelect from "./ChartTypeSelect";
 import ColumnMappingSelect from "./ColumnMappingSelect";
+import { getChartTypeDef, chartTypeHasLegendSettings } from "../chartTypes";
 import { useDebouncedCallback } from "use-debounce/lib";
 
 function getAvailableColumnMappingTypes(options: any) {
+  const chartDef = getChartTypeDef(options.globalSeriesType);
   const result = ["x", "y"];
 
   if (!includes(["custom", "heatmap"], options.globalSeriesType)) {
     result.push("series");
   }
 
+  chartDef?.extraColumnMappings?.forEach((mapping: string) => {
+    if (!result.includes(mapping)) {
+      result.push(mapping);
+    }
+  });
+
   if (options.globalSeriesType === "bubble" || some(options.seriesOptions, { type: "bubble" })) {
-    result.push("size");
+    if (!result.includes("size")) {
+      result.push("size");
+    }
   }
 
-  if (options.globalSeriesType === "heatmap") {
+  if (options.globalSeriesType === "heatmap" && !result.includes("zVal")) {
     result.push("zVal");
   }
 
-  if (!includes(["custom", "bubble", "heatmap"], options.globalSeriesType)) {
+  if (!includes(["custom", "bubble", "heatmap", "candlestick"], options.globalSeriesType)) {
     result.push("yError");
+  }
+
+  if (options.globalSeriesType === "parallel") {
+    return ["y"];
+  }
+
+  if (options.globalSeriesType === "gauge") {
+    return ["y"];
   }
 
   return result;
@@ -138,7 +155,7 @@ export default function GeneralSettings({ options, data, onOptionsChange }: any)
         />
       </Section>
 
-      {includes(["column", "line", "box"], options.globalSeriesType) && (
+      {includes(["column", "line", "box", "pictorialBar"], options.globalSeriesType) && (
         // @ts-expect-error ts-migrate(2745) FIXME: This JSX tag's 'children' prop expects type 'never... Remove this comment to see the full error message
         <Section>
           <Checkbox
@@ -234,7 +251,7 @@ export default function GeneralSettings({ options, data, onOptionsChange }: any)
         </Section>
       )}
 
-      {!includes(["custom", "heatmap"], options.globalSeriesType) && (
+      {!includes(["custom", "heatmap"], options.globalSeriesType) && chartTypeHasLegendSettings(options.globalSeriesType) && (
         <React.Fragment>
           {/* @ts-expect-error ts-migrate(2745) FIXME: This JSX tag's 'children' prop expects type 'never... Remove this comment to see the full error message */}
           <Section>
@@ -304,7 +321,7 @@ export default function GeneralSettings({ options, data, onOptionsChange }: any)
             label="Stacking"
             data-test="Chart.Stacking"
             defaultValue={options.series.stacking}
-            disabled={!includes(["line", "area", "column"], options.globalSeriesType)}
+            disabled={!includes(["line", "area", "column", "pictorialBar"], options.globalSeriesType)}
             onChange={(stacking: any) => onOptionsChange({ series: { stacking } })}>
             {/* @ts-expect-error ts-migrate(2339) FIXME: Property 'Option' does not exist on type '({ class... Remove this comment to see the full error message */}
             <Select.Option value={null} data-test="Chart.Stacking.Disabled">
@@ -320,7 +337,7 @@ export default function GeneralSettings({ options, data, onOptionsChange }: any)
         </Section>
       )}
 
-      {includes(["line", "area", "column"], options.globalSeriesType) && (
+      {includes(["line", "area", "column", "pictorialBar"], options.globalSeriesType) && (
         // @ts-expect-error ts-migrate(2745) FIXME: This JSX tag's 'children' prop expects type 'never... Remove this comment to see the full error message
         <Section>
           <Checkbox

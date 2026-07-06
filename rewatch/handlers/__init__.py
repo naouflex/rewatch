@@ -35,5 +35,6 @@ def init_app(app):
     )
 
     app.register_blueprint(routes)
+    static.configure_pwa(app)
     api.init_app(app)
     setup_swagger(app)

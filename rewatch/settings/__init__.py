@@ -123,6 +123,8 @@ CONTENT_SECURITY_POLICY = os.environ.get(
     "script-src 'self' 'unsafe-eval'; "
     "font-src 'self' data: https://fonts.gstatic.com; "
     "img-src 'self' http: https: data: blob:; "
+    "manifest-src 'self'; "
+    "worker-src 'self'; "
     "object-src 'none'; "
     "frame-ancestors 'none'; "
     "frame-src naoufel.io;",

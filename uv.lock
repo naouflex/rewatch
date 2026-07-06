@@ -4,5 +4,5 @@ requires-python = ">=3.13"
 
 [[package]]
 name = "rewatch"
-version = "26.4.0.dev0"
+version = "0.1.0"
 source = { editable = "." }

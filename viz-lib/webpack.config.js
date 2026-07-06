@@ -5,6 +5,12 @@ const isProduction = process.env.NODE_ENV === "production";
 
 module.exports = {
   mode: isProduction ? "production" : "development",
+  cache: {
+    type: "filesystem",
+    buildDependencies: {
+      config: [__filename],
+    },
+  },
   entry: "./src/index.ts",
   output: {
     path: path.resolve(__dirname, "dist"),
@@ -26,7 +32,15 @@ module.exports = {
       {
         test: /\.[jt]sx?$/,
         exclude: /node_modules/,
-        use: ["babel-loader"],
+        use: [
+          {
+            loader: "babel-loader",
+            options: {
+              cacheDirectory: path.join(__dirname, "node_modules/.cache/babel-loader"),
+              cacheCompression: false,
+            },
+          },
+        ],
       },
       {
         test: /\.css$/,

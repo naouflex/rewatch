@@ -94,6 +94,8 @@ jobs:
           cache: 'pnpm'
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
+      - name: Build Visualizations Library
+        run: pnpm run build:viz
       - name: Run Lint
         run: pnpm run lint:ci
       - name: Store Test Results
@@ -160,6 +162,8 @@ jobs:
           echo "CODE_COVERAGE=true" >> "$GITHUB_ENV"
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
+      - name: Build Visualizations Library
+        run: pnpm run build:viz
       - name: Setup Rewatch Server
         run: |
           set -x

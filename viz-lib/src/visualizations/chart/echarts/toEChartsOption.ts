@@ -2,6 +2,8 @@ import { filter, map, isArray, isNil } from "lodash";
 import getThemePalette from "./getThemePalette";
 import { ColorPaletteArray } from "../../ColorPalette";
 import { getPieDimensions } from "./preparePieData";
+import { buildSpecialChartOption, applyTraceEchartsType } from "./specialCharts";
+import { getChartTypeDef } from "../chartTypes";
 
 function mapAxisType(type: string) {
   switch (type) {
@@ -94,25 +96,41 @@ function convertDefaultSeries(traces: any[], layout: any, options: any, palette:
 
     switch (trace.type) {
       case "bar":
-        return {
-          ...base,
-          type: "bar",
-          data: isHorizontal ? map(trace.y, (y, i) => [y, trace.x[i]]) : map(trace.x, (x, i) => [x, trace.y[i]]),
-        };
-      case "scatter":
-        if (trace.mode?.includes("markers") && trace.marker?.size) {
-          return {
+      case "column":
+        return applyTraceEchartsType(
+          {
             ...base,
-            type: "scatter",
-            symbolSize: (val: any, params: any) => trace.marker.size[params.dataIndex] ?? 10,
-            data: map(trace.x, (x, i) => [x, trace.y[i]]),
-          };
+            data: isHorizontal ? map(trace.y, (y, i) => [y, trace.x[i]]) : map(trace.x, (x, i) => [x, trace.y[i]]),
+          },
+          trace.type
+        );
+      case "scatter":
+      case "effectScatter":
+        if (trace.mode?.includes("markers") && trace.marker?.size) {
+          return applyTraceEchartsType(
+            {
+              ...base,
+              symbolSize: (val: any, params: any) => trace.marker.size[params.dataIndex] ?? 10,
+              data: map(trace.x, (x, i) => [x, trace.y[i]]),
+            },
+            trace.type
+          );
         }
-        return {
-          ...base,
-          type: "scatter",
-          data: map(trace.x, (x, i) => [x, trace.y[i]]),
-        };
+        return applyTraceEchartsType(
+          {
+            ...base,
+            data: map(trace.x, (x, i) => [x, trace.y[i]]),
+          },
+          trace.type
+        );
+      case "pictorialBar":
+        return applyTraceEchartsType(
+          {
+            ...base,
+            data: isHorizontal ? map(trace.y, (y, i) => [y, trace.x[i]]) : map(trace.x, (x, i) => [x, trace.y[i]]),
+          },
+          trace.type
+        );
       case "box":
         return {
           ...base,
@@ -121,8 +139,9 @@ function convertDefaultSeries(traces: any[], layout: any, options: any, palette:
         };
       case "line":
       case "scattergl":
+      case "area":
       default: {
-        const isArea = trace.fill === "tozeroy" || trace.fill === "tonexty";
+        const isArea = trace.type === "area" || trace.fill === "tozeroy" || trace.fill === "tonexty";
         const lineOpts = getLineStyle(trace.line?.shape ?? options.lineShape);
         return {
           ...base,
@@ -220,9 +239,12 @@ function convertHeatmapSeries(traces: any[], options: any, palette: ReturnType<t
 
 export default function toEChartsOption(traces: any[], layout: any, options: any, hideToolbox = false) {
   const palette = getThemePalette();
-  const isPie = options.globalSeriesType === "pie";
-  const isHeatmap = options.globalSeriesType === "heatmap";
-  const isHorizontal = options.swappedAxes && !isPie && !isHeatmap;
+  const chartType = options.globalSeriesType;
+  const chartDef = getChartTypeDef(chartType);
+  const isPie = chartType === "pie";
+  const isHeatmap = chartType === "heatmap";
+  const isHorizontal = options.swappedAxes && !isPie && !isHeatmap && chartDef?.hasAxes !== false;
+  const specialChart = buildSpecialChartOption(chartType, traces, layout, options, palette);
 
   let series: any[];
   let xAxisData: any;
@@ -245,6 +267,11 @@ export default function toEChartsOption(traces: any[], layout: any, options: any
     yAxisData = heatmap.yAxisData;
     visualMap = heatmap.visualMap;
     grid.bottom = 40;
+  } else if (specialChart) {
+    series = specialChart.series;
+    if (specialChart.grid !== undefined) {
+      grid = specialChart.grid;
+    }
   } else {
     series = convertDefaultSeries(traces, layout, options, palette);
   }
@@ -253,20 +280,22 @@ export default function toEChartsOption(traces: any[], layout: any, options: any
   const xAxisConfig = buildAxisConfig(layout.xaxis, palette);
   const yAxisConfig = buildAxisConfig(layout.yaxis, palette, "left");
   const y2AxisConfig = hasY2 ? buildAxisConfig(layout.yaxis2, palette, "right") : null;
+  const disableDataZoom = specialChart && Object.prototype.hasOwnProperty.call(specialChart, "dataZoom");
+  const showDataZoom = !isPie && !isHeatmap && chartDef?.hasAxes !== false && !disableDataZoom;
 
   const option: any = {
     backgroundColor: "transparent",
     color: ColorPaletteArray,
     textStyle: { color: palette.text, fontFamily: palette.fontFamily, fontSize: 12 },
     tooltip: {
-      trigger: isPie ? "item" : "axis",
+      trigger: isPie || chartType === "treemap" || chartType === "gauge" ? "item" : "axis",
       backgroundColor: palette.surface,
       borderColor: palette.border,
       textStyle: { color: palette.text, fontFamily: palette.fontFamily },
-      axisPointer: isPie ? undefined : { type: "cross", crossStyle: { color: palette.divider } },
+      axisPointer: isPie || chartType === "treemap" ? undefined : { type: "cross", crossStyle: { color: palette.divider } },
     },
     legend: {
-      show: layout.showlegend !== false && options.legend?.enabled !== false,
+      show: layout.showlegend !== false && options.legend?.enabled !== false && chartDef?.hasLegend !== false,
       textStyle: { color: palette.text, fontFamily: palette.fontFamily },
       bottom: options.legend?.placement === "below" ? 0 : undefined,
       type: "scroll",
@@ -275,7 +304,7 @@ export default function toEChartsOption(traces: any[], layout: any, options: any
     toolbox: hideToolbox
       ? { show: false }
       : {
-          show: true,
+          show: chartDef?.hasAxes !== false,
           right: 8,
           feature: {
             dataZoom: { yAxisIndex: "none" },
@@ -284,12 +313,18 @@ export default function toEChartsOption(traces: any[], layout: any, options: any
           },
           iconStyle: { borderColor: palette.textMuted },
         },
-    dataZoom: isPie || isHeatmap ? undefined : [{ type: "inside" }, { type: "slider", bottom: 4, height: 20 }],
+    dataZoom: showDataZoom ? [{ type: "inside" }, { type: "slider", bottom: 4, height: 20 }] : undefined,
     series,
     visualMap,
   };
 
-  if (!isPie) {
+  if (specialChart) {
+    const { series: _s, grid: _g, dataZoom: _d, ...specialRest } = specialChart;
+    Object.assign(option, specialRest);
+    option.series = series;
+  }
+
+  if (!isPie && chartDef?.hasAxes !== false && !option.xAxis && !option.radar && !option.parallel) {
     if (isHorizontal) {
       option.xAxis = yAxisConfig ? [{ ...yAxisConfig, type: mapAxisType(layout.yaxis?.type ?? "linear") }] : [{ type: "value" }];
       option.yAxis = xAxisConfig
