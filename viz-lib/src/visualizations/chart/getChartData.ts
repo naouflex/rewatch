@@ -100,6 +100,29 @@ export default function getChartData(data: any, options: any) {
     });
 
     if (isNil(seriesName)) {
+      const hasOhlc = openValue !== null || highValue !== null || lowValue !== null || closeValue !== null;
+      if (Object.keys(yValues).length === 0 && hasOhlc) {
+        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ x: number; $raw: any; }' is not assignable... Remove this comment to see the full error message
+        point = { x: xValue, $raw: point.$raw };
+        if (openValue !== null) {
+          // @ts-expect-error dynamic column mapping field
+          point.open = openValue;
+        }
+        if (highValue !== null) {
+          // @ts-expect-error dynamic column mapping field
+          point.high = highValue;
+        }
+        if (lowValue !== null) {
+          // @ts-expect-error dynamic column mapping field
+          point.low = lowValue;
+        }
+        if (closeValue !== null) {
+          // @ts-expect-error dynamic column mapping field
+          point.close = closeValue;
+        }
+        addPointToSeries(point, series, "series");
+      }
+
       each(yValues, (yValue, ySeriesName) => {
         // @ts-expect-error ts-migrate(2322) FIXME: Type '{ x: number; y: never; $raw: any; }' is not ... Remove this comment to see the full error message
         point = { x: xValue, y: yValue, $raw: point.$raw };
