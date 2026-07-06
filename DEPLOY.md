@@ -75,4 +75,4 @@ Put an HTTPS-terminating proxy in front of port `5001`. Easiest options:
 
 - A Google Cloud HTTPS Load Balancer pointing at the VM.
 - Caddy / Nginx on the VM with a Let's Encrypt cert for `REDASH_HOST`
-  (`watch.naoufel.io` in this project's `.env`).
+  (`rewatch.naoufel.io` in this project's `.env`).

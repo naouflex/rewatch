@@ -5,7 +5,7 @@
       "command": "uv",
       "args": ["run", "--directory", "${workspaceFolder}/mcp_server", "rewatch-mcp"],
       "env": {
-        "REWATCH_BASE_URL": "https://watch.naoufel.io"
+        "REWATCH_BASE_URL": "https://rewatch.naoufel.io"
       }
     }
   }
