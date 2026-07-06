@@ -10,7 +10,7 @@ import CreateDashboardDialog from "@/components/dashboards/CreateDashboardDialog
 import ThemeToggle from "@/components/ThemeToggle";
 import { Auth, clientConfig, currentUser } from "@/services/auth";
 import settingsMenu from "@/services/settingsMenu";
-import { APPLICATION_TITLE, getApiDocsUrl } from "@/config/brand";
+import { APPLICATION_TITLE } from "@/config/brand";
 import logoUrl from "@/assets/images/icon_small.png";
 
 import "./MobileNavbar.less";
@@ -136,15 +136,7 @@ export default function MobileNavbar() {
       items.push(linkItem("assistant", "assistant", "Assistant"));
     }
 
-    items.push({
-      key: "api-docs",
-      label: (
-        /* eslint-disable-next-line react/jsx-no-target-blank */
-        <a href={getApiDocsUrl(clientConfig.basePath)} target="_blank" rel="noopener noreferrer">
-          API
-        </a>
-      ),
-    });
+    items.push(linkItem("api-docs", "api-docs", "API"));
 
     items.push({ type: "divider" });
 

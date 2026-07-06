@@ -1,0 +1,29 @@
+.api-docs-page {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+  height: 100%;
+
+  .scalar-api-reference-host {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    min-width: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .scalar-app {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+}
+
+body.fixed-layout #application-root .application-layout-content > .api-docs-page {
+  flex: 1 1 auto;
+  min-height: 0;
+}

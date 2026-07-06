@@ -16,7 +16,7 @@ def _query_label(args: dict[str, Any]) -> str:
     if args.get("query_id"):
         return f"Running query #{args['query_id']}"
     if args.get("query_text"):
-        return f"Running SQL: {_truncate(args['query_text'], 48)}"
+        return f"Running query: {_truncate(args['query_text'], 48)}"
     return "Running a query"
 
 

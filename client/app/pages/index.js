@@ -20,6 +20,8 @@ import "./prediction/PredictionResult";
 
 import "./assistant/AssistantPage";
 
+import "./api-docs/ApiDocsPage";
+
 import "./dashboards/DashboardList";
 import "./dashboards/DashboardPage";
 import "./dashboards/PublicDashboardPage";

@@ -8,7 +8,7 @@ import CreateDashboardDialog from "@/components/dashboards/CreateDashboardDialog
 import { useCurrentRoute } from "@/components/ApplicationArea/Router";
 import { Auth, clientConfig, currentUser, subscribeToCurrentUser } from "@/services/auth";
 import settingsMenu from "@/services/settingsMenu";
-import { APPLICATION_TITLE, getApiDocsUrl } from "@/config/brand";
+import { APPLICATION_TITLE } from "@/config/brand";
 import logoUrl from "@/assets/images/icon_small.png";
 
 import ThemeToggle from "@/components/ThemeToggle";
@@ -62,6 +62,7 @@ function useNavbarActiveState() {
       ),
       dataSources: includes(["DataSources.List"], currentRoute.id),
       assistant: currentRoute.id === "Assistant",
+      apiDocs: currentRoute.id === "ApiDocs",
       alerts: includes(
         [
           "Alerts.List",
@@ -379,11 +380,11 @@ export default function DesktopNavbar() {
 
     items.push({
       key: "api-docs",
+      className: activeState.apiDocs ? "navbar-active-item" : null,
       label: (
-        /* eslint-disable-next-line react/jsx-no-target-blank */
-        <a href={getApiDocsUrl(clientConfig.basePath)} target="_blank" rel="noopener noreferrer">
+        <Link href="api-docs">
           <span className="desktop-navbar-label">API</span>
-        </a>
+        </Link>
       ),
     });
 
