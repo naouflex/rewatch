@@ -1,9 +1,25 @@
 import { isString, each, extend, includes, map, reduce } from "lodash";
-import d3 from "d3";
 import chooseTextColorForBackground from "@/lib/chooseTextColorForBackground";
 import { AllColorPaletteArrays, ColorPaletteTypes, resolveColorScheme } from "@/visualizations/ColorPalette";
 
 import { cleanNumber, normalizeValue } from "./utils";
+
+function createOrdinalColorScale(domain: any[], palette: string[]) {
+  const map = new Map<any, string>();
+  domain.forEach((d, i) => {
+    map.set(d, palette[i % palette.length]);
+  });
+  let fallbackIndex = 0;
+  return (v: any) => {
+    if (map.has(v)) {
+      return map.get(v)!;
+    }
+    const color = palette[fallbackIndex % palette.length];
+    fallbackIndex += 1;
+    map.set(v, color);
+    return color;
+  };
+}
 
 export function getPieDimensions(series: any) {
   const rows = series.length > 2 ? 2 : 1;
@@ -113,23 +129,15 @@ export default function preparePieData(seriesList: any, options: any) {
   let getDefaultColor : Function;
 
   // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
-  if (typeof(seriesList[0]) !== 'undefined' && ColorPaletteTypes[colorScheme] === 'continuous') {
-    const uniqueXValues =[... new Set(seriesList[0].data.map((d: any) => d.x))];
+  if (typeof seriesList[0] !== "undefined" && ColorPaletteTypes[colorScheme] === "continuous") {
+    const uniqueXValues = [...new Set(seriesList[0].data.map((d: any) => d.x))];
     const step = (palette.length - 1) / (uniqueXValues.length - 1 || 1);
-    const colorIndices = d3.range(uniqueXValues.length).map(function(i) {
-      return Math.round(step * i);
-    });
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'scale' does not exist on type 'typeof im... Remove this comment to see the full error message
-    getDefaultColor = d3.scale.ordinal()
-      .domain(uniqueXValues) // Set domain as the unique x-values
-      .range(colorIndices.map(index => palette[index]));
+    const colorIndices = uniqueXValues.map((_, i) => Math.round(step * i));
+    const continuousPalette = colorIndices.map(index => palette[index]);
+    getDefaultColor = createOrdinalColorScale(uniqueXValues, continuousPalette);
   } else {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'scale' does not exist on type 'typeof im... Remove this comment to see the full error message
-    getDefaultColor = d3.scale
-      .ordinal()
-      .domain([])
-      .range(palette);
-  };
+    getDefaultColor = createOrdinalColorScale([], palette);
+  }
 
   each(options.valuesOptions, (item, key) => {
     if (isString(item.color) && item.color !== "") {

@@ -169,9 +169,7 @@ const config = {
         resolve: {
           fullySpecified: false
         },
-        exclude: [
-          /node_modules\/@plotly\/mapbox-gl/,
-        ],
+        exclude: [],
       },
       {
         test: /\.(t|j)sx?$/,

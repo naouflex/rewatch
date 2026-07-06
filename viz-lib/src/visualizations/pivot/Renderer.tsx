@@ -4,15 +4,10 @@ import PivotTableUI from "react-pivottable/PivotTableUI";
 import TableRenderers from "react-pivottable/TableRenderers";
 import { RendererPropTypes } from "@/visualizations/prop-types";
 import { formatColumnValue } from "@/lib/utils";
-import createPlotlyComponent from "react-plotly.js/factory";
-import createPlotlyRenderers from "react-pivottable/PlotlyRenderers";
-import { Plotly } from "@/visualizations/chart/plotly";
+import EChartsRenderers from "./EChartsRenderers";
 
 import "react-pivottable/pivottable.css";
 import "./renderer.less";
-
-const Plot = createPlotlyComponent(Plotly);
-const PlotlyRenderers = createPlotlyRenderers(Plot);
 
 const VALID_OPTIONS = [
   "rows",
@@ -35,7 +30,7 @@ const VALID_OPTIONS = [
 ];
 
 function formatRows({ rows, columns }: any) {
-  return map(rows, (row) =>
+  return map(rows, row =>
     mapValues(row, (value, key) => formatColumnValue(value, find(columns, { name: key }).type))
   );
 }
@@ -54,7 +49,6 @@ export default function Renderer({ data, options, onOptionsChange }: any) {
     onOptionsChange(validOptions);
   };
 
-  // Legacy behavior: hideControls when controls.enabled is true
   const hideControls = get(options, "controls.enabled");
   const hideRowTotals = !get(options, "rendererOptions.table.rowTotals");
   const hideColumnTotals = !get(options, "rendererOptions.table.colTotals");
@@ -71,7 +65,7 @@ export default function Renderer({ data, options, onOptionsChange }: any) {
         {...pick(config, VALID_OPTIONS)}
         data={dataRows}
         onChange={onChange}
-        renderers={Object.assign({}, TableRenderers, PlotlyRenderers)}
+        renderers={Object.assign({}, TableRenderers, EChartsRenderers)}
       />
     </div>
   );

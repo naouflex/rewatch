@@ -51,18 +51,20 @@ class WidgetResource(BaseResource):
     @require_permission("edit_dashboard")
     def post(self, widget_id):
         """
-        Updates a widget in a dashboard.
-        This method currently handles Text Box widgets only.
+        Updates a widget on a dashboard (text box content and/or layout options).
 
         :param number widget_id: The ID of the widget to modify
 
-        :<json string text: The new contents of the text box
+        :<json string text: The new contents of a text box (optional)
+        :<json object options: Widget options including position (optional)
         """
         widget = models.Widget.get_by_id_and_org(widget_id, self.current_org)
         require_object_modify_permission(widget.dashboard, self.current_user)
         widget_properties = request.get_json(force=True)
-        widget.text = widget_properties["text"]
-        widget.options = widget_properties["options"]
+        if "text" in widget_properties:
+            widget.text = widget_properties["text"]
+        if "options" in widget_properties:
+            widget.options = widget_properties["options"]
         models.db.session.commit()
         return serialize_widget(widget)
 

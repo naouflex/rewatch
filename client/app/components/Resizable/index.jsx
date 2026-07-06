@@ -1,4 +1,3 @@
-import d3 from "d3";
 import React, { useRef, useMemo, useCallback, useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { Resizable as ReactResizable } from "react-resizable";
@@ -28,7 +27,7 @@ export default function Resizable({ toggleShortcut, direction, sizeAttribute, ch
       return;
     }
 
-    const element = d3.select(elementRef.current);
+    const element = elementRef.current;
     let targetSize;
     if (savedSize.current === null) {
       targetSize = "0px";
@@ -38,15 +37,10 @@ export default function Resizable({ toggleShortcut, direction, sizeAttribute, ch
       savedSize.current = null;
     }
 
-    element
-      .style(sizeAttribute, savedSize.current || "0px")
-      .transition()
-      .duration(200)
-      .ease("swing")
-      .style(sizeAttribute, targetSize);
+    element.style.transition = `${sizeAttribute} 200ms ease`;
+    element.style[sizeAttribute] = targetSize;
 
-    // update state to new element's size
-    setSize(parseInt(targetSize) || 0);
+    setSize(parseInt(targetSize, 10) || 0);
   }, [getElementSize, sizeAttribute]);
 
   const resizeHandle = useMemo(
@@ -56,14 +50,6 @@ export default function Resizable({ toggleShortcut, direction, sizeAttribute, ch
         className={`react-resizable-handle react-resizable-handle-${direction}`}
         role="separator"
         onClick={() => {
-          // TODO: add key controls
-          // On desktops resize uses `mousedown`/`mousemove`/`mouseup` events, and there is a conflict
-          // with this `click` handler: after user releases mouse - this handler will be executed.
-          // So we use `wasResized` flag to check if there was actual resize or user just pressed and released
-          // left mouse button (see also resize event handlers where ths flag is set).
-          // On mobile devices `touchstart`/`touchend` events wll be used, so it's safe to just execute this handler.
-          // To detect which set of events was actually used during particular resize operation, we pass
-          // `onMouseDown` handler to draggable core and check event type there (see also that handler's code).
           if (wasUsingTouchEventsRef.current || !wasResizedRef.current) {
             toggle();
           }
@@ -91,13 +77,12 @@ export default function Resizable({ toggleShortcut, direction, sizeAttribute, ch
   const resizeEventHandlers = useMemo(
     () => ({
       onResizeStart: () => {
-        // use element's size as initial value (it will also check constraints set in CSS)
-        // updated here and in `draggableCore::onMouseDown` handler to ensure that right value will be used
         setSize(getElementSize());
       },
       onResize: (unused, data) => {
-        // update element directly for better UI responsiveness
-        d3.select(elementRef.current).style(sizeAttribute, `${data.size[sizeProp]}px`);
+        if (elementRef.current) {
+          elementRef.current.style[sizeAttribute] = `${data.size[sizeProp]}px`;
+        }
         setSize(data.size[sizeProp]);
         wasResizedRef.current = true;
       },
@@ -113,16 +98,9 @@ export default function Resizable({ toggleShortcut, direction, sizeAttribute, ch
   const draggableCoreOptions = useMemo(
     () => ({
       onMouseDown: e => {
-        // In some cases this handler is executed twice during the same resize operation - first time
-        // with `touchstart` event and second time with `mousedown` (probably emulated by browser).
-        // Therefore we set the flag only when we receive `touchstart` because in ths case it's definitely
-        // mobile browser (desktop browsers will also send `mousedown` but never `touchstart`).
         if (e.type === "touchstart") {
           wasUsingTouchEventsRef.current = true;
         }
-
-        // use element's size as initial value (it will also check constraints set in CSS)
-        // updated here and in `onResizeStart` handler to ensure that right value will be used
         setSize(getElementSize());
       },
     }),
@@ -160,7 +138,7 @@ Resizable.propTypes = {
 
 Resizable.defaultProps = {
   direction: "horizontal",
-  sizeAttribute: null, // "width"/"height" - depending on `direction`
+  sizeAttribute: null,
   toggleShortcut: null,
   children: null,
 };

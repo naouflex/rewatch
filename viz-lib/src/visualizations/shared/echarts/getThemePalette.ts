@@ -1,10 +1,9 @@
 /**
  * Resolves Rewatch theme design tokens (CSS custom properties) into plain
- * color strings that Plotly can consume. Falls back to sensible light-theme
- * defaults when running outside the host app or before tokens are defined.
+ * color strings that chart libraries can consume.
  */
 
-type Palette = {
+export type ThemePalette = {
   background: string;
   surface: string;
   surfaceAlt: string;
@@ -16,7 +15,7 @@ type Palette = {
   fontFamily: string;
 };
 
-const LIGHT_FALLBACK: Palette = {
+const LIGHT_FALLBACK: ThemePalette = {
   background: "#ffffff",
   surface: "#ffffff",
   surfaceAlt: "#fbfaf7",
@@ -33,16 +32,14 @@ function readVar(name: string, fallback: string): string {
     return fallback;
   }
   try {
-    const value = getComputedStyle(document.documentElement)
-      .getPropertyValue(name)
-      .trim();
+    const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
     return value || fallback;
   } catch (e) {
     return fallback;
   }
 }
 
-export default function getThemePalette(): Palette {
+export default function getThemePalette(): ThemePalette {
   return {
     background: readVar("--rd-color-bg", LIGHT_FALLBACK.background),
     surface: readVar("--rd-color-surface", LIGHT_FALLBACK.surface),

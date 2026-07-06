@@ -64,6 +64,7 @@ function wrapComponentWithSettings(WrappedComponent) {
         "tableCellMaxJSONSize",
         "allowCustomJSVisualizations",
         "hidePlotlyModeBar",
+        "hideChartToolbox",
       ]),
     });
 

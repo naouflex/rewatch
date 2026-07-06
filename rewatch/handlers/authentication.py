@@ -274,6 +274,7 @@ def client_config():
         "allowScriptsInUserInput": settings.ALLOW_SCRIPTS_IN_USER_INPUT,
         "showPermissionsControl": current_org.get_setting("feature_show_permissions_control"),
         "hidePlotlyModeBar": current_org.get_setting("hide_plotly_mode_bar"),
+        "hideChartToolbox": current_org.get_setting("hide_plotly_mode_bar"),
         "disablePublicUrls": current_org.get_setting("disable_public_urls"),
         "multiByteSearchEnabled": current_org.get_setting("multi_byte_search_enabled"),
         "allowCustomJSVisualizations": settings.FEATURE_ALLOW_CUSTOM_JS_VISUALIZATIONS,

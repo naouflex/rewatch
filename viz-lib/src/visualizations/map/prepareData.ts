@@ -1,13 +1,23 @@
-import d3 from "d3";
 import { isNil, extend, map, filter, groupBy, omit } from "lodash";
+import ColorPalette from "@/visualizations/ColorPalette";
+
+const GROUP_COLORS = [
+  ColorPalette.Cyan,
+  ColorPalette["Light Blue"],
+  ColorPalette.Indigo,
+  ColorPalette.Forest,
+  ColorPalette.Orange,
+  ColorPalette.Red,
+  ColorPalette.Pink,
+  ColorPalette.Grape,
+  ColorPalette.Amber,
+  ColorPalette.Gray,
+];
 
 export default function prepareData(data: any, options: any) {
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'scale' does not exist on type 'typeof im... Remove this comment to see the full error message
-  const colorScale = d3.scale.category10();
-
   const { classify, latColName, lonColName } = options;
-
   const pointGroups = classify ? groupBy(data.rows, classify) : { All: data.rows };
+  let colorIndex = 0;
 
   return filter(
     map(pointGroups, (rows, name) => {
@@ -27,7 +37,8 @@ export default function prepareData(data: any, options: any) {
 
       const result = extend({}, options.groups[name], { name, points });
       if (isNil(result.color)) {
-        result.color = colorScale(name);
+        result.color = GROUP_COLORS[colorIndex % GROUP_COLORS.length];
+        colorIndex += 1;
       }
 
       return result;

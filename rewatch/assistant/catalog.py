@@ -219,16 +219,32 @@ VISUALIZATION_TYPES: dict[str, dict[str, Any]] = {
     },
     "CHART": {
         "name": "Chart",
-        "summary": "Plotly-based charts (column, line, bar, area, pie, scatter).",
+        "summary": "ECharts-based charts (column, line, bar, area, pie, scatter).",
         "required_options": ["columnMapping"],
         "common_options": {
-            "columnMapping": {"date_col": "x", "metric_col": "y"},
-            "globalSeriesType": "column | line | bar | area | pie | scatter",
+            "globalSeriesType": "line | column | bar | area | pie | scatter",
+            "columnMapping": {"<x_column>": "x", "<y_column>": "y"},
             "legend": {"enabled": True},
+            "sortX": True,
+        },
+        "example_options": {
+            "globalSeriesType": "line",
+            "columnMapping": {"date": "x", "tvl": "y"},
+            "legend": {"enabled": True},
+            "sortX": True,
+        },
+        "example_counter_options": {
+            "counterColName": "market_cap.usd",
+            "counterLabel": "Market cap",
+            "rowNumber": 1,
+            "targetRowNumber": 1,
         },
         "tips": [
-            "Query must validate first; use validation columns for columnMapping keys.",
-            "globalSeriesType controls chart style.",
+            "columnMapping keys are exact result column names from validation.columns (case-sensitive, dots allowed).",
+            "Values are roles: x, y, series — not column names.",
+            "Prefer omitting options in create_visualization; the server auto-maps columns from query results.",
+            "Read visualization_hints.recommended.CHART from run_query before creating charts.",
+            "Prefer line charts for time series (date + numeric); column/bar for categories.",
         ],
     },
     "COUNTER": {
@@ -237,10 +253,14 @@ VISUALIZATION_TYPES: dict[str, dict[str, Any]] = {
         "required_options": [],
         "common_options": {
             "counterLabel": "",
-            "counterColName": "column_with_value",
+            "counterColName": "exact_numeric_column_from_validation.columns",
             "rowNumber": 1,
             "targetRowNumber": 1,
         },
+        "tips": [
+            "counterColName must be an exact column name from validation.columns (e.g. market_cap.usd).",
+            "Omit options in create_visualization — the server picks the best numeric column.",
+        ],
     },
     "MAP": {
         "name": "Map (markers)",
@@ -549,4 +569,9 @@ def get_visualization_type(viz_type: str) -> dict[str, Any]:
             "known_types": sorted(VISUALIZATION_TYPES.keys()),
             "hint": "Call list_visualization_types to browse available types.",
         }
-    return {"type": viz_type, **meta}
+    result = {"type": viz_type, **meta}
+    result["dashboard_workflow"] = (
+        "Typical flow: run_query or create_query (read validation columns) → create_visualization "
+        "→ add_widget_to_dashboard → get_dashboard to verify layout → update_dashboard(is_draft=false) to publish."
+    )
+    return result

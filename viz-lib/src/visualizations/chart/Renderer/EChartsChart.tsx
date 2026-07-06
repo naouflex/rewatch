@@ -4,9 +4,9 @@ import { ErrorBoundaryContext } from "@/components/ErrorBoundary";
 import { RendererPropTypes } from "@/visualizations/prop-types";
 import { visualizationsSettings } from "@/visualizations/visualizationsSettings";
 import getChartData from "../getChartData";
-import initChart from "./initChart";
+import initChart from "./initEChartsChart";
 
-export interface PlotlyChartProps {
+export interface EChartsChartProps {
   data: {
     rows: any[];
     columns: any[];
@@ -14,18 +14,16 @@ export interface PlotlyChartProps {
   options: object;
 }
 
-export default function PlotlyChart({ options, data }: PlotlyChartProps) {
-  const [container, setContainer] = useState(null);
-  const [chart, setChart] = useState(null);
+export default function EChartsChart({ options, data }: EChartsChartProps) {
+  const [container, setContainer] = useState<HTMLDivElement | null>(null);
+  const [chart, setChart] = useState<any>(null);
 
   const errorHandler = useContext(ErrorBoundaryContext);
-  const errorHandlerRef = useRef();
-  // @ts-expect-error ts-migrate(2322) FIXME: Type '{ handleError: (error: any) => void; reset: ... Remove this comment to see the full error message
+  const errorHandlerRef = useRef<any>();
   errorHandlerRef.current = errorHandler;
 
   const isMobile = useMedia({ maxWidth: 768 });
-  const isMobileRef = useRef();
-  // @ts-expect-error ts-migrate(2322) FIXME: Type 'boolean' is not assignable to type 'undefine... Remove this comment to see the full error message
+  const isMobileRef = useRef<boolean>();
   isMobileRef.current = isMobile;
 
   useEffect(() => {
@@ -34,8 +32,7 @@ export default function PlotlyChart({ options, data }: PlotlyChartProps) {
 
       const chartData = getChartData(data.rows, options);
       const _chart = initChart(container, options, chartData, visualizationsSettings, (error: any) => {
-        // @ts-expect-error ts-migrate(2532) FIXME: Object is possibly 'undefined'.
-        errorHandlerRef.current.handleError(error);
+        errorHandlerRef.current?.handleError(error);
       });
       _chart.initialized.then(() => {
         if (!isDestroyed) {
@@ -51,13 +48,11 @@ export default function PlotlyChart({ options, data }: PlotlyChartProps) {
 
   useEffect(() => {
     if (chart) {
-      // @ts-expect-error ts-migrate(2531) FIXME: Object is possibly 'null'.
       chart.setZoomEnabled(!isMobile);
     }
   }, [chart, isMobile]);
 
-  // @ts-expect-error ts-migrate(2322) FIXME: Type 'Dispatch<SetStateAction<null>>' is not assig... Remove this comment to see the full error message
   return <div className="chart-visualization-container" ref={setContainer} />;
 }
 
-PlotlyChart.propTypes = RendererPropTypes;
+EChartsChart.propTypes = RendererPropTypes;

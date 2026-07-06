@@ -2,13 +2,13 @@ import React, { useState, useMemo, useEffect } from "react";
 import PropTypes from "prop-types";
 import Select from "antd/lib/select";
 import Alert from "antd/lib/alert";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import Card from "antd/lib/card";
 import Row from "antd/lib/row";
 import Col from "antd/lib/col";
 import Table from "antd/lib/table";
 import LoadingState from "@/components/items-list/components/LoadingState";
 import { useTheme } from "@/components/ThemeProvider";
+import EChartsLineChart from "./EChartsLineChart";
 import "./MLModelMetricsHistoryTrain.less";
 
 const MLModelMetricsHistoryTrain = ({ versions }) => {
@@ -21,7 +21,7 @@ const MLModelMetricsHistoryTrain = ({ versions }) => {
 
     const allColumns = new Set();
     versions.forEach(version => {
-      if (version.metrics && typeof version.metrics === 'object') {
+      if (version.metrics && typeof version.metrics === "object") {
         Object.keys(version.metrics).forEach(key => allColumns.add(key));
       }
     });
@@ -33,9 +33,11 @@ const MLModelMetricsHistoryTrain = ({ versions }) => {
 
     const allMetrics = new Set();
     versions.forEach(version => {
-      if (version.metrics && 
-          version.metrics[selectedColumn] && 
-          typeof version.metrics[selectedColumn] === 'object') {
+      if (
+        version.metrics &&
+        version.metrics[selectedColumn] &&
+        typeof version.metrics[selectedColumn] === "object"
+      ) {
         Object.keys(version.metrics[selectedColumn]).forEach(key => allMetrics.add(key));
       }
     });
@@ -57,66 +59,40 @@ const MLModelMetricsHistoryTrain = ({ versions }) => {
   const chartData = useMemo(() => {
     if (!selectedColumn || !selectedMetric) return [];
 
-    const data = versions
+    return versions
       .filter(version => {
-        if (selectedColumn === 'metrics') {
+        if (selectedColumn === "metrics") {
           return version.metrics && version.metrics[selectedMetric] !== undefined;
-        } else {
-          return version.metrics && 
-                 version.metrics[selectedColumn] && 
-                 version.metrics[selectedColumn][selectedMetric] !== undefined;
         }
+        return (
+          version.metrics &&
+          version.metrics[selectedColumn] &&
+          version.metrics[selectedColumn][selectedMetric] !== undefined
+        );
       })
       .map(version => ({
         date: new Date(version.created_at).toLocaleString(),
-        value: selectedColumn === 'metrics' ? version.metrics[selectedMetric] : version.metrics[selectedColumn][selectedMetric],
+        value:
+          selectedColumn === "metrics"
+            ? version.metrics[selectedMetric]
+            : version.metrics[selectedColumn][selectedMetric],
         regressor: version.options?.regressor,
         regressorOptions: version.options?.regressor_options,
       }))
       .sort((a, b) => new Date(a.date) - new Date(b.date));
-
-    return data;
   }, [versions, selectedColumn, selectedMetric]);
 
   const isChartable = useMemo(() => {
-    return chartData.length > 0 && typeof chartData[0].value === 'number';
+    return chartData.length > 0 && typeof chartData[0].value === "number";
   }, [chartData]);
 
-  const handleColumnChange = (value) => {
+  const handleColumnChange = value => {
     setSelectedColumn(value);
     setSelectedMetric(null);
   };
 
-  const handleMetricChange = (value) => {
+  const handleMetricChange = value => {
     setSelectedMetric(value);
-  };
-
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      const { value, regressor, regressorOptions } = payload[0].payload;
-      return (
-        <div className="custom-tooltip">
-          <p className="label">{`Date: ${label}`}</p>
-          <p className="intro">{`Value: ${value}`}</p>
-          {regressor && <p className="intro">{`Regressor: ${regressor}`}</p>}
-          {regressorOptions && (
-            <div className="intro">
-              <p>Regressor Options:</p>
-              <Table
-                dataSource={Object.entries(regressorOptions).map(([key, val]) => ({ key, val: JSON.stringify(val) }))}
-                columns={[
-                  { title: 'Option', dataIndex: 'key', key: 'key' },
-                  { title: 'Value', dataIndex: 'val', key: 'val' },
-                ]}
-                pagination={false}
-                size="small"
-              />
-            </div>
-          )}
-        </div>
-      );
-    }
-    return null;
   };
 
   const renderContent = () => {
@@ -138,17 +114,7 @@ const MLModelMetricsHistoryTrain = ({ versions }) => {
       );
     }
 
-    return (
-      <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={chartData}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="date" />
-          <YAxis domain={[0, 1]} />
-          <Tooltip content={<CustomTooltip />} />
-          <Line type="monotone" dataKey="value" stroke="#8884d8" activeDot={{ r: 8 }} />
-        </LineChart>
-      </ResponsiveContainer>
-    );
+    return <EChartsLineChart data={chartData} height={300} />;
   };
 
   if (!versions) {
@@ -160,7 +126,7 @@ const MLModelMetricsHistoryTrain = ({ versions }) => {
   }
 
   return (
-    <div className={`ml-model-metrics-history ${isDarkMode ? 'dark-mode' : ''}`}>
+    <div className={`ml-model-metrics-history ${isDarkMode ? "dark-mode" : ""}`}>
       <h3>Training Metrics History</h3>
       <Card className="ml-model-metrics-history-card">
         <Row gutter={[16, 16]}>

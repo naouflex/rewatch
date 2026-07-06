@@ -5,11 +5,11 @@ import Skeleton from "antd/lib/skeleton";
 import DynamicComponent from "@/components/DynamicComponent";
 import { SettingsEditorPropTypes, SettingsEditorDefaultProps } from "../prop-types";
 
-export default function PlotlySettings(props) {
+export default function ChartSettings(props) {
   const { values, onChange, loading } = props;
 
   return (
-    <DynamicComponent name="OrganizationSettings.PlotlySettings" {...props}>
+    <DynamicComponent name="OrganizationSettings.ChartSettings" {...props}>
       <Form.Item label="Chart Visualization">
         {loading ? (
           <Skeleton title={{ width: 300 }} paragraph={false} active />
@@ -18,7 +18,7 @@ export default function PlotlySettings(props) {
             name="hide_plotly_mode_bar"
             checked={values.hide_plotly_mode_bar}
             onChange={e => onChange({ hide_plotly_mode_bar: e.target.checked })}>
-            Hide Plotly mode bar
+            Hide chart toolbox
           </Checkbox>
         )}
       </Form.Item>
@@ -26,6 +26,5 @@ export default function PlotlySettings(props) {
   );
 }
 
-PlotlySettings.propTypes = SettingsEditorPropTypes;
-
-PlotlySettings.defaultProps = SettingsEditorDefaultProps;
+ChartSettings.propTypes = SettingsEditorPropTypes;
+ChartSettings.defaultProps = SettingsEditorDefaultProps;

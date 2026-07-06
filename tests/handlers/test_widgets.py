@@ -64,3 +64,16 @@ class WidgetAPITest(BaseTestCase):
         self.assertEqual(rv.status_code, 200)
         dashboard = models.Dashboard.get_by_slug_and_org(widget.dashboard.slug, widget.dashboard.org)
         self.assertEqual(dashboard.widgets.count(), 0)
+
+    def test_update_widget_options_without_text(self):
+        widget = self.factory.create_widget(
+            options={"position": {"col": 0, "row": 0, "sizeX": 6, "sizeY": 3}}
+        )
+        data = {
+            "options": {
+                "position": {"col": 6, "row": 0, "sizeX": 6, "sizeY": 3, "minSizeX": 2, "maxSizeX": 12},
+            }
+        }
+        rv = self.make_request("post", f"/api/widgets/{widget.id}", data=data)
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(rv.json["options"]["position"]["col"], 6)

@@ -2,7 +2,7 @@ import React from "react";
 import DynamicComponent from "@/components/DynamicComponent";
 
 import FormatSettings from "./FormatSettings";
-import PlotlySettings from "./PlotlySettings";
+import ChartSettings from "./ChartSettings";
 import FeatureFlagsSettings from "./FeatureFlagsSettings";
 
 export default function GeneralSettings(props) {
@@ -11,7 +11,7 @@ export default function GeneralSettings(props) {
       <h3 className="m-t-0">General</h3>
       <hr />
       <FormatSettings {...props} />
-      <PlotlySettings {...props} />
+      <ChartSettings {...props} />
       <FeatureFlagsSettings {...props} />
     </DynamicComponent>
   );

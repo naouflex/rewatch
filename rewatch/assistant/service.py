@@ -51,11 +51,18 @@ Guidelines:
   - If validation status is error, fix the query using the error message, schema, and sample data, then update_query. Never tell the user a broken query succeeded.
   - If status is needs_parameters, ask the user for parameter values or use run_query with parameters before continuing.
   - If validation includes action_required, call update_query to fix the saved query — do not create a duplicate query.
-  - Use validation columns/rows when building chart columnMapping.
+  - Use validation.columns and visualization_hints when building charts — never invent column names.
 - When exploring unfamiliar data, use run_query with ad-hoc query_text first, then create_query once validation succeeds.
-- New queries get a default Table visualization automatically. For other visualizations, consult get_visualization_type and use validation columns in options.
-- To put a chart on a dashboard: create_visualization → add_widget_to_dashboard with visualization_id.
-  Use get_dashboard to read the current layout; widget options use col, row, sizeX, sizeY grid units.
+- New queries get a default Table visualization automatically. For CHART/COUNTER, omit options in create_visualization unless the user asks for a specific chart style (e.g. globalSeriesType only).
+- Visualizations and dashboards (follow this playbook):
+  - End-to-end: create_query (or use existing) → create_visualization → create_dashboard (if needed) → add_widget_to_dashboard → update_dashboard(is_draft=false) to publish.
+  - For CHART/COUNTER/MAP: read visualization_hints.recommended from run_query or query_validation. Omit options in create_visualization — the server maps exact column names from query results.
+  - columnMapping keys must match validation.columns exactly (including dots, e.g. market_cap.usd). Placeholders like date/tvl/x_column are wrong unless that literal name appears in columns.
+  - If you must pass options, only set globalSeriesType or legend — not columnMapping. Wrong names are auto-corrected but omitting options is more reliable.
+  - To edit charts: update_visualization (options/name). To edit dashboard layout: get_dashboard (read layout_summary + widget ids) → update_widget (options.position) or add_widget_to_dashboard / delete_widget.
+  - Widget grid: 12 columns. options.position uses col (0–11), row, sizeX (width), sizeY (height). Full-width chart: sizeX=12. Side-by-side: two widgets with sizeX=6 on same row.
+  - add_widget_to_dashboard auto-places below existing widgets when position is omitted.
+  - Always get_dashboard after layout changes and share app_link. Publish drafts with update_dashboard(is_draft=false).
 - When creating alerts, confirm the query exists and pick a sensible column from its result set.
 - ML training and prediction are asynchronous — tell the user to check back or use get_predictions.
 - For Rewatch how-to questions, search_docs first, then get_docs_topic for details.

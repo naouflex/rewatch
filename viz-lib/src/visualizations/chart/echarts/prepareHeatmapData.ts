@@ -1,9 +1,28 @@
 import { map, max, uniq, sortBy, flatten, find, findIndex } from "lodash";
 import { createNumberFormatter } from "@/lib/value-format";
-// @ts-expect-error ts-migrate(7016) FIXME: Could not find a declaration file for module 'plot... Remove this comment to see the full error message
-import Colorscale from "plotly.js/src/components/colorscale";
-import d3 from "d3";
 import chooseTextColorForBackground from "@/lib/chooseTextColorForBackground";
+import getHeatmapColorScale from "./heatmapColorScales";
+
+function hexToRgb(hex: string) {
+  const normalized = hex.replace("#", "");
+  const bigint = parseInt(normalized, 16);
+  return {
+    r: (bigint >> 16) & 255,
+    g: (bigint >> 8) & 255,
+    b: bigint & 255,
+  };
+}
+
+function interpolateRgb(a: string, b: string) {
+  const start = hexToRgb(a);
+  const end = hexToRgb(b);
+  return (t: number) => {
+    const r = Math.round(start.r + (end.r - start.r) * t);
+    const g = Math.round(start.g + (end.g - start.g) * t);
+    const bChannel = Math.round(start.b + (end.b - start.b) * t);
+    return `rgb(${r}, ${g}, ${bChannel})`;
+  };
+}
 
 const defaultColorScheme = [
   [0, "#356aff"],
@@ -17,9 +36,11 @@ const defaultColorScheme = [
 ];
 
 function getColor(value: any, scheme: any) {
-  if (value == 1) { return scheme[scheme.length - 1][1]; }
+  if (value == 1) {
+    return scheme[scheme.length - 1][1];
+  }
   const upperboundIndex = findIndex(scheme, (range: any) => value < range[0]);
-  const scale = d3.interpolate(scheme[upperboundIndex - 1][1], scheme[upperboundIndex][1]);
+  const scale = interpolateRgb(scheme[upperboundIndex - 1][1], scheme[upperboundIndex][1]);
   return scale(value);
 }
 
@@ -113,7 +134,7 @@ export default function prepareHeatmapData(seriesList: any, options: any) {
       [1, options.heatMaxColor],
     ];
   } else {
-    colorScheme = Colorscale.getScale(options.colorScheme);
+    colorScheme = getHeatmapColorScale(options.colorScheme);
   }
 
   const additionalOptions = {

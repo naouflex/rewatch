@@ -12,8 +12,20 @@ import requests
 from rewatch.assistant import catalog as platform_catalog
 from rewatch.assistant import docs as docs_catalog
 from rewatch.assistant import web as web_tools
+from rewatch.assistant.dashboard_layout import (
+    enrich_dashboard_for_assistant,
+    has_explicit_position,
+    normalize_widget_options,
+    suggest_next_position,
+    summarize_dashboard_layout,
+)
 from rewatch.assistant.datasources import enrich_data_source, enrich_data_sources
 from rewatch.assistant.links import enrich_tool_payload
+from rewatch.assistant.visualization_helpers import (
+    build_visualization_hints,
+    normalize_visualization_options,
+    suggest_visualization_options,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -172,8 +184,10 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
         "function": {
             "name": "create_visualization",
             "description": (
-                "Add a visualization to a query. Call get_visualization_type(type) for required options. "
-                "Query must validate before creating non-TABLE visualizations."
+                "Add a visualization to a query. For CHART/COUNTER/MAP/CHOROPLETH, omit options "
+                "(or pass only globalSeriesType) — column names are auto-resolved from query results. "
+                "If you pass columnMapping/counterColName, invalid names are corrected to actual columns. "
+                "Read visualization_hints from run_query or query_validation before choosing types."
             ),
             "parameters": {
                 "type": "object",
@@ -192,7 +206,10 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
         "type": "function",
         "function": {
             "name": "update_visualization",
-            "description": "Update a visualization's name, type, or options.",
+            "description": (
+                "Update a visualization's name, type, or options. Column names in options are "
+                "validated against the parent query results and auto-corrected when wrong."
+            ),
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -335,7 +352,10 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
         "type": "function",
         "function": {
             "name": "get_dashboard",
-            "description": "Get a dashboard with widgets and linked queries/visualizations.",
+            "description": (
+                "Get a dashboard with widgets, layout_summary (grid positions), and visualization links. "
+                "Always call before rearranging widgets or editing an existing dashboard."
+            ),
             "parameters": {
                 "type": "object",
                 "properties": {"dashboard_id": {"type": "integer"}},
@@ -359,7 +379,10 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
         "type": "function",
         "function": {
             "name": "update_dashboard",
-            "description": "Update a dashboard name, layout, tags, or draft status.",
+            "description": (
+                "Update dashboard name, tags, draft/archived status, or layout. "
+                "Set is_draft=false to publish when widgets are placed."
+            ),
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -379,8 +402,9 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
         "function": {
             "name": "add_widget_to_dashboard",
             "description": (
-                "Add a widget to a dashboard. Pass visualization_id for a chart/table widget, "
-                "or text for a markdown text box. Use get_dashboard layout to place widgets."
+                "Add a visualization or text box to a dashboard. Pass visualization_id for charts/tables, "
+                "or text for markdown. Position goes in options.position (col, row, sizeX, sizeY on a "
+                "12-column grid). Omit position to auto-place below existing widgets."
             ),
             "parameters": {
                 "type": "object",
@@ -388,7 +412,13 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
                     "dashboard_id": {"type": "integer"},
                     "visualization_id": {"type": "integer"},
                     "text": {"type": "string", "description": "Text box content (markdown supported)"},
-                    "options": {"type": "object", "description": "Position: col, row, sizeX, sizeY"},
+                    "options": {
+                        "type": "object",
+                        "description": (
+                            "Widget options; use options.position or top-level col/row/sizeX/sizeY "
+                            "(col 0–11, sizeX width up to 12, sizeY height in row units)"
+                        ),
+                    },
                     "width": {"type": "integer", "default": 1},
                 },
                 "required": ["dashboard_id"],
@@ -399,15 +429,22 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
         "type": "function",
         "function": {
             "name": "update_widget",
-            "description": "Update a text-box widget on a dashboard.",
+            "description": (
+                "Update a dashboard widget: text (markdown text boxes), and/or options.position to "
+                "move or resize (col, row, sizeX, sizeY). Call get_dashboard first for widget_id and "
+                "current positions."
+            ),
             "parameters": {
                 "type": "object",
                 "properties": {
                     "widget_id": {"type": "integer"},
-                    "text": {"type": "string"},
-                    "options": {"type": "object"},
+                    "text": {"type": "string", "description": "New markdown text (text-box widgets)"},
+                    "options": {
+                        "type": "object",
+                        "description": "Widget options; merge position via options.position",
+                    },
                 },
-                "required": ["widget_id", "text"],
+                "required": ["widget_id"],
             },
         },
     },
@@ -838,13 +875,15 @@ class ToolContext:
         max_rows = args.get("max_rows", 50)
         query_result = response.get("query_result") if isinstance(response, dict) else {}
         query_result_id = query_result.get("id") if isinstance(query_result, dict) else None
-        return {
+        result = {
             "query_result_id": query_result_id,
             "columns": columns,
             "row_count": len(rows),
             "rows": rows[:max_rows],
+            "visualization_hints": build_visualization_hints(columns, rows),
             "note": f"Showing first {max_rows} rows" if len(rows) > max_rows else None,
         }
+        return result
 
     def _execute_saved_query_validation(self, query_id: int, parameters: Optional[dict] = None) -> dict[str, Any]:
         try:
@@ -992,31 +1031,106 @@ class ToolContext:
                 f"{query_validation['message']}"
             )
 
+        viz_type = (args.get("type") or "").upper()
+        columns = query_validation.get("columns") or []
+        rows = query_validation.get("rows") or []
+
+        user_options = args.get("options")
+        if not user_options:
+            options, corrections = normalize_visualization_options(
+                viz_type,
+                suggest_visualization_options(viz_type, columns, rows),
+                columns,
+                rows,
+            )
+        else:
+            options, corrections = normalize_visualization_options(viz_type, user_options, columns, rows)
+
         body = _merge_body(
             query_id=args["query_id"],
             type=args["type"],
             name=args["name"],
-            options=args.get("options") or {},
+            options=options or {},
             description=args.get("description"),
         )
         visualization = _as_dict(self.request("POST", "/api/visualizations", body=body), "visualization")
         visualization["query_validation"] = query_validation
+        visualization["resolved_options"] = options
+        if corrections:
+            visualization["column_corrections"] = corrections
+        if not user_options:
+            visualization["auto_suggested_options"] = options
         return visualization
 
     def update_visualization_tool(self, args: dict) -> Any:
         args = dict(args)
         visualization_id = args.pop("visualization_id")
-        return self.request("POST", f"/api/visualizations/{visualization_id}", body=_merge_body(**args))
+        current = _as_dict(self.request("GET", f"/api/visualizations/{visualization_id}"), "visualization")
+        query_id = current.get("query_id")
+        corrections: list[str] = []
+
+        if "options" in args and query_id:
+            query_validation = self._execute_saved_query_validation(query_id)
+            if query_validation.get("status") == "error":
+                raise RuntimeError(
+                    "Cannot update visualization options because the query failed to run: "
+                    f"{query_validation['message']}"
+                )
+            viz_type = (args.get("type") or current.get("type") or "").upper()
+            options, corrections = normalize_visualization_options(
+                viz_type,
+                args.get("options"),
+                query_validation.get("columns") or [],
+                query_validation.get("rows") or [],
+            )
+            args["options"] = options
+
+        result = self.request("POST", f"/api/visualizations/{visualization_id}", body=_merge_body(**args))
+        if corrections and isinstance(result, dict):
+            result["column_corrections"] = corrections
+        return result
+
+    def get_dashboard_tool(self, args: dict) -> Any:
+        dashboard = _as_dict(
+            self.request("GET", f"/api/dashboards/{args['dashboard_id']}"),
+            "dashboard",
+        )
+        return enrich_dashboard_for_assistant(dashboard)
 
     def add_widget_tool(self, args: dict) -> Any:
+        dashboard_id = args["dashboard_id"]
+        raw_options = args.get("options")
+        if has_explicit_position(raw_options):
+            options = normalize_widget_options(raw_options)
+        else:
+            dashboard = _as_dict(self.request("GET", f"/api/dashboards/{dashboard_id}"), "dashboard")
+            widgets = dashboard.get("widgets") if isinstance(dashboard.get("widgets"), list) else []
+            options = normalize_widget_options(raw_options, position=suggest_next_position(widgets))
+
         body = _merge_body(
-            dashboard_id=args["dashboard_id"],
+            dashboard_id=dashboard_id,
             visualization_id=args.get("visualization_id"),
             text=args.get("text"),
-            options=args.get("options") or {},
+            options=options,
             width=args.get("width", 1),
         )
-        return self.request("POST", "/api/widgets", body=body)
+        widget = _as_dict(self.request("POST", "/api/widgets", body=body), "widget")
+        dashboard = _as_dict(self.request("GET", f"/api/dashboards/{dashboard_id}"), "dashboard")
+        widgets = dashboard.get("widgets") if isinstance(dashboard.get("widgets"), list) else []
+        widget["layout_summary"] = summarize_dashboard_layout(widgets)
+        return widget
+
+    def update_widget_tool(self, args: dict) -> Any:
+        args = dict(args)
+        widget_id = args.pop("widget_id")
+        body: dict[str, Any] = {}
+        if "text" in args:
+            body["text"] = args.pop("text")
+        if "options" in args:
+            body["options"] = normalize_widget_options(args.pop("options"))
+        if not body:
+            raise RuntimeError("Provide text and/or options to update a widget.")
+        return self.request("POST", f"/api/widgets/{widget_id}", body=body)
 
 
 # Keep tool results within a sane share of the model context. Oversized
@@ -1090,15 +1204,11 @@ def execute_tool(ctx: ToolContext, name: str, arguments: dict) -> str:
             "/api/dashboards",
             params={k: v for k, v in {"q": a.get("q"), "page_size": a.get("page_size", 10)}.items() if v},
         ),
-        "get_dashboard": lambda a: ctx.request("GET", f"/api/dashboards/{a['dashboard_id']}"),
+        "get_dashboard": ctx.get_dashboard_tool,
         "create_dashboard": lambda a: ctx.request("POST", "/api/dashboards", body={"name": a["name"]}),
         "update_dashboard": ctx.update_dashboard_tool,
         "add_widget_to_dashboard": ctx.add_widget_tool,
-        "update_widget": lambda a: ctx.request(
-            "POST",
-            f"/api/widgets/{a['widget_id']}",
-            body=_merge_body(text=a["text"], options=a.get("options") or {}),
-        ),
+        "update_widget": ctx.update_widget_tool,
         "delete_widget": lambda a: ctx.request("DELETE", f"/api/widgets/{a['widget_id']}"),
         "list_alerts": lambda a: ctx.request("GET", "/api/alerts"),
         "get_alert": lambda a: ctx.request("GET", f"/api/alerts/{a['alert_id']}"),

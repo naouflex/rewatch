@@ -4,10 +4,10 @@ import { Section, Switch, TextArea } from "@/components/visualizations/editor";
 import { EditorPropTypes } from "@/visualizations/prop-types";
 
 const defaultCustomCode = trimStart(`
-// Available variables are x, ys, element, and Plotly
+// Available variables are x, ys, element, and echarts
 // Type console.log(x, ys); for more info about x and ys
-// To plot your graph call Plotly.newPlot(element, ...)
-// Plotly examples and docs: https://plot.ly/javascript/
+// To plot your graph: const chart = echarts.init(element); chart.setOption({...});
+// ECharts examples and docs: https://echarts.apache.org/examples/
 `);
 
 export default function CustomChartSettings({ options, onOptionsChange }: any) {

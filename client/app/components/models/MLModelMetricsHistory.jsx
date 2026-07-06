@@ -2,16 +2,15 @@ import React, { useState, useMemo, useEffect } from "react";
 import PropTypes from "prop-types";
 import Select from "antd/lib/select";
 import Alert from "antd/lib/alert";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import Card from "antd/lib/card";
 import Row from "antd/lib/row";
 import Col from "antd/lib/col";
-import Table from "antd/lib/table";
 import LoadingState from "@/components/items-list/components/LoadingState";
 import { useTheme } from "@/components/ThemeProvider";
-import "./MLModelMetricsHistoryTrain.less";
+import EChartsLineChart from "./EChartsLineChart";
+import "./MLModelMetricsHistory.less";
 
-const MLModelMetricsHistoryTrain = ({ predictions }) => {
+const MLModelMetricsHistory = ({ predictions }) => {
   const { isDarkMode } = useTheme();
   const [selectedColumn, setSelectedColumn] = useState(null);
   const [selectedMetric, setSelectedMetric] = useState(null);
@@ -21,7 +20,7 @@ const MLModelMetricsHistoryTrain = ({ predictions }) => {
 
     const allColumns = new Set();
     predictions.forEach(prediction => {
-      if (prediction.additional_properties && typeof prediction.additional_properties === 'object') {
+      if (prediction.additional_properties && typeof prediction.additional_properties === "object") {
         Object.keys(prediction.additional_properties).forEach(key => allColumns.add(key));
       }
     });
@@ -33,9 +32,11 @@ const MLModelMetricsHistoryTrain = ({ predictions }) => {
 
     const allMetrics = new Set();
     predictions.forEach(prediction => {
-      if (prediction.additional_properties && 
-          prediction.additional_properties[selectedColumn] && 
-          typeof prediction.additional_properties[selectedColumn] === 'object') {
+      if (
+        prediction.additional_properties &&
+        prediction.additional_properties[selectedColumn] &&
+        typeof prediction.additional_properties[selectedColumn] === "object"
+      ) {
         Object.keys(prediction.additional_properties[selectedColumn]).forEach(key => allMetrics.add(key));
       }
     });
@@ -57,77 +58,38 @@ const MLModelMetricsHistoryTrain = ({ predictions }) => {
   const chartData = useMemo(() => {
     if (!selectedColumn || !selectedMetric) return [];
 
-    const data = predictions
+    return predictions
       .filter(prediction => {
-        if (selectedColumn === 'additional_properties') {
+        if (selectedColumn === "additional_properties") {
           return prediction.additional_properties && prediction.additional_properties[selectedMetric] !== undefined;
-        } else {
-          return prediction.additional_properties && 
-                 prediction.additional_properties[selectedColumn] && 
-                 prediction.additional_properties[selectedColumn][selectedMetric] !== undefined;
         }
+        return (
+          prediction.additional_properties &&
+          prediction.additional_properties[selectedColumn] &&
+          prediction.additional_properties[selectedColumn][selectedMetric] !== undefined
+        );
       })
       .map(prediction => ({
         date: new Date(prediction.created_at).toLocaleString(),
-        value: selectedColumn === 'additional_properties' ? prediction.additional_properties[selectedMetric] : prediction.additional_properties[selectedColumn][selectedMetric],
-        regressor: prediction.options?.regressor,
-        regressorOptions: prediction.options?.regressor_options,
+        value:
+          selectedColumn === "additional_properties"
+            ? prediction.additional_properties[selectedMetric]
+            : prediction.additional_properties[selectedColumn][selectedMetric],
       }))
       .sort((a, b) => new Date(a.date) - new Date(b.date));
-
-    return data;
   }, [predictions, selectedColumn, selectedMetric]);
 
   const isChartable = useMemo(() => {
-    return chartData.length > 0 && typeof chartData[0].value === 'number';
+    return chartData.length > 0 && typeof chartData[0].value === "number";
   }, [chartData]);
-
-  const handleColumnChange = (value) => {
-    setSelectedColumn(value);
-    setSelectedMetric(null);
-  };
-
-  const handleMetricChange = (value) => {
-    setSelectedMetric(value);
-  };
-
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      const { value, regressor, regressorOptions } = payload[0].payload;
-      return (
-        <div className="custom-tooltip">
-          <p className="label">{`Date: ${label}`}</p>
-          <p className="intro">{`Value: ${value}`}</p>
-          {regressor && <p className="intro">{`Regressor: ${regressor}`}</p>}
-          {regressorOptions && (
-            <div className="intro">
-              <p>Regressor Options:</p>
-              <Table
-                dataSource={Object.entries(regressorOptions).map(([key, val]) => ({ key, val: JSON.stringify(val) }))}
-                columns={[
-                  { title: 'Option', dataIndex: 'key', key: 'key' },
-                  { title: 'Value', dataIndex: 'val', key: 'val' },
-                ]}
-                pagination={false}
-                size="small"
-              />
-            </div>
-          )}
-        </div>
-      );
-    }
-    return null;
-  };
 
   const renderContent = () => {
     if (!selectedColumn || !selectedMetric) {
       return <Alert message="Please select a column and a metric to view its history." type="info" />;
     }
-
     if (chartData.length === 0) {
       return <Alert message="No data available for the selected metric." type="warning" />;
     }
-
     if (!isChartable) {
       return (
         <Alert
@@ -137,18 +99,7 @@ const MLModelMetricsHistoryTrain = ({ predictions }) => {
         />
       );
     }
-
-    return (
-      <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={chartData}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="date" />
-          <YAxis domain={[0, 1]} />
-          <Tooltip content={<CustomTooltip />} />
-          <Line type="monotone" dataKey="value" stroke="#8884d8" activeDot={{ r: 8 }} />
-        </LineChart>
-      </ResponsiveContainer>
-    );
+    return <EChartsLineChart data={chartData} height={300} />;
   };
 
   if (!predictions) {
@@ -160,22 +111,25 @@ const MLModelMetricsHistoryTrain = ({ predictions }) => {
   }
 
   return (
-    <div className={`ml-model-additional_properties-history ${isDarkMode ? 'dark-mode' : ''}`}>
+    <div className={`ml-model-metrics-history ${isDarkMode ? "dark-mode" : ""}`}>
       <h3>Prediction Metrics History</h3>
-      <Card className="ml-model-additional_properties-history-card">
+      <Card className="ml-model-metrics-history-card">
         <Row gutter={[16, 16]}>
           <Col xs={24}>
             <Select
               style={{ width: 200, marginRight: 10, marginBottom: 20 }}
               placeholder="Select a column"
-              onChange={handleColumnChange}
+              onChange={value => {
+                setSelectedColumn(value);
+                setSelectedMetric(null);
+              }}
               value={selectedColumn}
               options={columnOptions}
             />
             <Select
               style={{ width: 200, marginBottom: 20 }}
               placeholder="Select a metric"
-              onChange={handleMetricChange}
+              onChange={setSelectedMetric}
               value={selectedMetric}
               options={metricOptions}
               disabled={!selectedColumn}
@@ -188,18 +142,17 @@ const MLModelMetricsHistoryTrain = ({ predictions }) => {
   );
 };
 
-MLModelMetricsHistoryTrain.propTypes = {
+MLModelMetricsHistory.propTypes = {
   predictions: PropTypes.arrayOf(
     PropTypes.shape({
       created_at: PropTypes.string.isRequired,
       additional_properties: PropTypes.object,
-      options: PropTypes.object,
     })
   ),
 };
 
-MLModelMetricsHistoryTrain.defaultProps = {
+MLModelMetricsHistory.defaultProps = {
   predictions: [],
 };
 
-export default MLModelMetricsHistoryTrain;
+export default MLModelMetricsHistory;

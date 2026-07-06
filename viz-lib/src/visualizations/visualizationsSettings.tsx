@@ -47,6 +47,7 @@ export const visualizationsSettings = {
   tableCellMaxJSONSize: 50000,
   allowCustomJSVisualizations: false,
   hidePlotlyModeBar: false,
+  hideChartToolbox: false,
   choroplethAvailableMaps: {},
 };
 

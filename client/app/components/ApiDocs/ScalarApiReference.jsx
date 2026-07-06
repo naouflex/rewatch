@@ -1,23 +1,34 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import PropTypes from "prop-types";
-import { API_REFERENCE_SCALAR_CONFIG } from "@/config/brand";
+import { buildApiReferenceScalarConfig } from "@/config/brand";
+import { getResolvedTheme, subscribeToTheme } from "@/services/theme";
 
 function joinPath(basePath, segment) {
   const base = basePath || "/";
   return `${base.replace(/\/?$/, "/")}${segment.replace(/^\//, "")}`;
 }
 
-function mountScalar(host, { basePath, specUrl, bundleUrl }) {
-  host.innerHTML = "";
+function cleanupScalarMount(host) {
+  if (host) {
+    host.innerHTML = "";
+  }
+  document.getElementById("api-reference")?.remove();
+  document.querySelectorAll('script[data-api-docs-bundle="true"]').forEach(el => el.remove());
+  document.querySelector(".scalar-app")?.remove();
+}
+
+function mountScalar(host, { specUrl, bundleUrl, resolvedTheme }) {
+  cleanupScalarMount(host);
 
   const configScript = document.createElement("script");
   configScript.id = "api-reference";
   configScript.type = "application/json";
   configScript.dataset.url = specUrl;
-  configScript.dataset.configuration = JSON.stringify(API_REFERENCE_SCALAR_CONFIG);
+  configScript.dataset.configuration = JSON.stringify(buildApiReferenceScalarConfig(resolvedTheme));
 
   const bundleScript = document.createElement("script");
-  bundleScript.src = bundleUrl;
+  // Cache-bust so Scalar re-initializes when the app theme changes.
+  bundleScript.src = `${bundleUrl}?theme=${encodeURIComponent(resolvedTheme)}`;
   bundleScript.async = true;
   bundleScript.dataset.apiDocsBundle = "true";
 
@@ -25,15 +36,11 @@ function mountScalar(host, { basePath, specUrl, bundleUrl }) {
   host.appendChild(bundleScript);
 }
 
-function unmountScalar(host) {
-  host.innerHTML = "";
-  document.getElementById("api-reference")?.remove();
-  document.querySelector('script[data-api-docs-bundle="true"]')?.remove();
-  document.querySelector(".scalar-app")?.remove();
-}
-
 export default function ScalarApiReference({ basePath }) {
   const hostRef = useRef(null);
+  const [resolvedTheme, setResolvedTheme] = useState(() => getResolvedTheme());
+
+  useEffect(() => subscribeToTheme(({ resolved }) => setResolvedTheme(resolved)), []);
 
   useEffect(() => {
     const host = hostRef.current;
@@ -44,14 +51,14 @@ export default function ScalarApiReference({ basePath }) {
     const specUrl = joinPath(basePath, "api/spec");
     const bundleUrl = joinPath(basePath, "api/docs/scalar.standalone.js");
 
-    mountScalar(host, { basePath, specUrl, bundleUrl });
+    mountScalar(host, { specUrl, bundleUrl, resolvedTheme });
 
     return () => {
-      unmountScalar(host);
+      cleanupScalarMount(host);
     };
-  }, [basePath]);
+  }, [basePath, resolvedTheme]);
 
-  return <div ref={hostRef} className="scalar-api-reference-host" />;
+  return <div ref={hostRef} className="scalar-api-reference-host" data-theme={resolvedTheme} />;
 }
 
 ScalarApiReference.propTypes = {
