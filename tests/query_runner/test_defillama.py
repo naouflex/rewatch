@@ -1,5 +1,4 @@
 """Unit tests for the DefiLlama query runner."""
-import json
 from unittest import TestCase
 from unittest import mock
 
@@ -10,6 +9,7 @@ from rewatch.query_runner.defillama import (
     _resolve_path,
     _sample_query,
     _schema_for_endpoint,
+    parse_defillama_response,
 )
 
 
@@ -32,6 +32,66 @@ class TestDefiLlamaHelpers(TestCase):
         schema_item = _schema_for_endpoint(entry)
         self.assertEqual(schema_item["name"], "tvl.protocols")
         self.assertIn("endpoint: protocols", schema_item["insertValue"])
+
+
+class TestParseDefiLlamaResponse(TestCase):
+    def test_timeseries_list(self):
+        data = [
+            {"date": 1506470400, "tvl": 0},
+            {"date": 1506556800, "tvl": 100},
+        ]
+        result = parse_defillama_response(data)
+        self.assertEqual(len(result["rows"]), 2)
+        self.assertEqual(result["rows"][0]["tvl"], 0)
+        self.assertIn("datetime", result["rows"][0])
+        self.assertIn("date", [c["name"] for c in result["columns"]])
+
+    def test_protocol_detail_extracts_tvl_series(self):
+        data = {
+            "name": "Inverse Finance",
+            "tvl": [
+                {"date": 1607731200, "totalLiquidityUSD": 40126},
+                {"date": 1607817600, "totalLiquidityUSD": 80125},
+            ],
+        }
+        result = parse_defillama_response(data)
+        self.assertEqual(len(result["rows"]), 2)
+        self.assertEqual(result["rows"][0]["tvl"], 40126)
+        self.assertNotIn("name", result["rows"][0])
+
+    def test_coins_prices(self):
+        data = {
+            "coins": {
+                "coingecko:ethereum": {
+                    "price": 1754.97,
+                    "symbol": "ETH",
+                    "timestamp": 1783331411,
+                    "confidence": 0.99,
+                }
+            }
+        }
+        result = parse_defillama_response(data)
+        self.assertEqual(len(result["rows"]), 1)
+        self.assertEqual(result["rows"][0]["coin"], "coingecko:ethereum")
+        self.assertEqual(result["rows"][0]["price"], 1754.97)
+
+    def test_stablecoin_chart_expands_nested_values(self):
+        data = [
+            {
+                "date": "1511913600",
+                "totalCirculating": {"peggedUSD": 109970},
+                "totalCirculatingUSD": {"peggedUSD": 110105},
+            }
+        ]
+        result = parse_defillama_response(data)
+        self.assertEqual(result["rows"][0]["totalCirculating_peggedUSD"], 109970)
+        self.assertEqual(result["rows"][0]["totalCirculatingUSD_peggedUSD"], 110105)
+
+    def test_unwraps_data_wrapper(self):
+        data = {"data": [{"name": "Aave", "tvl": 1000000}]}
+        result = parse_defillama_response(data)
+        self.assertEqual(len(result["rows"]), 1)
+        self.assertEqual(result["rows"][0]["name"], "Aave")
 
 
 class TestDefiLlamaRunner(TestCase):
@@ -63,9 +123,22 @@ class TestDefiLlamaRunner(TestCase):
             data, error = self.runner.run_query("endpoint: protocols", None)
 
         self.assertIsNone(error)
-        parsed = json.loads(data)
-        self.assertEqual(len(parsed["rows"]), 1)
-        self.assertIn("name", [c["name"] for c in parsed["columns"]])
+        self.assertEqual(len(data["rows"]), 1)
+        self.assertIn("name", [c["name"] for c in data["columns"]])
+
+    def test_run_query_protocol_timeseries(self):
+        response = mock.Mock(status_code=200)
+        response.json.return_value = {
+            "name": "Aave",
+            "tvl": [{"date": 1607731200, "totalLiquidityUSD": 40126}],
+        }
+
+        with mock.patch.object(self.runner, "get_response", return_value=(response, None)):
+            data, error = self.runner.run_query("endpoint: protocol\nprotocol: aave\n", None)
+
+        self.assertIsNone(error)
+        self.assertEqual(len(data["rows"]), 1)
+        self.assertEqual(data["rows"][0]["tvl"], 40126)
 
     def test_run_query_unknown_endpoint(self):
         data, error = self.runner.run_query("endpoint: does-not-exist", None)

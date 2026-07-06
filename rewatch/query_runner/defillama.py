@@ -11,6 +11,7 @@ Queries are written as YAML, e.g.
 The runner calls the DefiLlama free or Pro API and flattens responses into
 Rewatch-style ``{rows, columns}``.
 """
+import datetime
 import logging
 
 from rewatch.query_runner import (
@@ -24,10 +25,169 @@ from rewatch.query_runner import (
 )
 from rewatch.query_runner.coingecko import (
     QueryParseError,
-    parse_coingecko_response,
+    _get_type,
+    add_column,
+    flatten_dict,
     parse_query,
 )
+
 logger = logging.getLogger(__name__)
+
+# DefiLlama uses ``totalLiquidityUSD`` on protocol charts; normalize to ``tvl``.
+_TIMESERIES_VALUE_ALIASES = {"totalLiquidityUSD": "tvl"}
+
+
+def _parse_timestamp(value):
+    if value is None:
+        return None
+    if isinstance(value, (int, float)):
+        return int(value)
+    if isinstance(value, str) and value.isdigit():
+        return int(value)
+    return None
+
+
+def _is_timeseries_series(items):
+    if not isinstance(items, list) or not items:
+        return False
+    sample = [item for item in items[:5] if isinstance(item, dict)]
+    return bool(sample) and all("date" in item for item in sample)
+
+
+def _timeseries_column_name(key):
+    return _TIMESERIES_VALUE_ALIASES.get(key, key)
+
+
+def _timeseries_rows(points):
+    rows = []
+    columns = []
+
+    for point in points:
+        if not isinstance(point, dict):
+            continue
+
+        row = {}
+        timestamp = _parse_timestamp(point.get("date"))
+        if timestamp is not None:
+            row["date"] = timestamp
+            row["datetime"] = datetime.datetime.fromtimestamp(timestamp, tz=datetime.timezone.utc).isoformat()
+
+        for key, value in point.items():
+            if key == "date":
+                continue
+            if isinstance(value, dict):
+                for sub_key, sub_value in value.items():
+                    if isinstance(sub_value, (dict, list)):
+                        continue
+                    col_name = "{0}_{1}".format(key, sub_key)
+                    row[col_name] = sub_value
+                    add_column(columns, col_name, _get_type(sub_value), col_name.replace("_", " ").title())
+            elif isinstance(value, list):
+                continue
+            else:
+                col_name = _timeseries_column_name(key)
+                row[col_name] = value
+                add_column(columns, col_name, _get_type(value), col_name.replace("_", " ").title())
+
+        rows.append(row)
+
+    if rows:
+        add_column(columns, "date", TYPE_INTEGER, "Date")
+        add_column(columns, "datetime", TYPE_DATETIME, "Date Time")
+
+    return {"rows": rows, "columns": columns}
+
+
+def _extract_embedded_timeseries(data):
+    """Pull a top-level timeseries array out of protocol-style payloads."""
+    if not isinstance(data, dict):
+        return None
+
+    for key in ("tvl", "tvlUsd", "apy", "apyBase"):
+        series = data.get(key)
+        if _is_timeseries_series(series):
+            return series
+
+    chain_tvls = data.get("chainTvls")
+    if isinstance(chain_tvls, dict):
+        for chain_data in chain_tvls.values():
+            if not isinstance(chain_data, dict):
+                continue
+            series = chain_data.get("tvl")
+            if _is_timeseries_series(series):
+                return series
+
+    return None
+
+
+def _parse_coins_response(data):
+    coins = data.get("coins") if isinstance(data, dict) else None
+    if not isinstance(coins, dict):
+        return None
+
+    rows = []
+    columns = []
+    for coin_id, coin_data in coins.items():
+        row = {"coin": coin_id}
+        add_column(columns, "coin", TYPE_STRING, "Coin")
+        if isinstance(coin_data, dict):
+            for key, value in coin_data.items():
+                if isinstance(value, (dict, list)):
+                    continue
+                row[key] = value
+                add_column(columns, key, _get_type(value), key.replace("_", " ").title())
+        rows.append(row)
+
+    return {"rows": rows, "columns": columns}
+
+
+def _parse_tabular_records(records):
+    rows = []
+    columns = []
+
+    for record in records:
+        if not isinstance(record, dict):
+            continue
+
+        row = {}
+        for key, value in flatten_dict(record).items():
+            if isinstance(value, (dict, list)):
+                continue
+            safe_key = key.replace(".", "_")
+            row[safe_key] = value
+            add_column(columns, safe_key, _get_type(value), key.replace("_", " ").title())
+        rows.append(row)
+
+    return {"rows": rows, "columns": columns}
+
+
+def parse_defillama_response(data):
+    """Convert DefiLlama JSON into Rewatch ``{rows, columns}``."""
+    if data is None:
+        return {"rows": [], "columns": []}
+
+    if isinstance(data, dict) and "data" in data and isinstance(data["data"], list):
+        data = data["data"]
+
+    coins_result = _parse_coins_response(data) if isinstance(data, dict) else None
+    if coins_result is not None:
+        return coins_result
+
+    if isinstance(data, list) and _is_timeseries_series(data):
+        return _timeseries_rows(data)
+
+    if isinstance(data, dict):
+        embedded = _extract_embedded_timeseries(data)
+        if embedded is not None:
+            return _timeseries_rows(embedded)
+
+    if isinstance(data, list):
+        return _parse_tabular_records(data)
+
+    if isinstance(data, dict):
+        return _parse_tabular_records([data])
+
+    return {"rows": [], "columns": []}
 
 FREE_BASE_URL = "https://api.llama.fi"
 PRO_BASE_URL = "https://pro-api.llama.fi"
@@ -671,16 +831,7 @@ class DefiLlama(BaseHTTPQueryRunner):
             except ValueError as e:
                 return None, "Failed to parse JSON response: {0}".format(e)
 
-            # Many DefiLlama responses wrap rows under ``data`` or return arrays directly.
-            if isinstance(data, dict) and "data" in data and isinstance(data["data"], list):
-                rows_data = data["data"]
-            elif isinstance(data, dict) and "coins" in data:
-                rows_data = data
-            else:
-                rows_data = data
-
-            parsed = parse_coingecko_response(rows_data, "generic")
-            return parsed, None
+            return parse_defillama_response(data), None
 
         except QueryParseError as e:
             return None, str(e)
