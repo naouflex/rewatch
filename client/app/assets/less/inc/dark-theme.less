@@ -403,16 +403,17 @@
     border-color: var(--rd-color-border);
   }
 
-  /* Full-screen visualization editor dialog */
+  /* Modals — antd portals render on <body>; DialogWrapper also mounts outside
+     the app ConfigProvider, so these rules backstop dark surfaces everywhere. */
 
-  .ant-modal-fullscreen {
+  .ant-modal {
     .ant-modal-content {
-      background: var(--rd-color-surface);
+      background: var(--rd-color-surface) !important;
       color: var(--rd-color-text);
     }
 
     .ant-modal-header {
-      background: var(--rd-color-surface);
+      background: var(--rd-color-surface) !important;
       border-bottom-color: var(--rd-color-divider);
     }
 
@@ -421,13 +422,53 @@
     }
 
     .ant-modal-body {
-      background: var(--rd-color-surface);
+      background: var(--rd-color-surface) !important;
       color: var(--rd-color-text);
     }
 
     .ant-modal-footer {
-      background: var(--rd-color-surface);
+      background: var(--rd-color-surface) !important;
       border-top-color: var(--rd-color-divider);
+    }
+
+    .ant-modal-close {
+      color: var(--rd-color-text-muted);
+
+      &:hover {
+        color: var(--rd-color-text);
+        background: var(--rd-color-surface-hover);
+      }
+    }
+  }
+
+  .ant-modal-confirm {
+    .ant-modal-confirm-title {
+      color: var(--rd-color-text);
+    }
+
+    .ant-modal-confirm-content {
+      color: var(--rd-color-text-secondary);
+    }
+  }
+
+  /* Full-screen visualization editor dialog */
+
+  .ant-modal-fullscreen {
+    .ant-modal-content {
+      border-radius: var(--rd-radius-lg);
+      box-shadow: var(--rd-shadow-4);
+    }
+
+    .ant-modal-header {
+      padding: 16px 24px;
+    }
+
+    .ant-modal-body {
+      padding: 0 24px 16px;
+    }
+
+    .ant-modal-footer {
+      padding: 12px 24px;
     }
   }
 
@@ -441,6 +482,11 @@
     .visualization-preview .scrollbox {
       background: var(--rd-color-bg-subtle);
       border-color: var(--rd-color-divider);
+    }
+
+    .visualization-preview-header {
+      color: var(--rd-color-text);
+      border-bottom-color: var(--rd-color-divider);
     }
 
     .ant-tabs-tab {

@@ -217,10 +217,10 @@ function EditVisualizationDialog({ dialog, visualization, query, queryResult }) 
           </div>
         </div>
         <div className="visualization-preview">
-          <label htmlFor="visualization-preview" className="invisible hidden-xs">
-            Preview
-          </label>
-          <Filters filters={filters} onChange={setFilters} />
+          <div className="visualization-preview-header">
+            <span>Preview</span>
+            <Filters filters={filters} onChange={setFilters} />
+          </div>
           <div className="scrollbox" data-test="VisualizationPreview">
             <Renderer
               type={type}

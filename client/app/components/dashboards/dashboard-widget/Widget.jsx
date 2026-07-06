@@ -33,7 +33,8 @@ function WidgetDropdownButton({ extraOptions, showDeleteOption, onDelete }) {
           "data-test": "WidgetDropdownButtonMenu",
         }}
         placement="bottomRight"
-        trigger={["click"]}>
+        trigger={["click"]}
+        styles={{ root: { position: "fixed" } }}>
         <PlainButton className="action p-l-15 p-r-15" data-test="WidgetDropdownButton" aria-label="More options">
           <i className="zmdi zmdi-more-vert" aria-hidden="true" />
         </PlainButton>

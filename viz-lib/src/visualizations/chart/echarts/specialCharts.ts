@@ -76,7 +76,7 @@ function convertTreemapSeries(traces: any[], palette: ReturnType<typeof getTheme
 function convertGaugeSeries(traces: any[], palette: ReturnType<typeof getThemePalette>) {
   const trace = traces.find(t => t.visible !== false) ?? traces[0];
   const value = trace?.y?.[trace.y.length - 1] ?? 0;
-  const maxValue = max(trace?.y) ?? 100;
+  const maxValue = Math.max(100, max(trace?.y) ?? 0, value);
 
   return [
     {
@@ -143,11 +143,12 @@ function convertParallelSeries(traces: any[], options: any, palette: ReturnType<
   }));
 
   const rows: any[] = [];
-  const trace = traces.find(t => t.visible !== false) ?? traces[0];
-  if (trace?.sourceData) {
-    trace.sourceData.forEach((item: any) => {
-      rows.push(map(yColumns, col => item.row?.[col] ?? item.y));
-    });
+  const visibleTraces = filter(traces, t => t.visible !== false);
+  const tracesByName = Object.fromEntries(visibleTraces.map(t => [t.name, t]));
+  const rowCount = Math.max(...yColumns.map(col => tracesByName[col]?.y?.length ?? 0), 0);
+
+  for (let i = 0; i < rowCount; i += 1) {
+    rows.push(map(yColumns, col => tracesByName[col]?.y?.[i]));
   }
 
   return {

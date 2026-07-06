@@ -6,12 +6,21 @@ import getThemePalette from "@/visualizations/shared/echarts/getThemePalette";
 import { buildSunburstHierarchy, isSunburstDataValid } from "./prepareHierarchy";
 import "./renderer.less";
 
+function pruneExitNodes(node: any): any {
+  if (!node.children?.length) {
+    return node;
+  }
+
+  const children = node.children.filter((child: any) => !String(child.id).endsWith(" · Exit")).map(pruneExitNodes);
+  return children.length ? { ...node, children } : { id: node.id, value: node.value ?? 0 };
+}
+
 export default function Renderer({ data }: any) {
   const hierarchy = useMemo(() => {
     if (!isSunburstDataValid(data)) {
       return null;
     }
-    return buildSunburstHierarchy(data.rows);
+    return pruneExitNodes(buildSunburstHierarchy(data.rows));
   }, [data]);
 
   const palette = getThemePalette();
@@ -32,10 +41,7 @@ export default function Renderer({ data }: any) {
         borderWidth={1}
         borderColor={{ from: "color", modifiers: [["darker", 0.3]] }}
         colors={{ scheme: "nivo" }}
-        childColor={{ from: "color", modifiers: [["brighter", 0.4]] }}
-        enableArcLabels={true}
-        arcLabelsSkipAngle={10}
-        arcLabelsTextColor={{ from: "color", modifiers: [["darker", 2]] }}
+        enableArcLabels={false}
         theme={theme}
         tooltip={({ id, value }) => (
           <div

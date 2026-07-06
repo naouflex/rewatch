@@ -7,6 +7,21 @@ import { SankeyDataType } from "./index";
 import { prepareSankeyGraph, prepareSankeyRows } from "./prepareData";
 import "./renderer.less";
 
+function buildSankeySeries(graphData: ReturnType<typeof prepareSankeyGraph>) {
+  const nodes = graphData.nodes.map(n => ({ name: n.name, itemStyle: n.itemStyle }));
+  const nodeNames = new Set(nodes.map(n => n.name));
+  const links = graphData.links
+    .filter(link => link.value > 0)
+    .map(link => ({
+      source: graphData.nodes[link.source]?.name,
+      target: graphData.nodes[link.target]?.name,
+      value: link.value,
+    }))
+    .filter(link => link.source && link.target && nodeNames.has(link.source) && nodeNames.has(link.target));
+
+  return { nodes, links };
+}
+
 export default function Renderer({ data }: { data: SankeyDataType }) {
   const [container, setContainer] = useState<HTMLDivElement | null>(null);
   const graphData = useMemo(() => prepareSankeyGraph(prepareSankeyRows(data.rows)), [data]);
@@ -17,6 +32,11 @@ export default function Renderer({ data }: { data: SankeyDataType }) {
     }
 
     const palette = getThemePalette();
+    const { nodes, links } = buildSankeySeries(graphData);
+    if (links.length === 0) {
+      return;
+    }
+
     const { destroy } = createChartInstance(container, {
       tooltip: { trigger: "item", triggerOn: "mousemove" },
       series: [
@@ -24,8 +44,8 @@ export default function Renderer({ data }: { data: SankeyDataType }) {
           type: "sankey",
           layout: "none",
           emphasis: { focus: "adjacency" },
-          data: graphData.nodes.map(n => ({ name: n.name, itemStyle: n.itemStyle })),
-          links: graphData.links,
+          data: nodes,
+          links,
           lineStyle: { color: "gradient", curveness: 0.5, opacity: 0.4 },
           label: { color: palette.text, fontFamily: palette.fontFamily, fontSize: 11 },
         },

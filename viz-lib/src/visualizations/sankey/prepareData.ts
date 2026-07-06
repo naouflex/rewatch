@@ -13,19 +13,19 @@ export function prepareSankeyGraph(rows: any[]) {
   const validKey = (key: any) => key !== "value";
   const dataKeys = sortBy(filter(keys(rows[0]), validKey), identity);
 
-  function normalizeName(name: any) {
+  function normalizeName(name: any, level: any) {
     if (!isNil(name)) {
-      return "" + name;
+      return `${name} (step ${level})`;
     }
-    return "Exit";
+    return `Exit (step ${level})`;
   }
 
   function getNode(name: string, level: any) {
-    name = normalizeName(name);
-    const key = `${name}:${String(level)}`;
+    const label = normalizeName(name, level);
+    const key = label;
     let node = nodesDict[key];
     if (!node) {
-      node = { name };
+      node = { name: label };
       node.id = nodes.push(node) - 1;
       nodesDict[key] = node;
     }
@@ -67,7 +67,7 @@ export function prepareSankeyGraph(rows: any[]) {
   return {
     nodes: map(nodes, (d, i) =>
       extend(d, {
-        itemStyle: { color: getColor(d.name.replace(/ .*/, ""), i) },
+        itemStyle: { color: getColor(d.name.replace(/ \(step \d+\)$/, ""), i) },
       })
     ),
     links: values(linksDict),

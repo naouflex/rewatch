@@ -4,6 +4,7 @@ import { ColorPaletteArray } from "../../ColorPalette";
 import { getPieDimensions } from "./preparePieData";
 import { buildSpecialChartOption, applyTraceEchartsType } from "./specialCharts";
 import { getChartTypeDef } from "../chartTypes";
+import { computeBoxplotStats, resolveAxisType } from "./utils";
 
 function mapAxisType(type: string) {
   switch (type) {
@@ -131,12 +132,26 @@ function convertDefaultSeries(traces: any[], layout: any, options: any, palette:
           },
           trace.type
         );
-      case "box":
+      case "box": {
+        const grouped = new Map<string, number[]>();
+        trace.x.forEach((x: any, i: number) => {
+          const key = String(x);
+          if (!grouped.has(key)) {
+            grouped.set(key, []);
+          }
+          const y = Number(trace.y[i]);
+          if (Number.isFinite(y)) {
+            grouped.get(key)!.push(y);
+          }
+        });
+        const categories = [...grouped.keys()];
         return {
           ...base,
           type: "boxplot",
-          data: [trace.y],
+          data: categories.map(cat => computeBoxplotStats(grouped.get(cat)!)),
+          boxCategories: categories,
         };
+      }
       case "line":
       case "scattergl":
       case "area":
@@ -239,6 +254,13 @@ function convertHeatmapSeries(traces: any[], options: any, palette: ReturnType<t
 
 export default function toEChartsOption(traces: any[], layout: any, options: any, hideToolbox = false) {
   const palette = getThemePalette();
+  const xSamples = traces.flatMap(t => t.x ?? []);
+  const resolvedXType = resolveAxisType(layout.xaxis?.type ?? "-", xSamples);
+  layout = {
+    ...layout,
+    xaxis: layout.xaxis ? { ...layout.xaxis, type: resolvedXType } : layout.xaxis,
+  };
+
   const chartType = options.globalSeriesType;
   const chartDef = getChartTypeDef(chartType);
   const isPie = chartType === "pie";
@@ -334,9 +356,17 @@ export default function toEChartsOption(traces: any[], layout: any, options: any
       option.xAxis = { type: "category", data: xAxisData, splitArea: { show: false }, axisLabel: { color: palette.textMuted } };
       option.yAxis = { type: "category", data: yAxisData, splitArea: { show: false }, axisLabel: { color: palette.textMuted } };
     } else {
+      const boxCategories = chartType === "box" ? series[0]?.boxCategories : undefined;
       option.xAxis = xAxisConfig
-        ? [{ ...xAxisConfig, data: xAxisConfig.type === "category" ? series[0]?.data?.map((d: any) => d[0]) : undefined }]
-        : [{ type: "category" }];
+        ? [
+            {
+              ...xAxisConfig,
+              data:
+                boxCategories ??
+                (xAxisConfig.type === "category" ? series[0]?.data?.map((d: any) => d[0]) : undefined),
+            },
+          ]
+        : [{ type: "category", data: boxCategories }];
       option.yAxis = y2AxisConfig ? [yAxisConfig, y2AxisConfig] : yAxisConfig ? [yAxisConfig] : [{ type: "value" }];
     }
   }

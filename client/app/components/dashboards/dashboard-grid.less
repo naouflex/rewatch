@@ -154,6 +154,10 @@
 .react-grid-item {
   touch-action: initial !important; // react-draggable disables touch by default
 
+  &:focus-within {
+    z-index: 100;
+  }
+
   &.react-draggable {
     touch-action: none !important;
   }

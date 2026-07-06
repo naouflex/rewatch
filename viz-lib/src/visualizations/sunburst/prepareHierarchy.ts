@@ -1,6 +1,14 @@
 import { has, map, keys, groupBy, sortBy, filter, find, compact, first, every, identity } from "lodash";
 
-const exitNode = "<<<Exit>>>";
+const exitNode = "Exit";
+
+function pathId(segments: string[], index: number) {
+  return segments.slice(0, index + 1).join(" · ");
+}
+
+function exitId(parentId: string) {
+  return parentId === "root" ? exitNode : `${parentId} · Exit`;
+}
 
 function buildNodesFromHierarchyData(data: any) {
   const grouped = groupBy(data, "sequence");
@@ -45,34 +53,37 @@ export function buildSunburstHierarchy(rows: any[]) {
     let currentNode = root;
     for (let j = 0; j < nodes.length; j += 1) {
       let children = currentNode.children;
-      const nodeName = nodes[j];
+      const nodePath = pathId(nodes, j);
       const isLeaf = j + 1 === nodes.length;
 
       if (!children) {
         currentNode.children = children = [];
-        children.push({
-          id: exitNode,
-          value: currentNode.value ?? 0,
-        });
+        const exitValue = currentNode.value ?? 0;
+        if (exitValue > 0) {
+          children.push({
+            id: exitId(currentNode.id),
+            value: exitValue,
+          });
+        }
       }
 
-      let childNode = find(children, child => child.id === nodeName);
+      let childNode = find(children, child => child.id === nodePath);
 
       if (isLeaf && childNode) {
         childNode.children = childNode.children || [];
         childNode.children.push({
-          id: exitNode,
+          id: exitId(nodePath),
           value: size,
         });
       } else if (isLeaf) {
         children.push({
-          id: nodeName,
+          id: nodePath,
           value: size,
         });
       } else {
         if (!childNode) {
           childNode = {
-            id: nodeName,
+            id: nodePath,
             children: [],
           };
           children.push(childNode);

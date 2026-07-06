@@ -1,7 +1,11 @@
 import { isFunction } from "lodash";
 import React from "react";
 import PropTypes from "prop-types";
+import ConfigProvider from "antd/lib/config-provider";
 import { createRoot } from "react-dom/client";
+
+import { buildAntdTheme } from "@/config/antdTheme";
+import { getResolvedTheme, subscribeToTheme } from "@/services/theme";
 
 /**
   Wrapper for dialogs based on Ant's <Modal> component.
@@ -132,13 +136,31 @@ function openDialog(DialogComponent, props) {
   document.body.appendChild(container);
   const root = createRoot(container);
 
+  let resolvedTheme = getResolvedTheme();
+  let unsubscribeTheme = null;
+
   function render() {
-    root.render(<DialogComponent {...props} dialog={dialog} />);
+    root.render(
+      <ConfigProvider theme={buildAntdTheme(resolvedTheme)}>
+        <DialogComponent {...props} dialog={dialog} />
+      </ConfigProvider>
+    );
   }
+
+  unsubscribeTheme = subscribeToTheme(({ resolved }) => {
+    if (resolved !== resolvedTheme) {
+      resolvedTheme = resolved;
+      render();
+    }
+  });
 
   function destroyDialog() {
     // Allow calling chain to roll up, and then destroy component
     setTimeout(() => {
+      if (unsubscribeTheme) {
+        unsubscribeTheme();
+        unsubscribeTheme = null;
+      }
       root.unmount();
       document.body.removeChild(container);
     }, 10);
