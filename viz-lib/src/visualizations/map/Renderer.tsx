@@ -4,6 +4,7 @@ import { RendererPropTypes } from "@/visualizations/prop-types";
 
 import prepareData from "./prepareData";
 import initMap from "./initMap";
+import useThemeAttribute from "@/visualizations/shared/useThemeAttribute";
 
 function useMemoWithDeepCompare(create: any, inputs: any) {
   const valueRef = useRef();
@@ -22,6 +23,7 @@ export default function Renderer({ data, options, onOptionsChange }: any) {
 
   const groups = useMemo(() => prepareData(data, optionsWithoutBounds), [data, optionsWithoutBounds]);
 
+  const theme = useThemeAttribute();
   const [map, setMap] = useState(null);
 
   useEffect(() => {
@@ -40,7 +42,7 @@ export default function Renderer({ data, options, onOptionsChange }: any) {
       // @ts-expect-error ts-migrate(2531) FIXME: Object is possibly 'null'.
       map.updateLayers(groups, optionsWithoutBounds);
     }
-  }, [map, groups, optionsWithoutBounds]);
+  }, [map, groups, optionsWithoutBounds, theme]);
 
   useEffect(() => {
     if (map) {

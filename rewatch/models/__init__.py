@@ -124,6 +124,7 @@ class DataSource(BelongsToOrgMixin, db.Model):
     )
     queue_name = Column(db.String(255), default="queries")
     scheduled_queue_name = Column(db.String(255), default="scheduled_queries")
+    icon_url = Column(db.Text, nullable=True)
     created_at = Column(db.DateTime(True), default=db.func.now())
 
     data_source_groups = db.relationship("DataSourceGroup", back_populates="data_source", cascade="all")
@@ -148,6 +149,7 @@ class DataSource(BelongsToOrgMixin, db.Model):
             "paused": self.paused,
             "pause_reason": self.pause_reason,
             "supports_auto_limit": self.query_runner.supports_auto_limit,
+            "icon_url": self.icon_url,
         }
 
         if all:

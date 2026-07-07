@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import { find, sortBy } from "lodash";
 
 import Select from "antd/lib/select";
-import DataSource, { IMG_ROOT } from "@/services/data-source";
+import DataSource, { getDataSourceIconUrl } from "@/services/data-source";
 
 const SUPPORTED_TYPES = new Set([
   "pg",
@@ -47,7 +47,7 @@ export default function IndexerDestination({ value, onChange, viewMode, disabled
     return (
       <div className="indexer-destination-view">
         <img
-          src={`${IMG_ROOT}/${selected.type}.png`}
+          src={getDataSourceIconUrl(selected)}
           alt={selected.type}
           style={{ width: 16, height: 16, marginRight: 6 }}
         />
@@ -68,7 +68,7 @@ export default function IndexerDestination({ value, onChange, viewMode, disabled
       {dataSources.map(ds => (
         <Select.Option key={ds.id} value={ds.id}>
           <img
-            src={`${IMG_ROOT}/${ds.type}.png`}
+            src={getDataSourceIconUrl(ds)}
             alt={ds.type}
             style={{ width: 16, height: 16, marginRight: 6 }}
           />

@@ -2,6 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import classNames from "classnames";
 import Link from "@/components/Link";
+import { getDataSourceIconUrl } from "@/services/data-source";
 
 // PreviewCard
 
@@ -69,7 +70,7 @@ UserPreviewCard.defaultProps = {
 // DataSourcePreviewCard
 
 export function DataSourcePreviewCard({ dataSource, withLink, children, ...props }) {
-  const imageUrl = `/static/images/db-logos/${dataSource.type}.png`;
+  const imageUrl = getDataSourceIconUrl(dataSource);
   const title = withLink ? <Link href={"data_sources/" + dataSource.id}>{dataSource.name}</Link> : dataSource.name;
   return (
     <PreviewCard {...props} imageUrl={imageUrl} title={title}>
@@ -82,6 +83,7 @@ DataSourcePreviewCard.propTypes = {
   dataSource: PropTypes.shape({
     name: PropTypes.string.isRequired,
     type: PropTypes.string.isRequired,
+    icon_url: PropTypes.string,
   }).isRequired,
   withLink: PropTypes.bool,
   children: PropTypes.node,

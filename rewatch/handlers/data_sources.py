@@ -27,6 +27,26 @@ from rewatch.tasks.general import get_schema, test_connection
 from rewatch.utils import filter_none
 from rewatch.utils.configuration import ConfigurationContainer, ValidationError
 
+MAX_DATA_SOURCE_ICON_URL_LENGTH = 256 * 1024
+
+
+def validate_data_source_icon_url(value):
+    """Validate an uploaded data source icon. Returns the stored value (or `None`
+    to clear the custom icon and fall back to the type default)."""
+    if not value:
+        return None
+
+    if not isinstance(value, str):
+        abort(400, message="Invalid data source icon.")
+
+    if not value.startswith("data:image/") or ";base64," not in value:
+        abort(400, message="Data source icon must be an uploaded image.")
+
+    if len(value) > MAX_DATA_SOURCE_ICON_URL_LENGTH:
+        abort(400, message="Data source icon is too large.")
+
+    return value
+
 
 class DataSourceTypeListResource(BaseResource):
     @require_admin
@@ -65,6 +85,8 @@ class DataSourceResource(BaseResource):
 
         data_source.type = req["type"]
         data_source.name = req["name"]
+        if "icon_url" in req:
+            data_source.icon_url = validate_data_source_icon_url(req["icon_url"])
         models.db.session.add(data_source)
 
         try:
@@ -145,6 +167,8 @@ class DataSourceListResource(BaseResource):
             datasource = models.DataSource.create_with_group(
                 org=self.current_org, name=req["name"], type=req["type"], options=config
             )
+            if "icon_url" in req:
+                datasource.icon_url = validate_data_source_icon_url(req["icon_url"])
 
             models.db.session.commit()
         except IntegrityError as e:

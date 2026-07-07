@@ -6,6 +6,13 @@ export const SCHEMA_NOT_SUPPORTED = 1;
 export const SCHEMA_LOAD_ERROR = 2;
 export const IMG_ROOT = "/static/images/db-logos";
 
+export function getDataSourceIconUrl(dataSource) {
+  if (dataSource?.icon_url) {
+    return dataSource.icon_url;
+  }
+  return `${IMG_ROOT}/${dataSource.type}.png`;
+}
+
 function mapSchemaColumnsToObject(columns) {
   return map(columns, (column) => (isObject(column) ? column : { name: column }));
 }

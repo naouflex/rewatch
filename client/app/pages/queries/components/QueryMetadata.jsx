@@ -5,7 +5,7 @@ import cx from "classnames";
 import { Moment } from "@/components/proptypes";
 import TimeAgo from "@/components/TimeAgo";
 import SchedulePhrase from "@/components/queries/SchedulePhrase";
-import { IMG_ROOT } from "@/services/data-source";
+import { getDataSourceIconUrl } from "@/services/data-source";
 
 import "./QueryMetadata.less";
 
@@ -44,7 +44,7 @@ export default function QueryMetadata({ query, dataSource, layout, onEditSchedul
       {has(dataSource, "name") && has(dataSource, "type") && (
         <div className="query-metadata-item">
           Data Source:
-          <img src={`${IMG_ROOT}/${dataSource.type}.png`} width="20" alt={dataSource.type} />
+          <img src={getDataSourceIconUrl(dataSource)} width="20" alt={dataSource.type} />
           <div className="query-metadata-property">
             <div className="query-metadata-label">{dataSource.name}</div>
           </div>

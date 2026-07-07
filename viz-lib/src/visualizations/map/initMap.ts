@@ -18,6 +18,7 @@ import "leaflet-fullscreen/dist/leaflet.fullscreen.css";
 import { formatSimpleTemplate } from "@/lib/value-format";
 import sanitize from "@/services/sanitize";
 import resizeObserver from "@/services/resizeObserver";
+import { resolveMapTileUrl } from "@/visualizations/shared/resolveMapTheme";
 import chooseTextColorForBackground from "@/lib/chooseTextColorForBackground";
 
 // This is a workaround for an issue with giving Leaflet load the icon on its own.
@@ -165,7 +166,7 @@ export default function initMap(container: any) {
     // @ts-expect-error ts-migrate(2345) FIXME: Argument of type '{ center: [number, number]; zoom... Remove this comment to see the full error message
     fullscreenControl: true,
   });
-  const _tileLayer = L.tileLayer("//{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  const _tileLayer = L.tileLayer(resolveMapTileUrl("//{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"), {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
   }).addTo(_map);
   const _markerLayers = L.featureGroup().addTo(_map);
@@ -188,7 +189,7 @@ export default function initMap(container: any) {
   });
 
   function updateLayers(groups: any, options: any) {
-    _tileLayer.setUrl(options.mapTileUrl);
+    _tileLayer.setUrl(resolveMapTileUrl(options.mapTileUrl));
 
     _markerLayers.eachLayer(layer => {
       _markerLayers.removeLayer(layer);

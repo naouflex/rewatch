@@ -93,27 +93,31 @@ class TestDataSourceResourcePost(BaseTestCase):
     def setUp(self):
         super(TestDataSourceResourcePost, self).setUp()
         self.path = "/api/data_sources/{}".format(self.factory.data_source.id)
+        self.admin = self.factory.create_admin()
+        self.valid_payload = {
+            "name": "DS 1",
+            "type": "pg",
+            "options": {"dbname": "rewatch"},
+        }
 
     def test_returns_400_when_configuration_invalid(self):
-        admin = self.factory.create_admin()
         rv = self.make_request(
             "post",
             self.path,
             data={"name": "DS 1", "type": "pg", "options": {}},
-            user=admin,
+            user=self.admin,
         )
 
         self.assertEqual(rv.status_code, 400)
 
     def test_updates_data_source(self):
-        admin = self.factory.create_admin()
         new_name = "New Name"
         new_options = {"dbname": "newdb"}
         rv = self.make_request(
             "post",
             self.path,
             data={"name": new_name, "type": "pg", "options": new_options},
-            user=admin,
+            user=self.admin,
         )
 
         self.assertEqual(rv.status_code, 200)
@@ -121,6 +125,45 @@ class TestDataSourceResourcePost(BaseTestCase):
 
         self.assertEqual(data_source.name, new_name)
         self.assertEqual(data_source.options.to_dict(), new_options)
+
+    def test_updates_icon_url(self):
+        data_uri = "data:image/png;base64,iVBORw0KGgo="
+        rv = self.make_request(
+            "post",
+            self.path,
+            data={**self.valid_payload, "icon_url": data_uri},
+            user=self.admin,
+        )
+
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(rv.json["icon_url"], data_uri)
+        self.assertEqual(DataSource.query.get(self.factory.data_source.id).icon_url, data_uri)
+
+    def test_clears_icon_url(self):
+        data_source = DataSource.query.get(self.factory.data_source.id)
+        data_source.icon_url = "data:image/png;base64,AAAA"
+        self.db.session.commit()
+
+        rv = self.make_request(
+            "post",
+            self.path,
+            data={**self.valid_payload, "icon_url": ""},
+            user=self.admin,
+        )
+
+        self.assertEqual(rv.status_code, 200)
+        self.assertIsNone(rv.json["icon_url"])
+        self.assertIsNone(DataSource.query.get(self.factory.data_source.id).icon_url)
+
+    def test_rejects_non_image_icon_url(self):
+        rv = self.make_request(
+            "post",
+            self.path,
+            data={**self.valid_payload, "icon_url": "https://evil.example.com/logo.png"},
+            user=self.admin,
+        )
+
+        self.assertEqual(rv.status_code, 400)
 
 
 class TestDataSourceResourceDelete(BaseTestCase):

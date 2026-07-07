@@ -11,6 +11,10 @@ const mapTiles = [
     url: "//{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
   },
   {
+    name: "CartoDB Dark Matter",
+    url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+  },
+  {
     name: "OpenStreetMap BW",
     url: "//{s}.tiles.wmflabs.org/bw-mapnik/{z}/{x}/{y}.png",
   },

@@ -11,9 +11,12 @@ import helper from "@/components/dynamic-form/dynamicFormHelper";
 import HelpTrigger, { TYPES as HELP_TRIGGER_TYPES } from "@/components/HelpTrigger";
 import wrapSettingsTab from "@/components/SettingsWrapper";
 
-import DataSource, { IMG_ROOT } from "@/services/data-source";
+import DataSource from "@/services/data-source";
 import notification from "@/services/notification";
 import routes from "@/services/routes";
+import DataSourceIconForm from "@/pages/data-sources/components/DataSourceIconForm";
+
+import "./data-sources.less";
 
 class EditDataSource extends React.Component {
   static propTypes = {
@@ -126,7 +129,10 @@ class EditDataSource extends React.Component {
           )}
         </div>
         <div className="text-center m-b-10">
-          <img className="p-5" src={`${IMG_ROOT}/${type.type}.png`} alt={type.name} width="64" />
+          <DataSourceIconForm
+            dataSource={dataSource}
+            onChange={updatedDataSource => this.setState({ dataSource: updatedDataSource })}
+          />
           <h3 className="m-0">{type.name}</h3>
         </div>
         <div className="col-md-4 col-md-offset-4 m-b-10">

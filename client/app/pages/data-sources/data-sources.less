@@ -1,0 +1,52 @@
+.datasource__icon-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.datasource__icon-wrapper {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  border-radius: var(--rd-radius-sm, 4px);
+  overflow: hidden;
+  cursor: pointer;
+  outline: none;
+}
+
+.datasource__icon-image {
+  display: block;
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  background: var(--rd-color-surface-alt, #f5f5f5);
+}
+
+.datasource__icon-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  color: #fff;
+  font-size: 11px;
+  background: rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  transition: opacity 0.15s ease-in-out;
+}
+
+.datasource__icon-wrapper:hover .datasource__icon-overlay,
+.datasource__icon-wrapper:focus .datasource__icon-overlay {
+  opacity: 1;
+}
+
+.datasource__icon-actions {
+  margin-top: 4px;
+}

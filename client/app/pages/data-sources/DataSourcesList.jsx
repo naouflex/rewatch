@@ -13,7 +13,7 @@ import helper from "@/components/dynamic-form/dynamicFormHelper";
 import wrapSettingsTab from "@/components/SettingsWrapper";
 import PlainButton from "@/components/PlainButton";
 
-import DataSource, { IMG_ROOT } from "@/services/data-source";
+import DataSource, { getDataSourceIconUrl, IMG_ROOT } from "@/services/data-source";
 import { policy } from "@/services/policy";
 import recordEvent from "@/services/recordEvent";
 import routes from "@/services/routes";
@@ -21,7 +21,7 @@ import routes from "@/services/routes";
 export function DataSourcesListComponent({ dataSources, onClickCreate }) {
   const items = dataSources.map(dataSource => ({
     title: dataSource.name,
-    imgSrc: `${IMG_ROOT}/${dataSource.type}.png`,
+    imgSrc: getDataSourceIconUrl(dataSource),
     href: `data_sources/${dataSource.id}`,
   }));
 
