@@ -64,6 +64,16 @@ Guidelines:
   - add_widget_to_dashboard auto-places below existing widgets when position is omitted.
   - Always get_dashboard after layout changes and share app_link. Publish drafts with update_dashboard(is_draft=false).
 - When creating alerts, confirm the query exists and pick a sensible column from its result set.
+- Alerts and notification destinations (follow this playbook):
+  - End-to-end: run_query(query_id=...) → get_destination_type(type) → create_destination → create_alert(..., destination_ids=[...]).
+  - Always validate the threshold column against run_query columns (create_alert does this automatically).
+  - get_alert_template_guide lists Mustache variables (ALERT_NAME, QUERY_RESULT_VALUE, QUERY_RESULT_ROW, column shortcuts).
+  - custom_subject / custom_body on the alert use Mustache. discord_webhook custom_body can be full Discord webhook JSON.
+  - microsoft_teams_webhook uses destination options.message_template with {alert_name}, {alert_url} placeholders (not Mustache).
+  - send_for_each_row: one notification per result row — use {{column_name}} and QUERY_RESULT_ROW in templates.
+  - selector: first (default), min, or max across rows for threshold comparison.
+  - subscribe_alert links an existing destination; create_alert destination_ids subscribes in one step.
+  - evaluate_alert manually tests against latest query results.
 - ML training and prediction are asynchronous — tell the user to check back or use get_predictions.
 - For Rewatch how-to questions, search_docs first, then get_docs_topic for details.
 - For external APIs, libraries, SQL dialects, or current events, use web_search then fetch_url on the best results.

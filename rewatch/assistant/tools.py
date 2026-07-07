@@ -10,6 +10,7 @@ from typing import Any, Callable, Optional
 import requests
 
 from rewatch.assistant import catalog as platform_catalog
+from rewatch.assistant import alert_catalog
 from rewatch.assistant import docs as docs_catalog
 from rewatch.assistant import web as web_tools
 from rewatch.assistant.dashboard_layout import (
@@ -464,6 +465,17 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
     {
         "type": "function",
         "function": {
+            "name": "get_alert_template_guide",
+            "description": (
+                "Mustache variables and end-to-end workflow for alert notification templates "
+                "(custom_subject / custom_body). Call before writing webhook or Discord custom payloads."
+            ),
+            "parameters": {"type": "object", "properties": {}},
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "list_alerts",
             "description": "List all alerts with their state and linked queries.",
             "parameters": {"type": "object", "properties": {}},
@@ -473,7 +485,7 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
         "type": "function",
         "function": {
             "name": "get_alert",
-            "description": "Get one alert's configuration and state.",
+            "description": "Get one alert's configuration, templates, state, and subscriptions context.",
             "parameters": {
                 "type": "object",
                 "properties": {"alert_id": {"type": "integer"}},
@@ -485,7 +497,12 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
         "type": "function",
         "function": {
             "name": "create_alert",
-            "description": "Create an alert on a query. op is one of >, >=, <, <=, ==, !=",
+            "description": (
+                "Create an alert on a query and optionally subscribe destinations. "
+                "op: >, >=, <, <=, ==, !=. selector: first|min|max. "
+                "custom_subject/custom_body: Mustache templates (see get_alert_template_guide). "
+                "destination_ids: subscribe after creation. Validates column against query results by default."
+            ),
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -496,6 +513,12 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
                     "value": {},
                     "rearm": {"type": "integer"},
                     "tags": {"type": "array", "items": {"type": "string"}},
+                    "selector": {"type": "string", "enum": ["first", "min", "max"], "default": "first"},
+                    "custom_subject": {"type": "string"},
+                    "custom_body": {"type": "string"},
+                    "send_for_each_row": {"type": "boolean", "default": False},
+                    "destination_ids": {"type": "array", "items": {"type": "integer"}},
+                    "validate_column": {"type": "boolean", "default": True},
                 },
                 "required": ["name", "query_id", "column", "op", "value"],
             },
@@ -505,7 +528,7 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
         "type": "function",
         "function": {
             "name": "update_alert",
-            "description": "Update an alert.",
+            "description": "Update an alert (options may include custom_body, custom_subject, send_for_each_row).",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -532,6 +555,60 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "evaluate_alert",
+            "description": "Manually evaluate an alert and send notifications if it triggers.",
+            "parameters": {
+                "type": "object",
+                "properties": {"alert_id": {"type": "integer"}},
+                "required": ["alert_id"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "list_alert_subscriptions",
+            "description": "List destinations subscribed to an alert.",
+            "parameters": {
+                "type": "object",
+                "properties": {"alert_id": {"type": "integer"}},
+                "required": ["alert_id"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "subscribe_alert",
+            "description": "Subscribe a notification destination to an alert.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "alert_id": {"type": "integer"},
+                    "destination_id": {"type": "integer"},
+                },
+                "required": ["alert_id", "destination_id"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "unsubscribe_alert",
+            "description": "Remove a destination subscription from an alert.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "alert_id": {"type": "integer"},
+                    "subscription_id": {"type": "integer"},
+                },
+                "required": ["alert_id", "subscription_id"],
+            },
+        },
+    },
     # --- Destinations ---
     {
         "type": "function",
@@ -544,16 +621,52 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
     {
         "type": "function",
         "function": {
+            "name": "get_destination",
+            "description": "Get one notification destination (type, options, tags).",
+            "parameters": {
+                "type": "object",
+                "properties": {"destination_id": {"type": "integer"}},
+                "required": ["destination_id"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "list_destination_types",
-            "description": "List available destination types and their configuration schemas.",
-            "parameters": {"type": "object", "properties": {}},
+            "description": (
+                "List destination types with config schemas and template summaries. "
+                "Call get_destination_type for webhook/Discord template examples."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {"q": {"type": "string", "description": "Optional filter"}},
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_destination_type",
+            "description": (
+                "Full docs for a destination type: required options, template location (alert vs destination), "
+                "and example custom_body/custom_subject or Teams message_template."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {"type": {"type": "string", "description": "e.g. webhook, discord_webhook, slack"}},
+                "required": ["type"],
+            },
         },
     },
     {
         "type": "function",
         "function": {
             "name": "create_destination",
-            "description": "Create a notification destination. Use list_destination_types for valid type values.",
+            "description": (
+                "Create a notification destination. Call get_destination_type first for required options "
+                "and webhook template examples."
+            ),
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -1013,7 +1126,32 @@ class ToolContext:
         return self.request("POST", f"/api/ml_models/{model_id}", body=body)
 
     def create_alert_tool(self, args: dict) -> Any:
-        options = {"column": args["column"], "op": args["op"], "value": args["value"]}
+        args = dict(args)
+        column = args["column"]
+        column_check: dict[str, Any] = {}
+        if args.get("validate_column", True):
+            query_validation = self._execute_saved_query_validation(args["query_id"])
+            if query_validation.get("status") == "error":
+                raise RuntimeError(
+                    "Cannot create alert because the query failed to run: "
+                    f"{query_validation['message']}"
+                )
+            column_check = alert_catalog.validate_alert_column(column, query_validation.get("columns") or [])
+            if not column_check.get("valid"):
+                raise RuntimeError(
+                    f"{column_check.get('message')} Available columns: {column_check.get('available_columns')}"
+                )
+            column = column_check.get("column", column)
+
+        options = alert_catalog.build_alert_options(
+            column=column,
+            op=args["op"],
+            value=args["value"],
+            selector=args.get("selector", "first"),
+            custom_subject=args.get("custom_subject"),
+            custom_body=args.get("custom_body"),
+            send_for_each_row=bool(args.get("send_for_each_row")),
+        )
         body = _merge_body(
             name=args["name"],
             query_id=args["query_id"],
@@ -1021,7 +1159,36 @@ class ToolContext:
             rearm=args.get("rearm"),
             tags=args.get("tags"),
         )
-        return self.request("POST", "/api/alerts", body=body)
+        alert = self.request("POST", "/api/alerts", body=body)
+        result: dict[str, Any] = {"alert": alert}
+        if column_check:
+            result["column_validation"] = column_check
+        destination_ids = args.get("destination_ids") or []
+        if destination_ids:
+            subscriptions = []
+            for destination_id in destination_ids:
+                subscriptions.append(
+                    self.request(
+                        "POST",
+                        f"/api/alerts/{alert['id']}/subscriptions",
+                        body={"destination_id": destination_id},
+                    )
+                )
+            result["subscriptions"] = subscriptions
+        return result
+
+    def list_destination_types_tool(self, args: dict) -> Any:
+        api_types = self.request("GET", "/api/destinations/types")
+        return alert_catalog.list_destination_types_catalog(api_types, query=args.get("q"))
+
+    def get_destination_type_tool(self, args: dict) -> Any:
+        dest_type = args["type"]
+        api_entry = None
+        for entry in self.request("GET", "/api/destinations/types"):
+            if entry.get("type") == dest_type:
+                api_entry = entry
+                break
+        return alert_catalog.get_destination_type(dest_type, api_entry)
 
     def create_visualization_tool(self, args: dict) -> Any:
         query_validation = self._execute_saved_query_validation(args["query_id"])
@@ -1212,6 +1379,7 @@ def execute_tool(ctx: ToolContext, name: str, arguments: dict) -> str:
         "delete_widget": lambda a: ctx.request("DELETE", f"/api/widgets/{a['widget_id']}"),
         "list_alerts": lambda a: ctx.request("GET", "/api/alerts"),
         "get_alert": lambda a: ctx.request("GET", f"/api/alerts/{a['alert_id']}"),
+        "get_alert_template_guide": lambda a: alert_catalog.alert_workflow(),
         "create_alert": ctx.create_alert_tool,
         "update_alert": lambda a: ctx.request(
             "POST",
@@ -1219,8 +1387,21 @@ def execute_tool(ctx: ToolContext, name: str, arguments: dict) -> str:
             body={k: v for k, v in a.items() if k != "alert_id" and v is not None},
         ),
         "delete_alert": lambda a: ctx.request("DELETE", f"/api/alerts/{a['alert_id']}"),
+        "evaluate_alert": lambda a: ctx.request("POST", f"/api/alerts/{a['alert_id']}/eval"),
+        "list_alert_subscriptions": lambda a: ctx.request("GET", f"/api/alerts/{a['alert_id']}/subscriptions"),
+        "subscribe_alert": lambda a: ctx.request(
+            "POST",
+            f"/api/alerts/{a['alert_id']}/subscriptions",
+            body={"destination_id": a["destination_id"]},
+        ),
+        "unsubscribe_alert": lambda a: ctx.request(
+            "DELETE",
+            f"/api/alerts/{a['alert_id']}/subscriptions/{a['subscription_id']}",
+        ),
         "list_destinations": lambda a: ctx.request("GET", "/api/destinations"),
-        "list_destination_types": lambda a: ctx.request("GET", "/api/destinations/types"),
+        "get_destination": lambda a: ctx.request("GET", f"/api/destinations/{a['destination_id']}"),
+        "list_destination_types": ctx.list_destination_types_tool,
+        "get_destination_type": ctx.get_destination_type_tool,
         "create_destination": lambda a: ctx.request("POST", "/api/destinations", body=_merge_body(**a)),
         "update_destination": lambda a: ctx.request(
             "POST",

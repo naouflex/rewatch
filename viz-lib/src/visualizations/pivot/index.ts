@@ -22,6 +22,7 @@ export default {
   Renderer,
   Editor,
 
+  autoHeight: true,
   defaultRows: 10,
   defaultColumns: 6,
   minColumns: 2,

@@ -12,8 +12,8 @@ A local [MCP](https://modelcontextprotocol.io) (stdio) server that exposes the R
 
 **Curated tools** for common workflows:
 
-- **Read:** `run_query`, `search_queries`, `get_query`, `list_data_sources`, `get_data_source_schema`, `list_dashboards`, `get_dashboard`, `list_alerts`, `get_alert`, `list_ml_models`, `get_ml_model`, `get_predictions`, `list_destinations`, `list_indexers`
-- **Write:** `create_query`, `update_query`, `archive_query`, `create_alert`, `update_alert`, `delete_alert`, `create_dashboard`, `update_dashboard`, `create_visualization`, `update_visualization`, `add_widget_to_dashboard`, `update_widget`, `delete_widget`, `create_destination`, `update_destination`, `create_ml_model`, `update_ml_model`, `train_ml_model`, `predict_ml_model`, `create_indexer`, `update_indexer`
+- **Read:** `run_query`, `search_queries`, `get_query`, `list_data_sources`, `get_data_source_schema`, `list_dashboards`, `get_dashboard`, `list_alerts`, `get_alert`, `get_alert_template_guide`, `list_ml_models`, `get_ml_model`, `get_predictions`, `list_destinations`, `get_destination`, `list_destination_types`, `get_destination_type`, `list_alert_subscriptions`, `list_indexers`
+- **Write:** `create_query`, `update_query`, `archive_query`, `create_alert`, `update_alert`, `delete_alert`, `evaluate_alert`, `subscribe_alert`, `unsubscribe_alert`, `create_dashboard`, `update_dashboard`, `create_visualization`, `update_visualization`, `add_widget_to_dashboard`, `update_widget`, `delete_widget`, `create_destination`, `update_destination`, `create_ml_model`, `update_ml_model`, `train_ml_model`, `predict_ml_model`, `create_indexer`, `update_indexer`
 
 ## Configuration
 

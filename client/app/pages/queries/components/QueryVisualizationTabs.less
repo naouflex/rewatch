@@ -188,6 +188,20 @@
     overflow: hidden;
   }
 
+  .pivot-table-visualization-container,
+  .cohort-visualization-container {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 300px;
+    height: auto;
+    left: auto;
+    top: auto;
+    right: auto;
+    bottom: auto;
+    width: 100%;
+    overflow: auto;
+  }
+
   // Leaflet needs a definite height; flex + height:auto collapses an empty map container.
   .map-visualization-container {
     position: relative;

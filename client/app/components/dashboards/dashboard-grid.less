@@ -20,9 +20,13 @@
     padding: 0;
   }
 
-  .pivot-table-visualization-container > table,
+  .pivot-table-visualization-container,
+  .cohort-visualization-container {
+    overflow: auto;
+  }
+
   .visualization-renderer > .visualization-renderer-wrapper {
-    overflow: visible;
+    overflow: auto;
   }
 
   &.preview-mode {
@@ -103,7 +107,9 @@
   .map-visualization-container,
   .word-cloud-visualization-container,
   .box-plot-deprecated-visualization-container,
-  .chart-visualization-container {
+  .chart-visualization-container,
+  .pivot-table-visualization-container,
+  .cohort-visualization-container {
     position: absolute;
     left: 0;
     top: 0;
@@ -112,6 +118,11 @@
     width: auto;
     height: auto;
     overflow: hidden;
+  }
+
+  .pivot-table-visualization-container,
+  .cohort-visualization-container {
+    overflow: auto;
   }
 
   .counter-visualization-container {
@@ -129,7 +140,9 @@
     }
   }
   .table-visualization-container,
-  .chart-visualization-container {
+  .chart-visualization-container,
+  .pivot-table-visualization-container,
+  .cohort-visualization-container {
     height: 100%;
   }
 }

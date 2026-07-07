@@ -914,6 +914,46 @@
   .pivot-table-visualization-container {
     background: var(--rd-color-surface);
     color: var(--rd-color-text);
+
+    table.pvtTable tbody tr td {
+      background: var(--rd-color-surface);
+      color: var(--rd-color-text);
+    }
+
+    table.pvtTable thead tr th,
+    table.pvtTable tbody tr th {
+      background: var(--rd-color-surface-alt);
+      color: var(--rd-color-text);
+    }
+
+    .pvtAxisContainer,
+    .pvtRenderers,
+    .pvtVals {
+      background: var(--rd-color-surface);
+      color: var(--rd-color-text);
+      border-color: var(--rd-color-border);
+    }
+
+    .pvtFilterBox {
+      background: var(--rd-color-surface);
+      color: var(--rd-color-text);
+      border-color: var(--rd-color-border);
+    }
+  }
+
+  .cohort-visualization-container {
+    background: var(--rd-color-surface);
+    color: var(--rd-color-text);
+
+    .cornelius-table {
+      .cornelius-time,
+      .cornelius-label,
+      .cornelius-stage,
+      .cornelius-people {
+        background: var(--rd-color-surface-alt);
+        color: var(--rd-color-text);
+      }
+    }
   }
 
   /* Result tables (rendered by Rewatch, not Ant) */

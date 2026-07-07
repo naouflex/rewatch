@@ -25,6 +25,11 @@ import httpx
 from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
 
+try:
+    from rewatch_mcp.alert_catalog import alert_catalog
+except ImportError:
+    alert_catalog = None  # type: ignore[assignment]
+
 _WORKSPACE_ENV = Path(__file__).resolve().parent.parent.parent / ".env"
 if _WORKSPACE_ENV.is_file():
     load_dotenv(_WORKSPACE_ENV, override=False)
@@ -43,8 +48,11 @@ mcp = FastMCP(
     instructions=(
         "Tools for the Rewatch (Rewatch) data platform: run SQL queries, create and "
         "update queries/alerts/dashboards/ML models, browse data sources and schemas, "
-        "and call any REST API endpoint. Use list_endpoints/describe_endpoint to "
-        "discover the full API surface, then call_api for anything not covered by a "
+        "configure notification destinations (Slack, webhooks, Discord, email, …), "
+        "and call any REST API endpoint. For alerts: run_query first to validate columns, "
+        "get_destination_type for webhook template examples, create_destination, then "
+        "create_alert with destination_ids to subscribe. Use list_endpoints/describe_endpoint "
+        "to discover the full API surface, then call_api for anything not covered by a "
         "dedicated tool."
     ),
 )
@@ -451,6 +459,31 @@ def update_dashboard(
 # ---------------------------------------------------------------------------
 
 
+def _validate_alert_column_from_query(query_id: int, column: str) -> dict[str, Any]:
+    """Run the linked query and verify the threshold column exists."""
+    if alert_catalog is None:
+        return {"skipped": True}
+    try:
+        response = _request("POST", f"/api/queries/{query_id}/results", body={"max_age": -1})
+        if "job" in response:
+            result_id = _poll_job(response["job"], 120)
+            response = _request("GET", f"/api/queries/{query_id}/results/{result_id}.json")
+        query_result = response.get("query_result", {})
+        columns = [c.get("name") for c in query_result.get("data", {}).get("columns", []) if c.get("name")]
+        return alert_catalog.validate_alert_column(column, columns)
+    except Exception as exc:
+        return {"valid": False, "message": f"Could not validate column: {exc}"}
+
+
+def _subscribe_alert_destinations(alert_id: int, destination_ids: list[int]) -> list[dict[str, Any]]:
+    subscriptions = []
+    for destination_id in destination_ids:
+        subscriptions.append(
+            _request("POST", f"/api/alerts/{alert_id}/subscriptions", body={"destination_id": destination_id})
+        )
+    return subscriptions
+
+
 @mcp.tool()
 def list_alerts() -> str:
     """List alerts with their state (ok/triggered/unknown), linked query and options."""
@@ -459,8 +492,20 @@ def list_alerts() -> str:
 
 @mcp.tool()
 def get_alert(alert_id: int) -> str:
-    """Get one alert: trigger condition, state, linked query and rearm settings."""
+    """Get one alert: trigger condition, state, linked query, templates and rearm settings."""
     return _compact(_request("GET", f"/api/alerts/{alert_id}"))
+
+
+@mcp.tool()
+def get_alert_template_guide() -> str:
+    """Mustache variables and workflow for alert notification templates (custom_subject / custom_body).
+
+    Use before writing webhook or Discord custom payloads. For destination-specific JSON
+    examples, call get_destination_type(type='webhook' or 'discord_webhook').
+    """
+    if alert_catalog is None:
+        raise RuntimeError("Alert template guide is unavailable in this MCP install.")
+    return _compact(alert_catalog.alert_workflow())
 
 
 @mcp.tool()
@@ -473,19 +518,66 @@ def create_alert(
     rearm: Optional[int] = None,
     tags: Optional[list[str]] = None,
     muted: bool = False,
+    selector: str = "first",
+    custom_subject: Optional[str] = None,
+    custom_body: Optional[str] = None,
+    send_for_each_row: bool = False,
+    destination_ids: Optional[list[int]] = None,
+    validate_column: bool = True,
 ) -> str:
-    """Create an alert on a saved query.
+    """Create an alert on a saved query and optionally subscribe notification destinations.
 
-    ``op`` is one of: ``>``, ``>=``, ``<``, ``<=``, ``==``, ``!=``.
-    ``value`` is the threshold to compare against ``column`` in the query result.
-    ``rearm`` is seconds before the alert can trigger again (optional).
+  ``op`` is one of: ``>``, ``>=``, ``<``, ``<=``, ``==``, ``!=``.
+  ``selector``: ``first`` (default), ``min``, or ``max`` across result rows.
+  ``custom_subject`` / ``custom_body``: Mustache templates for notification text (see get_alert_template_guide).
+  ``send_for_each_row``: notify once per query result row (use QUERY_RESULT_ROW in templates).
+  ``destination_ids``: destination IDs to subscribe immediately after creation.
+  Set ``validate_column=false`` to skip the pre-flight column check against query results.
     """
     _ensure_writable()
-    options: dict[str, Any] = {"column": column, "op": op, "value": value}
-    if muted:
-        options["muted"] = True
+    column_check: dict[str, Any] = {}
+    resolved_column = column
+    if validate_column and alert_catalog is not None:
+        column_check = _validate_alert_column_from_query(query_id, column)
+        if not column_check.get("valid"):
+            raise RuntimeError(
+                f"Alert column validation failed: {column_check.get('message')}. "
+                f"Available columns: {column_check.get('available_columns')}. "
+                "Run run_query(query_id=...) first or pass validate_column=false."
+            )
+        resolved_column = column_check.get("column", column)
+
+    if alert_catalog is not None:
+        options = alert_catalog.build_alert_options(
+            column=resolved_column,
+            op=op,
+            value=value,
+            selector=selector,
+            custom_subject=custom_subject,
+            custom_body=custom_body,
+            send_for_each_row=send_for_each_row,
+            muted=muted,
+        )
+    else:
+        options = {"column": resolved_column, "op": op, "value": value, "selector": selector}
+        if custom_subject:
+            options["custom_subject"] = custom_subject
+        if custom_body:
+            options["custom_body"] = custom_body
+        if send_for_each_row:
+            options["send_for_each_row"] = True
+        if muted:
+            options["muted"] = True
+
     body = _merge_body(name=name, query_id=query_id, options=options, rearm=rearm, tags=tags)
-    return _compact(_request("POST", "/api/alerts", body=body))
+    alert = _request("POST", "/api/alerts", body=body)
+
+    result: dict[str, Any] = {"alert": alert}
+    if column_check:
+        result["column_validation"] = column_check
+    if destination_ids:
+        result["subscriptions"] = _subscribe_alert_destinations(alert["id"], destination_ids)
+    return _compact(result)
 
 
 @mcp.tool()
@@ -497,7 +589,7 @@ def update_alert(
     rearm: Optional[int] = None,
     tags: Optional[list[str]] = None,
 ) -> str:
-    """Update an alert's name, linked query, trigger options, rearm interval or tags."""
+    """Update an alert's name, linked query, trigger options (incl. custom_body/custom_subject), rearm or tags."""
     _ensure_writable()
     body = _merge_body(name=name, query_id=query_id, options=options, rearm=rearm, tags=tags)
     return _compact(_request("POST", f"/api/alerts/{alert_id}", body=body))
@@ -509,6 +601,37 @@ def delete_alert(alert_id: int) -> str:
     _ensure_writable()
     _request("DELETE", f"/api/alerts/{alert_id}")
     return _compact({"deleted": True, "alert_id": alert_id})
+
+
+@mcp.tool()
+def evaluate_alert(alert_id: int) -> str:
+    """Manually evaluate an alert against its query's latest results and send notifications if triggered."""
+    _ensure_writable()
+    _request("POST", f"/api/alerts/{alert_id}/eval")
+    return _compact({"evaluated": True, "alert_id": alert_id})
+
+
+@mcp.tool()
+def list_alert_subscriptions(alert_id: int) -> str:
+    """List notification destinations subscribed to an alert."""
+    return _compact(_request("GET", f"/api/alerts/{alert_id}/subscriptions"))
+
+
+@mcp.tool()
+def subscribe_alert(alert_id: int, destination_id: int) -> str:
+    """Subscribe a notification destination to an alert."""
+    _ensure_writable()
+    return _compact(
+        _request("POST", f"/api/alerts/{alert_id}/subscriptions", body={"destination_id": destination_id})
+    )
+
+
+@mcp.tool()
+def unsubscribe_alert(alert_id: int, subscription_id: int) -> str:
+    """Remove a destination subscription from an alert."""
+    _ensure_writable()
+    _request("DELETE", f"/api/alerts/{alert_id}/subscriptions/{subscription_id}")
+    return _compact({"unsubscribed": True, "alert_id": alert_id, "subscription_id": subscription_id})
 
 
 # ---------------------------------------------------------------------------
@@ -603,14 +726,49 @@ def list_destinations() -> str:
 
 
 @mcp.tool()
-def list_destination_types() -> str:
-    """List available destination types and their configuration schemas."""
-    return _compact(_request("GET", "/api/destinations/types"))
+def get_destination(destination_id: int) -> str:
+    """Get one notification destination including type, options and tags."""
+    return _compact(_request("GET", f"/api/destinations/{destination_id}"))
+
+
+@mcp.tool()
+def list_destination_types(query: Optional[str] = None) -> str:
+    """List available destination types with configuration schemas and template summaries.
+
+    For webhook/Discord template examples and Mustache variables, call get_destination_type.
+    """
+    api_types = _request("GET", "/api/destinations/types")
+    if alert_catalog is not None:
+        return _compact(alert_catalog.list_destination_types_catalog(api_types, query=query))
+    return _compact(api_types)
+
+
+@mcp.tool()
+def get_destination_type(type: str) -> str:
+    """Get full docs for one destination type: config schema, template location, and examples.
+
+    ``type`` examples: ``webhook``, ``discord_webhook``, ``slack``, ``microsoft_teams_webhook``, ``email``.
+    Alert-level templates use Mustache (custom_subject/custom_body). Teams uses destination message_template.
+    """
+    api_entry = None
+    for entry in _request("GET", "/api/destinations/types"):
+        if entry.get("type") == type:
+            api_entry = entry
+            break
+    if alert_catalog is not None:
+        return _compact(alert_catalog.get_destination_type(type, api_entry))
+    if api_entry is None:
+        raise RuntimeError(f"Unknown destination type {type!r}.")
+    return _compact(api_entry)
 
 
 @mcp.tool()
 def create_destination(name: str, type: str, options: dict, tags: Optional[list[str]] = None) -> str:
-    """Create a notification destination. Use list_destination_types for valid ``type`` values and option schemas."""
+    """Create a notification destination.
+
+    Call get_destination_type(type) first for required options and template examples.
+    Common types: webhook (url), discord_webhook (url), slack (url), email, microsoft_teams_webhook (url, message_template).
+    """
     _ensure_writable()
     body = _merge_body(name=name, type=type, options=options, tags=tags)
     return _compact(_request("POST", "/api/destinations", body=body))
@@ -624,7 +782,7 @@ def update_destination(
     options: Optional[dict] = None,
     tags: Optional[list[str]] = None,
 ) -> str:
-    """Update a notification destination."""
+    """Update a notification destination. When changing type, pass both type and options together."""
     _ensure_writable()
     body = _merge_body(name=name, type=type, options=options, tags=tags)
     return _compact(_request("POST", f"/api/destinations/{destination_id}", body=body))

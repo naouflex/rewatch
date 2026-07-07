@@ -1,6 +1,10 @@
 @import "../variables.less";
 
 .pivot-table-visualization-container {
+  width: 100%;
+  min-height: 300px;
+  overflow: auto;
+
   &[data-hide-controls] {
     .pvtAxisContainer,
     .pvtRenderers,
@@ -29,6 +33,22 @@
       }
     }
   }
+
+  .dashboard-widget-wrapper:not(.widget-auto-height-enabled) &,
+  .query-fixed-layout & {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+  }
+}
+
+.pivot-chart-visualization-container {
+  width: 100%;
+  min-height: 300px;
+  height: 100%;
 }
 
 .pvtAxisContainer,
@@ -37,10 +57,21 @@
   background: var(--rd-color-surface, #fff);
 }
 
-.pvtAxisContainer li span.pvtAttr {
-  background: fade(@visualizations-gray, 10%);
-  border: 1px solid fade(@visualizations-gray, 15%);
-  border-radius: 3px;
+.pvtAxisContainer {
+  li span.pvtAttr {
+    background: fade(@visualizations-gray, 10%);
+    border: 1px solid fade(@visualizations-gray, 15%);
+    border-radius: 3px;
+  }
+}
+
+.pvtRenderers {
+  background: var(--rd-color-surface, #fff);
+  color: var(--rd-color-text, #333);
+}
+
+.pvtVals {
+  color: var(--rd-color-text, #333);
 }
 
 .pvtCheckContainer {
@@ -59,12 +90,15 @@
 
 table.pvtTable thead tr th,
 table.pvtTable tbody tr th {
-  background-color: fade(@visualizations-gray, 10%);
+  background-color: var(--rd-color-surface-alt, fade(@visualizations-gray, 10%));
+  color: var(--rd-color-text, #333);
   border: 1px solid var(--rd-color-border, #ced8dc);
 }
 
 table.pvtTable tbody tr td {
   border: 1px solid var(--rd-color-border, #ced8dc);
+  background-color: var(--rd-color-surface, #fff);
+  color: var(--rd-color-text, #333);
 }
 
 .pvtFilterBox {

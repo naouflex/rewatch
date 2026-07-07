@@ -2,36 +2,44 @@ import React, { useMemo } from "react";
 import { RendererPropTypes } from "@/visualizations/prop-types";
 
 import prepareData from "./prepareData";
+import { resolveCohortOptions } from "./resolveCohortTheme";
+import useThemeAttribute from "@/visualizations/shared/useThemeAttribute";
 import "./renderer.less";
 
 import Cornelius from "./Cornelius";
 
 export default function Renderer({ data, options }: any) {
-  const { data: cohortData, initialDate } = useMemo(() => prepareData(data, options), [data, options]);
+  const theme = useThemeAttribute();
+  const themedOptions = useMemo(() => resolveCohortOptions(options), [options, theme]);
+  const { data: cohortData, initialDate } = useMemo(() => prepareData(data, themedOptions), [data, themedOptions]);
 
   const corneliusOptions = useMemo(
     () => ({
       initialDate,
-      timeInterval: options.timeInterval,
+      timeInterval: themedOptions.timeInterval,
 
-      noValuePlaceholder: options.noValuePlaceholder,
-      rawNumberOnHover: options.showTooltips,
-      displayAbsoluteValues: !options.percentValues,
+      noValuePlaceholder: themedOptions.noValuePlaceholder,
+      rawNumberOnHover: themedOptions.showTooltips,
+      displayAbsoluteValues: !themedOptions.percentValues,
 
-      timeColumnTitle: options.timeColumnTitle,
-      peopleColumnTitle: options.peopleColumnTitle,
-      stageColumnTitle: options.stageColumnTitle,
+      timeColumnTitle: themedOptions.timeColumnTitle,
+      peopleColumnTitle: themedOptions.peopleColumnTitle,
+      stageColumnTitle: themedOptions.stageColumnTitle,
 
-      numberFormat: options.numberFormat,
-      percentFormat: options.percentFormat,
+      numberFormat: themedOptions.numberFormat,
+      percentFormat: themedOptions.percentFormat,
 
-      colors: options.colors,
+      colors: themedOptions.colors,
     }),
-    [options, initialDate]
+    [themedOptions, initialDate]
   );
 
   if (cohortData.length === 0) {
-    return null;
+    return (
+      <div className="cohort-visualization-container">
+        <div className="cohort-visualization-empty">No cohort data to display. Check column mappings and query results.</div>
+      </div>
+    );
   }
 
   return (

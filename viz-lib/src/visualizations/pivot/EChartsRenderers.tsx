@@ -67,7 +67,7 @@ function makeRenderer(chartType: string, chartOptions: any = {}) {
       };
     }, [props]);
 
-    return <div ref={containerRef} style={{ width: "100%", height: 400 }} />;
+    return <div ref={containerRef} className="pivot-chart-visualization-container" />;
   };
 }
 

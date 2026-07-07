@@ -1,6 +1,28 @@
 @import "../variables";
 
 .cohort-visualization-container {
+  width: 100%;
+  min-height: 300px;
+  overflow: auto;
+
+  .dashboard-widget-wrapper:not(.widget-auto-height-enabled) &,
+  .query-fixed-layout & {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .cohort-visualization-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+    color: var(--rd-color-text-muted, #7a7068);
+  }
+
   .cornelius-table {
     width: 100%;
 
@@ -15,7 +37,8 @@
     .cornelius-label,
     .cornelius-stage,
     .cornelius-people {
-      background-color: fade(@visualizations-gray, 3%);
+      background-color: var(--rd-color-surface-alt, fade(@visualizations-gray, 3%));
+      color: var(--rd-color-text, #333);
     }
   }
 }

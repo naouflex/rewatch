@@ -5,7 +5,6 @@ import Alert from "antd/lib/alert";
 import Card from "antd/lib/card";
 import Row from "antd/lib/row";
 import Col from "antd/lib/col";
-import Table from "antd/lib/table";
 import LoadingState from "@/components/items-list/components/LoadingState";
 import { useTheme } from "@/components/ThemeProvider";
 import EChartsLineChart from "./EChartsLineChart";
