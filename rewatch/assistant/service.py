@@ -281,8 +281,33 @@ def chat(
                 fn_name = tool_call["name"]
                 try:
                     fn_args = json.loads(tool_call["arguments"] or "{}")
-                except json.JSONDecodeError:
-                    fn_args = {}
+                except json.JSONDecodeError as exc:
+                    raw = (tool_call.get("arguments") or "")[:500]
+                    err_result = json.dumps(
+                        {
+                            "error": (
+                                f"Tool call {fn_name!r} had invalid JSON arguments: {exc}. "
+                                f"Retry with valid JSON. Raw: {raw!r}"
+                            )
+                        }
+                    )
+                    _emit(
+                        on_activity,
+                        {
+                            "type": "tool_done",
+                            "id": tool_call["id"],
+                            "tool": fn_name,
+                            "label": f"Invalid arguments for {fn_name}",
+                        },
+                    )
+                    conversation.append(
+                        {
+                            "role": "tool",
+                            "tool_call_id": tool_call["id"],
+                            "content": err_result,
+                        }
+                    )
+                    continue
 
                 label = tool_start_label(fn_name, fn_args)
                 activity_id = tool_call["id"]

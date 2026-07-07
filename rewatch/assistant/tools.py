@@ -64,6 +64,19 @@ def _merge_body(**kwargs) -> dict:
     return {k: v for k, v in kwargs.items() if v is not None}
 
 
+def _require_catalog_result(result: Any, label: str = "lookup") -> Any:
+    if isinstance(result, dict) and result.get("error"):
+        known = result.get("known_types")
+        suffix = f" Known types: {known[:25]}" if isinstance(known, list) and known else ""
+        raise RuntimeError(f"{label} failed: {result['error']}{suffix}")
+    return result
+
+
+def _require_widget_content(visualization_id: Any, text: Any) -> None:
+    if visualization_id is None and not text:
+        raise RuntimeError("Provide visualization_id (chart/table widget) or text (text box widget).")
+
+
 TOOL_DEFINITIONS: list[dict[str, Any]] = [
     # --- Queries ---
     {
@@ -1131,6 +1144,11 @@ class ToolContext:
         column_check: dict[str, Any] = {}
         if args.get("validate_column", True):
             query_validation = self._execute_saved_query_validation(args["query_id"])
+            if query_validation.get("status") == "needs_parameters":
+                raise RuntimeError(
+                    "Cannot create alert: the linked query requires parameter values. "
+                    "Run the query with parameters first or set defaults on the query."
+                )
             if query_validation.get("status") == "error":
                 raise RuntimeError(
                     "Cannot create alert because the query failed to run: "
@@ -1143,15 +1161,18 @@ class ToolContext:
                 )
             column = column_check.get("column", column)
 
-        options = alert_catalog.build_alert_options(
-            column=column,
-            op=args["op"],
-            value=args["value"],
-            selector=args.get("selector", "first"),
-            custom_subject=args.get("custom_subject"),
-            custom_body=args.get("custom_body"),
-            send_for_each_row=bool(args.get("send_for_each_row")),
-        )
+        try:
+            options = alert_catalog.build_alert_options(
+                column=column,
+                op=args["op"],
+                value=args["value"],
+                selector=args.get("selector", "first"),
+                custom_subject=args.get("custom_subject"),
+                custom_body=args.get("custom_body"),
+                send_for_each_row=bool(args.get("send_for_each_row")),
+            )
+        except ValueError as exc:
+            raise RuntimeError(str(exc)) from exc
         body = _merge_body(
             name=args["name"],
             query_id=args["query_id"],
@@ -1188,10 +1209,18 @@ class ToolContext:
             if entry.get("type") == dest_type:
                 api_entry = entry
                 break
-        return alert_catalog.get_destination_type(dest_type, api_entry)
+        return _require_catalog_result(
+            alert_catalog.get_destination_type(dest_type, api_entry),
+            "Destination type",
+        )
 
     def create_visualization_tool(self, args: dict) -> Any:
         query_validation = self._execute_saved_query_validation(args["query_id"])
+        if query_validation.get("status") == "needs_parameters":
+            raise RuntimeError(
+                "Cannot create visualization: the linked query requires parameter values. "
+                "Run the query with parameters first or set defaults on the query."
+            )
         if query_validation.get("status") == "error":
             raise RuntimeError(
                 "Cannot create visualization because the query failed to run: "
@@ -1238,6 +1267,11 @@ class ToolContext:
 
         if "options" in args and query_id:
             query_validation = self._execute_saved_query_validation(query_id)
+            if query_validation.get("status") == "needs_parameters":
+                raise RuntimeError(
+                    "Cannot update visualization options: the linked query requires parameter values. "
+                    "Run the query with parameters first or set defaults on the query."
+                )
             if query_validation.get("status") == "error":
                 raise RuntimeError(
                     "Cannot update visualization options because the query failed to run: "
@@ -1265,6 +1299,7 @@ class ToolContext:
         return enrich_dashboard_for_assistant(dashboard)
 
     def add_widget_tool(self, args: dict) -> Any:
+        _require_widget_content(args.get("visualization_id"), args.get("text"))
         dashboard_id = args["dashboard_id"]
         raw_options = args.get("options")
         if has_explicit_position(raw_options):
@@ -1355,9 +1390,15 @@ def execute_tool(ctx: ToolContext, name: str, arguments: dict) -> str:
         "delete_visualization": lambda a: ctx.request("DELETE", f"/api/visualizations/{a['visualization_id']}"),
         "list_data_sources": lambda a: enrich_data_sources(ctx.request("GET", "/api/data_sources")),
         "list_query_runner_types": lambda a: platform_catalog.list_query_runner_types(a.get("q")),
-        "get_query_runner_type": lambda a: platform_catalog.get_query_runner_type(a["type"]),
+        "get_query_runner_type": lambda a: _require_catalog_result(
+            platform_catalog.get_query_runner_type(a["type"]),
+            "Query runner type",
+        ),
         "list_visualization_types": lambda a: platform_catalog.list_visualization_types(a.get("q")),
-        "get_visualization_type": lambda a: platform_catalog.get_visualization_type(a["type"]),
+        "get_visualization_type": lambda a: _require_catalog_result(
+            platform_catalog.get_visualization_type(a["type"]),
+            "Visualization type",
+        ),
         "get_data_source": lambda a: enrich_data_source(
             _as_dict(ctx.request("GET", f"/api/data_sources/{a['data_source_id']}"), "data source")
         ),

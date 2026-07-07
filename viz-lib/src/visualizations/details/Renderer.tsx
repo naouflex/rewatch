@@ -36,7 +36,7 @@ export default function Renderer({ data, options }: any) {
   const row = data.rows[page];
 
   return (
-    <div className="details-viz">
+    <div className="details-visualization-container details-viz">
       <Descriptions size="small" column={1} bordered>
         {map(visibleColumns, column => {
           const { Component } = column;

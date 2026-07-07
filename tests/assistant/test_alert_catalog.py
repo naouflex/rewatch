@@ -1,5 +1,7 @@
 """Tests for alert/destination assistant catalog."""
 
+import pytest
+
 from rewatch.assistant import alert_catalog
 
 
@@ -57,3 +59,18 @@ def test_alert_workflow_lists_mustache_variables():
     workflow = alert_catalog.alert_workflow()
     assert "mustache_variables" in workflow
     assert any(v["name"] == "QUERY_RESULT_VALUE" for v in workflow["mustache_variables"])
+
+
+def test_validate_alert_operator_rejects_invalid():
+    with pytest.raises(ValueError, match="Invalid alert operator"):
+        alert_catalog.validate_alert_operator("gt")
+
+
+def test_validate_alert_selector_rejects_invalid():
+    with pytest.raises(ValueError, match="Invalid alert selector"):
+        alert_catalog.validate_alert_selector_value("average")
+
+
+def test_build_alert_options_rejects_bad_operator():
+    with pytest.raises(ValueError):
+        alert_catalog.build_alert_options(column="value", op="gt", value=1)

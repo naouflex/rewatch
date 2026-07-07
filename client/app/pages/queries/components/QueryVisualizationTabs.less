@@ -159,6 +159,7 @@
     right: auto;
     bottom: auto;
     padding: 15px;
+    height: 100%;
   }
 
   .visualization-renderer-wrapper {
@@ -167,6 +168,7 @@
     display: flex;
     flex-direction: column;
     position: relative;
+    height: 100%;
   }
 
   .table-visualization-container,
@@ -175,11 +177,14 @@
   .sankey-visualization-container,
   .funnel-visualization-container,
   .word-cloud-visualization-container,
-  .box-plot-deprecated-visualization-container {
+  .box-plot-deprecated-visualization-container,
+  .details-visualization-container,
+  .pivot-table-visualization-container,
+  .cohort-visualization-container {
     position: relative;
     flex: 1 1 auto;
     min-height: 300px;
-    height: auto;
+    height: 100%;
     left: auto;
     top: auto;
     right: auto;
@@ -188,17 +193,10 @@
     overflow: hidden;
   }
 
+  .table-visualization-container,
   .pivot-table-visualization-container,
-  .cohort-visualization-container {
-    position: relative;
-    flex: 1 1 auto;
-    min-height: 300px;
-    height: auto;
-    left: auto;
-    top: auto;
-    right: auto;
-    bottom: auto;
-    width: 100%;
+  .cohort-visualization-container,
+  .details-visualization-container {
     overflow: auto;
   }
 
@@ -217,6 +215,8 @@
   }
 
   .table-visualization-container {
+    overflow: auto;
+
     div {
       height: auto;
     }
@@ -226,6 +226,7 @@
       flex-direction: column;
       flex: 1 1 auto;
       min-height: 0;
+      height: 100%;
 
       .ant-table {
         flex: 1 1 auto;

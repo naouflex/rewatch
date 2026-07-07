@@ -262,6 +262,20 @@ def validate_alert_column(column: str, columns: list[str]) -> dict[str, Any]:
     }
 
 
+def validate_alert_operator(op: str) -> str:
+    op = (op or "").strip()
+    if op not in ALERT_OPERATORS:
+        raise ValueError(f"Invalid alert operator {op!r}. Use one of: {', '.join(ALERT_OPERATORS)}")
+    return op
+
+
+def validate_alert_selector_value(selector: str) -> str:
+    selector = (selector or "first").strip().lower()
+    if selector not in ALERT_SELECTORS:
+        raise ValueError(f"Invalid alert selector {selector!r}. Use one of: {', '.join(ALERT_SELECTORS)}")
+    return selector
+
+
 def build_alert_options(
     *,
     column: str,
@@ -274,6 +288,8 @@ def build_alert_options(
     muted: bool = False,
 ) -> dict[str, Any]:
     """Build alert.options dict for API create/update."""
+    op = validate_alert_operator(op)
+    selector = validate_alert_selector_value(selector)
     options: dict[str, Any] = {
         "column": column,
         "op": op,

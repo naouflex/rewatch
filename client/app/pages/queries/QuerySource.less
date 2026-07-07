@@ -75,4 +75,21 @@
 .query-page-wrapper.query-fixed-layout .query-fullscreen .query-results-wrapper {
   flex: 1 1 auto;
   min-height: 0;
+  margin-bottom: 0;
+}
+
+.query-page-wrapper.query-fixed-layout .query-fullscreen {
+  .content {
+    justify-content: flex-start;
+    min-height: 0;
+  }
+
+  .flex-fill.p-relative {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .flex-fill.p-relative > .p-absolute.d-flex.flex-column {
+    overflow: hidden;
+  }
 }

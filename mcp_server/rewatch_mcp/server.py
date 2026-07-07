@@ -30,6 +30,11 @@ try:
 except ImportError:
     alert_catalog = None  # type: ignore[assignment]
 
+try:
+    from rewatch_mcp.platform_catalog import platform_catalog
+except ImportError:
+    platform_catalog = None  # type: ignore[assignment]
+
 _WORKSPACE_ENV = Path(__file__).resolve().parent.parent.parent / ".env"
 if _WORKSPACE_ENV.is_file():
     load_dotenv(_WORKSPACE_ENV, override=False)
@@ -109,6 +114,37 @@ def _ensure_writable() -> None:
 
 def _merge_body(**fields: Any) -> dict[str, Any]:
     return {key: value for key, value in fields.items() if value is not None}
+
+
+def _require_catalog_result(result: Any, label: str = "lookup") -> Any:
+    if isinstance(result, dict) and result.get("error"):
+        known = result.get("known_types")
+        suffix = f" Known types: {known[:25]}" if isinstance(known, list) and known else ""
+        raise RuntimeError(f"{label} failed: {result['error']}{suffix}")
+    return result
+
+
+def _require_widget_content(visualization_id: Optional[int], text: Optional[str]) -> None:
+    if visualization_id is None and not text:
+        raise RuntimeError("Provide visualization_id (chart/table widget) or text (text box widget).")
+
+
+def _run_saved_query_result(query_id: int, max_age: int = -1) -> dict[str, Any]:
+    """Execute a saved query and return the API response containing query_result."""
+    try:
+        response = _request("POST", f"/api/queries/{query_id}/results", body={"max_age": max_age})
+        if "job" in response:
+            result_id = _poll_job(response["job"], 120)
+            response = _request("GET", f"/api/queries/{query_id}/results/{result_id}.json")
+        return response
+    except RuntimeError as exc:
+        message = str(exc)
+        if "Missing parameter" in message or "missing parameter" in message.lower():
+            raise RuntimeError(
+                f"Query #{query_id} requires parameter values. "
+                "Run run_query(query_id=..., parameters={{...}}) first or set defaults on the query."
+            ) from exc
+        raise RuntimeError(f"Query #{query_id} must run successfully: {message}") from exc
 
 
 # ---------------------------------------------------------------------------
@@ -387,6 +423,41 @@ def get_data_source_schema(data_source_id: int, refresh: bool = False) -> str:
     return _compact(_request("GET", f"/api/data_sources/{data_source_id}/schema", params=params))
 
 
+@mcp.tool()
+def list_query_runner_types(q: Optional[str] = None) -> str:
+    """List query runner types (pg, mysql, coingecko, defillama, …) with syntax hints.
+
+    Call get_query_runner_type(type) before writing query text for an unfamiliar source.
+    """
+    if platform_catalog is None:
+        raise RuntimeError("Platform catalog is unavailable in this MCP install.")
+    return _compact(platform_catalog.list_query_runner_types(q))
+
+
+@mcp.tool()
+def get_query_runner_type(type: str) -> str:
+    """Get syntax guide, config fields, and examples for one query runner type."""
+    if platform_catalog is None:
+        raise RuntimeError("Platform catalog is unavailable in this MCP install.")
+    return _compact(_require_catalog_result(platform_catalog.get_query_runner_type(type), "Query runner type"))
+
+
+@mcp.tool()
+def list_visualization_types(q: Optional[str] = None) -> str:
+    """List visualization types (TABLE, CHART, COUNTER, DETAILS, …)."""
+    if platform_catalog is None:
+        raise RuntimeError("Platform catalog is unavailable in this MCP install.")
+    return _compact(platform_catalog.list_visualization_types(q))
+
+
+@mcp.tool()
+def get_visualization_type(type: str) -> str:
+    """Get option schema and workflow tips for one visualization type."""
+    if platform_catalog is None:
+        raise RuntimeError("Platform catalog is unavailable in this MCP install.")
+    return _compact(_require_catalog_result(platform_catalog.get_visualization_type(type), "Visualization type"))
+
+
 # ---------------------------------------------------------------------------
 # Dashboards
 # ---------------------------------------------------------------------------
@@ -463,16 +534,10 @@ def _validate_alert_column_from_query(query_id: int, column: str) -> dict[str, A
     """Run the linked query and verify the threshold column exists."""
     if alert_catalog is None:
         return {"skipped": True}
-    try:
-        response = _request("POST", f"/api/queries/{query_id}/results", body={"max_age": -1})
-        if "job" in response:
-            result_id = _poll_job(response["job"], 120)
-            response = _request("GET", f"/api/queries/{query_id}/results/{result_id}.json")
-        query_result = response.get("query_result", {})
-        columns = [c.get("name") for c in query_result.get("data", {}).get("columns", []) if c.get("name")]
-        return alert_catalog.validate_alert_column(column, columns)
-    except Exception as exc:
-        return {"valid": False, "message": f"Could not validate column: {exc}"}
+    response = _run_saved_query_result(query_id)
+    query_result = response.get("query_result", {})
+    columns = [c.get("name") for c in query_result.get("data", {}).get("columns", []) if c.get("name")]
+    return alert_catalog.validate_alert_column(column, columns)
 
 
 def _subscribe_alert_destinations(alert_id: int, destination_ids: list[int]) -> list[dict[str, Any]]:
@@ -548,16 +613,19 @@ def create_alert(
         resolved_column = column_check.get("column", column)
 
     if alert_catalog is not None:
-        options = alert_catalog.build_alert_options(
-            column=resolved_column,
-            op=op,
-            value=value,
-            selector=selector,
-            custom_subject=custom_subject,
-            custom_body=custom_body,
-            send_for_each_row=send_for_each_row,
-            muted=muted,
-        )
+        try:
+            options = alert_catalog.build_alert_options(
+                column=resolved_column,
+                op=op,
+                value=value,
+                selector=selector,
+                custom_subject=custom_subject,
+                custom_body=custom_body,
+                send_for_each_row=send_for_each_row,
+                muted=muted,
+            )
+        except ValueError as exc:
+            raise RuntimeError(str(exc)) from exc
     else:
         options = {"column": resolved_column, "op": op, "value": value, "selector": selector}
         if custom_subject:
@@ -697,12 +765,14 @@ def update_ml_model(
 @mcp.tool()
 def train_ml_model(model_id: int) -> str:
     """Start a training run for an ML model. Returns the training job info; training is asynchronous."""
+    _ensure_writable()
     return _compact(_request("POST", f"/api/ml_models/{model_id}/train"))
 
 
 @mcp.tool()
 def predict_ml_model(model_id: int, body: Optional[dict] = None) -> str:
     """Start a prediction run for a trained ML model. Prediction is asynchronous; results appear under get_predictions."""
+    _ensure_writable()
     return _compact(_request("POST", f"/api/ml_models/{model_id}/predict", body=body))
 
 
@@ -756,7 +826,9 @@ def get_destination_type(type: str) -> str:
             api_entry = entry
             break
     if alert_catalog is not None:
-        return _compact(alert_catalog.get_destination_type(type, api_entry))
+        return _compact(
+            _require_catalog_result(alert_catalog.get_destination_type(type, api_entry), "Destination type")
+        )
     if api_entry is None:
         raise RuntimeError(f"Unknown destination type {type!r}.")
     return _compact(api_entry)
@@ -828,6 +900,14 @@ def update_visualization(
 
 
 @mcp.tool()
+def delete_visualization(visualization_id: int) -> str:
+    """Delete a visualization from a query."""
+    _ensure_writable()
+    _request("DELETE", f"/api/visualizations/{visualization_id}")
+    return _compact({"deleted": True, "visualization_id": visualization_id})
+
+
+@mcp.tool()
 def add_widget_to_dashboard(
     dashboard_id: int,
     visualization_id: Optional[int] = None,
@@ -837,6 +917,7 @@ def add_widget_to_dashboard(
 ) -> str:
     """Add a widget to a dashboard. Pass ``visualization_id`` for a chart/table, or ``text`` for a text box."""
     _ensure_writable()
+    _require_widget_content(visualization_id, text)
     body = _merge_body(
         dashboard_id=dashboard_id,
         visualization_id=visualization_id,
@@ -848,10 +929,12 @@ def add_widget_to_dashboard(
 
 
 @mcp.tool()
-def update_widget(widget_id: int, text: str, options: Optional[dict] = None) -> str:
-    """Update a text-box widget on a dashboard."""
+def update_widget(widget_id: int, text: Optional[str] = None, options: Optional[dict] = None) -> str:
+    """Update a dashboard widget. Pass ``text`` and/or ``options`` (e.g. position/size in the layout grid)."""
     _ensure_writable()
-    body = _merge_body(text=text, options=options or {})
+    body = _merge_body(text=text, options=options)
+    if not body:
+        raise RuntimeError("Provide text and/or options to update a widget.")
     return _compact(_request("POST", f"/api/widgets/{widget_id}", body=body))
 
 

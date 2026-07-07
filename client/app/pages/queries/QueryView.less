@@ -65,7 +65,12 @@ page-query-view {
       display: flex;
       flex-direction: column;
       flex-grow: 1;
-      overflow: auto;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .query-results-footer {
+      flex: 0 0 auto;
     }
 
     .query-parameters-wrapper {
