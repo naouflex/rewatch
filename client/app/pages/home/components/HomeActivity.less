@@ -1,0 +1,122 @@
+@import (reference, less) "~bootstrap/less/variables.less";
+
+.home-activity {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  &__charts {
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  &__panel {
+    border: 1px solid var(--rd-color-divider);
+    border-radius: var(--rd-radius-md);
+    background: var(--rd-color-surface-alt);
+    padding: 14px 14px 8px;
+    height: 100%;
+
+    &--breakdown {
+      min-height: 220px;
+    }
+
+    &--heatmap {
+      padding-bottom: 12px;
+    }
+  }
+
+  &__panel-title {
+    margin: 0 0 8px;
+    font-size: 13px;
+    font-weight: var(--rd-font-weight-semibold);
+    color: var(--rd-color-text);
+  }
+
+  &__heatmap-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 4px;
+  }
+
+  &__heatmap-meta {
+    font-size: 12px;
+    color: var(--rd-color-text-secondary);
+  }
+
+  &__empty {
+    margin: 0;
+    color: var(--rd-color-text-secondary);
+    font-size: 13px;
+  }
+}
+
+.home-hero__activity {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--rd-color-text-secondary);
+
+  strong {
+    color: var(--rd-color-text);
+    font-weight: var(--rd-font-weight-semibold);
+  }
+}
+
+.home-hero__activity-delta {
+  margin-left: 6px;
+
+  &--up {
+    color: var(--rd-color-success, #2e7d32);
+  }
+
+  &--down {
+    color: var(--rd-color-text-secondary);
+  }
+}
+
+.profile-activity {
+  margin-top: 24px;
+
+  &__title {
+    margin: 0 0 12px;
+    font-size: 16px;
+    font-weight: var(--rd-font-weight-semibold);
+  }
+
+  &__stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  &__stat {
+    flex: 1 1 120px;
+    padding: 12px;
+    border: 1px solid var(--rd-color-divider);
+    border-radius: var(--rd-radius-md);
+    background: var(--rd-color-surface-alt);
+  }
+
+  &__stat-value {
+    display: block;
+    font-size: 22px;
+    font-weight: var(--rd-font-weight-semibold);
+    line-height: 1.1;
+  }
+
+  &__stat-label {
+    display: block;
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--rd-color-text-secondary);
+  }
+}
+
+@media (max-width: @screen-sm-min) {
+  .home-activity__charts > [class*="col-"] + [class*="col-"] {
+    margin-top: 12px;
+  }
+}

@@ -18,6 +18,7 @@ from openai import (
 from rewatch import settings
 from rewatch.assistant.activity import tool_start_label
 from rewatch.assistant.links import append_preview_markdown, collect_previews, normalize_reply_links
+from rewatch.assistant.page_context import format_page_context
 from rewatch.assistant.tools import TOOL_DEFINITIONS, ToolContext, execute_tool
 
 logger = logging.getLogger(__name__)
@@ -82,6 +83,7 @@ Guidelines:
 - When tool results include preview_image_url, show the preview in chat using markdown images, e.g. ![Query name](preview_image_url). Previews are auto-appended when you forget.
 - Rewatch uses path-based routing. Never use hash URLs (wrong: /#/queries/5 or {base_url}/#/queries/5; correct: /queries/5 or {base_url}/queries/5).
 - Be proactive: when the user says "yes" or agrees to a plan, execute it with tools immediately — do not re-ask for names, URLs, or data sources you can infer or discover.
+- When a "Current UI context" block is present, the user is on that page — treat referenced resource IDs as the subject of the conversation (e.g. "fix this query" means the active query_id).
 - If a tool returns an error, explain it plainly and suggest a fix.
 """
 
@@ -211,14 +213,20 @@ def chat(
     api_key: str,
     help_base_url: str,
     on_activity: Optional[ActivityCallback] = None,
+    page_context: Optional[dict[str, Any]] = None,
 ) -> dict[str, Any]:
     """Run the assistant chat loop. Returns reply text and updated message history."""
     ctx = ToolContext(base_url=base_url, api_key=api_key, help_base_url=help_base_url)
     client = _client()
     web_base = base_url.rstrip("/")
 
+    system_content = SYSTEM_PROMPT.replace("{base_url}", web_base)
+    page_block = format_page_context(page_context)
+    if page_block:
+        system_content = f"{system_content}\n\n{page_block}"
+
     conversation: list[dict[str, Any]] = [
-        {"role": "system", "content": SYSTEM_PROMPT.replace("{base_url}", web_base)},
+        {"role": "system", "content": system_content},
     ]
     conversation.extend(messages)
 

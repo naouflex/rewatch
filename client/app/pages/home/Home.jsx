@@ -17,7 +17,9 @@ import routes from "@/services/routes";
 
 import { DashboardAndQueryFavoritesList } from "./components/FavoritesList";
 import HomeHero from "./components/HomeHero";
+import HomeActivitySection from "./components/HomeActivitySection";
 import RecentItemsRow from "./components/RecentItems";
+import CommunityPreview from "./components/CommunityPreview";
 
 import "./Home.less";
 
@@ -80,6 +82,7 @@ export default function Home() {
         {includes(messages, "using-deprecated-embed-feature") && <DeprecatedEmbedFeatureAlert />}
         {includes(messages, "email-not-verified") && <EmailNotVerifiedAlert />}
         <HomeHero />
+        <HomeActivitySection />
         <DynamicComponent name="Home.EmptyState">
           <EmptyState
             header={`Welcome to ${APPLICATION_TITLE} 👋`}
@@ -93,6 +96,7 @@ export default function Home() {
         </DynamicComponent>
         <DynamicComponent name="HomeExtra" />
         <RecentItemsRow />
+        <CommunityPreview />
         <DashboardAndQueryFavoritesList />
       </div>
     </div>

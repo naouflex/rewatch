@@ -50,7 +50,7 @@ const Assistant = {
   createThread: () => axios.post("api/assistant/threads"),
   deleteThread: threadId => axios.delete(`api/assistant/threads/${threadId}`),
   getMessages: threadId => axios.get(`api/assistant/threads/${threadId}/messages`),
-  chat: ({ threadId, message }) => axios.post("api/assistant/chat", { thread_id: threadId, message }),
+  chat: ({ threadId, message, pageContext }) => axios.post("api/assistant/chat", { thread_id: threadId, message, page_context: pageContext }),
   generateQuery: ({
     prompt,
     dataSourceId,
@@ -69,7 +69,7 @@ const Assistant = {
       schema,
       existing_query: existingQuery,
     }),
-  chatStream: async ({ threadId, message, onEvent }) => {
+  chatStream: async ({ threadId, message, pageContext, onEvent }) => {
     const response = await fetch("api/assistant/chat/stream", {
       method: "POST",
       credentials: "same-origin",
@@ -78,7 +78,7 @@ const Assistant = {
         Accept: "text/event-stream",
         "X-CSRF-TOKEN": readCookie("csrf_token"),
       },
-      body: JSON.stringify({ thread_id: threadId, message }),
+      body: JSON.stringify({ thread_id: threadId, message, page_context: pageContext }),
     });
 
     let result = null;

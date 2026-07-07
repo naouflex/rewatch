@@ -33,6 +33,7 @@ from rewatch.handlers.alerts import (
     AlertTagsResource,
     MyAlertsResource,
 )
+from rewatch.handlers.community import ForumPostListResource, ForumPostResource
 from rewatch.handlers.base import org_scoped_rule
 from rewatch.handlers.dashboards import (
     DashboardFavoriteListResource,
@@ -172,6 +173,7 @@ from rewatch.handlers.query_snippets import (
     QuerySnippetTagsResource,
 )
 from rewatch.handlers.settings import OrganizationSettings
+from rewatch.handlers.user_activity import UserActivityResource
 from rewatch.handlers.users import (
     UserDisableResource,
     UserInviteResource,
@@ -526,6 +528,7 @@ api.add_org_resource(
     endpoint="user_regenerate_api_key",
 )
 api.add_org_resource(UserDisableResource, "/api/users/<user_id>/disable", endpoint="user_disable")
+api.add_org_resource(UserActivityResource, "/api/users/me/activity", endpoint="user_activity")
 
 api.add_org_resource(VisualizationListResource, "/api/visualizations", endpoint="visualizations")
 api.add_org_resource(
@@ -581,6 +584,9 @@ api.add_org_resource(QuerySnippetResource, "/api/query_snippets/<snippet_id>", e
 api.add_org_resource(QuerySnippetListResource, "/api/query_snippets", endpoint="query_snippets")
 
 api.add_org_resource(OrganizationSettings, "/api/settings/organization", endpoint="organization_settings")
+
+api.add_org_resource(ForumPostListResource, "/api/community/posts", endpoint="community_posts")
+api.add_org_resource(ForumPostResource, "/api/community/posts/<post_id>", endpoint="community_post")
 
 api.add_org_resource(AssistantStatusResource, "/api/assistant/status", endpoint="assistant_status")
 api.add_org_resource(AssistantThreadListResource, "/api/assistant/threads", endpoint="assistant_threads")

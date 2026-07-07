@@ -37,7 +37,9 @@
 
   /* ---- Links ---- */
 
-  a {
+  /* Plain links only — Ant Design buttons rendered as <a.ant-btn> keep their
+     own foreground colors (primary uses --rd-color-text-inverse). */
+  a:not(.ant-btn) {
     color: var(--rd-color-link);
 
     &:hover,

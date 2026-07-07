@@ -13,6 +13,7 @@ import routes from "@/services/routes";
 import useImmutableCallback from "@/lib/hooks/useImmutableCallback";
 
 import EditableUserProfile from "./components/EditableUserProfile";
+import ProfileActivityPanel from "./components/ProfileActivityPanel";
 import ReadOnlyUserProfile from "./components/ReadOnlyUserProfile";
 
 import "./settings.less";
@@ -42,6 +43,7 @@ function UserProfile({ userId, onError }) {
   }, [userId, handleError]);
 
   const canEdit = user && (currentUser.isAdmin || currentUser.id === user.id);
+  const isOwnProfile = !userId || String(userId) === String(currentUser.id);
   return (
     <React.Fragment>
       <EmailSettingsWarning featureName="invite emails" className="m-b-20" adminOnly />
@@ -54,6 +56,13 @@ function UserProfile({ userId, onError }) {
           </DynamicComponent>
         )}
       </div>
+      {user && isOwnProfile && (
+        <div className="row">
+          <div className="col-md-10 col-md-offset-1">
+            <ProfileActivityPanel />
+          </div>
+        </div>
+      )}
     </React.Fragment>
   );
 }

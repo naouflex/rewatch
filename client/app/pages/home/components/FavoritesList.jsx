@@ -7,7 +7,6 @@ import BigMessage from "@/components/BigMessage";
 import Link from "@/components/Link";
 import TimeAgo from "@/components/TimeAgo";
 import CreateDashboardDialog from "@/components/dashboards/CreateDashboardDialog";
-import HelpTrigger from "@/components/HelpTrigger";
 import { currentUser } from "@/services/auth";
 import { Dashboard } from "@/services/dashboard";
 import { Query } from "@/services/query";

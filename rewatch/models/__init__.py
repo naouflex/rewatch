@@ -1974,6 +1974,7 @@ from rewatch.models.ml_models import (  # noqa: E402,F401
 )
 
 from rewatch.models.assistant import AssistantMessage, AssistantThread  # noqa: E402,F401
+from rewatch.models.community import FORUM_CATEGORIES, ForumPost  # noqa: E402,F401
 
 
 def init_db():

@@ -250,6 +250,25 @@ def serialize_alert_event(alert_event, include_alert=True, include_destination=T
     return d
 
 
+def serialize_forum_post(post, full=True):
+    body = post.body or ""
+    d = {
+        "id": post.id,
+        "title": post.title,
+        "category": post.category,
+        "created_at": post.created_at,
+        "updated_at": post.updated_at,
+        "user": post.user.to_dict(),
+        "user_id": post.user_id,
+    }
+    if full:
+        d["body"] = body
+    else:
+        preview = body.replace("\n", " ").strip()
+        d["excerpt"] = preview[:240] + ("..." if len(preview) > 240 else "")
+    return d
+
+
 def serialize_indexer(indexer, full=True, with_favorite_state=True):
     d = {
         "id": indexer.id,

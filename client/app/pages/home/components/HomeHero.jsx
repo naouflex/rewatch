@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Button from "antd/lib/button";
 
 import Link from "@/components/Link";
@@ -7,6 +7,7 @@ import HelpTrigger from "@/components/HelpTrigger";
 import { APPLICATION_TITLE } from "@/config/brand";
 import { currentUser } from "@/services/auth";
 import organizationStatus from "@/services/organizationStatus";
+import UserActivity from "@/services/userActivity";
 
 function getGreeting() {
   const hour = new Date().getHours();
@@ -36,10 +37,53 @@ function formatStatLine(counters) {
   return parts.join(" · ");
 }
 
+function formatActivityLine(summary) {
+  if (!summary) {
+    return null;
+  }
+
+  const parts = [];
+  if (summary.week_total > 0) {
+    parts.push(
+      <>
+        <strong>{summary.week_total}</strong> contribution{summary.week_total === 1 ? "" : "s"} this week
+      </>
+    );
+  }
+  if (summary.streak > 1) {
+    parts.push(
+      <>
+        <strong>{summary.streak}</strong>-day streak
+      </>
+    );
+  }
+
+  if (!parts.length) {
+    return "Your activity chart will fill in as you work with queries and dashboards.";
+  }
+
+  return parts.reduce((acc, part, index) => {
+    if (index === 0) {
+      return [part];
+    }
+    return [...acc, " · ", part];
+  }, []);
+}
+
 export default function HomeHero() {
   const counters = organizationStatus.objectCounters || {};
   const statLine = formatStatLine(counters);
   const displayName = currentUser.name?.split(" ")[0] || "there";
+  const [activitySummary, setActivitySummary] = useState(null);
+
+  useEffect(() => {
+    UserActivity.getSummary({ days: 365 })
+      .then(setActivitySummary)
+      .catch(() => setActivitySummary(null));
+  }, []);
+
+  const activityLine = formatActivityLine(activitySummary);
+  const weekDelta = activitySummary?.week_change;
 
   return (
     <div className="tile home-hero m-b-15">
@@ -58,6 +102,20 @@ export default function HomeHero() {
                 <>Welcome back to {APPLICATION_TITLE}.</>
               )}
             </p>
+            {activityLine && (
+              <p className="home-hero__activity">
+                {activityLine}
+                {typeof weekDelta === "number" && weekDelta !== 0 && (
+                  <span
+                    className={`home-hero__activity-delta ${
+                      weekDelta > 0 ? "home-hero__activity-delta--up" : "home-hero__activity-delta--down"
+                    }`}
+                  >
+                    {weekDelta > 0 ? `+${weekDelta}` : weekDelta} vs last week
+                  </span>
+                )}
+              </p>
+            )}
           </div>
           <div className="home-hero__actions">
             {currentUser.hasPermission("create_query") && (

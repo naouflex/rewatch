@@ -136,6 +136,10 @@ export default function MobileNavbar() {
       items.push(linkItem("assistant", "assistant", "Assistant"));
     }
 
+    if (currentUser.hasPermission("list_community_posts")) {
+      items.push(linkItem("community", "community", "Community"));
+    }
+
     items.push(linkItem("api-docs", "api-docs", "API"));
 
     items.push({ type: "divider" });

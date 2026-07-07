@@ -46,6 +46,7 @@ def _user_api_key(user):
 def _parse_chat_payload(payload):
     thread_id = payload.get("thread_id")
     message = (payload.get("message") or "").strip()
+    page_context = payload.get("page_context")
 
     if not message and payload.get("messages"):
         for item in reversed(payload["messages"]):
@@ -55,7 +56,9 @@ def _parse_chat_payload(payload):
 
     if not message:
         abort(400, message="message is required.")
-    return thread_id, message
+    if page_context is not None and not isinstance(page_context, dict):
+        page_context = None
+    return thread_id, message, page_context
 
 
 def _prepare_thread(current_user, current_org, thread_id, message):
@@ -169,7 +172,7 @@ class AssistantChatResource(BaseResource):
         _ensure_assistant_enabled(self.current_user)
 
         payload = request.get_json(force=True) or {}
-        thread_id, message = _parse_chat_payload(payload)
+        thread_id, message, page_context = _parse_chat_payload(payload)
         thread, thread_id, llm_messages = _prepare_thread(self.current_user, self.current_org, thread_id, message)
 
         try:
@@ -178,6 +181,7 @@ class AssistantChatResource(BaseResource):
                 base_url=_assistant_base_url(),
                 api_key=_user_api_key(self.current_user),
                 help_base_url=_help_base_url(),
+                page_context=page_context,
             )
         except Exception as exc:
             db.session.rollback()
@@ -191,7 +195,7 @@ class AssistantChatStreamResource(BaseResource):
         _ensure_assistant_enabled(self.current_user)
 
         payload = request.get_json(force=True) or {}
-        thread_id, message = _parse_chat_payload(payload)
+        thread_id, message, page_context = _parse_chat_payload(payload)
         thread, thread_id, llm_messages = _prepare_thread(self.current_user, self.current_org, thread_id, message)
 
         user_api_key = _user_api_key(self.current_user)
@@ -213,6 +217,7 @@ class AssistantChatStreamResource(BaseResource):
                     api_key=user_api_key,
                     help_base_url=help_base_url,
                     on_activity=on_activity,
+                    page_context=page_context,
                 )
             except Exception as exc:
                 error_holder["error"] = exc

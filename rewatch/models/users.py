@@ -274,6 +274,10 @@ class Group(db.Model, BelongsToOrgMixin):
         "create_query_snippet",
         "edit_query_snippet",
         "view_query_snippet",
+        "list_community_posts",
+        "view_community_post",
+        "create_community_post",
+        "edit_community_post",
     ]
     ADMIN_PERMISSIONS = ["admin", "super_admin"]
 

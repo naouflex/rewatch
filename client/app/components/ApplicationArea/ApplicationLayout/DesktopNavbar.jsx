@@ -62,6 +62,7 @@ function useNavbarActiveState() {
       ),
       dataSources: includes(["DataSources.List"], currentRoute.id),
       assistant: currentRoute.id === "Assistant",
+      community: includes(["Community.List", "Community.View", "Community.New"], currentRoute.id),
       apiDocs: currentRoute.id === "ApiDocs",
       alerts: includes(
         [
@@ -373,6 +374,18 @@ export default function DesktopNavbar() {
         label: (
           <Link href="assistant">
             <span className="desktop-navbar-label">Assistant</span>
+          </Link>
+        ),
+      });
+    }
+
+    if (currentUser.hasPermission("list_community_posts")) {
+      items.push({
+        key: "community",
+        className: activeState.community ? "navbar-active-item" : null,
+        label: (
+          <Link href="community">
+            <span className="desktop-navbar-label">Community</span>
           </Link>
         ),
       });

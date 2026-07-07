@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import cx from "classnames";
 import moment from "moment";
@@ -10,7 +10,9 @@ import CloseOutlined from "@ant-design/icons/CloseOutlined";
 import HistoryOutlined from "@ant-design/icons/HistoryOutlined";
 import PlusOutlined from "@ant-design/icons/PlusOutlined";
 import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
+import { useCurrentRoute } from "@/components/ApplicationArea/Router";
 import Assistant from "@/services/assistant";
+import { buildAssistantPageContext } from "@/services/assistantPageContext";
 import AssistantThinking from "@/components/Assistant/AssistantThinking";
 
 import "./AssistantChat.less";
@@ -67,6 +69,8 @@ export default function AssistantChat({
   const [historyLoading, setHistoryLoading] = useState(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+  const currentRoute = useCurrentRoute();
+  const pageContext = useMemo(() => buildAssistantPageContext(currentRoute), [currentRoute]);
 
   const loadThread = useCallback(
     async id => {
@@ -199,8 +203,8 @@ export default function AssistantChat({
 
   const runChat = useCallback(
     async ({ threadId: currentThreadId, message }) =>
-      Assistant.chatStream({ threadId: currentThreadId, message, onEvent: handleStreamEvent }),
-    [handleStreamEvent]
+      Assistant.chatStream({ threadId: currentThreadId, message, pageContext, onEvent: handleStreamEvent }),
+    [handleStreamEvent, pageContext]
   );
 
   useEffect(() => {

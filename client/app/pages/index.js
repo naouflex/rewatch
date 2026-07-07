@@ -20,6 +20,10 @@ import "./prediction/PredictionResult";
 
 import "./assistant/AssistantPage";
 
+import "./community/CommunityList";
+import "./community/CommunityNew";
+import "./community/CommunityPost";
+
 import "./api-docs/ApiDocsPage";
 
 import "./dashboards/DashboardList";
