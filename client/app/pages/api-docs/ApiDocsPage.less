@@ -46,6 +46,19 @@ html[data-theme="dark"] {
         --scalar-border-color: var(--rd-color-border);
       }
 
+      // Parameter/auth tables keep a hard-coded light table fill; cells are transparent.
+      .scalar-data-table {
+        table {
+          background-color: transparent !important;
+        }
+
+        td.box-content,
+        th.box-content {
+          border-color: var(--rd-color-border) !important;
+          color: var(--rd-color-text-secondary) !important;
+        }
+      }
+
       [class*="group/input"] {
         background-color: var(--rd-color-surface-alt) !important;
         color: var(--rd-color-text) !important;
@@ -66,6 +79,15 @@ html[data-theme="dark"] {
 
       [class*="group/input"] .cm-placeholder {
         color: var(--rd-color-text-muted) !important;
+      }
+
+      .scalar-password-input {
+        background-color: var(--rd-color-surface-alt) !important;
+        color: var(--rd-color-text) !important;
+
+        &::placeholder {
+          color: var(--rd-color-text-muted) !important;
+        }
       }
     }
   }
