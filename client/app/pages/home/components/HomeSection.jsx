@@ -5,13 +5,17 @@ import Skeleton from "antd/lib/skeleton";
 
 import Link from "@/components/Link";
 
-export function HomeListSkeleton({ rows = 4 }) {
+export function HomeListSkeleton({ rows = 4, compact }) {
   return (
-    <div className="home-list-skeleton" aria-hidden="true">
+    <div className={classNames("home-list-skeleton", compact && "home-list-skeleton--compact")} aria-hidden="true">
       {Array.from({ length: rows }, (_, index) => (
         <div key={index} className="home-list-skeleton__row">
-          <Skeleton.Avatar active size="small" shape="square" />
-          <Skeleton active title={{ width: "60%" }} paragraph={{ rows: 1, width: "40%" }} />
+          <Skeleton.Avatar active size={compact ? 20 : "small"} shape="square" />
+          <Skeleton
+            active
+            title={{ width: "60%" }}
+            paragraph={{ rows: compact ? 0 : 1, width: "40%" }}
+          />
         </div>
       ))}
     </div>
@@ -20,6 +24,11 @@ export function HomeListSkeleton({ rows = 4 }) {
 
 HomeListSkeleton.propTypes = {
   rows: PropTypes.number,
+  compact: PropTypes.bool,
+};
+
+HomeListSkeleton.defaultProps = {
+  compact: false,
 };
 
 export function HomeListItem({ href, icon, title, meta, badge, className }) {
@@ -51,9 +60,18 @@ HomeListItem.defaultProps = {
   className: null,
 };
 
-export default function HomeSection({ title, viewAllHref, viewAllLabel, loading, children, className }) {
+export default function HomeSection({
+  title,
+  viewAllHref,
+  viewAllLabel,
+  loading,
+  children,
+  className,
+  compact,
+  skeletonRows,
+}) {
   return (
-    <div className={classNames("tile home-section", className)}>
+    <div className={classNames("tile home-section", compact && "home-section--compact", className)}>
       <div className="t-header home-section__header">
         <div className="th-title">{title}</div>
         {viewAllHref && !loading && (
@@ -62,7 +80,9 @@ export default function HomeSection({ title, viewAllHref, viewAllLabel, loading,
           </Link>
         )}
       </div>
-      <div className="t-body tb-padding">{loading ? <HomeListSkeleton /> : children}</div>
+      <div className="t-body tb-padding home-section__body">
+        {loading ? <HomeListSkeleton rows={skeletonRows} compact={compact} /> : children}
+      </div>
     </div>
   );
 }
@@ -74,6 +94,8 @@ HomeSection.propTypes = {
   loading: PropTypes.bool,
   children: PropTypes.node,
   className: PropTypes.string,
+  compact: PropTypes.bool,
+  skeletonRows: PropTypes.number,
 };
 
 HomeSection.defaultProps = {
@@ -82,4 +104,6 @@ HomeSection.defaultProps = {
   loading: false,
   children: null,
   className: null,
+  compact: false,
+  skeletonRows: 4,
 };

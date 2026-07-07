@@ -33,13 +33,21 @@ class TestUserActivityResource(BaseTestCase):
         self.assertTrue(rv.json["by_object_type"])
 
     def test_activity_ignores_passive_view_events(self):
-        self._record_event("view", days_ago=0)
+        self._record_event("view", object_type="page", days_ago=0)
         self._record_event("list", object_type="dashboard", days_ago=0)
         db.session.commit()
 
         rv = self.make_request("get", "/api/users/me/activity?days=7")
         self.assertEqual(rv.status_code, 200)
         self.assertEqual(rv.json["total"], 0)
+
+    def test_activity_counts_query_views(self):
+        self._record_event("view", object_type="query", days_ago=0)
+        db.session.commit()
+
+        rv = self.make_request("get", "/api/users/me/activity?days=7")
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(rv.json["total"], 1)
 
     def test_activity_clamps_days_parameter(self):
         rv = self.make_request("get", "/api/users/me/activity?days=999")

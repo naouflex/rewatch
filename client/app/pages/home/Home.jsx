@@ -15,10 +15,9 @@ import { messages } from "@/services/auth";
 import notification from "@/services/notification";
 import routes from "@/services/routes";
 
-import { DashboardAndQueryFavoritesList } from "./components/FavoritesList";
 import HomeHero from "./components/HomeHero";
 import HomeActivitySection from "./components/HomeActivitySection";
-import RecentItemsRow from "./components/RecentItems";
+import HomeWorkspaceRow from "./components/HomeWorkspaceRow";
 import CommunityPreview from "./components/CommunityPreview";
 
 import "./Home.less";
@@ -95,9 +94,8 @@ export default function Home() {
           />
         </DynamicComponent>
         <DynamicComponent name="HomeExtra" />
-        <RecentItemsRow />
+        <HomeWorkspaceRow />
         <CommunityPreview />
-        <DashboardAndQueryFavoritesList />
       </div>
     </div>
   );

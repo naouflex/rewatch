@@ -43,6 +43,13 @@ function PostCard({ post }) {
           alt=""
         />
         <span>{post.user.name}</span>
+        <span className="community-post-card__stats">
+          <i className="fa fa-comment-o m-r-5" aria-hidden="true" />
+          {post.reply_count || 0}
+          <span className="community-post-card__stats-sep" />
+          <i className="fa fa-thumbs-up m-r-5" aria-hidden="true" />
+          {post.like_count || 0}
+        </span>
       </div>
     </Link>
   );

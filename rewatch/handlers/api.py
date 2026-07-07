@@ -33,7 +33,14 @@ from rewatch.handlers.alerts import (
     AlertTagsResource,
     MyAlertsResource,
 )
-from rewatch.handlers.community import ForumPostListResource, ForumPostResource
+from rewatch.handlers.community import (
+    ForumCommentLikeResource,
+    ForumCommentListResource,
+    ForumCommentResource,
+    ForumPostLikeResource,
+    ForumPostListResource,
+    ForumPostResource,
+)
 from rewatch.handlers.base import org_scoped_rule
 from rewatch.handlers.dashboards import (
     DashboardFavoriteListResource,
@@ -587,6 +594,26 @@ api.add_org_resource(OrganizationSettings, "/api/settings/organization", endpoin
 
 api.add_org_resource(ForumPostListResource, "/api/community/posts", endpoint="community_posts")
 api.add_org_resource(ForumPostResource, "/api/community/posts/<post_id>", endpoint="community_post")
+api.add_org_resource(
+    ForumCommentListResource,
+    "/api/community/posts/<post_id>/comments",
+    endpoint="community_post_comments",
+)
+api.add_org_resource(
+    ForumCommentResource,
+    "/api/community/posts/<post_id>/comments/<comment_id>",
+    endpoint="community_post_comment",
+)
+api.add_org_resource(
+    ForumPostLikeResource,
+    "/api/community/posts/<post_id>/like",
+    endpoint="community_post_like",
+)
+api.add_org_resource(
+    ForumCommentLikeResource,
+    "/api/community/posts/<post_id>/comments/<comment_id>/like",
+    endpoint="community_post_comment_like",
+)
 
 api.add_org_resource(AssistantStatusResource, "/api/assistant/status", endpoint="assistant_status")
 api.add_org_resource(AssistantThreadListResource, "/api/assistant/threads", endpoint="assistant_threads")

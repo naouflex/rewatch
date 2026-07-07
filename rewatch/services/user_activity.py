@@ -3,49 +3,46 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from typing import Any
 
 from sqlalchemy import func
 
 from rewatch.models import Event, db
 
-# Actions that represent meaningful contributions (exclude passive browsing).
-CONTRIBUTION_ACTIONS = frozenset(
+# Passive actions that should not count as contributions.
+EXCLUDED_ACTIONS = frozenset(
     {
-        "execute",
-        "execute_query",
-        "cancel_execute",
-        "create",
-        "edit",
-        "fork",
-        "archive",
-        "edit_name",
-        "edit_tags",
-        "toggle_published",
-        "favorite",
-        "copy",
-        "train",
-        "predict",
+        "list",
+        "search",
+        "api_get",
+        "load_favorites",
     }
 )
+
+# Page/screen views are too noisy for a contribution chart.
+PASSIVE_VIEW_OBJECT_TYPES = frozenset({"page", "screen"})
 
 # Normalize server/client execute variants for breakdown charts.
 ACTION_LABELS = {
     "execute": "Executions",
     "execute_query": "Executions",
     "cancel_execute": "Executions",
+    "view": "Views",
     "create": "Created",
     "edit": "Edits",
     "fork": "Forks",
     "archive": "Archives",
     "edit_name": "Renames",
     "edit_tags": "Tag edits",
+    "edit_schedule": "Schedule edits",
     "toggle_published": "Publish toggles",
     "favorite": "Favorites",
+    "unfavorite": "Unfavorites",
     "copy": "Copies",
     "train": "Model training",
     "predict": "Predictions",
+    "delete": "Deletes",
 }
 
 OBJECT_TYPE_LABELS = {
@@ -64,6 +61,17 @@ OBJECT_TYPE_LABELS = {
 }
 
 
+def _is_contribution(action: str | None, object_type: str | None) -> bool:
+    action = action or ""
+    object_type = object_type or ""
+
+    if action in EXCLUDED_ACTIONS:
+        return False
+    if action == "view" and object_type in PASSIVE_VIEW_OBJECT_TYPES:
+        return False
+    return bool(action)
+
+
 def _normalize_action(action: str) -> str:
     if action in ("execute", "execute_query", "cancel_execute"):
         return "execute"
@@ -75,7 +83,7 @@ def _day_key(value) -> str:
         return value.isoformat()
     if isinstance(value, datetime):
         return value.date().isoformat()
-    return str(value)
+    return str(value)[:10]
 
 
 def _compute_streak(day_counts: dict[str, int], end_day: date) -> int:
@@ -89,9 +97,9 @@ def _compute_streak(day_counts: dict[str, int], end_day: date) -> int:
 
 def get_user_activity_summary(user, org, days: int = 365) -> dict[str, Any]:
     days = max(7, min(days, 366))
-    end_day = datetime.utcnow().date()
+    end_day = datetime.now(timezone.utc).date()
     start_day = end_day - timedelta(days=days - 1)
-    since = datetime.combine(start_day, datetime.min.time())
+    since = datetime.combine(start_day, datetime.min.time(), tzinfo=timezone.utc)
 
     rows = (
         db.session.query(
@@ -104,7 +112,6 @@ def get_user_activity_summary(user, org, days: int = 365) -> dict[str, Any]:
             Event.org_id == org.id,
             Event.user_id == user.id,
             Event.created_at >= since,
-            Event.action.in_(list(CONTRIBUTION_ACTIONS)),
         )
         .group_by("day", Event.action, Event.object_type)
         .all()
@@ -116,6 +123,9 @@ def get_user_activity_summary(user, org, days: int = 365) -> dict[str, Any]:
     total = 0
 
     for row in rows:
+        if not _is_contribution(row.action, row.object_type):
+            continue
+
         day = _day_key(row.day)
         count = int(row.count)
         total += count

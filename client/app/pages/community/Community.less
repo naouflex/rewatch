@@ -91,6 +91,20 @@
     color: var(--rd-color-text-secondary);
   }
 
+  &__stats {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  &__stats-sep {
+    width: 1px;
+    height: 12px;
+    margin: 0 6px;
+    background: var(--rd-color-divider);
+  }
+
   &__avatar {
     width: 22px;
     height: 22px;
@@ -104,7 +118,7 @@
 }
 
 .community-post-view {
-  max-width: 760px;
+  max-width: 860px;
 
   &__meta {
     display: flex;
@@ -194,5 +208,109 @@
   &__meta {
     font-size: 12px;
     color: var(--rd-color-text-secondary);
+  }
+}
+
+.forum-like-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  height: auto;
+  color: var(--rd-color-text-secondary);
+
+  &--active,
+  &:hover {
+    color: var(--rd-color-brand);
+  }
+
+  &--small {
+    font-size: 12px;
+  }
+}
+
+.forum-thread {
+  max-width: 860px;
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid var(--rd-color-divider);
+
+  &__header h3 {
+    margin: 0 0 16px;
+    font-size: 18px;
+    font-weight: var(--rd-font-weight-semibold);
+  }
+
+  &__empty {
+    margin: 0;
+    color: var(--rd-color-text-secondary);
+    font-size: 14px;
+  }
+}
+
+.forum-reply-form {
+  margin-bottom: 20px;
+
+  &--nested {
+    margin-top: 12px;
+    margin-left: 12px;
+    padding-left: 12px;
+    border-left: 2px solid var(--rd-color-divider);
+  }
+}
+
+.forum-comment {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--rd-color-divider);
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  &__avatar {
+    width: 28px;
+    height: 28px;
+  }
+
+  &__meta {
+    flex: 1 1 auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--rd-color-text-secondary);
+
+    strong {
+      color: var(--rd-color-text);
+    }
+  }
+
+  &__body {
+    white-space: pre-wrap;
+    line-height: 1.6;
+    font-size: 14px;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 4px;
+    margin-top: 8px;
+  }
+
+  &__edit-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  &__replies {
+    margin-top: 12px;
+    margin-left: 20px;
+    padding-left: 16px;
+    border-left: 2px solid var(--rd-color-divider);
   }
 }

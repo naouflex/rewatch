@@ -250,8 +250,48 @@ def serialize_alert_event(alert_event, include_alert=True, include_destination=T
     return d
 
 
-def serialize_forum_post(post, full=True):
+def serialize_forum_comment(comment, like_summary=None):
+    if like_summary is None:
+        user_id = None if current_user.is_api_user() else current_user.id
+        like_summary = {
+            "like_count": models.ForumLike.count_for("comment", comment.id),
+            "is_liked": models.ForumLike.is_liked(user_id, "comment", comment.id),
+        }
+
+    return {
+        "id": comment.id,
+        "post_id": comment.post_id,
+        "parent_id": comment.parent_id,
+        "body": comment.body,
+        "created_at": comment.created_at,
+        "updated_at": comment.updated_at,
+        "user": comment.user.to_dict(),
+        "user_id": comment.user_id,
+        "like_count": like_summary["like_count"],
+        "is_liked": like_summary["is_liked"],
+    }
+
+
+def _serialize_forum_comments(comments):
+    comment_ids = [comment.id for comment in comments]
+    user_id = None if current_user.is_api_user() else current_user.id
+    like_summaries = models.ForumLike.summaries(user_id, "comment", comment_ids)
+    return [serialize_forum_comment(comment, like_summaries.get(comment.id)) for comment in comments]
+
+
+def serialize_forum_post(post, full=True, like_summary=None, reply_count=None):
     body = post.body or ""
+    user_id = None if current_user.is_api_user() else current_user.id
+
+    if like_summary is None:
+        like_summary = {
+            "like_count": models.ForumLike.count_for("post", post.id),
+            "is_liked": models.ForumLike.is_liked(user_id, "post", post.id),
+        }
+
+    if reply_count is None:
+        reply_count = models.ForumComment.query.filter(models.ForumComment.post_id == post.id).count()
+
     d = {
         "id": post.id,
         "title": post.title,
@@ -260,9 +300,14 @@ def serialize_forum_post(post, full=True):
         "updated_at": post.updated_at,
         "user": post.user.to_dict(),
         "user_id": post.user_id,
+        "like_count": like_summary["like_count"],
+        "is_liked": like_summary["is_liked"],
+        "reply_count": reply_count,
     }
     if full:
         d["body"] = body
+        comments = models.ForumComment.for_post(post.id).all()
+        d["comments"] = _serialize_forum_comments(comments)
     else:
         preview = body.replace("\n", " ").strip()
         d["excerpt"] = preview[:240] + ("..." if len(preview) > 240 else "")

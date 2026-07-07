@@ -63,7 +63,7 @@ export default function ProfileActivityPanel() {
           <ActivityBreakdown byAction={summary.by_action} byObjectType={summary.by_object_type} />
         </div>
         <div className="home-activity__panel home-activity__panel--heatmap m-t-15">
-          <ActivityHeatmap daily={summary.daily} height={170} />
+          <ActivityHeatmap daily={summary.daily} />
         </div>
       </div>
     </div>

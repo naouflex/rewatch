@@ -27,6 +27,12 @@ const Community = {
   create: payload => axios.post("api/community/posts", payload),
   save: (postId, payload) => axios.post(`api/community/posts/${postId}`, payload),
   delete: postId => axios.delete(`api/community/posts/${postId}`),
+  createComment: (postId, payload) => axios.post(`api/community/posts/${postId}/comments`, payload),
+  saveComment: (postId, commentId, payload) =>
+    axios.post(`api/community/posts/${postId}/comments/${commentId}`, payload),
+  deleteComment: (postId, commentId) => axios.delete(`api/community/posts/${postId}/comments/${commentId}`),
+  togglePostLike: postId => axios.post(`api/community/posts/${postId}/like`),
+  toggleCommentLike: (postId, commentId) => axios.post(`api/community/posts/${postId}/comments/${commentId}/like`),
 };
 
 export default Community;

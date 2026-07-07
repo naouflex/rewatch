@@ -17,6 +17,9 @@ import Community, { COMMUNITY_CATEGORIES, getCategoryMeta } from "@/services/com
 import notification from "@/services/notification";
 import routes from "@/services/routes";
 
+import ForumLikeButton from "./components/ForumLikeButton";
+import ForumThread from "./components/ForumThread";
+
 import "./Community.less";
 
 const { TextArea } = Input;
@@ -33,20 +36,25 @@ function CommunityPostPage({ postId, onError }) {
     currentUser.hasPermission("edit_community_post") &&
     (currentUser.isAdmin || currentUser.id === post.user_id);
 
+  const loadPost = () =>
+    Community.get(postId)
+      .then(setPost)
+      .catch(err => onError(err));
+
   useEffect(() => {
     setLoading(true);
-    Community.get(postId)
-      .then(data => {
-        setPost(data);
-        form.setFieldsValue({
-          title: data.title,
-          category: data.category,
-          body: data.body,
-        });
-      })
-      .catch(err => onError(err))
-      .finally(() => setLoading(false));
-  }, [form, onError, postId]);
+    loadPost().finally(() => setLoading(false));
+  }, [postId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (post) {
+      form.setFieldsValue({
+        title: post.title,
+        category: post.category,
+        body: post.body,
+      });
+    }
+  }, [form, post]);
 
   const handleSave = values => {
     setSaving(true);
@@ -73,6 +81,14 @@ function CommunityPostPage({ postId, onError }) {
           })
           .catch(() => notification.error("Failed to delete post.")),
     });
+  };
+
+  const handleTogglePostLike = () => {
+    Community.togglePostLike(postId)
+      .then(result => {
+        setPost(current => ({ ...current, like_count: result.like_count, is_liked: result.is_liked }));
+      })
+      .catch(() => notification.error("Failed to update like."));
   };
 
   if (loading) {
@@ -138,22 +154,30 @@ function CommunityPostPage({ postId, onError }) {
           </Form.Item>
         </Form>
       ) : (
-        <article className="community-post-view">
-          <div className="community-post-view__meta">
-            <span className="community-post-view__category">
-              <i className={`fa ${categoryMeta.icon} m-r-5`} aria-hidden="true" />
-              {categoryMeta.label}
-            </span>
-            <img
-              className="profile__image_thumb community-post-view__avatar"
-              src={post.user.profile_image_url}
-              alt=""
-            />
-            <span>{post.user.name}</span>
-            <TimeAgo date={post.updated_at || post.created_at} />
-          </div>
-          <div className="community-post-view__body">{post.body}</div>
-        </article>
+        <>
+          <article className="community-post-view">
+            <div className="community-post-view__meta">
+              <span className="community-post-view__category">
+                <i className={`fa ${categoryMeta.icon} m-r-5`} aria-hidden="true" />
+                {categoryMeta.label}
+              </span>
+              <img
+                className="profile__image_thumb community-post-view__avatar"
+                src={post.user.profile_image_url}
+                alt=""
+              />
+              <span>{post.user.name}</span>
+              <TimeAgo date={post.updated_at || post.created_at} />
+              <ForumLikeButton
+                count={post.like_count}
+                isLiked={post.is_liked}
+                onToggle={handleTogglePostLike}
+              />
+            </div>
+            <div className="community-post-view__body">{post.body}</div>
+          </article>
+          <ForumThread post={post} onChange={setPost} />
+        </>
       )}
     </div>
   );
