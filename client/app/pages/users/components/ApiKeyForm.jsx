@@ -2,7 +2,7 @@ import React, { useState, useCallback } from "react";
 import PropTypes from "prop-types";
 import Button from "antd/lib/button";
 import Form from "antd/lib/form";
-import Modal from "antd/lib/modal";
+import { confirmDialog } from "@/components/ModalShell/confirmDialog";
 import DynamicComponent from "@/components/DynamicComponent";
 import InputWithCopy from "@/components/InputWithCopy";
 import { UserProfile } from "@/components/proptypes";
@@ -31,13 +31,11 @@ export default function ApiKeyForm(props) {
         });
     };
 
-    Modal.confirm({
+    confirmDialog({
       title: "Regenerate API Key",
-      content: "Are you sure you want to regenerate?",
+      description: "Are you sure you want to regenerate?",
       okText: "Regenerate",
-      onOk: doRegenerate,
-      maskClosable: true,
-      autoFocusButton: null,
+      onConfirm: doRegenerate,
     });
   }, [user, handleChange]);
 

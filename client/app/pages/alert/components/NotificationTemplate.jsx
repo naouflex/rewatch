@@ -8,7 +8,7 @@ import { Alert as AlertType, Query as QueryType } from "@/components/proptypes";
 
 import Input from "antd/lib/input";
 import Select from "antd/lib/select";
-import Modal from "antd/lib/modal";
+import { confirmDialog } from "@/components/ModalShell/confirmDialog";
 import Switch from "antd/lib/switch";
 
 import "./NotificationTemplate.less";
@@ -43,17 +43,15 @@ function NotificationTemplate({ alert, query, columnNames, resultValues, subject
       setEnabled(value);
       setShowPreview(false);
     } else {
-      Modal.confirm({
+      confirmDialog({
         title: "Are you sure?",
-        content: "Switching to default template will discard your custom template.",
-        onOk: () => {
+        description: "Switching to default template will discard your custom template.",
+        onConfirm: () => {
           setSubject(null);
           setBody(null);
           setEnabled(value);
           setShowPreview(false);
         },
-        maskClosable: true,
-        autoFocusButton: null,
       });
     }
   };

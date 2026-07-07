@@ -2,8 +2,8 @@ import { get, find, toUpper } from "lodash";
 import React from "react";
 import PropTypes from "prop-types";
 
-import Modal from "antd/lib/modal";
 import routeWithUserSession from "@/components/ApplicationArea/routeWithUserSession";
+import { confirmDialog } from "@/components/ModalShell/confirmDialog";
 import navigateTo from "@/components/ApplicationArea/navigateTo";
 import LoadingState from "@/components/items-list/components/LoadingState";
 import DynamicForm from "@/components/dynamic-form/DynamicForm";
@@ -69,15 +69,13 @@ class EditDataSource extends React.Component {
         });
     };
 
-    Modal.confirm({
+    confirmDialog({
       title: "Delete Data Source",
-      content: "Are you sure you want to delete this data source?",
+      description: "Are you sure you want to delete this data source?",
       okText: "Delete",
-      okType: "danger",
-      onOk: doDelete,
+      variant: "danger",
+      onConfirm: doDelete,
       onCancel: callback,
-      maskClosable: true,
-      autoFocusButton: null,
     });
   };
 

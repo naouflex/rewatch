@@ -2,13 +2,15 @@ import { map, includes, groupBy, first, find } from "lodash";
 import React, { useState, useMemo, useCallback } from "react";
 import PropTypes from "prop-types";
 import Select from "antd/lib/select";
-import Modal from "antd/lib/modal";
 import { wrap as wrapDialog, DialogPropType } from "@/components/DialogWrapper";
+import { ModalShell, ModalSection } from "@/components/ModalShell";
 import { MappingType, ParameterMappingListInput } from "@/components/ParameterMappingInput";
 import QuerySelector from "@/components/QuerySelector";
 import notification from "@/services/notification";
 import { Query } from "@/services/query";
 import { useUniqueId } from "@/lib/hooks/useUniqueId";
+import { getModalFormProps } from "@/styles/formStyle";
+import Form from "antd/lib/form";
 
 function VisualizationSelect({ query, visualization, onChange }) {
   const visualizationGroups = useMemo(() => {
@@ -30,26 +32,24 @@ function VisualizationSelect({ query, visualization, onChange }) {
   }
 
   return (
-    <div>
-      <div className="form-group">
-        <label htmlFor={vizSelectId}>Choose Visualization</label>
-        <Select
-          id={vizSelectId}
-          className="w-100"
-          value={visualization ? visualization.id : undefined}
-          onChange={handleChange}>
-          {map(visualizationGroups, (visualizations, groupKey) => (
-            <Select.OptGroup key={groupKey} label={groupKey}>
-              {map(visualizations, visualization => (
-                <Select.Option key={`${visualization.id}`} value={visualization.id}>
-                  {visualization.name}
-                </Select.Option>
-              ))}
-            </Select.OptGroup>
-          ))}
-        </Select>
-      </div>
-    </div>
+    <Form.Item label="Visualization" htmlFor={vizSelectId}>
+      <Select
+        id={vizSelectId}
+        className="w-100"
+        value={visualization ? visualization.id : undefined}
+        onChange={handleChange}
+        size="large">
+        {map(visualizationGroups, (visualizations, groupKey) => (
+          <Select.OptGroup key={groupKey} label={groupKey}>
+            {map(visualizations, viz => (
+              <Select.Option key={`${viz.id}`} value={viz.id}>
+                {viz.name}
+              </Select.Option>
+            ))}
+          </Select.OptGroup>
+        ))}
+      </Select>
+    </Form.Item>
   );
 }
 
@@ -72,7 +72,6 @@ function AddWidgetDialog({ dialog, dashboard }) {
 
   const selectQuery = useCallback(
     queryId => {
-      // Clear previously selected query (if any)
       setSelectedQuery(null);
       setSelectedVisualization(null);
       setParameterMappings([]);
@@ -114,41 +113,43 @@ function AddWidgetDialog({ dialog, dashboard }) {
   const parameterMappingsId = useUniqueId("parameter-mappings");
 
   return (
-    <Modal
-      {...dialog.props}
+    <ModalShell
+      dialog={dialog}
       title="Add Widget"
+      description="Pick a query, visualization, and map parameters for this dashboard."
+      size="lg"
       onOk={saveWidget}
+      okText="Add to Dashboard"
       okButtonProps={{
         ...dialog.props.okButtonProps,
         disabled: !selectedQuery || dialog.props.okButtonProps.disabled,
       }}
-      okText="Add to Dashboard"
-      width={700}>
-      <div data-test="AddWidgetDialog">
-        <QuerySelector onChange={query => selectQuery(query ? query.id : null)} />
-
+      wrapProps={{ "data-test": "AddWidgetDialog" }}>
+      <Form {...getModalFormProps()} data-test="AddWidgetDialog">
+        <ModalSection title="Query">
+          <QuerySelector onChange={query => selectQuery(query ? query.id : null)} />
+        </ModalSection>
         {selectedQuery && (
-          <VisualizationSelect
-            query={selectedQuery}
-            visualization={selectedVisualization}
-            onChange={setSelectedVisualization}
-          />
+          <ModalSection title="Visualization">
+            <VisualizationSelect
+              query={selectedQuery}
+              visualization={selectedVisualization}
+              onChange={setSelectedVisualization}
+            />
+          </ModalSection>
         )}
-
-        {parameterMappings.length > 0 && [
-          <label key="parameters-title" htmlFor={parameterMappingsId}>
-            Parameters
-          </label>,
-          <ParameterMappingListInput
-            key="parameters-list"
-            id={parameterMappingsId}
-            mappings={parameterMappings}
-            existingParams={existingParams}
-            onChange={setParameterMappings}
-          />,
-        ]}
-      </div>
-    </Modal>
+        {parameterMappings.length > 0 && (
+          <ModalSection title="Parameters">
+            <ParameterMappingListInput
+              id={parameterMappingsId}
+              mappings={parameterMappings}
+              existingParams={existingParams}
+              onChange={setParameterMappings}
+            />
+          </ModalSection>
+        )}
+      </Form>
+    </ModalShell>
   );
 }
 

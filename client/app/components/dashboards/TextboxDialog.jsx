@@ -3,13 +3,13 @@ import { markdown } from "markdown";
 import React, { useState, useEffect, useCallback } from "react";
 import PropTypes from "prop-types";
 import { useDebouncedCallback } from "use-debounce";
-import Modal from "antd/lib/modal";
 import Input from "antd/lib/input";
 import Tooltip from "@/components/Tooltip";
-import Divider from "antd/lib/divider";
 import Link from "@/components/Link";
 import HtmlContent from "@rewatch/viz/lib/components/HtmlContent";
 import { wrap as wrapDialog, DialogPropType } from "@/components/DialogWrapper";
+import { ModalShell, ModalSection } from "@/components/ModalShell";
+import { confirmDialog } from "@/components/ModalShell/confirmDialog";
 import notification from "@/services/notification";
 
 import "./TextboxDialog.less";
@@ -44,15 +44,12 @@ function TextboxDialog({ dialog, isNew, ...props }) {
   const confirmDialogDismiss = useCallback(() => {
     const originalText = props.text;
     if (text !== originalText) {
-      Modal.confirm({
+      confirmDialog({
         title: "Quit editing?",
-        content: "Changes you made so far will not be saved. Are you sure?",
+        description: "Changes you made so far will not be saved. Are you sure?",
+        variant: "danger",
         okText: "Yes, quit",
-        okType: "danger",
-        onOk: () => dialog.dismiss(),
-        maskClosable: true,
-        autoFocusButton: null,
-        style: { top: 170 },
+        onConfirm: () => dialog.dismiss(),
       });
     } else {
       dialog.dismiss();
@@ -60,15 +57,16 @@ function TextboxDialog({ dialog, isNew, ...props }) {
   }, [dialog, text, props.text]);
 
   return (
-    <Modal
-      {...dialog.props}
+    <ModalShell
+      dialog={dialog}
       title={isNew ? "Add Textbox" : "Edit Textbox"}
+      description="Write markdown content to display on your dashboard."
+      size="md"
       onOk={saveWidget}
       onCancel={confirmDialogDismiss}
       okText={isNew ? "Add to Dashboard" : "Save"}
-      width={500}
       wrapProps={{ "data-test": "TextboxDialog" }}>
-      <div className="textbox-dialog">
+      <ModalSection title="Content">
         <Input.TextArea
           className="resize-vertical"
           rows="5"
@@ -88,15 +86,13 @@ function TextboxDialog({ dialog, isNew, ...props }) {
           </Link>
           .
         </small>
-        {text && (
-          <React.Fragment>
-            <Divider dashed />
-            <strong className="preview-title">Preview:</strong>
-            <HtmlContent className="preview markdown">{preview}</HtmlContent>
-          </React.Fragment>
-        )}
-      </div>
-    </Modal>
+      </ModalSection>
+      {text && (
+        <ModalSection title="Preview">
+          <HtmlContent className="preview markdown">{preview}</HtmlContent>
+        </ModalSection>
+      )}
+    </ModalShell>
   );
 }
 

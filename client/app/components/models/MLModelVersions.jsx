@@ -8,7 +8,7 @@ import LoadingState from "@/components/items-list/components/LoadingState";
 import * as Grid from "antd/lib/grid";
 import JsonViewInteractive from "@/components/json-view-interactive/JsonViewInteractive";
 import Button from "antd/lib/button";
-import Modal from "antd/lib/modal";
+import ModelVersionPickModal from "./ModelVersionPickModal";
 import { useTheme } from "@/components/ThemeProvider";
 import "./MLModelVersions.less";
 
@@ -248,16 +248,15 @@ function MLModelVersions({ versions, revertToVersion }) {
           </Grid.Row>
         </div>
       )}
-      <Modal
-        title="Revert Model Version"
+      <ModelVersionPickModal
         open={isRevertModalVisible}
+        title="Revert Model Version"
+        description="This action cannot be undone."
+        okText="Revert"
         onOk={handleRevertOk}
-        onCancel={handleRevertCancel}
-        className={isDarkMode ? 'dark-mode' : ''}
-      >
+        onCancel={handleRevertCancel}>
         <p>Are you sure you want to revert to version {selectedVersion?.version}?</p>
-        <p>This action cannot be undone.</p>
-      </Modal>
+      </ModelVersionPickModal>
     </div>
   );
 }

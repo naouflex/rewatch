@@ -1,7 +1,6 @@
 import React from "react";
 import { isEmpty, get } from "lodash";
 
-import Modal from "antd/lib/modal";
 import Tag from "antd/lib/tag";
 
 import routeWithUserSession from "@/components/ApplicationArea/routeWithUserSession";
@@ -10,6 +9,8 @@ import Paginator from "@/components/Paginator";
 import Tooltip from "@/components/Tooltip";
 import TimeAgo from "@/components/TimeAgo";
 import PlainButton from "@/components/PlainButton";
+import NotificationContentModal from "@/components/alerts/NotificationContentModal";
+import { confirmDialog } from "@/components/ModalShell/confirmDialog";
 
 import { wrap as itemsList, ControllerType } from "@/components/items-list/ItemsList";
 import { ItemsSource } from "@/components/items-list/classes/ItemsSource";
@@ -20,14 +21,10 @@ import ListPageToolbar from "@/components/items-list/components/ListPageToolbar"
 import ItemsTable, { Columns } from "@/components/items-list/components/ItemsTable";
 
 import AlertEvents from "@/services/alert-events";
+import { destinationLabel, statusTag } from "@/pages/alert-events/alertEventUtils";
 import { currentUser } from "@/services/auth";
 import notification from "@/services/notification";
 import routes from "@/services/routes";
-
-const STATUS_COLORS = {
-  ok: "green",
-  error: "red",
-};
 
 const STATE_COLORS = {
   ok: "green",
@@ -50,25 +47,11 @@ const sidebarMenu = [
   },
 ];
 
-function statusTag(status) {
-  if (!status) {
-    return null;
-  }
-  return <Tag color={STATUS_COLORS[status]}>{status.toUpperCase()}</Tag>;
-}
-
 function stateTag(state) {
   if (!state) {
     return null;
   }
   return <Tag color={STATE_COLORS[state] || "default"}>{state.toUpperCase()}</Tag>;
-}
-
-function destinationLabel(event) {
-  if (event.destination && event.destination.name) {
-    return event.destination.name;
-  }
-  return event.alert_type === "default" ? "Default destination" : event.alert_type || "—";
 }
 
 class AlertEventsList extends React.Component {
@@ -152,10 +135,10 @@ class AlertEventsList extends React.Component {
     if (!event.alert) {
       return;
     }
-    Modal.confirm({
+    confirmDialog({
       title: "Archive this event?",
-      content: "Archived events are hidden from the default views.",
-      onOk: () =>
+      description: "Archived events are hidden from the default views.",
+      onConfirm: () =>
         AlertEvents.archive({ alertId: event.alert.id, eventId: event.id })
           .then(() => {
             notification.success("Event archived.");
@@ -169,11 +152,11 @@ class AlertEventsList extends React.Component {
     if (!event.alert) {
       return;
     }
-    Modal.confirm({
+    confirmDialog({
       title: "Delete this event?",
-      okType: "danger",
-      content: "This will permanently remove the event from history.",
-      onOk: () =>
+      variant: "danger",
+      description: "This will permanently remove the event from history.",
+      onConfirm: () =>
         AlertEvents.delete({ alertId: event.alert.id, eventId: event.id })
           .then(() => {
             notification.success("Event deleted.");
@@ -186,27 +169,11 @@ class AlertEventsList extends React.Component {
   renderModal() {
     const { selectedEvent } = this.state;
     return (
-      <Modal
-        title="Notification content"
+      <NotificationContentModal
         open={!!selectedEvent}
-        onCancel={() => this.setState({ selectedEvent: null })}
-        footer={null}
-        width={720}>
-        {selectedEvent && (
-          <div>
-            <p className="text-muted">
-              <TimeAgo date={selectedEvent.created_at} /> · {destinationLabel(selectedEvent)} ·{" "}
-              {statusTag(selectedEvent.status)}
-            </p>
-            {!isEmpty(get(selectedEvent, "additional_properties.error")) && (
-              <pre className="text-danger">{selectedEvent.additional_properties.error}</pre>
-            )}
-            <pre style={{ whiteSpace: "pre-wrap", maxHeight: 400, overflow: "auto" }}>
-              {selectedEvent.content || "(no content recorded)"}
-            </pre>
-          </div>
-        )}
-      </Modal>
+        event={selectedEvent}
+        onClose={() => this.setState({ selectedEvent: null })}
+      />
     );
   }
 

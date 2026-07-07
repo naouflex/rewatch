@@ -2,13 +2,12 @@ import React, { useState, useEffect, useCallback } from "react";
 import { axios } from "@/services/axios";
 import PropTypes from "prop-types";
 import { each, debounce, get, find } from "lodash";
-import Button from "antd/lib/button";
 import List from "antd/lib/list";
-import Modal from "antd/lib/modal";
 import Select from "antd/lib/select";
 import Tag from "antd/lib/tag";
 import Tooltip from "@/components/Tooltip";
 import { wrap as wrapDialog, DialogPropType } from "@/components/DialogWrapper";
+import { ModalShell, ModalSection } from "@/components/ModalShell";
 import { toHuman } from "@/lib/utils";
 import HelpTrigger from "@/components/HelpTrigger";
 import { UserPreviewCard } from "@/components/PreviewCard";
@@ -64,11 +63,8 @@ const searchUsers = (searchTerm) =>
 function PermissionsEditorDialogHeader({ context }) {
   return (
     <>
-      Manage Permissions
-      <div className="modal-header-desc">
-        {`Editing this ${context} is enabled for the users in this list and for admins. `}
-        <HelpTrigger type="MANAGE_PERMISSIONS" />
-      </div>
+      {`Editing this ${context} is enabled for the users in this list and for admins. `}
+      <HelpTrigger type="MANAGE_PERMISSIONS" />
     </>
   );
 }
@@ -157,50 +153,56 @@ function PermissionsEditorDialog({ dialog, author, context, aclUrl }) {
   }, [aclUrl, loadUsersWithPermissions]);
 
   return (
-    <Modal
-      {...dialog.props}
+    <ModalShell
+      dialog={dialog}
       className="permissions-editor-dialog"
-      title={<PermissionsEditorDialogHeader context={context} />}
-      footer={<Button onClick={dialog.dismiss}>Close</Button>}
-    >
-      <UserSelect
-        onSelect={(userId) => addPermission(userId).then(loadUsersWithPermissions)}
-        shouldShowUser={(user) => !userHasPermission(user)}
-      />
-      <div className="d-flex align-items-center m-t-5">
-        <h5 className="flex-fill">Users with permissions</h5>
-        {loadingGrantees && (
-          <span role="status" aria-live="polite" aria-relevant="additions removals">
-            <i className="fa fa-spinner fa-pulse" aria-hidden="true" />
-            <span className="sr-only">Loading...</span>
-          </span>
-        )}
-      </div>
-      <div className="scrollbox p-5" style={{ maxHeight: "40vh" }}>
-        <List
-          size="small"
-          dataSource={[author, ...grantees]}
-          renderItem={(user) => (
-            <List.Item>
-              <UserPreviewCard key={user.id} user={user}>
-                {user.id === author.id ? (
-                  <Tag className="m-0">Author</Tag>
-                ) : (
-                  <Tooltip title="Remove user permissions">
-                    <PlainButton
-                      aria-label="Remove permissions"
-                      onClick={() => removePermission(user.id).then(loadUsersWithPermissions)}
-                    >
-                      <i className="fa fa-remove clickable" aria-hidden="true" />
-                    </PlainButton>
-                  </Tooltip>
-                )}
-              </UserPreviewCard>
-            </List.Item>
-          )}
+      title="Manage Permissions"
+      description={<PermissionsEditorDialogHeader context={context} />}
+      size="lg"
+      footer="close">
+      <ModalSection title="Add user">
+        <UserSelect
+          onSelect={userId => addPermission(userId).then(loadUsersWithPermissions)}
+          shouldShowUser={user => !userHasPermission(user)}
         />
-      </div>
-    </Modal>
+      </ModalSection>
+      <ModalSection
+        title={
+          <>
+            Users with permissions
+            {loadingGrantees && (
+              <span className="m-l-10" role="status" aria-live="polite" aria-relevant="additions removals">
+                <i className="fa fa-spinner fa-pulse" aria-hidden="true" />
+                <span className="sr-only">Loading...</span>
+              </span>
+            )}
+          </>
+        }>
+        <div className="modal-shell__picker-list">
+          <List
+            size="small"
+            dataSource={[author, ...grantees]}
+            renderItem={user => (
+              <List.Item>
+                <UserPreviewCard key={user.id} user={user}>
+                  {user.id === author.id ? (
+                    <Tag className="m-0">Author</Tag>
+                  ) : (
+                    <Tooltip title="Remove user permissions">
+                      <PlainButton
+                        aria-label="Remove permissions"
+                        onClick={() => removePermission(user.id).then(loadUsersWithPermissions)}>
+                        <i className="fa fa-remove clickable" aria-hidden="true" />
+                      </PlainButton>
+                    </Tooltip>
+                  )}
+                </UserPreviewCard>
+              </List.Item>
+            )}
+          />
+        </div>
+      </ModalSection>
+    </ModalShell>
   );
 }
 

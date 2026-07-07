@@ -1,12 +1,13 @@
 import { isFunction, get } from "lodash";
 import React from "react";
 import Form from "antd/lib/form";
-import Modal from "antd/lib/modal";
 import Input from "antd/lib/input";
 import { UserProfile } from "@/components/proptypes";
 import { wrap as wrapDialog, DialogPropType } from "@/components/DialogWrapper";
+import { ModalShell, ModalSection } from "@/components/ModalShell";
 import User from "@/services/user";
 import notification from "@/services/notification";
+import { getModalFormProps } from "@/styles/formStyle";
 
 class ChangePasswordDialog extends React.Component {
   static propTypes = {
@@ -100,43 +101,48 @@ class ChangePasswordDialog extends React.Component {
     const { dialog } = this.props;
     const { currentPassword, newPassword, repeatPassword, updatingPassword } = this.state;
 
-    const formItemProps = { className: "m-b-10", required: true };
-
     const inputProps = {
       onChange: this.handleChange,
       onPressEnter: this.updatePassword,
     };
 
     return (
-      <Modal
-        {...dialog.props}
-        okButtonProps={{ loading: updatingPassword }}
+      <ModalShell
+        dialog={dialog}
+        title="Change Password"
+        description="Enter your current password and choose a new one."
+        size="md"
+        okText="Update password"
         onOk={this.updatePassword}
-        title="Change Password">
-        <Form layout="vertical">
-          <Form.Item
-            {...formItemProps}
-            validateStatus={currentPassword.touched && currentPassword.error ? "error" : null}
-            help={currentPassword.touched ? currentPassword.error : null}
-            label="Current Password">
-            <Input.Password {...inputProps} name="currentPassword" data-test="CurrentPassword" autoFocus />
-          </Form.Item>
-          <Form.Item
-            {...formItemProps}
-            validateStatus={newPassword.touched && newPassword.error ? "error" : null}
-            help={newPassword.touched ? newPassword.error : null}
-            label="New Password">
-            <Input.Password {...inputProps} name="newPassword" data-test="NewPassword" />
-          </Form.Item>
-          <Form.Item
-            {...formItemProps}
-            validateStatus={repeatPassword.touched && repeatPassword.error ? "error" : null}
-            help={repeatPassword.touched ? repeatPassword.error : null}
-            label="Repeat New Password">
-            <Input.Password {...inputProps} name="repeatPassword" data-test="RepeatPassword" />
-          </Form.Item>
+        okButtonProps={{ loading: updatingPassword }}>
+        <Form {...getModalFormProps()}>
+          <ModalSection title="Current password">
+            <Form.Item
+              validateStatus={currentPassword.touched && currentPassword.error ? "error" : null}
+              help={currentPassword.touched ? currentPassword.error : null}
+              label="Current password"
+              required>
+              <Input.Password {...inputProps} name="currentPassword" data-test="CurrentPassword" autoFocus size="large" />
+            </Form.Item>
+          </ModalSection>
+          <ModalSection title="New password">
+            <Form.Item
+              validateStatus={newPassword.touched && newPassword.error ? "error" : null}
+              help={newPassword.touched ? newPassword.error : null}
+              label="New password"
+              required>
+              <Input.Password {...inputProps} name="newPassword" data-test="NewPassword" size="large" />
+            </Form.Item>
+            <Form.Item
+              validateStatus={repeatPassword.touched && repeatPassword.error ? "error" : null}
+              help={repeatPassword.touched ? repeatPassword.error : null}
+              label="Confirm new password"
+              required>
+              <Input.Password {...inputProps} name="repeatPassword" data-test="RepeatPassword" size="large" />
+            </Form.Item>
+          </ModalSection>
         </Form>
-      </Modal>
+      </ModalShell>
     );
   }
 }

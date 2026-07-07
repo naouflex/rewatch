@@ -3,7 +3,7 @@ import React from "react";
 import PropTypes from "prop-types";
 
 import Button from "antd/lib/button";
-import Modal from "antd/lib/modal";
+import { confirmDialog } from "@/components/ModalShell/confirmDialog";
 import routeWithUserSession from "@/components/ApplicationArea/routeWithUserSession";
 import Link from "@/components/Link";
 import Paginator from "@/components/Paginator";
@@ -147,8 +147,9 @@ class UsersList extends React.Component {
       .then(user => {
         notification.success("Saved.");
         if (user.invite_link) {
-          Modal.warning({
+          confirmDialog({
             title: "Email not sent!",
+            variant: "warning",
             content: (
               <React.Fragment>
                 <p>

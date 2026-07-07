@@ -1,0 +1,35 @@
+.schedule-component {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.schedule-component.ends {
+  gap: 12px;
+}
+
+.schedule-component .ends {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.schedule-component .datepicker {
+  margin-left: 0;
+}
+
+.utc {
+  opacity: 0.65;
+  margin-left: 8px;
+  font-size: var(--rd-font-size-sm);
+  color: var(--rd-color-text-muted);
+}
+
+.schedule-phrase {
+  display: inline-block;
+}
+
+a.schedule-phrase {
+  cursor: pointer;
+}

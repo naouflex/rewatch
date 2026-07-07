@@ -1,13 +1,13 @@
 import { extend } from "lodash";
 import React, { useCallback } from "react";
-import Modal from "antd/lib/modal";
+import { confirmDialog } from "@/components/ModalShell/confirmDialog";
 import { Query } from "@/services/query";
 import notification from "@/services/notification";
 import useImmutableCallback from "@/lib/hooks/useImmutableCallback";
 
 function confirmArchive() {
   return new Promise((resolve, reject) => {
-    Modal.confirm({
+    confirmDialog({
       title: "Archive Query",
       content: (
         <React.Fragment>
@@ -16,15 +16,9 @@ function confirmArchive() {
         </React.Fragment>
       ),
       okText: "Archive",
-      okType: "danger",
-      onOk: () => {
-        resolve();
-      },
-      onCancel: () => {
-        reject();
-      },
-      maskClosable: true,
-      autoFocusButton: null,
+      variant: "danger",
+      onConfirm: () => resolve(),
+      onCancel: () => reject(),
     });
   });
 }

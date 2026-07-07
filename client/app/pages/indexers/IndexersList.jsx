@@ -2,9 +2,8 @@ import React from "react";
 import cx from "classnames";
 import { get } from "lodash";
 
-import Modal from "antd/lib/modal";
-
 import routeWithUserSession from "@/components/ApplicationArea/routeWithUserSession";
+import { confirmDialog } from "@/components/ModalShell/confirmDialog";
 import Link from "@/components/Link";
 import Paginator from "@/components/Paginator";
 import EmptyState, { EmptyStateHelpMessage } from "@/components/empty-state/EmptyState";
@@ -57,11 +56,11 @@ const sidebarMenu = [
 ];
 
 function archiveIndexer(indexer, onSuccess) {
-  Modal.confirm({
+  confirmDialog({
     title: `Archive "${indexer.name}"?`,
-    content: "Archived indexers no longer appear in the list and stop running for new query results.",
-    okType: "danger",
-    onOk: () =>
+    description: "Archived indexers no longer appear in the list and stop running for new query results.",
+    variant: "danger",
+    onConfirm: () =>
       IndexerService.doArchive({ id: indexer.id })
         .then(() => {
           notification.success("Indexer archived.");

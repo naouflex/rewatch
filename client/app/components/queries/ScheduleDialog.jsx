@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
-import Modal from "antd/lib/modal";
 import DatePicker, { TimePicker } from "@/components/momentPickers";
 import Select from "antd/lib/select";
 import Radio from "antd/lib/radio";
@@ -8,9 +7,10 @@ import { capitalize, clone, isEqual, omitBy, isNil, isEmpty } from "lodash";
 import moment from "moment";
 import { secondsToInterval, durationHumanize, pluralize, IntervalEnum, localizeTime } from "@/lib/utils";
 import { wrap as wrapDialog, DialogPropType } from "@/components/DialogWrapper";
+import { ModalShell, ModalSection } from "@/components/ModalShell";
 import { RefreshScheduleType, RefreshScheduleDefault, Moment } from "../proptypes";
 
-import "./ScheduleDialog.css";
+import "./ScheduleDialog.less";
 
 const WEEKDAYS_SHORT = moment.weekdaysShort();
 const WEEKDAYS_FULL = moment.weekdays();
@@ -198,11 +198,17 @@ class ScheduleDialog extends React.Component {
     } = this.state;
 
     return (
-      <Modal {...dialog.props} title="Refresh Schedule" className="schedule" onOk={() => this.save()}>
-        <div className="schedule-component">
-          <h5>Refresh every</h5>
-          <div data-testid="interval">
-            <Select className="input" value={seconds} onChange={this.setInterval} popupMatchSelectWidth={false}>
+      <ModalShell
+        dialog={dialog}
+        title="Refresh Schedule"
+        description="Configure how often this query refreshes automatically."
+        size="sm"
+        okText="Save"
+        onOk={() => this.save()}
+        wrapProps={{ "data-test": "ScheduleDialog" }}>
+        <ModalSection title="Interval">
+          <div className="schedule-component" data-testid="interval">
+            <Select className="input w-100" value={seconds} onChange={this.setInterval} popupMatchSelectWidth={false}>
               <Option value={null} key="never">
                 Never
               </Option>
@@ -219,11 +225,10 @@ class ScheduleDialog extends React.Component {
                 ))}
             </Select>
           </div>
-        </div>
+        </ModalSection>
         {[IntervalEnum.DAYS, IntervalEnum.WEEKS].indexOf(interval) !== -1 ? (
-          <div className="schedule-component">
-            <h5>On time</h5>
-            <div data-testid="time">
+          <ModalSection title="Time">
+            <div className="schedule-component" data-testid="time">
               <TimeEditor
                 defaultValue={
                   hour
@@ -235,12 +240,11 @@ class ScheduleDialog extends React.Component {
                 onChange={this.setTime}
               />
             </div>
-          </div>
+          </ModalSection>
         ) : null}
         {IntervalEnum.WEEKS === interval ? (
-          <div className="schedule-component">
-            <h5>On day</h5>
-            <div data-testid="weekday">
+          <ModalSection title="Day">
+            <div className="schedule-component" data-testid="weekday">
               <Radio.Group size="medium" defaultValue={this.state.dayOfWeek} onChange={this.setWeekday}>
                 {WEEKDAYS_SHORT.map(day => (
                   <Radio.Button value={day} key={day} className="input">
@@ -249,12 +253,11 @@ class ScheduleDialog extends React.Component {
                 ))}
               </Radio.Group>
             </div>
-          </div>
+          </ModalSection>
         ) : null}
         {interval !== IntervalEnum.NEVER ? (
-          <div className="schedule-component">
-            <h5>Ends</h5>
-            <div className="ends" data-testid="ends">
+          <ModalSection title="Ends">
+            <div className="schedule-component ends" data-testid="ends">
               <Radio.Group size="medium" value={!!until} onChange={this.setUntilToggle}>
                 <Radio value={false}>Never</Radio>
                 <Radio value>On</Radio>
@@ -270,9 +273,9 @@ class ScheduleDialog extends React.Component {
                 />
               ) : null}
             </div>
-          </div>
+          </ModalSection>
         ) : null}
-      </Modal>
+      </ModalShell>
     );
   }
 }

@@ -8,7 +8,7 @@ import { MLModel as ModelType, Query as QueryType } from "@/components/proptypes
 
 import Input from "antd/lib/input";
 import Select from "antd/lib/select";
-import Modal from "antd/lib/modal";
+import { confirmDialog } from "@/components/ModalShell/confirmDialog";
 import Switch from "antd/lib/switch";
 
 import "./NotificationTemplate.less";
@@ -47,10 +47,10 @@ function NotificationTemplate({ model, query, columnNames, resultValues, subject
       setEnabled(value);
       setShowPreview(false);
     } else {
-      Modal.confirm({
+      confirmDialog({
         title: "Are you sure?",
-        content: "Switching to default template will discard your custom template.",
-        onOk: () => {
+        description: "Switching to default template will discard your custom template.",
+        onConfirm: () => {
           setEnabled(0);
           setTimeout(() => {
             setShowPreview(false);
@@ -68,8 +68,6 @@ function NotificationTemplate({ model, query, columnNames, resultValues, subject
             }, 0);
           }, 0);
         },
-        maskClosable: true,
-        autoFocusButton: null,
       });
     }
   };

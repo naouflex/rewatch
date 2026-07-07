@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
-import Button from "antd/lib/button";
-import Modal from "antd/lib/modal";
 import Alert from "antd/lib/alert";
 import DynamicForm from "@/components/dynamic-form/DynamicForm";
 import { wrap as wrapDialog, DialogPropType } from "@/components/DialogWrapper";
+import { ModalShell, ModalSection } from "@/components/ModalShell";
 import recordEvent from "@/services/recordEvent";
 import { useUniqueId } from "@/lib/hooks/useUniqueId";
 
@@ -22,29 +21,19 @@ function CreateUserDialog({ dialog }) {
   const formId = useUniqueId("userForm");
 
   return (
-    <Modal
-      {...dialog.props}
+    <ModalShell
+      dialog={dialog}
       title="Create a New User"
-      footer={[
-        <Button key="cancel" {...dialog.props.cancelButtonProps} onClick={dialog.dismiss}>
-          Cancel
-        </Button>,
-        <Button
-          key="submit"
-          {...dialog.props.okButtonProps}
-          htmlType="submit"
-          type="primary"
-          form={formId}
-          data-test="SaveUserButton">
-          Create
-        </Button>,
-      ]}
-      wrapProps={{
-        "data-test": "CreateUserDialog",
-      }}>
-      <DynamicForm id={formId} fields={formFields} onSubmit={handleSubmit} hideSubmitButton />
-      {error && <Alert message={error.message} type="error" showIcon data-test="CreateUserErrorAlert" />}
-    </Modal>
+      description="Invite a team member with their name and email address."
+      size="md"
+      okText="Create"
+      formId={formId}
+      wrapProps={{ "data-test": "CreateUserDialog" }}>
+      <ModalSection title="Account details">
+        <DynamicForm id={formId} fields={formFields} onSubmit={handleSubmit} hideSubmitButton />
+      </ModalSection>
+      {error && <Alert message={error.message} type="error" showIcon data-test="CreateUserErrorAlert" className="m-t-15" />}
+    </ModalShell>
   );
 }
 

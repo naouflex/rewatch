@@ -2,12 +2,11 @@ import { uniqueId } from "lodash";
 import React from "react";
 import PropTypes from "prop-types";
 import Alert from "antd/lib/alert";
-import Button from "antd/lib/button";
 import Checkbox from "antd/lib/checkbox";
 import Form from "antd/lib/form";
 import InputNumber from "antd/lib/input-number";
-import Modal from "antd/lib/modal";
 import { wrap as wrapDialog, DialogPropType } from "@/components/DialogWrapper";
+import { ModalShell, ModalSection } from "@/components/ModalShell";
 import { clientConfig } from "@/services/auth";
 import CodeBlock from "@/components/CodeBlock";
 
@@ -46,25 +45,21 @@ class EmbedQueryDialog extends React.Component {
     const { enableChangeIframeSize, iframeWidth, iframeHeight } = this.state;
 
     return (
-      <Modal
-        {...dialog.props}
-        className="embed-query-dialog"
+      <ModalShell
+        dialog={dialog}
         title="Embed Query"
-        footer={<Button onClick={dialog.dismiss}>Close</Button>}>
+        description="Share this visualization with a public URL or iframe embed code."
+        size="lg"
+        footer="close"
+        className="embed-query-dialog">
         {query.is_safe ? (
-          <React.Fragment>
-            <h5 id={this.urlEmbedLabelId} className="m-t-0">
-              Public URL
-            </h5>
-            <div className="m-b-30">
+          <>
+            <ModalSection title="Public URL">
               <CodeBlock aria-labelledby={this.urlEmbedLabelId} data-test="EmbedIframe" copyable>
                 {this.embedUrl}
               </CodeBlock>
-            </div>
-            <h5 id={this.iframeEmbedLabelId} className="m-t-0">
-              IFrame Embed
-            </h5>
-            <div>
+            </ModalSection>
+            <ModalSection title="IFrame embed">
               <CodeBlock aria-labelledby={this.iframeEmbedLabelId} copyable>
                 {`<iframe src="${this.embedUrl}" width="${iframeWidth}" height="${iframeHeight}"></iframe>`}
               </CodeBlock>
@@ -94,14 +89,13 @@ class EmbedQueryDialog extends React.Component {
                   />
                 </Form.Item>
               </Form>
-            </div>
+            </ModalSection>
             {this.snapshotUrl && (
-              <React.Fragment>
-                <h5>Image Embed</h5>
+              <ModalSection title="Image embed">
                 <CodeBlock copyable>{this.snapshotUrl}</CodeBlock>
-              </React.Fragment>
+              </ModalSection>
             )}
-          </React.Fragment>
+          </>
         ) : (
           <Alert
             message="Currently it is not possible to embed queries that contain text parameters."
@@ -109,7 +103,7 @@ class EmbedQueryDialog extends React.Component {
             data-test="EmbedErrorAlert"
           />
         )}
-      </Modal>
+      </ModalShell>
     );
   }
 }

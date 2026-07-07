@@ -2,10 +2,11 @@
 
 exports[`ScheduleDialog Sets correct schedule settings Sets to "1 Day 22:15" Sets to correct interval 1`] = `
 <div
+  class="schedule-component"
   data-testid="interval"
 >
   <div
-    class="ant-select ant-select-outlined input css-var-root ant-select-css-var css-dev-only-do-not-override-1pi45l5 ant-select-single ant-select-show-arrow"
+    class="ant-select ant-select-outlined input w-100 css-var-root ant-select-css-var css-dev-only-do-not-override-1pi45l5 ant-select-single ant-select-show-arrow"
   >
     <div
       class="ant-select-content ant-select-content-has-value"
@@ -54,6 +55,7 @@ exports[`ScheduleDialog Sets correct schedule settings Sets to "1 Day 22:15" Set
 
 exports[`ScheduleDialog Sets correct schedule settings Sets to "1 Day 22:15" Sets to correct time 1`] = `
 <div
+  class="schedule-component"
   data-testid="time"
 >
   <div
@@ -67,7 +69,7 @@ exports[`ScheduleDialog Sets correct schedule settings Sets to "1 Day 22:15" Set
         autocomplete="off"
         placeholder="Select time"
         size="10"
-        value="00:15"
+        value="23:15"
       />
       <span
         class="ant-picker-suffix"
@@ -111,10 +113,11 @@ exports[`ScheduleDialog Sets correct schedule settings Sets to "1 Day 22:15" Set
 
 exports[`ScheduleDialog Sets correct schedule settings Sets to "2 Hours" 1`] = `
 <div
+  class="schedule-component"
   data-testid="interval"
 >
   <div
-    class="ant-select ant-select-outlined input css-var-root ant-select-css-var css-dev-only-do-not-override-1pi45l5 ant-select-single ant-select-show-arrow"
+    class="ant-select ant-select-outlined input w-100 css-var-root ant-select-css-var css-dev-only-do-not-override-1pi45l5 ant-select-single ant-select-show-arrow"
   >
     <div
       class="ant-select-content ant-select-content-has-value"
@@ -163,10 +166,11 @@ exports[`ScheduleDialog Sets correct schedule settings Sets to "2 Hours" 1`] = `
 
 exports[`ScheduleDialog Sets correct schedule settings Sets to "2 Weeks 22:15 Tuesday" Sets to correct interval 1`] = `
 <div
+  class="schedule-component"
   data-testid="interval"
 >
   <div
-    class="ant-select ant-select-outlined input css-var-root ant-select-css-var css-dev-only-do-not-override-1pi45l5 ant-select-single ant-select-show-arrow"
+    class="ant-select ant-select-outlined input w-100 css-var-root ant-select-css-var css-dev-only-do-not-override-1pi45l5 ant-select-single ant-select-show-arrow"
   >
     <div
       class="ant-select-content ant-select-content-has-value"
@@ -215,6 +219,7 @@ exports[`ScheduleDialog Sets correct schedule settings Sets to "2 Weeks 22:15 Tu
 
 exports[`ScheduleDialog Sets correct schedule settings Sets to "2 Weeks 22:15 Tuesday" Sets to correct time 1`] = `
 <div
+  class="schedule-component"
   data-testid="time"
 >
   <div
@@ -228,7 +233,7 @@ exports[`ScheduleDialog Sets correct schedule settings Sets to "2 Weeks 22:15 Tu
         autocomplete="off"
         placeholder="Select time"
         size="10"
-        value="00:15"
+        value="23:15"
       />
       <span
         class="ant-picker-suffix"
@@ -272,6 +277,7 @@ exports[`ScheduleDialog Sets correct schedule settings Sets to "2 Weeks 22:15 Tu
 
 exports[`ScheduleDialog Sets correct schedule settings Sets to "2 Weeks 22:15 Tuesday" Sets to correct weekday 1`] = `
 <div
+  class="schedule-component"
   data-testid="weekday"
 >
   <div
@@ -418,10 +424,11 @@ exports[`ScheduleDialog Sets correct schedule settings Sets to "2 Weeks 22:15 Tu
 
 exports[`ScheduleDialog Sets correct schedule settings Sets to "5 Minutes" 1`] = `
 <div
+  class="schedule-component"
   data-testid="interval"
 >
   <div
-    class="ant-select ant-select-outlined input css-var-root ant-select-css-var css-dev-only-do-not-override-1pi45l5 ant-select-single ant-select-show-arrow"
+    class="ant-select ant-select-outlined input w-100 css-var-root ant-select-css-var css-dev-only-do-not-override-1pi45l5 ant-select-single ant-select-show-arrow"
   >
     <div
       class="ant-select-content ant-select-content-has-value"
@@ -470,10 +477,11 @@ exports[`ScheduleDialog Sets correct schedule settings Sets to "5 Minutes" 1`] =
 
 exports[`ScheduleDialog Sets correct schedule settings Sets to "Never" 1`] = `
 <div
+  class="schedule-component"
   data-testid="interval"
 >
   <div
-    class="ant-select ant-select-outlined input css-var-root ant-select-css-var css-dev-only-do-not-override-1pi45l5 ant-select-single ant-select-show-arrow"
+    class="ant-select ant-select-outlined input w-100 css-var-root ant-select-css-var css-dev-only-do-not-override-1pi45l5 ant-select-single ant-select-show-arrow"
   >
     <div
       class="ant-select-content"
@@ -524,6 +532,7 @@ exports[`ScheduleDialog Sets correct schedule settings Sets to "Never" 1`] = `
 
 exports[`ScheduleDialog Sets correct schedule settings Supports 30 days interval with no time value Time is none 1`] = `
 <div
+  class="schedule-component"
   data-testid="time"
 >
   <div
@@ -573,7 +582,7 @@ exports[`ScheduleDialog Sets correct schedule settings Supports 30 days interval
 
 exports[`ScheduleDialog Sets correct schedule settings Until feature Until is set 1`] = `
 <div
-  class="ends"
+  class="schedule-component ends"
   data-testid="ends"
 >
   <div
@@ -664,7 +673,7 @@ exports[`ScheduleDialog Sets correct schedule settings Until feature Until is se
 
 exports[`ScheduleDialog Sets correct schedule settings Until feature Until not set 1`] = `
 <div
-  class="ends"
+  class="schedule-component ends"
   data-testid="ends"
 >
   <div

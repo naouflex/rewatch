@@ -2,19 +2,19 @@ import { isString } from "lodash";
 import React from "react";
 import PropTypes from "prop-types";
 import Button from "antd/lib/button";
-import Modal from "antd/lib/modal";
+import { confirmDialog } from "@/components/ModalShell/confirmDialog";
 import Tooltip from "@/components/Tooltip";
 import notification from "@/services/notification";
 import Group from "@/services/group";
 
 function deleteGroup(event, group, onGroupDeleted) {
-  Modal.confirm({
+  confirmDialog({
     title: "Delete Group",
-    content: "Are you sure you want to delete this group?",
+    description: "Are you sure you want to delete this group?",
     okText: "Yes",
-    okType: "danger",
+    variant: "danger",
     cancelText: "No",
-    onOk: () => {
+    onConfirm: () => {
       Group.delete(group).then(() => {
         notification.success("Group deleted successfully.");
         onGroupDeleted();

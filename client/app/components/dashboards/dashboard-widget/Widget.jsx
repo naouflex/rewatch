@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import cx from "classnames";
 import { isEmpty } from "lodash";
 import Dropdown from "antd/lib/dropdown";
-import Modal from "antd/lib/modal";
+import { confirmDialog } from "@/components/ModalShell/confirmDialog";
 import recordEvent from "@/services/recordEvent";
 import { Moment } from "@/components/proptypes";
 import PlainButton from "@/components/PlainButton";
@@ -109,14 +109,12 @@ class Widget extends React.Component {
   deleteWidget = () => {
     const { widget, onDelete } = this.props;
 
-    Modal.confirm({
+    confirmDialog({
       title: "Delete Widget",
-      content: "Are you sure you want to remove this widget from the dashboard?",
+      description: "Are you sure you want to remove this widget from the dashboard?",
       okText: "Delete",
-      okType: "danger",
-      onOk: () => widget.delete().then(onDelete),
-      maskClosable: true,
-      autoFocusButton: null,
+      variant: "danger",
+      onConfirm: () => widget.delete().then(onDelete),
     });
   };
 

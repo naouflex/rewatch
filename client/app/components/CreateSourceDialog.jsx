@@ -3,10 +3,10 @@ import PropTypes from "prop-types";
 import { isEmpty, toUpper, includes, get, uniqueId } from "lodash";
 import Button from "antd/lib/button";
 import List from "antd/lib/list";
-import Modal from "antd/lib/modal";
 import Input from "antd/lib/input";
 import Steps from "antd/lib/steps";
 import { wrap as wrapDialog, DialogPropType } from "@/components/DialogWrapper";
+import { ModalShell, ModalSection } from "@/components/ModalShell";
 import Link from "@/components/Link";
 import { PreviewCard } from "@/components/PreviewCard";
 import EmptyState from "@/components/items-list/components/EmptyState";
@@ -152,37 +152,42 @@ class CreateSourceDialog extends React.Component {
   render() {
     const { currentStep, savingSource } = this.state;
     const { dialog, sourceType } = this.props;
+    const wizardFooter =
+      currentStep === StepEnum.SELECT_TYPE
+        ? [
+            <Button key="cancel" onClick={() => dialog.dismiss()} data-test="CreateSourceCancelButton">
+              Cancel
+            </Button>,
+            <Button key="submit" type="primary" disabled>
+              Create
+            </Button>,
+          ]
+        : [
+            <Button key="previous" onClick={this.resetType}>
+              Previous
+            </Button>,
+            <Button
+              key="submit"
+              htmlType="submit"
+              form={this.formId}
+              type="primary"
+              loading={savingSource}
+              data-test="CreateSourceSaveButton">
+              Create
+            </Button>,
+          ];
+
     return (
-      <Modal
-        {...dialog.props}
+      <ModalShell
+        dialog={dialog}
         title={`Create a New ${sourceType}`}
-        footer={
-          currentStep === StepEnum.SELECT_TYPE
-            ? [
-                <Button key="cancel" onClick={() => dialog.dismiss()} data-test="CreateSourceCancelButton">
-                  Cancel
-                </Button>,
-                <Button key="submit" type="primary" disabled>
-                  Create
-                </Button>,
-              ]
-            : [
-                <Button key="previous" onClick={this.resetType}>
-                  Previous
-                </Button>,
-                <Button
-                  key="submit"
-                  htmlType="submit"
-                  form={this.formId}
-                  type="primary"
-                  loading={savingSource}
-                  data-test="CreateSourceSaveButton">
-                  Create
-                </Button>,
-              ]
-        }>
-        <div data-test="CreateSourceDialog">
-          <Steps className="hidden-xs m-b-10" size="small" current={currentStep} progressDot>
+        description="Choose a data source type and configure the connection."
+        size="lg"
+        footer="custom"
+        customFooter={wizardFooter}
+        wrapProps={{ "data-test": "CreateSourceDialog" }}>
+        <ModalSection title="Setup progress">
+          <Steps className="hidden-xs" size="small" current={currentStep} progressDot>
             {currentStep === StepEnum.CONFIGURE_IT ? (
               <Step title={<a>Type Selection</a>} className="clickable" onClick={this.resetType} />
             ) : (
@@ -191,10 +196,10 @@ class CreateSourceDialog extends React.Component {
             <Step title="Configuration" />
             <Step title="Done" />
           </Steps>
-          {currentStep === StepEnum.SELECT_TYPE && this.renderTypeSelector()}
-          {currentStep !== StepEnum.SELECT_TYPE && this.renderForm()}
-        </div>
-      </Modal>
+        </ModalSection>
+        {currentStep === StepEnum.SELECT_TYPE && this.renderTypeSelector()}
+        {currentStep !== StepEnum.SELECT_TYPE && this.renderForm()}
+      </ModalShell>
     );
   }
 }

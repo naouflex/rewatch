@@ -1,6 +1,6 @@
 import { isNil, isObject, extend, keys, map, omit, pick, uniq, get } from "lodash";
 import React, { useCallback } from "react";
-import Modal from "antd/lib/modal";
+import { confirmDialog } from "@/components/ModalShell/confirmDialog";
 import { Query } from "@/services/query";
 import notification from "@/services/notification";
 import useImmutableCallback from "@/lib/hooks/useImmutableCallback";
@@ -27,7 +27,7 @@ class SaveQueryConflictError extends SaveQueryError {
 
 function confirmOverwrite() {
   return new Promise((resolve, reject) => {
-    Modal.confirm({
+    confirmDialog({
       title: "Overwrite Query",
       content: (
         <React.Fragment>
@@ -36,15 +36,13 @@ function confirmOverwrite() {
         </React.Fragment>
       ),
       okText: "Overwrite",
-      okType: "danger",
-      onOk: () => {
+      variant: "danger",
+      onConfirm: () => {
         resolve();
       },
       onCancel: () => {
         reject();
       },
-      maskClosable: true,
-      autoFocusButton: null,
     });
   });
 }

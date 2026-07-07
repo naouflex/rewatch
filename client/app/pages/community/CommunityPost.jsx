@@ -3,8 +3,8 @@ import React, { useEffect, useState } from "react";
 import Button from "antd/lib/button";
 import Form from "antd/lib/form";
 import Input from "antd/lib/input";
-import Modal from "antd/lib/modal";
 import Select from "antd/lib/select";
+import { confirmDialog } from "@/components/ModalShell/confirmDialog";
 
 import routeWithUserSession from "@/components/ApplicationArea/routeWithUserSession";
 import navigateTo from "@/components/ApplicationArea/navigateTo";
@@ -69,11 +69,11 @@ function CommunityPostPage({ postId, onError }) {
   };
 
   const handleDelete = () => {
-    Modal.confirm({
+    confirmDialog({
       title: "Delete this post?",
-      content: "This cannot be undone.",
-      okType: "danger",
-      onOk: () =>
+      description: "This cannot be undone.",
+      variant: "danger",
+      onConfirm: () =>
         Community.delete(postId)
           .then(() => {
             notification.success("Post deleted.");

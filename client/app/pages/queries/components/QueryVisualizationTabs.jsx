@@ -5,7 +5,7 @@ import { find, orderBy } from "lodash";
 import useMedia from "use-media";
 import Tabs from "antd/lib/tabs";
 import Button from "antd/lib/button";
-import Modal from "antd/lib/modal";
+import { confirmDialog } from "@/components/ModalShell/confirmDialog";
 import VisualizationRenderer from "@/components/visualizations/VisualizationRenderer";
 import PlainButton from "@/components/PlainButton";
 
@@ -40,14 +40,12 @@ function TabWithDeleteButton({ visualizationName, canDelete, onDelete, ...props 
   const handleDelete = useCallback(
     (e) => {
       e.stopPropagation();
-      Modal.confirm({
+      confirmDialog({
         title: "Delete Visualization",
-        content: "Are you sure you want to delete this visualization?",
+        description: "Are you sure you want to delete this visualization?",
         okText: "Delete",
-        okType: "danger",
-        onOk: onDelete,
-        maskClosable: true,
-        autoFocusButton: null,
+        variant: "danger",
+        onConfirm: onDelete,
       });
     },
     [onDelete]

@@ -5,7 +5,7 @@ import { map, includes } from "lodash";
 import Button from "antd/lib/button";
 import Dropdown from "antd/lib/dropdown";
 import EllipsisOutlinedIcon from "@ant-design/icons/EllipsisOutlined";
-import Modal from "antd/lib/modal";
+import { confirmDialog } from "@/components/ModalShell/confirmDialog";
 import Tooltip from "@/components/Tooltip";
 import FavoritesControl from "@/components/FavoritesControl";
 import EditInPlace from "@/components/EditInPlace";
@@ -130,14 +130,12 @@ function DashboardMoreOptionsButton({ dashboardConfiguration }) {
   } = dashboardConfiguration;
 
   const archive = useCallback(() => {
-    Modal.confirm({
+    confirmDialog({
       title: "Archive Dashboard",
-      content: `Are you sure you want to archive the "${dashboard.name}" dashboard?`,
+      description: `Are you sure you want to archive the "${dashboard.name}" dashboard?`,
       okText: "Archive",
-      okType: "danger",
-      onOk: archiveDashboard,
-      maskClosable: true,
-      autoFocusButton: null,
+      variant: "danger",
+      onConfirm: archiveDashboard,
     });
   }, [dashboard.name, archiveDashboard]);
 

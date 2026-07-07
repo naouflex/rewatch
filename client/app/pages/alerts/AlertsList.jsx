@@ -2,9 +2,8 @@ import React from "react";
 import cx from "classnames";
 import { toUpper } from "lodash";
 
-import Modal from "antd/lib/modal";
-
 import routeWithUserSession from "@/components/ApplicationArea/routeWithUserSession";
+import { confirmDialog } from "@/components/ModalShell/confirmDialog";
 import Link from "@/components/Link";
 import Paginator from "@/components/Paginator";
 import EmptyState, { EmptyStateHelpMessage } from "@/components/empty-state/EmptyState";
@@ -63,11 +62,11 @@ const sidebarMenu = [
 ];
 
 function archiveAlert(alert, onSuccess) {
-  Modal.confirm({
+  confirmDialog({
     title: `Archive "${alert.name}"?`,
-    content: "Archived alerts no longer appear in the list and stop sending notifications.",
-    okType: "danger",
-    onOk: () =>
+    description: "Archived alerts no longer appear in the list and stop sending notifications.",
+    variant: "danger",
+    onConfirm: () =>
       AlertService.doArchive({ id: alert.id })
         .then(() => {
           notification.success("Alert archived.");

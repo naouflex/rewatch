@@ -1,8 +1,8 @@
 import { isMatch, map, find, sortBy } from "lodash";
 import React from "react";
 import PropTypes from "prop-types";
-import Modal from "antd/lib/modal";
 import { wrap as wrapDialog, DialogPropType } from "@/components/DialogWrapper";
+import { ModalShell, ModalSection } from "@/components/ModalShell";
 import {
   MappingType,
   ParameterMappingListInput,
@@ -98,20 +98,23 @@ class EditParameterMappingsDialog extends React.Component {
   render() {
     const { dialog } = this.props;
     return (
-      <Modal
-        {...dialog.props}
+      <ModalShell
+        dialog={dialog}
         title="Parameters"
+        description="Map widget parameters to dashboard-level values."
+        size="lg"
         onOk={() => this.saveWidget()}
-        okButtonProps={{ loading: this.state.saveInProgress }}
-        width={700}>
+        okButtonProps={{ loading: this.state.saveInProgress }}>
         {this.state.parameterMappings.length > 0 && (
-          <ParameterMappingListInput
-            mappings={this.state.parameterMappings}
-            existingParams={this.props.dashboard.getParametersDefs()}
-            onChange={mappings => this.updateParamMappings(mappings)}
-          />
+          <ModalSection title="Parameter mappings">
+            <ParameterMappingListInput
+              mappings={this.state.parameterMappings}
+              existingParams={this.props.dashboard.getParametersDefs()}
+              onChange={mappings => this.updateParamMappings(mappings)}
+            />
+          </ModalSection>
         )}
-      </Modal>
+      </ModalShell>
     );
   }
 }

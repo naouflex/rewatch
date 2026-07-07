@@ -1,9 +1,8 @@
 import { map } from "lodash";
 import React from "react";
 
-import Modal from "antd/lib/modal";
-
 import routeWithUserSession from "@/components/ApplicationArea/routeWithUserSession";
+import { confirmDialog } from "@/components/ModalShell/confirmDialog";
 import Link from "@/components/Link";
 import Paginator from "@/components/Paginator";
 import Tooltip from "@/components/Tooltip";
@@ -62,12 +61,12 @@ function canModify(destination) {
 }
 
 function archiveDestination(destination, onSuccess) {
-  Modal.confirm({
+  confirmDialog({
     title: `Archive "${destination.name}"?`,
-    content: "Archived destinations are hidden from the default list but can be restored later.",
+    description: "Archived destinations are hidden from the default list but can be restored later.",
     okText: "Archive",
-    okType: "danger",
-    onOk: () =>
+    variant: "danger",
+    onConfirm: () =>
       DestinationService.doArchive(destination)
         .then(() => {
           notification.success("Alert destination archived.");
@@ -78,12 +77,12 @@ function archiveDestination(destination, onSuccess) {
 }
 
 function deleteDestination(destination, onSuccess) {
-  Modal.confirm({
+  confirmDialog({
     title: `Delete "${destination.name}"?`,
-    content: "Are you sure you want to delete this alert destination?",
+    description: "Are you sure you want to delete this alert destination?",
     okText: "Delete",
-    okType: "danger",
-    onOk: () =>
+    variant: "danger",
+    onConfirm: () =>
       DestinationService.delete(destination)
         .then(() => {
           notification.success("Alert destination deleted successfully.");

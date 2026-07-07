@@ -1,30 +1,31 @@
 import React from "react";
 import PropTypes from "prop-types";
-import Button from "antd/lib/button";
-import Modal from "antd/lib/modal";
 import { wrap as wrapDialog, DialogPropType } from "@/components/DialogWrapper";
+import { ModalShell } from "@/components/ModalShell";
 import { FiltersType } from "@/components/Filters";
 import VisualizationRenderer from "@/components/visualizations/VisualizationRenderer";
 import VisualizationName from "@/components/visualizations/VisualizationName";
 
 function ExpandedWidgetDialog({ dialog, widget, filters }) {
   return (
-    <Modal
-      {...dialog.props}
+    <ModalShell
+      dialog={dialog}
       title={
         <>
           <VisualizationName visualization={widget.visualization} /> <span>{widget.getQuery().name}</span>
         </>
       }
+      description="Full-size preview of this dashboard widget."
       width="95%"
-      footer={<Button onClick={dialog.dismiss}>Close</Button>}>
+      footer="close"
+      bodyClassName="modal-shell__body modal-shell__body--flush">
       <VisualizationRenderer
         visualization={widget.visualization}
         queryResult={widget.getQueryResult()}
         filters={filters}
         context="widget"
       />
-    </Modal>
+    </ModalShell>
   );
 }
 

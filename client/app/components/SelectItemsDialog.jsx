@@ -2,11 +2,10 @@ import { filter, find, isEmpty, size } from "lodash";
 import React, { useState, useCallback, useEffect } from "react";
 import PropTypes from "prop-types";
 import classNames from "classnames";
-import Modal from "antd/lib/modal";
 import Input from "antd/lib/input";
 import List from "antd/lib/list";
-import Button from "antd/lib/button";
 import { wrap as wrapDialog, DialogPropType } from "@/components/DialogWrapper";
+import { ModalShell, ModalSection } from "@/components/ModalShell";
 import BigMessage from "@/components/BigMessage";
 import LoadingState from "@/components/items-list/components/LoadingState";
 import notification from "@/services/notification";
@@ -95,38 +94,26 @@ function SelectItemsDialog({
   }, [dialog, selectedItems]);
 
   return (
-    <Modal
-      {...dialog.props}
+    <ModalShell
+      dialog={dialog}
       className="select-items-dialog"
       width={width}
       title={dialogTitle}
-      footer={
-        <div className="d-flex align-items-center">
-          <span
-            className="flex-fill m-r-5"
-            style={{ textAlign: "left", color: "var(--rd-color-text-muted)" }}>
-            {extraFooterContent}
-          </span>
-          <Button {...dialog.props.cancelButtonProps} onClick={dialog.dismiss}>
-            Cancel
-          </Button>
-          <Button
-            {...dialog.props.okButtonProps}
-            onClick={save}
-            disabled={selectedItems.length === 0 || dialog.props.okButtonProps.disabled}
-            type="primary">
-            Save
-            {showCount && !isEmpty(selectedItems) ? ` (${size(selectedItems)})` : null}
-          </Button>
-        </div>
-      }>
-      <div className="d-flex align-items-center m-b-10">
+      size="xl"
+      okText={`Save${showCount && !isEmpty(selectedItems) ? ` (${size(selectedItems)})` : ""}`}
+      onOk={save}
+      okButtonProps={{
+        disabled: selectedItems.length === 0 || dialog.props.okButtonProps.disabled,
+      }}
+      footerExtra={extraFooterContent}>
+      <div className="modal-shell__picker-search d-flex align-items-center">
         <div className="flex-fill">
           <Input.Search
             onChange={event => search(event.target.value)}
             placeholder={inputPlaceholder}
             aria-label={inputPlaceholder}
             autoFocus
+            size="large"
           />
         </div>
         {renderStagedItem && (
@@ -136,8 +123,8 @@ function SelectItemsDialog({
         )}
       </div>
 
-      <div className="d-flex align-items-stretch" style={{ minHeight: "30vh", maxHeight: "50vh" }}>
-        <div className="flex-fill scrollbox">
+      <div className="d-flex align-items-stretch m-t-10" style={{ minHeight: "30vh", maxHeight: "50vh" }}>
+        <div className="flex-fill modal-shell__picker-list">
           {isLoading && <LoadingState className="" />}
           {!isLoading && !hasResults && (
             <BigMessage icon="fa-search" message="No items match your search." className="" />
@@ -151,7 +138,7 @@ function SelectItemsDialog({
           )}
         </div>
         {renderStagedItem && (
-          <div className="w-50 m-l-20 scrollbox">
+          <div className="w-50 m-l-20 modal-shell__picker-list">
             {selectedItems.length > 0 && (
               <ItemsList
                 items={selectedItems}
@@ -162,7 +149,7 @@ function SelectItemsDialog({
           </div>
         )}
       </div>
-    </Modal>
+    </ModalShell>
   );
 }
 

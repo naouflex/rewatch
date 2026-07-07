@@ -2,13 +2,13 @@ import React, { useState, useCallback, useMemo } from "react";
 import PropTypes from "prop-types";
 import cx from "classnames";
 
-import Modal from "antd/lib/modal";
 import Dropdown from "antd/lib/dropdown";
 import Button from "antd/lib/button";
 
 import LoadingOutlinedIcon from "@ant-design/icons/LoadingOutlined";
 import EllipsisOutlinedIcon from "@ant-design/icons/EllipsisOutlined";
 import PlainButton from "@/components/PlainButton";
+import { confirmDialog } from "@/components/ModalShell/confirmDialog";
 import "./MenuButton.less";
 
 export default function MenuButton({ doDelete, doArchive, doUnarchive, archived }) {
@@ -22,38 +22,32 @@ export default function MenuButton({ doDelete, doArchive, doUnarchive, archived 
   }, []);
 
   const confirmDelete = useCallback(() => {
-    Modal.confirm({
+    confirmDialog({
       title: "Delete Predicition",
-      content: "Are you sure you want to delete this predicition?",
+      description: "Are you sure you want to delete this predicition?",
       okText: "Delete",
-      okType: "danger",
-      onOk: () => execute(doDelete),
-      maskClosable: true,
-      autoFocusButton: null,
+      variant: "danger",
+      onConfirm: () => execute(doDelete),
     });
   }, [doDelete, execute]);
 
   const confirmArchive = useCallback(() => {
-    Modal.confirm({
+    confirmDialog({
       title: "Archive Predicition",
-      content: "Are you sure you want to archive this predicition?",
+      description: "Are you sure you want to archive this predicition?",
       okText: "Archive",
-      okType: "danger",
-      onOk: () => execute(doArchive),
-      maskClosable: true,
-      autoFocusButton: null,
+      variant: "danger",
+      onConfirm: () => execute(doArchive),
     });
   }, [doArchive, execute]);
 
   const confirmUnarchive = useCallback(() => {
-    Modal.confirm({
+    confirmDialog({
       title: "Unarchive Predicition",
-      content: "Are you sure you want to unarchive this predicition?",
+      description: "Are you sure you want to unarchive this predicition?",
       okText: "Unarchive",
-      okType: "danger",
-      onOk: () => execute(doUnarchive),
-      maskClosable: true,
-      autoFocusButton: null,
+      variant: "danger",
+      onConfirm: () => execute(doUnarchive),
     });
   }, [doUnarchive, execute]);
 

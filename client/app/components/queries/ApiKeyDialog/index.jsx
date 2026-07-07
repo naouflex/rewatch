@@ -1,18 +1,18 @@
 import { extend } from "lodash";
 import React, { useMemo, useState, useCallback } from "react";
 import PropTypes from "prop-types";
-import Modal from "antd/lib/modal";
 import Input from "antd/lib/input";
 import Button from "antd/lib/button";
 import { wrap as wrapDialog, DialogPropType } from "@/components/DialogWrapper";
+import { ModalShell, ModalSection } from "@/components/ModalShell";
 import CodeBlock from "@/components/CodeBlock";
 import { axios } from "@/services/axios";
 import { clientConfig } from "@/services/auth";
 import notification from "@/services/notification";
 import { useUniqueId } from "@/lib/hooks/useUniqueId";
+import { policy } from "@/services/policy";
 
 import "./index.less";
-import { policy } from "@/services/policy";
 
 function ApiKeyDialog({ dialog, ...props }) {
   const [query, setQuery] = useState(props.query);
@@ -44,40 +44,40 @@ function ApiKeyDialog({ dialog, ...props }) {
   const jsonResultsLabelId = useUniqueId("json-results-label");
 
   return (
-    <Modal
-      {...dialog.props}
-      wrapClassName="query-api-key-dialog"
-      width={600}
+    <ModalShell
+      dialog={dialog}
       title="Query API Key"
-      footer={<Button onClick={() => dialog.close(query)}>Close</Button>}
-    >
-      <div className="query-api-key-dialog-wrapper">
-        <div className="m-b-20">
-          <Input.Group compact>
-            <Input readOnly value={query.api_key} aria-label="Query API Key" />
-            {policy.canEdit(query) && (
-              <Button disabled={updatingApiKey} loading={updatingApiKey} onClick={regenerateQueryApiKey}>
-                Regenerate
-              </Button>
-            )}
-          </Input.Group>
-        </div>
-
-        <h5>Example API Calls:</h5>
+      description="Use this key to access query results programmatically."
+      size="md"
+      footer="close"
+      onClose={() => dialog.close(query)}
+      closeText="Close"
+      wrapClassName="query-api-key-dialog">
+      <ModalSection title="API key">
+        <Input.Group compact>
+          <Input readOnly value={query.api_key} aria-label="Query API Key" size="large" />
+          {policy.canEdit(query) && (
+            <Button disabled={updatingApiKey} loading={updatingApiKey} onClick={regenerateQueryApiKey}>
+              Regenerate
+            </Button>
+          )}
+        </Input.Group>
+      </ModalSection>
+      <ModalSection title="Example API calls">
         <div className="m-b-10">
-          <span id={csvResultsLabelId}>Results in CSV format:</span>
+          <span id={csvResultsLabelId}>Results in CSV format</span>
           <CodeBlock aria-labelledby={csvResultsLabelId} copyable>
             {csvUrl}
           </CodeBlock>
         </div>
         <div>
-          <span id={jsonResultsLabelId}>Results in JSON format:</span>
+          <span id={jsonResultsLabelId}>Results in JSON format</span>
           <CodeBlock aria-labelledby={jsonResultsLabelId} copyable>
             {jsonUrl}
           </CodeBlock>
         </div>
-      </div>
-    </Modal>
+      </ModalSection>
+    </ModalShell>
   );
 }
 

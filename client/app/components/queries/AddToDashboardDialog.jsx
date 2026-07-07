@@ -1,13 +1,13 @@
 import { isString } from "lodash";
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import Modal from "antd/lib/modal";
 import Input from "antd/lib/input";
 import List from "antd/lib/list";
 import Link from "@/components/Link";
 import PlainButton from "@/components/PlainButton";
 import CloseOutlinedIcon from "@ant-design/icons/CloseOutlined";
 import { wrap as wrapDialog, DialogPropType } from "@/components/DialogWrapper";
+import { ModalShell, ModalSection } from "@/components/ModalShell";
 import { QueryTagsControl } from "@/components/tags-control/TagsControl";
 import { Dashboard } from "@/services/dashboard";
 import notification from "@/services/notification";
@@ -39,7 +39,6 @@ function AddToDashboardDialog({ dialog, visualization }) {
   }, [doSearch, searchTerm]);
 
   function addWidgetToDashboard() {
-    // Load dashboard with all widgets
     Dashboard.get(selectedDashboard)
       .then(dashboard => {
         dashboard.addWidget(visualization);
@@ -72,60 +71,66 @@ function AddToDashboardDialog({ dialog, visualization }) {
   const items = selectedDashboard ? [selectedDashboard] : dashboards;
 
   return (
-    <Modal
-      {...dialog.props}
+    <ModalShell
+      dialog={dialog}
       title="Add to Dashboard"
+      description="Search for a dashboard and add this visualization as a widget."
+      size="md"
+      okText="Add widget"
+      onOk={addWidgetToDashboard}
       okButtonProps={{ disabled: !selectedDashboard || saveInProgress, loading: saveInProgress }}
-      cancelButtonProps={{ disabled: saveInProgress }}
-      onOk={addWidgetToDashboard}>
-      <label htmlFor="add-to-dashboard-dialog-dashboard">Choose the dashboard to add this query to:</label>
+      cancelButtonProps={{ disabled: saveInProgress }}>
+      <ModalSection title="Dashboard">
+        {!selectedDashboard && (
+          <Input
+            id="add-to-dashboard-dialog-dashboard"
+            className="w-100 m-b-10"
+            autoComplete="off"
+            autoFocus
+            placeholder="Search a dashboard by name"
+            value={searchTerm}
+            onChange={event => setSearchTerm(event.target.value)}
+            size="large"
+            suffix={
+              <PlainButton className={searchTerm === "" ? "hidden" : null} onClick={() => setSearchTerm("")}>
+                <CloseOutlinedIcon />
+              </PlainButton>
+            }
+          />
+        )}
 
-      {!selectedDashboard && (
-        <Input
-          id="add-to-dashboard-dialog-dashboard"
-          className="w-100"
-          autoComplete="off"
-          autoFocus
-          placeholder="Search a dashboard by name"
-          value={searchTerm}
-          onChange={event => setSearchTerm(event.target.value)}
-          suffix={
-            <PlainButton className={searchTerm === "" ? "hidden" : null} onClick={() => setSearchTerm("")}>
-              <CloseOutlinedIcon />
-            </PlainButton>
-          }
-        />
-      )}
-
-      {(items.length > 0 || isLoading) && (
-        <List
-          className={selectedDashboard ? "add-to-dashboard-dialog-selection" : "add-to-dashboard-dialog-search-results"}
-          bordered
-          itemLayout="horizontal"
-          loading={isLoading}
-          dataSource={items}
-          renderItem={d => (
-            <List.Item
-              key={`dashboard-${d.id}`}
-              actions={
-                selectedDashboard
-                  ? [
-                      <PlainButton onClick={() => setSelectedDashboard(null)}>
-                        <CloseOutlinedIcon />
-                      </PlainButton>,
-                    ]
-                  : []
-              }
-              onClick={selectedDashboard ? null : () => setSelectedDashboard(d)}>
-              <div className="add-to-dashboard-dialog-item-content">
-                {d.name}
-                <QueryTagsControl isDraft={d.is_draft} tags={d.tags} />
-              </div>
-            </List.Item>
-          )}
-        />
-      )}
-    </Modal>
+        {(items.length > 0 || isLoading) && (
+          <List
+            className={
+              selectedDashboard ? "add-to-dashboard-dialog-selection" : "add-to-dashboard-dialog-search-results"
+            }
+            bordered
+            itemLayout="horizontal"
+            loading={isLoading}
+            dataSource={items}
+            renderItem={d => (
+              <List.Item
+                key={`dashboard-${d.id}`}
+                actions={
+                  selectedDashboard
+                    ? [
+                        <PlainButton key="clear" onClick={() => setSelectedDashboard(null)}>
+                          <CloseOutlinedIcon />
+                        </PlainButton>,
+                      ]
+                    : []
+                }
+                onClick={selectedDashboard ? null : () => setSelectedDashboard(d)}>
+                <div className="add-to-dashboard-dialog-item-content">
+                  {d.name}
+                  <QueryTagsControl isDraft={d.is_draft} tags={d.tags} />
+                </div>
+              </List.Item>
+            )}
+          />
+        )}
+      </ModalSection>
+    </ModalShell>
   );
 }
 

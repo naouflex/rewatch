@@ -1,10 +1,11 @@
 import { isEqual, extend, map, sortBy, findIndex, filter, pick, omit } from "lodash";
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import PropTypes from "prop-types";
-import Modal from "antd/lib/modal";
 import Select from "antd/lib/select";
 import Input from "antd/lib/input";
 import { wrap as wrapDialog, DialogPropType } from "@/components/DialogWrapper";
+import { ModalShell } from "@/components/ModalShell";
+import { confirmDialog } from "@/components/ModalShell/confirmDialog";
 import Filters, { filterData } from "@/components/Filters";
 import notification from "@/services/notification";
 import Visualization from "@/services/visualization";
@@ -50,15 +51,15 @@ function saveVisualization(visualization) {
     });
 }
 
-function confirmDialogClose(isDirty) {
+function confirmCloseIfDirty(isDirty) {
   return new Promise((resolve, reject) => {
     if (isDirty) {
-      Modal.confirm({
+      confirmDialog({
         title: "Visualization Editor",
-        content: "Are you sure you want to close the editor without saving?",
+        description: "Are you sure you want to close the editor without saving?",
         okText: "Yes",
         cancelText: "No",
-        onOk: () => resolve(),
+        onConfirm: () => resolve(),
         onCancel: () => reject(),
       });
     } else {
@@ -148,7 +149,7 @@ function EditVisualizationDialog({ dialog, visualization, query, queryResult }) 
 
   function dismiss() {
     const optionsChanged = !isEqual(options, defaultState.originalOptions);
-    confirmDialogClose(nameChanged || optionsChanged)
+    confirmCloseIfDirty(nameChanged || optionsChanged)
       .then(dialog.dismiss)
       .catch(() => {});
   }
@@ -163,19 +164,22 @@ function EditVisualizationDialog({ dialog, visualization, query, queryResult }) 
   const vizNameId = useUniqueId("visualization-name");
 
   return (
-    <Modal
-      {...dialog.props}
-      wrapClassName="ant-modal-fullscreen"
+    <ModalShell
+      dialog={dialog}
       title="Visualization Editor"
+      description="Configure chart type, options, and preview the result."
+      footer="submit-cancel"
       okText="Save"
+      onOk={save}
+      onCancel={dismiss}
       okButtonProps={{
         loading: saveInProgress,
         disabled: saveInProgress,
       }}
-      onOk={save}
-      onCancel={dismiss}
-      wrapProps={{ "data-test": "EditVisualizationDialog" }}
-    >
+      wrapClassName="ant-modal-fullscreen"
+      width="95%"
+      bodyClassName="modal-shell__body modal-shell__body--flush"
+      wrapProps={{ "data-test": "EditVisualizationDialog" }}>
       <div className="edit-visualization-dialog">
         <div className="visualization-settings">
           <div className="m-b-15">
@@ -232,7 +236,7 @@ function EditVisualizationDialog({ dialog, visualization, query, queryResult }) 
           </div>
         </div>
       </div>
-    </Modal>
+    </ModalShell>
   );
 }
 

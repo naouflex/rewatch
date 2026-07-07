@@ -2,17 +2,17 @@ import React, { useState, useCallback, useMemo } from "react";
 import PropTypes from "prop-types";
 import cx from "classnames";
 
-import Modal from "antd/lib/modal";
 import Dropdown from "antd/lib/dropdown";
 import Button from "antd/lib/button";
-import Select from "antd/lib/select";
 import notification from "antd/lib/notification";
 
 import LoadingOutlinedIcon from "@ant-design/icons/LoadingOutlined";
 import EllipsisOutlinedIcon from "@ant-design/icons/EllipsisOutlined";
 import PlainButton from "@/components/PlainButton";
+import { confirmDialog } from "@/components/ModalShell/confirmDialog";
 
 import MLModel from "@/services/ml-model";
+import ModelVersionPickModal from "@/components/models/ModelVersionPickModal";
 import "./MenuButton.less";
 
 export default function MenuButton({
@@ -51,39 +51,32 @@ export default function MenuButton({
   }, []);
 
   const confirmDelete = useCallback(() => {
-    Modal.confirm({
+    confirmDialog({
       title: "Delete Model",
-      content: "Are you sure you want to delete this model?",
+      description: "Are you sure you want to delete this model?",
       okText: "Delete",
-      okType: "danger",
-      onOk: () => execute(doDelete),
-      maskClosable: true,
-      autoFocusButton: null,
-      
+      variant: "danger",
+      onConfirm: () => execute(doDelete),
     });
   }, [doDelete, execute]);
 
   const confirmArchive = useCallback(() => {
-    Modal.confirm({
+    confirmDialog({
       title: "Archive Model",
-      content: "Are you sure you want to archive this model?",
+      description: "Are you sure you want to archive this model?",
       okText: "Archive",
-      okType: "danger",
-      onOk: () => execute(doArchive),
-      maskClosable: true,
-      autoFocusButton: null,
+      variant: "danger",
+      onConfirm: () => execute(doArchive),
     });
   }, [doArchive, execute]);
 
   const confirmUnarchive = useCallback(() => {
-    Modal.confirm({
+    confirmDialog({
       title: "Unarchive Model",
-      content: "Are you sure you want to unarchive this model?",
+      description: "Are you sure you want to unarchive this model?",
       okText: "Unarchive",
-      okType: "danger",
-      onOk: () => execute(doUnarchive),
-      maskClosable: true,
-      autoFocusButton: null,
+      variant: "danger",
+      onConfirm: () => execute(doUnarchive),
     });
   }, [doUnarchive, execute]);
 
@@ -297,64 +290,39 @@ export default function MenuButton({
         </Button>
       </Dropdown>
 
-      <Modal
-        title="Revert Model Version"
+      <ModelVersionPickModal
         open={isRevertModalVisible}
+        title="Revert Model Version"
+        description="Select a previous version to restore as the active model."
+        okText="Revert"
+        versions={availableVersions}
+        value={selectedVersion}
+        onChange={setSelectedVersion}
         onOk={handleRevertOk}
         onCancel={handleRevertCancel}
-      >
-        <Select
-          style={{ width: '100%' }}
-          placeholder="Select a version"
-          onChange={(value) => {
-            setSelectedVersion(value); // Update state correctly
-          }}
-          value={selectedVersion} // Ensure value is bound to state
-        >
-          {availableVersions.map((version) => (
-            <Select.Option 
-              key={`${version.id || version.version}`} 
-              value={version.version}
-            >
-              {version.name} v{version.version}
-            </Select.Option>
-          ))}
-        </Select>
-      </Modal>
+      />
 
-      <Modal
-        title="Create Model from Version"
+      <ModelVersionPickModal
         open={isCreateModalVisible}
+        title="Create Model from Version"
+        description="Create a new model based on a previous version snapshot."
+        okText="Create"
+        versions={availableVersions}
+        value={selectedVersion}
+        onChange={setSelectedVersion}
         onOk={handleCreateOk}
         onCancel={handleCreateCancel}
-      >
-        <Select
-          style={{ width: '100%' }}
-          placeholder="Select a version"
-          onChange={(value) => {
-            setSelectedVersion(value);
-          }}
-          value={selectedVersion}
-        >
-          {availableVersions.map((version) => (
-            <Select.Option 
-              key={`${version.id || version.version}`} 
-              value={version.version}
-            >
-              {version.name} v{version.version}
-            </Select.Option>
-          ))}
-        </Select>
-      </Modal>
+      />
 
-      <Modal
-        title="Copy Model"
+      <ModelVersionPickModal
         open={isCopyModalVisible}
+        title="Copy Model"
+        description="Create a duplicate of this model with the same configuration."
+        okText="Copy"
         onOk={handleCopyOk}
-        onCancel={handleCopyCancel}
-      >
+        onCancel={handleCopyCancel}>
         <p>Are you sure you want to create a copy of this model?</p>
-      </Modal>
+      </ModelVersionPickModal>
     </>
   );
 }

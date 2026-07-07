@@ -4,7 +4,7 @@ import PropTypes from "prop-types";
 import Button from "antd/lib/button";
 import Form from "antd/lib/form";
 import Input from "antd/lib/input";
-import Modal from "antd/lib/modal";
+import { confirmDialog } from "@/components/ModalShell/confirmDialog";
 
 import TimeAgo from "@/components/TimeAgo";
 import { currentUser } from "@/services/auth";
@@ -52,11 +52,11 @@ function CommentItem({
   };
 
   const handleDelete = () => {
-    Modal.confirm({
+    confirmDialog({
       title: "Delete this reply?",
-      content: "This cannot be undone.",
-      okType: "danger",
-      onOk: () =>
+      description: "This cannot be undone.",
+      variant: "danger",
+      onConfirm: () =>
         onDelete(comment.id)
           .then(() => notification.success("Reply deleted."))
           .catch(() => notification.error("Failed to delete reply.")),

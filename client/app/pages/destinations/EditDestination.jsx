@@ -2,8 +2,8 @@ import { get, find } from "lodash";
 import React from "react";
 import PropTypes from "prop-types";
 
-import Modal from "antd/lib/modal";
 import routeWithUserSession from "@/components/ApplicationArea/routeWithUserSession";
+import { confirmDialog } from "@/components/ModalShell/confirmDialog";
 import navigateTo from "@/components/ApplicationArea/navigateTo";
 import Link from "@/components/Link";
 import LoadingState from "@/components/items-list/components/LoadingState";
@@ -65,15 +65,13 @@ class EditDestination extends React.Component {
         });
     };
 
-    Modal.confirm({
+    confirmDialog({
       title: "Delete Alert Destination",
-      content: "Are you sure you want to delete this alert destination?",
+      description: "Are you sure you want to delete this alert destination?",
       okText: "Delete",
-      okType: "danger",
-      onOk: doDelete,
+      variant: "danger",
+      onConfirm: doDelete,
       onCancel: callback,
-      maskClosable: true,
-      autoFocusButton: null,
     });
   };
 

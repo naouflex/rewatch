@@ -1,9 +1,8 @@
 import { get, map } from "lodash";
 import React from "react";
 
-import Modal from "antd/lib/modal";
-
 import routeWithUserSession from "@/components/ApplicationArea/routeWithUserSession";
+import { confirmDialog } from "@/components/ModalShell/confirmDialog";
 import navigateTo from "@/components/ApplicationArea/navigateTo";
 import Paginator from "@/components/Paginator";
 import Tooltip from "@/components/Tooltip";
@@ -177,12 +176,12 @@ class QuerySnippetsList extends React.Component {
   }
 
   archiveQuerySnippet = querySnippet => {
-    Modal.confirm({
+    confirmDialog({
       title: `Archive "${querySnippet.trigger}"?`,
-      content: "Archived snippets are hidden from the list and autocomplete but can be restored later.",
+      description: "Archived snippets are hidden from the list and autocomplete but can be restored later.",
       okText: "Archive",
-      okType: "danger",
-      onOk: () =>
+      variant: "danger",
+      onConfirm: () =>
         QuerySnippetService.doArchive(querySnippet)
           .then(() => {
             notification.success("Query snippet archived.");
@@ -198,13 +197,13 @@ class QuerySnippetsList extends React.Component {
   };
 
   deleteQuerySnippet = (event, querySnippet) => {
-    Modal.confirm({
+    confirmDialog({
       title: "Delete Query Snippet",
-      content: "Are you sure you want to delete this query snippet?",
+      description: "Are you sure you want to delete this query snippet?",
       okText: "Yes",
-      okType: "danger",
+      variant: "danger",
       cancelText: "No",
-      onOk: () => {
+      onConfirm: () => {
         QuerySnippetService.delete(querySnippet)
           .then(() => {
             notification.success("Query snippet deleted successfully.");

@@ -1,10 +1,9 @@
 import { isNil, get, map, compact, trim } from "lodash";
 import React, { useCallback, useEffect, useState } from "react";
 import PropTypes from "prop-types";
-import Button from "antd/lib/button";
-import Modal from "antd/lib/modal";
 import DynamicForm from "@/components/dynamic-form/DynamicForm";
 import { wrap as wrapDialog, DialogPropType } from "@/components/DialogWrapper";
+import { ModalShell } from "@/components/ModalShell";
 import { useUniqueId } from "@/lib/hooks/useUniqueId";
 
 function QuerySnippetDialog({ querySnippet, dialog, readOnly, getAvailableTags }) {
@@ -80,29 +79,20 @@ function QuerySnippetDialog({ querySnippet, dialog, readOnly, getAvailableTags }
   const querySnippetsFormId = useUniqueId("querySnippetForm");
 
   return (
-    <Modal
-      {...dialog.props}
+    <ModalShell
+      dialog={dialog}
       title={isEditing ? querySnippet.trigger : "Create Query Snippet"}
-      footer={[
-        <Button key="cancel" {...dialog.props.cancelButtonProps} onClick={dialog.dismiss}>
-          {readOnly ? "Close" : "Cancel"}
-        </Button>,
-        !readOnly && (
-          <Button
-            key="submit"
-            {...dialog.props.okButtonProps}
-            disabled={readOnly || dialog.props.okButtonProps.disabled}
-            htmlType="submit"
-            type="primary"
-            form={querySnippetsFormId}
-            data-test="SaveQuerySnippetButton">
-            {isEditing ? "Save" : "Create"}
-          </Button>
-        ),
-      ]}
-      wrapProps={{
-        "data-test": "QuerySnippetDialog",
-      }}>
+      description={
+        readOnly
+          ? "View snippet details and SQL template."
+          : "Define a trigger keyword and reusable SQL snippet for the query editor."
+      }
+      size="lg"
+      okText={isEditing ? "Save" : "Create"}
+      cancelText={readOnly ? "Close" : "Cancel"}
+      footer={readOnly ? "close" : "submit-cancel"}
+      formId={readOnly ? null : querySnippetsFormId}
+      wrapProps={{ "data-test": "QuerySnippetDialog" }}>
       <DynamicForm
         id={querySnippetsFormId}
         fields={formFields}
@@ -110,7 +100,7 @@ function QuerySnippetDialog({ querySnippet, dialog, readOnly, getAvailableTags }
         hideSubmitButton
         feedbackIcons
       />
-    </Modal>
+    </ModalShell>
   );
 }
 

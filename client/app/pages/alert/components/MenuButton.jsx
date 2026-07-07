@@ -2,13 +2,13 @@ import React, { useState, useCallback, useMemo } from "react";
 import PropTypes from "prop-types";
 import cx from "classnames";
 
-import Modal from "antd/lib/modal";
 import Dropdown from "antd/lib/dropdown";
 import Button from "antd/lib/button";
 
 import LoadingOutlinedIcon from "@ant-design/icons/LoadingOutlined";
 import EllipsisOutlinedIcon from "@ant-design/icons/EllipsisOutlined";
 import PlainButton from "@/components/PlainButton";
+import { confirmDialog } from "@/components/ModalShell/confirmDialog";
 
 export default function MenuButton({ doDelete, canEdit, mute, unmute, evaluate, muted }) {
   const [loading, setLoading] = useState(false);
@@ -21,19 +21,17 @@ export default function MenuButton({ doDelete, canEdit, mute, unmute, evaluate, 
   }, []);
 
   const confirmDelete = useCallback(() => {
-    Modal.confirm({
+    confirmDialog({
       title: "Delete Alert",
-      content: "Are you sure you want to delete this alert?",
+      description: "Are you sure you want to delete this alert?",
       okText: "Delete",
-      okType: "danger",
-      onOk: () => {
+      variant: "danger",
+      onConfirm: () => {
         setLoading(true);
         doDelete().catch(() => {
           setLoading(false);
         });
       },
-      maskClosable: true,
-      autoFocusButton: null,
     });
   }, [doDelete]);
 

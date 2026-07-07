@@ -101,8 +101,7 @@ describe("ScheduleDialog", () => {
         render(<TimeEditor defaultValue={defaultValue} onChange={() => {}} />);
         const utc = screen.getByTestId("utc");
 
-        // expect utc to be 2h below initial time
-        expect(utc.textContent).toBe("(03:25 UTC)");
+        expect(utc.textContent).toBe(`(${moment.utc(defaultValue).format("HH:mm")} UTC)`);
       });
 
       test("UTC time should not render", () => {

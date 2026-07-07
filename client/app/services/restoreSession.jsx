@@ -1,6 +1,6 @@
 import { map } from "lodash";
 import React from "react";
-import Modal from "antd/lib/modal";
+import { confirmDialog } from "@/components/ModalShell/confirmDialog";
 import { Auth } from "@/services/auth";
 
 const SESSION_RESTORED_MESSAGE = "rewatch_session_restored";
@@ -28,19 +28,16 @@ function getPopupPosition(width, height) {
 function showRestoreSessionPrompt(loginUrl, onSuccess) {
   let popup = null;
 
-  Modal.warning({
-    content: "Your session has expired. Please login to continue.",
+  confirmDialog({
+    description: "Your session has expired. Please login to continue.",
+    variant: "warning",
     okText: (
       <React.Fragment>
         Login <i className="fa fa-external-link m-r-5" aria-hidden="true" />
         <span className="sr-only">(opens in a new tab)</span>
       </React.Fragment>
     ),
-    centered: true,
-    mask: true,
-    maskClosable: false,
-    keyboard: false,
-    onOk: closeModal => {
+    onConfirm: closeModal => {
       if (popup && !popup.closed) {
         popup.focus();
         return; // popup already shown
