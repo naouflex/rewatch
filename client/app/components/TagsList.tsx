@@ -1,4 +1,4 @@
-import { map, includes, difference } from "lodash";
+import { map, includes, difference, isEqual } from "lodash";
 import React, { useState, useCallback, useEffect } from "react";
 import Badge from "antd/lib/badge";
 import Menu from "antd/lib/menu";
@@ -17,11 +17,25 @@ type TagsListProps = {
   tagsUrl: string;
   showUnselectAll: boolean;
   onUpdate?: (selectedTags: string[]) => void;
+  layout?: "sidebar" | "inline";
+  selectedTags?: string[];
 };
 
-function TagsList({ tagsUrl, showUnselectAll = false, onUpdate }: TagsListProps): JSX.Element | null {
+function TagsList({
+  tagsUrl,
+  showUnselectAll = false,
+  onUpdate,
+  layout = "sidebar",
+  selectedTags: selectedTagsProp,
+}: TagsListProps): JSX.Element | null {
   const [allTags, setAllTags] = useState<Tag[]>([]);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>(selectedTagsProp ?? []);
+
+  useEffect(() => {
+    if (selectedTagsProp !== undefined) {
+      setSelectedTags(prev => (isEqual(prev, selectedTagsProp) ? prev : selectedTagsProp));
+    }
+  }, [selectedTagsProp]);
 
   useEffect(() => {
     let isCancelled = false;
@@ -73,6 +87,34 @@ function TagsList({ tagsUrl, showUnselectAll = false, onUpdate }: TagsListProps)
 
   if (allTags.length === 0) {
     return null;
+  }
+
+  if (layout === "inline") {
+    return (
+      <div className="tags-list tags-list--inline">
+        <div className="tags-list-chips">
+          {showUnselectAll && selectedTags.length > 0 && (
+            <PlainButton type="link" className="tags-list-clear" onClick={unselectAll}>
+              <CloseOutlinedIcon />
+              clear selection
+            </PlainButton>
+          )}
+          {map(allTags, tag => {
+            const isSelected = includes(selectedTags, tag.name);
+            return (
+              <PlainButton
+                key={tag.name}
+                className={`tags-list-chip${isSelected ? " tags-list-chip--selected" : ""}`}
+                onClick={event => toggleTag(event, tag.name)}
+              >
+                <span className="max-character">{tag.name}</span>
+                <Badge count={tag.count} />
+              </PlainButton>
+            );
+          })}
+        </div>
+      </div>
+    );
   }
 
   return (

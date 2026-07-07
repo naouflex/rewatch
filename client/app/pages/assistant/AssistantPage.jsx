@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
 import routeWithUserSession from "@/components/ApplicationArea/routeWithUserSession";
-import PageHeader from "@/components/PageHeader";
 import AssistantChat from "@/components/Assistant/AssistantChat";
 import AssistantThreadSidebar from "@/components/Assistant/AssistantThreadSidebar";
 import { clientConfig } from "@/services/auth";
@@ -81,20 +80,21 @@ function AssistantPage() {
 
   if (!enabled) {
     return (
-      <div className="container">
-        <PageHeader title="Assistant" />
-        <p className="text-muted">
-          The assistant is not configured. Set <code>REDASH_OPENAI_API_KEY</code> in the server environment and
-          restart Rewatch.
-        </p>
+      <div className="page-assistant">
+        <div className="container">
+          <p className="text-muted">
+            The assistant is not configured. Set <code>REDASH_OPENAI_API_KEY</code> in the server environment and
+            restart Rewatch.
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container m-b-20">
-      <PageHeader title="Assistant" />
-      <div className="assistant-page-layout">
+    <div className="page-assistant">
+      <div className="container m-b-20">
+        <div className="assistant-page-layout">
         <AssistantThreadSidebar
           threads={threads}
           activeId={activeThreadId}
@@ -109,6 +109,7 @@ function AssistantPage() {
             onThreadIdChange={handleSelectThread}
             onThreadsChanged={refreshThreads}
           />
+        </div>
         </div>
       </div>
     </div>

@@ -12,6 +12,7 @@ export function buildApiReferenceScalarConfig(resolvedTheme = "light") {
     theme: "default",
     layout: "modern",
     darkMode: isDark,
+    forceDarkModeState: isDark ? "dark" : "light",
     hideDarkModeToggle: true,
     defaultOpenAllTags: false,
     hideClientButton: false,

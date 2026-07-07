@@ -5,6 +5,7 @@ import ConfigProvider from "antd/lib/config-provider";
 import { createRoot } from "react-dom/client";
 
 import { buildAntdTheme } from "@/config/antdTheme";
+import { syncAntdGlobalTheme } from "@/config/syncAntdGlobalTheme";
 import { getResolvedTheme, subscribeToTheme } from "@/services/theme";
 
 /**
@@ -137,6 +138,7 @@ function openDialog(DialogComponent, props) {
   const root = createRoot(container);
 
   let resolvedTheme = getResolvedTheme();
+  syncAntdGlobalTheme(resolvedTheme);
   let unsubscribeTheme = null;
 
   function render() {
@@ -150,6 +152,7 @@ function openDialog(DialogComponent, props) {
   unsubscribeTheme = subscribeToTheme(({ resolved }) => {
     if (resolved !== resolvedTheme) {
       resolvedTheme = resolved;
+      syncAntdGlobalTheme(resolvedTheme);
       render();
     }
   });

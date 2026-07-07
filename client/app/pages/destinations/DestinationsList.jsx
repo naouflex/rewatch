@@ -1,13 +1,10 @@
 import { map } from "lodash";
 import React from "react";
 
-import Button from "antd/lib/button";
 import Modal from "antd/lib/modal";
 
 import routeWithUserSession from "@/components/ApplicationArea/routeWithUserSession";
-import navigateTo from "@/components/ApplicationArea/navigateTo";
 import Link from "@/components/Link";
-import PageHeader from "@/components/PageHeader";
 import Paginator from "@/components/Paginator";
 import Tooltip from "@/components/Tooltip";
 import PlainButton from "@/components/PlainButton";
@@ -18,13 +15,11 @@ import { ResourceItemsSource } from "@/components/items-list/classes/ItemsSource
 import { UrlStateStorage } from "@/components/items-list/classes/StateStorage";
 
 import * as Sidebar from "@/components/items-list/components/Sidebar";
+import ListPageToolbar from "@/components/items-list/components/ListPageToolbar";
 import ItemsTable, { Columns } from "@/components/items-list/components/ItemsTable";
-
-import Layout from "@/components/layouts/ContentWithSidebar";
 
 import DestinationService, { Destination, IMG_ROOT } from "@/services/destination";
 import { currentUser } from "@/services/auth";
-import { policy } from "@/services/policy";
 import getTags from "@/services/getTags";
 import location from "@/services/location";
 import notification from "@/services/notification";
@@ -178,19 +173,6 @@ function buildColumns(refresh) {
   ];
 }
 
-function pageTitleFor(currentPage) {
-  switch (currentPage) {
-    case "my":
-      return "My Alert Destinations";
-    case "favorites":
-      return "Favorite Alert Destinations";
-    case "archive":
-      return "Archived Alert Destinations";
-    default:
-      return "Alert Destinations";
-  }
-}
-
 function emptyStateContentFor(currentPage) {
   switch (currentPage) {
     case "my":
@@ -224,56 +206,44 @@ class DestinationsList extends React.Component {
     return (
       <div className="page-destinations-list">
         <div className="container">
-          <PageHeader
-            title={pageTitleFor(currentPage)}
-            actions={
-              policy.isCreateDestinationEnabled() ? (
-                <Button block type="primary" onClick={() => navigateTo("destinations/new")}>
-                  <i className="fa fa-plus m-r-5" aria-hidden="true" />
-                  New Alert Destination
-                </Button>
-              ) : null
-            }
+          <ListPageToolbar
+            searchPlaceholder="Search Destinations..."
+            searchLabel="Search destinations"
+            searchValue={controller.searchTerm}
+            onSearchChange={controller.updateSearch}
+            menu={sidebarMenu}
+            selected={currentPage}
+            tagsUrl="api/destinations/tags"
+            onTagsChange={controller.updateSelectedTags}
+            selectedTags={controller.selectedTags}
           />
-          <Layout>
-            <Layout.Sidebar className="m-b-0">
-              <Sidebar.SearchInput
-                placeholder="Search Destinations..."
-                label="Search destinations"
-                value={controller.searchTerm}
-                onChange={controller.updateSearch}
-              />
-              <Sidebar.Menu items={sidebarMenu} selected={currentPage} />
-              <Sidebar.Tags url="api/destinations/tags" onChange={controller.updateSelectedTags} showUnselectAll />
-            </Layout.Sidebar>
-            <Layout.Content>
-              {controller.isLoaded && controller.isEmpty ? (
-                <div className="text-center bg-white tiled p-30">
-                  <i className="fa fa-paper-plane-o f-30 text-muted" aria-hidden="true" />
-                  <p className="m-t-10 text-muted">{emptyStateContentFor(currentPage)}</p>
-                </div>
-              ) : (
-                <div className="bg-white tiled table-responsive">
-                  <ItemsTable
-                    items={controller.pageItems}
-                    loading={!controller.isLoaded}
-                    columns={columns}
-                    orderByField={controller.orderByField}
-                    orderByReverse={controller.orderByReverse}
-                    toggleSorting={controller.toggleSorting}
-                  />
-                  <Paginator
-                    showPageSizeSelect
-                    totalCount={controller.totalItemsCount}
-                    pageSize={controller.itemsPerPage}
-                    onPageSizeChange={itemsPerPage => controller.updatePagination({ itemsPerPage })}
-                    page={controller.page}
-                    onChange={page => controller.updatePagination({ page })}
-                  />
-                </div>
-              )}
-            </Layout.Content>
-          </Layout>
+          <div className="list-page-layout__content">
+            {controller.isLoaded && controller.isEmpty ? (
+              <div className="text-center bg-white tiled p-30">
+                <i className="fa fa-paper-plane-o f-30 text-muted" aria-hidden="true" />
+                <p className="m-t-10 text-muted">{emptyStateContentFor(currentPage)}</p>
+              </div>
+            ) : (
+              <div className="list-page-table">
+                <ItemsTable
+                  items={controller.pageItems}
+                  loading={!controller.isLoaded}
+                  columns={columns}
+                  orderByField={controller.orderByField}
+                  orderByReverse={controller.orderByReverse}
+                  toggleSorting={controller.toggleSorting}
+                />
+                <Paginator
+                  showPageSizeSelect
+                  totalCount={controller.totalItemsCount}
+                  pageSize={controller.itemsPerPage}
+                  onPageSizeChange={itemsPerPage => controller.updatePagination({ itemsPerPage })}
+                  page={controller.page}
+                  onChange={page => controller.updatePagination({ page })}
+                />
+              </div>
+            )}
+          </div>
         </div>
       </div>
     );

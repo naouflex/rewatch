@@ -1,21 +1,19 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 import Button from "antd/lib/button";
-import Input from "antd/lib/input";
 import Tag from "antd/lib/tag";
 
 import routeWithUserSession from "@/components/ApplicationArea/routeWithUserSession";
 import Link from "@/components/Link";
-import PageHeader from "@/components/PageHeader";
 import TimeAgo from "@/components/TimeAgo";
 import BigMessage from "@/components/BigMessage";
+import * as Sidebar from "@/components/items-list/components/Sidebar";
 import { currentUser } from "@/services/auth";
 import Community, { COMMUNITY_CATEGORIES, getCategoryMeta } from "@/services/community";
 import routes from "@/services/routes";
 
+import "@/components/items-list/list-page-layout.less";
 import "./Community.less";
-
-const { Search } = Input;
 
 function CategoryBadge({ category }) {
   const meta = getCategoryMeta(category);
@@ -31,24 +29,29 @@ function PostCard({ post }) {
   return (
     <Link className="community-post-card" href={`community/${post.id}`}>
       <div className="community-post-card__header">
+        <div className="community-post-card__author">
+          <img
+            className="profile__image_thumb community-post-card__avatar"
+            src={post.user.profile_image_url}
+            alt=""
+          />
+          <span>{post.user.name}</span>
+        </div>
         <CategoryBadge category={post.category} />
-        <TimeAgo date={post.updated_at || post.created_at} />
       </div>
       <h3 className="community-post-card__title">{post.title}</h3>
       {post.excerpt && <p className="community-post-card__excerpt">{post.excerpt}</p>}
       <div className="community-post-card__footer">
-        <img
-          className="profile__image_thumb community-post-card__avatar"
-          src={post.user.profile_image_url}
-          alt=""
-        />
-        <span>{post.user.name}</span>
+        <TimeAgo date={post.updated_at || post.created_at} />
         <span className="community-post-card__stats">
-          <i className="fa fa-comment-o m-r-5" aria-hidden="true" />
-          {post.reply_count || 0}
-          <span className="community-post-card__stats-sep" />
-          <i className="fa fa-thumbs-up m-r-5" aria-hidden="true" />
-          {post.like_count || 0}
+          <span className="community-post-card__stat">
+            <i className="fa fa-comment-o" aria-hidden="true" />
+            {post.reply_count || 0}
+          </span>
+          <span className="community-post-card__stat">
+            <i className="fa fa-thumbs-up" aria-hidden="true" />
+            {post.like_count || 0}
+          </span>
         </span>
       </div>
     </Link>
@@ -86,68 +89,61 @@ function CommunityListPage() {
 
   return (
     <div className="community-page container">
-      <PageHeader
-        title="Community"
-        description="Discuss queries, dashboards, alerts, and tips with your team."
-      >
-        {canCreate && (
-          <Link.Button type="primary" href="community/new">
-            <i className="fa fa-plus m-r-5" aria-hidden="true" />
-            New post
-          </Link.Button>
-        )}
-      </PageHeader>
-
-      <div className="community-toolbar">
-        <div className="community-toolbar__categories">
-          <Button
-            type={category === "all" ? "primary" : "default"}
-            size="small"
-            onClick={() => setCategory("all")}
-          >
-            All
-          </Button>
-          {COMMUNITY_CATEGORIES.map(item => (
+      <div className="community-layout community-layout--wide">
+        <div className="community-toolbar">
+          <Sidebar.SearchInput
+            placeholder="Search posts..."
+            label="Search posts"
+            value={search}
+            onChange={setSearch}
+            showIcon
+            liveSearch={false}
+            className="page-toolbar-search"
+          />
+          <div className="community-toolbar__categories">
             <Button
-              key={item.value}
-              type={category === item.value ? "primary" : "default"}
+              type={category === "all" ? "primary" : "default"}
               size="small"
-              onClick={() => setCategory(item.value)}
+              onClick={() => setCategory("all")}
             >
-              <i className={`fa ${item.icon} m-r-5`} aria-hidden="true" />
-              {item.label}
+              All
             </Button>
-          ))}
+            {COMMUNITY_CATEGORIES.map(item => (
+              <Button
+                key={item.value}
+                type={category === item.value ? "primary" : "default"}
+                size="small"
+                onClick={() => setCategory(item.value)}
+              >
+                <i className={`fa ${item.icon} m-r-5`} aria-hidden="true" />
+                {item.label}
+              </Button>
+            ))}
+          </div>
         </div>
-        <Search
-          allowClear
-          placeholder="Search posts..."
-          className="community-toolbar__search"
-          onSearch={value => setSearch(value.trim())}
-        />
+
+        <h2 className="community-section-title">{filteredLabel}</h2>
+
+        {loading ? (
+          <div className="community-loading">Loading posts...</div>
+        ) : posts.length ? (
+          <div className="community-post-feed">
+            {posts.map(post => (
+              <PostCard key={post.id} post={post} />
+            ))}
+          </div>
+        ) : (
+          <BigMessage icon="fa-comments" className="community-empty">
+            {search ? "No posts match your search." : "No posts yet — start the conversation!"}
+            {canCreate && !search && (
+              <>
+                {" "}
+                <Link href="community/new">Create the first post</Link>
+              </>
+            )}
+          </BigMessage>
+        )}
       </div>
-
-      <h2 className="community-section-title">{filteredLabel}</h2>
-
-      {loading ? (
-        <div className="community-loading">Loading posts...</div>
-      ) : posts.length ? (
-        <div className="community-post-grid">
-          {posts.map(post => (
-            <PostCard key={post.id} post={post} />
-          ))}
-        </div>
-      ) : (
-        <BigMessage icon="fa-comments" className="community-empty">
-          {search ? "No posts match your search." : "No posts yet — start the conversation!"}
-          {canCreate && !search && (
-            <>
-              {" "}
-              <Link href="community/new">Create the first post</Link>
-            </>
-          )}
-        </BigMessage>
-      )}
     </div>
   );
 }

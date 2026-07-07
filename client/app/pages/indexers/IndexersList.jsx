@@ -2,13 +2,10 @@ import React from "react";
 import cx from "classnames";
 import { get } from "lodash";
 
-import Button from "antd/lib/button";
 import Modal from "antd/lib/modal";
 
 import routeWithUserSession from "@/components/ApplicationArea/routeWithUserSession";
-import navigateTo from "@/components/ApplicationArea/navigateTo";
 import Link from "@/components/Link";
-import PageHeader from "@/components/PageHeader";
 import Paginator from "@/components/Paginator";
 import EmptyState, { EmptyStateHelpMessage } from "@/components/empty-state/EmptyState";
 import DynamicComponent from "@/components/DynamicComponent";
@@ -21,9 +18,8 @@ import { ResourceItemsSource } from "@/components/items-list/classes/ItemsSource
 import { UrlStateStorage } from "@/components/items-list/classes/StateStorage";
 
 import * as Sidebar from "@/components/items-list/components/Sidebar";
+import ListPageToolbar from "@/components/items-list/components/ListPageToolbar";
 import ItemsTable, { Columns } from "@/components/items-list/components/ItemsTable";
-
-import Layout from "@/components/layouts/ContentWithSidebar";
 
 import IndexerService, { Indexer } from "@/services/indexer";
 import { currentUser } from "@/services/auth";
@@ -149,19 +145,6 @@ function buildColumns(currentPage, refresh) {
   ];
 }
 
-function pageTitleFor(currentPage) {
-  switch (currentPage) {
-    case "my":
-      return "My Indexers";
-    case "favorites":
-      return "Favorite Indexers";
-    case "archive":
-      return "Archived Indexers";
-    default:
-      return "Indexers";
-  }
-}
-
 function emptyStateContentFor(currentPage) {
   switch (currentPage) {
     case "my":
@@ -197,34 +180,19 @@ class IndexersList extends React.Component {
     return (
       <div className="page-indexers-list">
         <div className="container">
-          <PageHeader
-            title={pageTitleFor(currentPage)}
-            actions={
-              currentUser.hasPermission("create_indexer") ? (
-                <Button block type="primary" onClick={() => navigateTo("indexers/new")}>
-                  <i className="fa fa-plus m-r-5" aria-hidden="true" />
-                  New Indexer
-                </Button>
-              ) : null
-            }
+          <ListPageToolbar
+            searchPlaceholder="Search Indexers..."
+            searchLabel="Search indexers"
+            searchValue={controller.searchTerm}
+            onSearchChange={controller.updateSearch}
+            menu={sidebarMenu}
+            selected={currentPage}
+            tagsUrl="api/indexers/tags"
+            onTagsChange={controller.updateSelectedTags}
+            selectedTags={controller.selectedTags}
           />
-          <Layout>
-            <Layout.Sidebar className="m-b-0">
-              <Sidebar.SearchInput
-                placeholder="Search Indexers..."
-                label="Search indexers"
-                value={controller.searchTerm}
-                onChange={controller.updateSearch}
-              />
-              <Sidebar.Menu items={sidebarMenu} selected={currentPage} />
-              <Sidebar.Tags
-                url="api/indexers/tags"
-                onChange={controller.updateSelectedTags}
-                showUnselectAll
-              />
-            </Layout.Sidebar>
-            <Layout.Content>
-              {controller.isLoaded && controller.isEmpty ? (
+          <div className="list-page-layout__content">
+            {controller.isLoaded && controller.isEmpty ? (
                 <DynamicComponent name="IndexersList.EmptyState">
                   {customEmptyText ? (
                     <div className="text-center bg-white tiled p-30">
@@ -241,7 +209,7 @@ class IndexersList extends React.Component {
                   )}
                 </DynamicComponent>
               ) : (
-                <div className="bg-white tiled table-responsive">
+                <div className="list-page-table">
                   <ItemsTable
                     items={controller.pageItems}
                     loading={!controller.isLoaded}
@@ -262,8 +230,7 @@ class IndexersList extends React.Component {
                   />
                 </div>
               )}
-            </Layout.Content>
-          </Layout>
+          </div>
         </div>
       </div>
     );

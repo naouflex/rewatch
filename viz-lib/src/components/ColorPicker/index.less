@@ -1,4 +1,6 @@
 .color-picker {
+  z-index: 3000;
+
   &.color-picker-with-actions {
     &.ant-popover-placement-top,
     &.ant-popover-placement-topLeft,
@@ -6,7 +8,7 @@
     &.ant-popover-placement-leftBottom,
     &.ant-popover-placement-rightBottom {
       > .ant-popover-content > .ant-popover-arrow {
-        border-color: #fafafa; // same as card actions
+        border-color: var(--rd-color-surface-alt, #fafafa);
       }
     }
   }
@@ -32,6 +34,11 @@
 
   .ant-card-body {
     padding: 10px;
+  }
+
+  .ant-card {
+    background: var(--rd-color-surface, #fff);
+    color: var(--rd-color-text, inherit);
   }
 }
 

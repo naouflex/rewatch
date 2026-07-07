@@ -49,7 +49,7 @@ type Props = {
 
 export default function ColorPicker({
   color = "#FFFFFF",
-  placement = "top",
+  placement = "bottomLeft",
   presetColors = null,
   presetColumns = 8,
   interactive = false,
@@ -111,7 +111,13 @@ export default function ColorPicker({
         classNames={{
           root: `color-picker ${interactive ? "color-picker-interactive" : "color-picker-with-actions"}`,
         }}
-        styles={{ root: { "--color-picker-selected-color": currentColor } as React.CSSProperties }}
+        styles={{
+          root: {
+            "--color-picker-selected-color": currentColor,
+            zIndex: 3000,
+          } as React.CSSProperties,
+        }}
+        getPopupContainer={() => document.body}
         content={
           <Card
             data-test="ColorPicker"

@@ -1,12 +1,34 @@
+.snippet-content-cell {
+  min-width: 0;
+  max-width: 100%;
+
+  &__toggle {
+    display: block;
+    padding: 0;
+    height: auto;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+}
+
 .snippet-content {
-  max-width: 500px;
-  max-height: 56px;
-  overflow: hidden;
+  display: block;
   white-space: pre-wrap;
-  /* autoprefixer: off */
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
+  word-break: break-word;
+  max-width: 100%;
+
+  &--clamped {
+    max-height: 4.5em;
+    overflow: hidden;
+    /* autoprefixer: off */
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+  }
+
+  &--expanded {
+    white-space: pre-wrap;
+  }
 }
 
 .query-snippets-table {
@@ -20,6 +42,11 @@
 
   .ant-table-cell {
     height: 100%;
+    vertical-align: top;
+
+    &:first-child {
+      vertical-align: middle;
+    }
 
     & > .table-main-title {
       display: inline-flex;
@@ -27,5 +54,12 @@
       height: 100%;
       width: 100%;
     }
+  }
+
+  .favorites-control {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
   }
 }

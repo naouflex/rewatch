@@ -444,12 +444,31 @@
   }
 
   .ant-modal-confirm {
+    .ant-modal-content {
+      background: var(--rd-color-surface) !important;
+      color: var(--rd-color-text);
+    }
+
     .ant-modal-confirm-title {
       color: var(--rd-color-text);
     }
 
     .ant-modal-confirm-content {
       color: var(--rd-color-text-secondary);
+    }
+
+    .ant-modal-confirm-btns {
+      .ant-btn-default {
+        color: var(--rd-color-text);
+        background-color: var(--rd-color-surface);
+        border-color: var(--rd-color-border);
+
+        &:hover {
+          background-color: var(--rd-color-surface-hover);
+          color: var(--rd-color-text);
+          border-color: var(--rd-color-border-strong);
+        }
+      }
     }
   }
 

@@ -1,10 +1,9 @@
+import { map } from "lodash";
 import React from "react";
 import cx from "classnames";
 
-import Button from "antd/lib/button";
 import routeWithUserSession from "@/components/ApplicationArea/routeWithUserSession";
 import Link from "@/components/Link";
-import PageHeader from "@/components/PageHeader";
 import Paginator from "@/components/Paginator";
 import DynamicComponent from "@/components/DynamicComponent";
 import { DashboardTagsControl } from "@/components/tags-control/TagsControl";
@@ -12,13 +11,15 @@ import { wrap as itemsList, ControllerType } from "@/components/items-list/Items
 import { ResourceItemsSource } from "@/components/items-list/classes/ItemsSource";
 import { UrlStateStorage } from "@/components/items-list/classes/StateStorage";
 import * as Sidebar from "@/components/items-list/components/Sidebar";
+import ListPageToolbar from "@/components/items-list/components/ListPageToolbar";
 import ItemsTable, { Columns } from "@/components/items-list/components/ItemsTable";
 import useItemsListExtraActions from "@/components/items-list/hooks/useItemsListExtraActions";
-import CreateDashboardDialog from "@/components/dashboards/CreateDashboardDialog";
-import Layout from "@/components/layouts/ContentWithSidebar";
 
 import { Dashboard } from "@/services/dashboard";
 import { currentUser } from "@/services/auth";
+import getTags from "@/services/getTags";
+import notification from "@/services/notification";
+import { policy } from "@/services/policy";
 import routes from "@/services/routes";
 
 import DashboardListEmptyState from "./components/DashboardListEmptyState";
@@ -46,42 +47,55 @@ const sidebarMenu = [
   },
 ];
 
-const listColumns = [
-  Columns.favorites({ className: "p-r-0" }),
-  Columns.custom.sortable(
-    (text, item) => (
-      <React.Fragment>
-        <Link className="table-main-title" href={item.url} data-test={`DashboardId${item.id}`}>
-          {item.name}
-        </Link>
-        <DashboardTagsControl
-          className="d-block"
-          tags={item.tags}
-          isDraft={item.is_draft}
-          isArchived={item.is_archived}
-        />
-      </React.Fragment>
+function getDashboardTags() {
+  return getTags("api/dashboards/tags").then(tags => map(tags, t => t.name));
+}
+
+function buildColumns(refresh) {
+  return [
+    Columns.favorites({ className: "p-r-0" }),
+    Columns.custom.sortable(
+      (text, item) => (
+        <React.Fragment>
+          <Link className="table-main-title" href={item.url} data-test={`DashboardId${item.id}`}>
+            {item.name}
+          </Link>
+          <DashboardTagsControl
+            className="d-block"
+            tags={item.tags}
+            isDraft={item.is_draft}
+            isArchived={item.is_archived}
+            canEdit={!item.is_archived && policy.canEdit(item)}
+            getAvailableTags={getDashboardTags}
+            onEdit={tags =>
+              Dashboard.save({ id: item.id, tags, version: item.version })
+                .then(() => refresh())
+                .catch(() => notification.error("Failed to update tags."))
+            }
+          />
+        </React.Fragment>
+      ),
+      {
+        title: "Name",
+        field: "name",
+        width: null,
+      }
     ),
-    {
-      title: "Name",
-      field: "name",
-      width: null,
-    }
-  ),
-  Columns.custom((text, item) => item.user.name, { title: "Created By", width: "1%" }),
-  Columns.dateTime.sortable({
-    title: "Created At",
-    field: "created_at",
-    width: "1%",
-  }),
-];
+    Columns.custom((text, item) => item.user.name, { title: "Created By", width: "1%" }),
+    Columns.dateTime.sortable({
+      title: "Created At",
+      field: "created_at",
+      width: "1%",
+    }),
+  ];
+}
 
 function DashboardListExtraActions(props) {
   return <DynamicComponent name="DashboardList.Actions" {...props} />;
 }
 
 function DashboardList({ controller }) {
-  let usedListColumns = listColumns;
+  let usedListColumns = buildColumns(() => controller.update());
   if (controller.params.currentPage === "favorites") {
     usedListColumns = [
       ...usedListColumns,
@@ -98,64 +112,52 @@ function DashboardList({ controller }) {
   return (
     <div className="page-dashboard-list">
       <div className="container">
-        <PageHeader
-          title={controller.params.pageTitle}
-          actions={
-            currentUser.hasPermission("create_dashboard") ? (
-              <Button block type="primary" onClick={() => CreateDashboardDialog.showModal()}>
-                <i className="fa fa-plus m-r-5" aria-hidden="true" />
-                New Dashboard
-              </Button>
-            ) : null
-          }
+        <ListPageToolbar
+          searchPlaceholder="Search Dashboards..."
+          searchLabel="Search dashboards"
+          searchValue={controller.searchTerm}
+          onSearchChange={controller.updateSearch}
+          menu={sidebarMenu}
+          selected={controller.params.currentPage}
+          tagsUrl="api/dashboards/tags"
+          onTagsChange={controller.updateSelectedTags}
+          selectedTags={controller.selectedTags}
         />
-        <Layout>
-          <Layout.Sidebar className="m-b-0">
-            <Sidebar.SearchInput
-              placeholder="Search Dashboards..."
-              label="Search dashboards"
-              value={controller.searchTerm}
-              onChange={controller.updateSearch}
-            />
-            <Sidebar.Menu items={sidebarMenu} selected={controller.params.currentPage} />
-            <Sidebar.Tags url="api/dashboards/tags" onChange={controller.updateSelectedTags} showUnselectAll />
-          </Layout.Sidebar>
-          <Layout.Content>
-            <div data-test="DashboardLayoutContent">
-              {controller.isLoaded && controller.isEmpty ? (
-                <DashboardListEmptyState
-                  page={controller.params.currentPage}
-                  searchTerm={controller.searchTerm}
-                  selectedTags={controller.selectedTags}
-                />
-              ) : (
-                <React.Fragment>
-                  <div className={cx({ "m-b-10": areExtraActionsAvailable })}>
-                    <ExtraActionsComponent selectedItems={selectedItems} />
-                  </div>
-                  <div className="bg-white tiled table-responsive">
-                    <ItemsTable
-                      items={controller.pageItems}
-                      loading={!controller.isLoaded}
-                      columns={tableColumns}
-                      orderByField={controller.orderByField}
-                      orderByReverse={controller.orderByReverse}
-                      toggleSorting={controller.toggleSorting}
-                    />
-                    <Paginator
-                      showPageSizeSelect
-                      totalCount={controller.totalItemsCount}
-                      pageSize={controller.itemsPerPage}
-                      onPageSizeChange={(itemsPerPage) => controller.updatePagination({ itemsPerPage })}
-                      page={controller.page}
-                      onChange={(page) => controller.updatePagination({ page })}
-                    />
-                  </div>
-                </React.Fragment>
-              )}
-            </div>
-          </Layout.Content>
-        </Layout>
+        <div className="list-page-layout__content">
+          <div data-test="DashboardLayoutContent">
+            {controller.isLoaded && controller.isEmpty ? (
+              <DashboardListEmptyState
+                page={controller.params.currentPage}
+                searchTerm={controller.searchTerm}
+                selectedTags={controller.selectedTags}
+              />
+            ) : (
+              <React.Fragment>
+                <div className={cx({ "m-b-10": areExtraActionsAvailable })}>
+                  <ExtraActionsComponent selectedItems={selectedItems} />
+                </div>
+                <div className="list-page-table">
+                  <ItemsTable
+                    items={controller.pageItems}
+                    loading={!controller.isLoaded}
+                    columns={tableColumns}
+                    orderByField={controller.orderByField}
+                    orderByReverse={controller.orderByReverse}
+                    toggleSorting={controller.toggleSorting}
+                  />
+                  <Paginator
+                    showPageSizeSelect
+                    totalCount={controller.totalItemsCount}
+                    pageSize={controller.itemsPerPage}
+                    onPageSizeChange={(itemsPerPage) => controller.updatePagination({ itemsPerPage })}
+                    page={controller.page}
+                    onChange={(page) => controller.updatePagination({ page })}
+                  />
+                </div>
+              </React.Fragment>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

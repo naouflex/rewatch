@@ -6,7 +6,6 @@ import Tag from "antd/lib/tag";
 
 import routeWithUserSession from "@/components/ApplicationArea/routeWithUserSession";
 import Link from "@/components/Link";
-import PageHeader from "@/components/PageHeader";
 import Paginator from "@/components/Paginator";
 import Tooltip from "@/components/Tooltip";
 import TimeAgo from "@/components/TimeAgo";
@@ -17,9 +16,8 @@ import { ItemsSource } from "@/components/items-list/classes/ItemsSource";
 import { UrlStateStorage } from "@/components/items-list/classes/StateStorage";
 
 import * as Sidebar from "@/components/items-list/components/Sidebar";
+import ListPageToolbar from "@/components/items-list/components/ListPageToolbar";
 import ItemsTable, { Columns } from "@/components/items-list/components/ItemsTable";
-
-import Layout from "@/components/layouts/ContentWithSidebar";
 
 import AlertEvents from "@/services/alert-events";
 import { currentUser } from "@/services/auth";
@@ -216,56 +214,51 @@ class AlertEventsList extends React.Component {
     const { controller } = this.props;
     const { currentPage } = controller.params;
     const columns = this.buildColumns(currentPage);
-    const title = currentPage === "archive" ? "Archived Alert Events" : "Alerts History";
 
     return (
       <div className="page-alert-events-list">
         <div className="container">
-          <PageHeader title={title} />
-          <Layout>
-            <Layout.Sidebar className="m-b-0">
-              <Sidebar.SearchInput
-                placeholder="Search events..."
-                label="Search alert events"
-                value={controller.searchTerm}
-                onChange={controller.updateSearch}
-              />
-              <Sidebar.Menu items={sidebarMenu} selected={currentPage} />
-            </Layout.Sidebar>
-            <Layout.Content>
-              {controller.isLoaded && controller.isEmpty ? (
-                <div className="text-center bg-white tiled p-30">
-                  <i className="fa fa-history text-muted f-30" aria-hidden="true" />
-                  <p className="m-t-10 text-muted">
-                    {currentPage === "archive"
-                      ? "No archived alert events."
-                      : "No alert notifications have been recorded yet."}
-                  </p>
-                </div>
-              ) : (
-                <div className="bg-white tiled table-responsive">
-                  <ItemsTable
-                    items={controller.pageItems}
-                    loading={!controller.isLoaded}
-                    columns={columns}
-                    orderByField={controller.orderByField}
-                    orderByReverse={controller.orderByReverse}
-                    toggleSorting={controller.toggleSorting}
-                  />
-                  <Paginator
-                    showPageSizeSelect
-                    totalCount={controller.totalItemsCount}
-                    pageSize={controller.itemsPerPage}
-                    onPageSizeChange={itemsPerPage =>
-                      controller.updatePagination({ itemsPerPage })
-                    }
-                    page={controller.page}
-                    onChange={page => controller.updatePagination({ page })}
-                  />
-                </div>
-              )}
-            </Layout.Content>
-          </Layout>
+          <ListPageToolbar
+            searchPlaceholder="Search events..."
+            searchLabel="Search alert events"
+            searchValue={controller.searchTerm}
+            onSearchChange={controller.updateSearch}
+            menu={sidebarMenu}
+            selected={currentPage}
+          />
+          <div className="list-page-layout__content">
+            {controller.isLoaded && controller.isEmpty ? (
+              <div className="text-center bg-white tiled p-30">
+                <i className="fa fa-history text-muted f-30" aria-hidden="true" />
+                <p className="m-t-10 text-muted">
+                  {currentPage === "archive"
+                    ? "No archived alert events."
+                    : "No alert notifications have been recorded yet."}
+                </p>
+              </div>
+            ) : (
+              <div className="list-page-table">
+                <ItemsTable
+                  items={controller.pageItems}
+                  loading={!controller.isLoaded}
+                  columns={columns}
+                  orderByField={controller.orderByField}
+                  orderByReverse={controller.orderByReverse}
+                  toggleSorting={controller.toggleSorting}
+                />
+                <Paginator
+                  showPageSizeSelect
+                  totalCount={controller.totalItemsCount}
+                  pageSize={controller.itemsPerPage}
+                  onPageSizeChange={itemsPerPage =>
+                    controller.updatePagination({ itemsPerPage })
+                  }
+                  page={controller.page}
+                  onChange={page => controller.updatePagination({ page })}
+                />
+              </div>
+            )}
+          </div>
         </div>
         {this.renderModal()}
       </div>

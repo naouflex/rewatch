@@ -1,26 +1,22 @@
 import { get, map } from "lodash";
 import React from "react";
 
-import Button from "antd/lib/button";
 import Modal from "antd/lib/modal";
 
 import routeWithUserSession from "@/components/ApplicationArea/routeWithUserSession";
 import navigateTo from "@/components/ApplicationArea/navigateTo";
-import PageHeader from "@/components/PageHeader";
 import Paginator from "@/components/Paginator";
 import Tooltip from "@/components/Tooltip";
 import PlainButton from "@/components/PlainButton";
 import QuerySnippetDialog from "@/components/query-snippets/QuerySnippetDialog";
-import { QuerySnippetTagsControl } from "@/components/tags-control/TagsControl";
 
 import { wrap as itemsList, ControllerType } from "@/components/items-list/ItemsList";
 import { ResourceItemsSource } from "@/components/items-list/classes/ItemsSource";
 import { UrlStateStorage } from "@/components/items-list/classes/StateStorage";
 
 import * as Sidebar from "@/components/items-list/components/Sidebar";
+import ListPageToolbar from "@/components/items-list/components/ListPageToolbar";
 import ItemsTable, { Columns } from "@/components/items-list/components/ItemsTable";
-
-import Layout from "@/components/layouts/ContentWithSidebar";
 
 import QuerySnippetService, { QuerySnippet } from "@/services/query-snippet";
 import { currentUser } from "@/services/auth";
@@ -30,6 +26,7 @@ import location from "@/services/location";
 import notification from "@/services/notification";
 import routes from "@/services/routes";
 
+import SnippetContentCell from "./SnippetContentCell";
 import "./QuerySnippetsList.less";
 
 function getQuerySnippetTags() {
@@ -65,19 +62,6 @@ const sidebarMenu = [
 ];
 
 const canEditQuerySnippet = querySnippet => currentUser.isAdmin || currentUser.id === get(querySnippet, "user.id");
-
-function pageTitleFor(currentPage) {
-  switch (currentPage) {
-    case "my":
-      return "My Query Snippets";
-    case "favorites":
-      return "Favorite Query Snippets";
-    case "archive":
-      return "Archived Query Snippets";
-    default:
-      return "Query Snippets";
-  }
-}
 
 function emptyStateContentFor(currentPage) {
   switch (currentPage) {
@@ -127,23 +111,9 @@ class QuerySnippetsList extends React.Component {
       Columns.favorites({ className: "p-r-0" }),
       Columns.custom.sortable(
         (text, querySnippet) => (
-          <React.Fragment>
-            <PlainButton type="link" className="table-main-title" onClick={() => this.showSnippetDialog(querySnippet)}>
-              {querySnippet.trigger}
-            </PlainButton>
-            <QuerySnippetTagsControl
-              className="d-block"
-              tags={querySnippet.tags}
-              isArchived={querySnippet.is_archived}
-              canEdit={canEditQuerySnippet(querySnippet)}
-              getAvailableTags={getQuerySnippetTags}
-              onEdit={tags =>
-                QuerySnippetService.save({ id: querySnippet.id, tags })
-                  .then(() => this.props.controller.update())
-                  .catch(() => notification.error("Failed to update tags."))
-              }
-            />
-          </React.Fragment>
+          <PlainButton type="link" className="table-main-title" onClick={() => this.showSnippetDialog(querySnippet)}>
+            {querySnippet.trigger}
+          </PlainButton>
         ),
         {
           title: "Trigger",
@@ -156,7 +126,7 @@ class QuerySnippetsList extends React.Component {
         field: "description",
         className: "text-nowrap",
       }),
-      Columns.custom(snippet => <code className="snippet-content">{snippet}</code>, {
+      Columns.custom(snippet => <SnippetContentCell content={snippet} />, {
         title: "Snippet",
         field: "snippet",
       }),
@@ -254,6 +224,7 @@ class QuerySnippetsList extends React.Component {
     QuerySnippetDialog.showModal({
       querySnippet,
       readOnly: !canSave,
+      getAvailableTags: getQuerySnippetTags,
     })
       .onClose(querySnippet =>
         this.saveQuerySnippet(querySnippet).then(() => {
@@ -272,56 +243,44 @@ class QuerySnippetsList extends React.Component {
     return (
       <div className="page-query-snippets-list">
         <div className="container">
-          <PageHeader
-            title={pageTitleFor(currentPage)}
-            actions={
-              policy.isCreateQuerySnippetEnabled() ? (
-                <Button block type="primary" onClick={() => this.showSnippetDialog()}>
-                  <i className="fa fa-plus m-r-5" aria-hidden="true" />
-                  New Query Snippet
-                </Button>
-              ) : null
-            }
+          <ListPageToolbar
+            searchPlaceholder="Search Snippets..."
+            searchLabel="Search query snippets"
+            searchValue={controller.searchTerm}
+            onSearchChange={controller.updateSearch}
+            menu={sidebarMenu}
+            selected={currentPage}
+            tagsUrl="api/query_snippets/tags"
+            onTagsChange={controller.updateSelectedTags}
+            selectedTags={controller.selectedTags}
           />
-          <Layout>
-            <Layout.Sidebar className="m-b-0">
-              <Sidebar.SearchInput
-                placeholder="Search Snippets..."
-                label="Search query snippets"
-                value={controller.searchTerm}
-                onChange={controller.updateSearch}
-              />
-              <Sidebar.Menu items={sidebarMenu} selected={currentPage} />
-              <Sidebar.Tags url="api/query_snippets/tags" onChange={controller.updateSelectedTags} showUnselectAll />
-            </Layout.Sidebar>
-            <Layout.Content>
-              {controller.isLoaded && controller.isEmpty ? (
-                <div className="text-center bg-white tiled p-30">
-                  <i className="fa fa-scissors f-30 text-muted" aria-hidden="true" />
-                  <p className="m-t-10 text-muted">{emptyStateContentFor(currentPage)}</p>
-                </div>
-              ) : (
-                <div className="bg-white tiled table-responsive query-snippets-table">
-                  <ItemsTable
-                    items={controller.pageItems}
-                    loading={!controller.isLoaded}
-                    columns={columns}
-                    orderByField={controller.orderByField}
-                    orderByReverse={controller.orderByReverse}
-                    toggleSorting={controller.toggleSorting}
-                  />
-                  <Paginator
-                    showPageSizeSelect
-                    totalCount={controller.totalItemsCount}
-                    pageSize={controller.itemsPerPage}
-                    onPageSizeChange={itemsPerPage => controller.updatePagination({ itemsPerPage })}
-                    page={controller.page}
-                    onChange={page => controller.updatePagination({ page })}
-                  />
-                </div>
-              )}
-            </Layout.Content>
-          </Layout>
+          <div className="list-page-layout__content">
+            {controller.isLoaded && controller.isEmpty ? (
+              <div className="text-center bg-white tiled p-30">
+                <i className="fa fa-scissors f-30 text-muted" aria-hidden="true" />
+                <p className="m-t-10 text-muted">{emptyStateContentFor(currentPage)}</p>
+              </div>
+            ) : (
+              <div className="list-page-table query-snippets-table">
+                <ItemsTable
+                  items={controller.pageItems}
+                  loading={!controller.isLoaded}
+                  columns={columns}
+                  orderByField={controller.orderByField}
+                  orderByReverse={controller.orderByReverse}
+                  toggleSorting={controller.toggleSorting}
+                />
+                <Paginator
+                  showPageSizeSelect
+                  totalCount={controller.totalItemsCount}
+                  pageSize={controller.itemsPerPage}
+                  onPageSizeChange={itemsPerPage => controller.updatePagination({ itemsPerPage })}
+                  page={controller.page}
+                  onChange={page => controller.updatePagination({ page })}
+                />
+              </div>
+            )}
+          </div>
         </div>
       </div>
     );

@@ -29,3 +29,44 @@ body.fixed-layout #application-root .application-layout-content > .api-docs-page
   flex: 1 1 auto;
   min-height: 0;
 }
+
+// Scalar auth inputs (name/value) can inherit light card tokens inside dark mode.
+html[data-theme="dark"] {
+  .api-docs-page {
+    .scalar-app {
+      .light-mode .scalar-card.dark-mode,
+      .introduction-card .scalar-card {
+        --scalar-background-1: var(--rd-color-surface);
+        --scalar-background-2: var(--rd-color-surface-alt);
+        --scalar-background-3: var(--rd-color-surface-hover);
+        --scalar-background-card: var(--rd-color-surface);
+        --scalar-color-1: var(--rd-color-text);
+        --scalar-color-2: var(--rd-color-text-secondary);
+        --scalar-color-3: var(--rd-color-text-muted);
+        --scalar-border-color: var(--rd-color-border);
+      }
+
+      [class*="group/input"] {
+        background-color: var(--rd-color-surface-alt) !important;
+        color: var(--rd-color-text) !important;
+        border-color: var(--rd-color-border) !important;
+      }
+
+      [class*="group/input"] .cm-editor,
+      [class*="group/input"] .cm-content,
+      [class*="group/input"] .cm-scroller,
+      [class*="group/input"] .cm-line {
+        background-color: transparent !important;
+        color: var(--rd-color-text) !important;
+      }
+
+      [class*="group/input"] .cm-cursor {
+        border-left-color: var(--rd-color-text) !important;
+      }
+
+      [class*="group/input"] .cm-placeholder {
+        color: var(--rd-color-text-muted) !important;
+      }
+    }
+  }
+}

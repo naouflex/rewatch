@@ -79,10 +79,11 @@ def _normalize_action(action: str) -> str:
 
 
 def _day_key(value) -> str:
-    if isinstance(value, date):
-        return value.isoformat()
+    # datetime is a date subclass; check it first so we normalize to YYYY-MM-DD.
     if isinstance(value, datetime):
         return value.date().isoformat()
+    if isinstance(value, date):
+        return value.isoformat()
     return str(value)[:10]
 
 

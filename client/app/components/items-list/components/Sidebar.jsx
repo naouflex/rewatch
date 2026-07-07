@@ -1,6 +1,7 @@
 import { isFunction, isString, filter, map } from "lodash";
 import React, { useState, useCallback, useEffect } from "react";
 import PropTypes from "prop-types";
+import classNames from "classnames";
 import Input from "antd/lib/input";
 import AntdMenu from "antd/lib/menu";
 import Link from "@/components/Link";
@@ -10,34 +11,70 @@ import TagsList from "@/components/TagsList";
     SearchInput
  */
 
-export function SearchInput({ placeholder, value, showIcon, onChange, label }) {
+export function SearchInput({
+  placeholder,
+  value,
+  showIcon,
+  onChange,
+  label,
+  className,
+  liveSearch = true,
+}) {
   const [currentValue, setCurrentValue] = useState(value);
 
   useEffect(() => {
     setCurrentValue(value);
   }, [value]);
 
-  const onInputChange = useCallback(
-    event => {
-      const newValue = event.target.value;
-      setCurrentValue(newValue);
-      onChange(newValue);
+  const commitSearch = useCallback(
+    searchValue => {
+      const nextValue = (searchValue ?? "").trim();
+      setCurrentValue(nextValue);
+      onChange(nextValue);
     },
     [onChange]
   );
 
-  const InputControl = showIcon ? Input.Search : Input;
-  return (
-    <div className="m-b-10">
-      <InputControl
-        className="form-control"
-        placeholder={placeholder}
-        value={currentValue}
-        aria-label={label}
-        onChange={onInputChange}
-      />
-    </div>
+  const onInputChange = useCallback(
+    event => {
+      const newValue = event.target.value;
+      setCurrentValue(newValue);
+      if (liveSearch || newValue === "") {
+        onChange(newValue);
+      }
+    },
+    [onChange, liveSearch]
   );
+
+  const searchControl = showIcon ? (
+    <Input.Search
+      allowClear
+      autoFocus={false}
+      className={className}
+      placeholder={placeholder}
+      value={currentValue}
+      aria-label={label}
+      onChange={onInputChange}
+      onSearch={commitSearch}
+    />
+  ) : (
+    <Input
+      allowClear
+      autoFocus={false}
+      className={className}
+      placeholder={placeholder}
+      value={currentValue}
+      aria-label={label}
+      onChange={onInputChange}
+      onPressEnter={() => commitSearch(currentValue)}
+    />
+  );
+
+  if (className) {
+    return searchControl;
+  }
+
+  return <div className="m-b-10">{searchControl}</div>;
 }
 
 SearchInput.propTypes = {
@@ -46,12 +83,16 @@ SearchInput.propTypes = {
   showIcon: PropTypes.bool,
   onChange: PropTypes.func.isRequired,
   label: PropTypes.string,
+  className: PropTypes.string,
+  liveSearch: PropTypes.bool,
 };
 
 SearchInput.defaultProps = {
   placeholder: "Search...",
   showIcon: false,
   label: "Search",
+  className: null,
+  liveSearch: true,
 };
 
 /*
@@ -108,6 +149,45 @@ Menu.defaultProps = {
   selected: null,
 };
 
+export function FilterMenu({ items, selected }) {
+  items = filter(items, item => (isFunction(item.isAvailable) ? item.isAvailable() : true));
+  if (items.length === 0) {
+    return null;
+  }
+
+  return (
+    <nav className="list-page-filter-menu" aria-label="List filters">
+      {map(items, item => (
+        <Link
+          key={item.key}
+          href={item.href}
+          className={classNames("list-page-filter-menu__item", {
+            "list-page-filter-menu__item--active": item.key === selected,
+          })}
+        >
+          {isString(item.icon) && item.icon !== "" && (
+            <span className="btn-favorite">
+              <i className={item.icon} aria-hidden="true" />
+            </span>
+          )}
+          {isFunction(item.icon) && (item.icon(item) || null)}
+          {item.title}
+        </Link>
+      ))}
+    </nav>
+  );
+}
+
+FilterMenu.propTypes = {
+  items: Menu.propTypes.items,
+  selected: PropTypes.string,
+};
+
+FilterMenu.defaultProps = {
+  items: [],
+  selected: null,
+};
+
 /*
     MenuIcon
  */
@@ -146,13 +226,19 @@ ProfileImage.propTypes = {
     Tags
  */
 
-export function Tags({ url, onChange, showUnselectAll }) {
+export function Tags({ url, onChange, showUnselectAll, layout, selectedTags }) {
   if (url === "") {
     return null;
   }
   return (
-    <div className="m-b-10">
-      <TagsList tagsUrl={url} onUpdate={onChange} showUnselectAll={showUnselectAll} />
+    <div className={classNames(layout === "inline" ? "tags-list--inline-wrapper" : "m-b-10")}>
+      <TagsList
+        tagsUrl={url}
+        onUpdate={onChange}
+        showUnselectAll={showUnselectAll}
+        layout={layout}
+        selectedTags={selectedTags}
+      />
     </div>
   );
 }
@@ -161,5 +247,12 @@ Tags.propTypes = {
   url: PropTypes.string.isRequired,
   onChange: PropTypes.func.isRequired,
   showUnselectAll: PropTypes.bool,
-  unselectAllButtonTitle: PropTypes.string,
+  layout: PropTypes.oneOf(["sidebar", "inline"]),
+  selectedTags: PropTypes.arrayOf(PropTypes.string),
+};
+
+Tags.defaultProps = {
+  showUnselectAll: false,
+  layout: "sidebar",
+  selectedTags: undefined,
 };

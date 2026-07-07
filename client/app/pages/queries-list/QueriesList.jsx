@@ -1,11 +1,8 @@
 import React, { useCallback, useEffect, useRef } from "react";
 import cx from "classnames";
-import Button from "antd/lib/button";
 
 import routeWithUserSession from "@/components/ApplicationArea/routeWithUserSession";
-import navigateTo from "@/components/ApplicationArea/navigateTo";
 import Link from "@/components/Link";
-import PageHeader from "@/components/PageHeader";
 import Paginator from "@/components/Paginator";
 import DynamicComponent from "@/components/DynamicComponent";
 import { QueryTagsControl } from "@/components/tags-control/TagsControl";
@@ -17,9 +14,8 @@ import { ResourceItemsSource } from "@/components/items-list/classes/ItemsSource
 import { UrlStateStorage } from "@/components/items-list/classes/StateStorage";
 
 import * as Sidebar from "@/components/items-list/components/Sidebar";
+import ListPageToolbar from "@/components/items-list/components/ListPageToolbar";
 import ItemsTable, { Columns } from "@/components/items-list/components/ItemsTable";
-
-import Layout from "@/components/layouts/ContentWithSidebar";
 
 import { Query } from "@/services/query";
 import { clientConfig, currentUser } from "@/services/auth";
@@ -134,63 +130,51 @@ function QueriesList({ controller }) {
   return (
     <div className="page-queries-list">
       <div className="container">
-        <PageHeader
-          title={controller.params.pageTitle}
-          actions={
-            currentUser.hasPermission("create_query") ? (
-              <Button block type="primary" onClick={() => navigateTo("queries/new")}>
-                <i className="fa fa-plus m-r-5" aria-hidden="true" />
-                New Query
-              </Button>
-            ) : null
-          }
+        <ListPageToolbar
+          searchPlaceholder="Search Queries..."
+          searchLabel="Search queries"
+          searchValue={controller.searchTerm}
+          onSearchChange={updateSearch}
+          menu={sidebarMenu}
+          selected={controller.params.currentPage}
+          tagsUrl="api/queries/tags"
+          onTagsChange={controller.updateSelectedTags}
+          selectedTags={controller.selectedTags}
         />
-        <Layout>
-          <Layout.Sidebar className="m-b-0">
-            <Sidebar.SearchInput
-              placeholder="Search Queries..."
-              label="Search queries"
-              value={controller.searchTerm}
-              onChange={updateSearch}
+        <div className="list-page-layout__content">
+          {controller.isLoaded && controller.isEmpty ? (
+            <QueriesListEmptyState
+              page={controller.params.currentPage}
+              searchTerm={controller.searchTerm}
+              selectedTags={controller.selectedTags}
             />
-            <Sidebar.Menu items={sidebarMenu} selected={controller.params.currentPage} />
-            <Sidebar.Tags url="api/queries/tags" onChange={controller.updateSelectedTags} showUnselectAll />
-          </Layout.Sidebar>
-          <Layout.Content>
-            {controller.isLoaded && controller.isEmpty ? (
-              <QueriesListEmptyState
-                page={controller.params.currentPage}
-                searchTerm={controller.searchTerm}
-                selectedTags={controller.selectedTags}
-              />
-            ) : (
-              <React.Fragment>
-                <div className={cx({ "m-b-10": areExtraActionsAvailable })}>
-                  <ExtraActionsComponent selectedItems={selectedItems} />
-                </div>
-                <div className="bg-white tiled table-responsive">
-                  <ItemsTable
-                    items={controller.pageItems}
-                    loading={!controller.isLoaded}
-                    columns={tableColumns}
-                    orderByField={controller.orderByField}
-                    orderByReverse={controller.orderByReverse}
-                    toggleSorting={controller.toggleSorting}
-                    setSorting={controller.setSorting}
-                  />
-                  <Paginator
-                    showPageSizeSelect
-                    totalCount={controller.totalItemsCount}
-                    pageSize={controller.itemsPerPage}
-                    onPageSizeChange={(itemsPerPage) => controller.updatePagination({ itemsPerPage })}
-                    page={controller.page}
-                    onChange={(page) => controller.updatePagination({ page })}
-                  />
-                </div>
-              </React.Fragment>
-            )}
-          </Layout.Content>
-        </Layout>
+          ) : (
+            <React.Fragment>
+              <div className={cx({ "m-b-10": areExtraActionsAvailable })}>
+                <ExtraActionsComponent selectedItems={selectedItems} />
+              </div>
+              <div className="list-page-table">
+                <ItemsTable
+                  items={controller.pageItems}
+                  loading={!controller.isLoaded}
+                  columns={tableColumns}
+                  orderByField={controller.orderByField}
+                  orderByReverse={controller.orderByReverse}
+                  toggleSorting={controller.toggleSorting}
+                  setSorting={controller.setSorting}
+                />
+                <Paginator
+                  showPageSizeSelect
+                  totalCount={controller.totalItemsCount}
+                  pageSize={controller.itemsPerPage}
+                  onPageSizeChange={(itemsPerPage) => controller.updatePagination({ itemsPerPage })}
+                  page={controller.page}
+                  onChange={(page) => controller.updatePagination({ page })}
+                />
+              </div>
+            </React.Fragment>
+          )}
+        </div>
       </div>
     </div>
   );

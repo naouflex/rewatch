@@ -2,7 +2,6 @@ import React, { useEffect, useRef } from "react";
 import cx from "classnames";
 import routeWithUserSession from "../../components/ApplicationArea/routeWithUserSession";
 import Link from "@/components/Link";
-import PageHeader from "@/components/PageHeader";
 import Paginator from "@/components/Paginator";
 import DynamicComponent from "@/components/DynamicComponent";
 
@@ -12,11 +11,10 @@ import { ResourceItemsSource } from "@/components/items-list/classes/ItemsSource
 import { UrlStateStorage } from "@/components/items-list/classes/StateStorage";
 
 import * as Sidebar from "@/components/items-list/components/Sidebar";
+import ListPageToolbar from "@/components/items-list/components/ListPageToolbar";
 import ItemsTable, { Columns } from "@/components/items-list/components/ItemsTable";
 
 import { toUpper } from "lodash";
-
-import Layout from "@/components/layouts/ContentWithSidebar";
 
 import { MLModelVersion } from "@/services/ml-models-versions";
 import { currentUser } from "@/services/auth";
@@ -330,62 +328,50 @@ function MLModelsVersionsList({ controller }) {
   return (
     <div className="page-models-list">
       <div className="container">
-        <PageHeader
-          title={controller.params.pageTitle}
-          actions={
-            currentUser.hasPermission("create_model") ? (
-              <Link.Button block type="primary" href="ml_models/new">
-                <i className="fa fa-plus m-r-5" aria-hidden="true" />
-                New Model
-              </Link.Button>
-            ) : null
-          }
+        <ListPageToolbar
+          searchPlaceholder="Search Models..."
+          searchLabel="Search model versions"
+          searchValue={controller.searchTerm}
+          onSearchChange={controller.updateSearch}
+          menu={sidebarMenu}
+          selected={controller.params.currentPage}
+          tagsUrl="api/ml_models_versions/tags"
+          onTagsChange={controller.updateSelectedTags}
+          selectedTags={controller.selectedTags}
         />
-        <Layout>
-          <Layout.Sidebar className="m-b-0">
-            <Sidebar.SearchInput
-              placeholder="Search Models..."
-              label="Search models"
-              value={controller.searchTerm}
-              onChange={controller.updateSearch}
+        <div className="list-page-layout__content">
+          {controller.isLoaded && controller.isEmpty ? (
+            <MLModelListEmptyState
+              page={controller.params.currentPage}
+              searchTerm={controller.searchTerm}
+              selectedTags={controller.selectedTags}
             />
-            <Sidebar.Menu items={sidebarMenu} selected={controller.params.currentPage} />
-            <Sidebar.Tags url="api/ml_models_versions/tags" onChange={controller.updateSelectedTags} showUnselectAll />
-          </Layout.Sidebar>
-          <Layout.Content>
-            {controller.isLoaded && controller.isEmpty ? (
-              <MLModelListEmptyState
-                page={controller.params.currentPage}
-                searchTerm={controller.searchTerm}
-                selectedTags={controller.selectedTags}
-              />
-            ) : (
-              <React.Fragment>
-                <div className={cx({ "m-b-10": areExtraActionsAvailable })}>
-                  <ExtraActionsComponent selectedItems={selectedItems} />
-                </div>
-                <div className="bg-white tiled table-responsive">
-                  <ItemsTable
-                    items={controller.pageItems}
-                    loading={!controller.isLoaded}
-                    columns={tableColumns}
-                    orderByField={controller.orderByField}
-                    orderByReverse={controller.orderByReverse}
-                    toggleSorting={controller.toggleSorting}
-                  />
-                  <Paginator
-                    showPageSizeSelect
-                    totalCount={controller.totalItemsCount}
-                    pageSize={controller.itemsPerPage}
-                    onPageSizeChange={itemsPerPage => controller.updatePagination({ itemsPerPage })}
-                    page={controller.page}
-                    onChange={page => controller.updatePagination({ page })}
-                  />
-                </div>
-              </React.Fragment>
-            )}
-          </Layout.Content>
-        </Layout>
+          ) : (
+            <React.Fragment>
+              <div className={cx({ "m-b-10": areExtraActionsAvailable })}>
+                <ExtraActionsComponent selectedItems={selectedItems} />
+              </div>
+              <div className="list-page-table">
+                <ItemsTable
+                  items={controller.pageItems}
+                  loading={!controller.isLoaded}
+                  columns={tableColumns}
+                  orderByField={controller.orderByField}
+                  orderByReverse={controller.orderByReverse}
+                  toggleSorting={controller.toggleSorting}
+                />
+                <Paginator
+                  showPageSizeSelect
+                  totalCount={controller.totalItemsCount}
+                  pageSize={controller.itemsPerPage}
+                  onPageSizeChange={itemsPerPage => controller.updatePagination({ itemsPerPage })}
+                  page={controller.page}
+                  onChange={page => controller.updatePagination({ page })}
+                />
+              </div>
+            </React.Fragment>
+          )}
+        </div>
       </div>
     </div>
   );

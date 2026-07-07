@@ -6,7 +6,6 @@ import MenuOutlinedIcon from "@ant-design/icons/MenuOutlined";
 import Menu from "antd/lib/menu";
 import Link from "@/components/Link";
 import HelpTrigger from "@/components/HelpTrigger";
-import CreateDashboardDialog from "@/components/dashboards/CreateDashboardDialog";
 import ThemeToggle from "@/components/ThemeToggle";
 import { Auth, clientConfig, currentUser } from "@/services/auth";
 import settingsMenu from "@/services/settingsMenu";
@@ -36,39 +35,16 @@ export default function MobileNavbar() {
   const firstSettingsTab = first(settingsMenu.getAvailableItems());
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const canCreateQuery = currentUser.hasPermission("create_query");
-  const canCreateDashboard = currentUser.hasPermission("create_dashboard");
-  const canCreateAlert = currentUser.hasPermission("list_alerts");
-  const canCreateDestination = currentUser.hasPermission("create_destination");
-  const canCreateIndexer = currentUser.hasPermission("create_indexer");
-  const canCreateModel = currentUser.hasPermission("create_model");
-
   const menuItems = useMemo(() => {
     const items = [];
 
     if (currentUser.hasPermission("list_dashboards")) {
-      if (canCreateDashboard) {
-        items.push(
-          submenuItem("dashboards", "Dashboards", [
-            { key: "new-dashboard", label: "Create Dashboard", "data-test": "CreateDashboardMenuItem" },
-            { type: "divider" },
-            linkItem("dashboards-list", "dashboards", "Dashboards"),
-          ])
-        );
-      } else {
-        items.push(linkItem("dashboards", "dashboards", "Dashboards"));
-      }
+      items.push(linkItem("dashboards", "dashboards", "Dashboards"));
     }
 
     if (currentUser.hasPermission("view_query")) {
       items.push(
         submenuItem("queries", "Queries", [
-          ...(canCreateQuery
-            ? [
-                linkItem("new-query", "queries/new", "Create Query", { "data-test": "CreateQueryMenuItem" }),
-                { type: "divider" },
-              ]
-            : []),
           linkItem("queries-list", "queries", "Queries"),
           ...(currentUser.hasPermission("list_query_snippets")
             ? [linkItem("query-snippets", "query_snippets", "Query Snippets")]
@@ -80,51 +56,22 @@ export default function MobileNavbar() {
     if (currentUser.hasPermission("list_alerts")) {
       items.push(
         submenuItem("alerts", "Alerts", [
-          ...(canCreateAlert
-            ? [
-                linkItem("new-alert", "alerts/new", "Create Alert", { "data-test": "CreateAlertMenuItem" }),
-                { type: "divider" },
-              ]
-            : []),
           linkItem("alerts-list", "alerts", "Alerts"),
           linkItem("alerts-history", "alert_events", "Alerts History"),
           ...(currentUser.hasPermission("list_destinations")
             ? [linkItem("alert-destinations", "destinations", "Destinations")]
-            : []),
-          ...(canCreateDestination
-            ? [
-                linkItem("new-destination", "destinations/new", "Create Destination", {
-                  "data-test": "CreateDestinationMenuItem",
-                }),
-              ]
             : []),
         ])
       );
     }
 
     if (currentUser.hasPermission("list_indexers")) {
-      if (canCreateIndexer) {
-        items.push(
-          submenuItem("indexers", "Indexers", [
-            linkItem("new-indexer", "indexers/new", "Create Indexer", { "data-test": "CreateIndexerMenuItem" }),
-            { type: "divider" },
-            linkItem("indexers-list", "indexers", "Indexers"),
-          ])
-        );
-      } else {
-        items.push(linkItem("indexers", "indexers", "Indexers"));
-      }
+      items.push(linkItem("indexers", "indexers", "Indexers"));
     }
 
     if (currentUser.hasPermission("list_models")) {
       items.push(
         submenuItem("models", "Models", [
-          ...(canCreateModel
-            ? [
-                linkItem("new-model", "ml_models/new", "Create Model", { "data-test": "CreateMLModelMenuItem" }),
-                { type: "divider" },
-              ]
-            : []),
           linkItem("models-list", "ml_models", "Models"),
           linkItem("models-versions", "ml_models_versions", "Versions"),
           linkItem("predictions-list", "predictions", "Predictions"),
@@ -186,15 +133,7 @@ export default function MobileNavbar() {
     });
 
     return items;
-  }, [
-    canCreateAlert,
-    canCreateDashboard,
-    canCreateDestination,
-    canCreateIndexer,
-    canCreateModel,
-    canCreateQuery,
-    firstSettingsTab,
-  ]);
+  }, [firstSettingsTab]);
 
   const handleMenuClick = useCallback(({ key }) => {
     if (SUBMENU_KEYS.has(key)) {
@@ -203,10 +142,6 @@ export default function MobileNavbar() {
 
     if (key === "logout") {
       Auth.logout();
-    }
-
-    if (key === "new-dashboard") {
-      CreateDashboardDialog.showModal();
     }
 
     if (key !== "theme") {

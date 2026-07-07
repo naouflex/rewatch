@@ -32,6 +32,18 @@ class TestUserActivityResource(BaseTestCase):
         self.assertTrue(rv.json["by_action"])
         self.assertTrue(rv.json["by_object_type"])
 
+    def test_activity_daily_keys_match_series(self):
+        self._record_event("execute", days_ago=0)
+        self._record_event("edit", object_type="dashboard", days_ago=1)
+        db.session.commit()
+
+        rv = self.make_request("get", "/api/users/me/activity?days=7")
+        self.assertEqual(rv.status_code, 200)
+        self.assertGreater(rv.json["total"], 0)
+        self.assertEqual(sum(item["count"] for item in rv.json["daily"]), rv.json["total"])
+        self.assertTrue(any(item["count"] > 0 for item in rv.json["daily"]))
+        self.assertGreater(rv.json["week_total"], 0)
+
     def test_activity_ignores_passive_view_events(self):
         self._record_event("view", object_type="page", days_ago=0)
         self._record_event("list", object_type="dashboard", days_ago=0)

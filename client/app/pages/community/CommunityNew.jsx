@@ -44,37 +44,39 @@ function CommunityNewPage() {
         }
       />
 
-      <Form
-        form={form}
-        layout="vertical"
-        initialValues={{ category: "general" }}
-        onFinish={handleSubmit}
-        className="community-form"
-      >
-        <Form.Item name="title" label="Title" rules={[{ required: true, message: "Title is required" }]}>
-          <Input maxLength={255} placeholder="What would you like to discuss?" />
-        </Form.Item>
-        <Form.Item name="category" label="Category" rules={[{ required: true }]}>
-          <Select>
-            {COMMUNITY_CATEGORIES.map(item => (
-              <Select.Option key={item.value} value={item.value}>
-                {item.label}
-              </Select.Option>
-            ))}
-          </Select>
-        </Form.Item>
-        <Form.Item name="body" label="Body" rules={[{ required: true, message: "Body is required" }]}>
-          <TextArea rows={12} placeholder="Share your question, tip, or dashboard idea..." />
-        </Form.Item>
-        <Form.Item>
-          <Button type="primary" htmlType="submit" loading={saving} className="m-r-10">
-            Publish
-          </Button>
-          <Link.Button href="community" disabled={saving}>
-            Cancel
-          </Link.Button>
-        </Form.Item>
-      </Form>
+      <div className="community-layout">
+        <Form
+          form={form}
+          layout="vertical"
+          initialValues={{ category: "general" }}
+          onFinish={handleSubmit}
+          className="community-form"
+        >
+          <Form.Item name="title" label="Title" rules={[{ required: true, message: "Title is required" }]}>
+            <Input maxLength={255} placeholder="What would you like to discuss?" />
+          </Form.Item>
+          <Form.Item name="category" label="Category" rules={[{ required: true }]}>
+            <Select>
+              {COMMUNITY_CATEGORIES.map(item => (
+                <Select.Option key={item.value} value={item.value}>
+                  {item.label}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+          <Form.Item name="body" label="Body" rules={[{ required: true, message: "Body is required" }]}>
+            <TextArea rows={12} placeholder="Share your question, tip, or dashboard idea..." />
+          </Form.Item>
+          <Form.Item>
+            <Button type="primary" htmlType="submit" loading={saving} className="m-r-10">
+              Publish
+            </Button>
+            <Link.Button href="community" disabled={saving}>
+              Cancel
+            </Link.Button>
+          </Form.Item>
+        </Form>
+      </div>
     </div>
   );
 }

@@ -4,7 +4,6 @@ import Menu from "antd/lib/menu";
 import Link from "@/components/Link";
 import PlainButton from "@/components/PlainButton";
 import HelpTrigger from "@/components/HelpTrigger";
-import CreateDashboardDialog from "@/components/dashboards/CreateDashboardDialog";
 import { useCurrentRoute } from "@/components/ApplicationArea/Router";
 import { Auth, clientConfig, currentUser, subscribeToCurrentUser } from "@/services/auth";
 import settingsMenu from "@/services/settingsMenu";
@@ -134,61 +133,21 @@ export default function DesktopNavbar() {
 
   const activeState = useNavbarActiveState();
 
-  const canCreateQuery = currentUser.hasPermission("create_query");
-  const canCreateDashboard = currentUser.hasPermission("create_dashboard");
-  const canCreateAlert = currentUser.hasPermission("list_alerts");
-  const canCreateDestination = currentUser.hasPermission("create_destination");
-  const canCreateIndexer = currentUser.hasPermission("create_indexer");
-  const canCreateModel = currentUser.hasPermission("create_model");
   const canListModels = currentUser.hasPermission("list_models");
 
   const mainNavItems = useMemo(() => {
     const items = [];
 
     if (currentUser.hasPermission("list_dashboards")) {
-      const dashboardChildren = [
-        ...(canCreateDashboard
-          ? [
-              {
-                key: "new-dashboard",
-                label: (
-                  <PlainButton data-test="CreateDashboardMenuItem" onClick={() => CreateDashboardDialog.showModal()}>
-                    Create Dashboard
-                  </PlainButton>
-                ),
-              },
-              { type: "divider" },
-            ]
-          : []),
-        {
-          key: "dashboards-list",
-          label: <Link href="dashboards">Dashboards</Link>,
-        },
-      ];
-
-      if (canCreateDashboard) {
-        items.push({
-          key: "dashboards",
-          popupClassName: "desktop-navbar-submenu",
-          className: activeState.dashboards ? "navbar-active-item" : null,
-          label: (
-            <Link href="dashboards" className="navbar-submenu-title">
-              <span className="desktop-navbar-label">Dashboards</span>
-            </Link>
-          ),
-          children: dashboardChildren,
-        });
-      } else {
-        items.push({
-          key: "dashboards",
-          className: activeState.dashboards ? "navbar-active-item" : null,
-          label: (
-            <Link href="dashboards">
-              <span className="desktop-navbar-label">Dashboards</span>
-            </Link>
-          ),
-        });
-      }
+      items.push({
+        key: "dashboards",
+        className: activeState.dashboards ? "navbar-active-item" : null,
+        label: (
+          <Link href="dashboards">
+            <span className="desktop-navbar-label">Dashboards</span>
+          </Link>
+        ),
+      });
     }
 
     if (currentUser.hasPermission("view_query")) {
@@ -202,19 +161,6 @@ export default function DesktopNavbar() {
           </Link>
         ),
         children: [
-          ...(canCreateQuery
-            ? [
-                {
-                  key: "new-query",
-                  label: (
-                    <Link href="queries/new" data-test="CreateQueryMenuItem">
-                      Create Query
-                    </Link>
-                  ),
-                },
-                { type: "divider" },
-              ]
-            : []),
           {
             key: "queries-list",
             label: <Link href="queries">Queries</Link>,
@@ -242,19 +188,6 @@ export default function DesktopNavbar() {
           </Link>
         ),
         children: [
-          ...(canCreateAlert
-            ? [
-                {
-                  key: "new-alert",
-                  label: (
-                    <Link data-test="CreateAlertMenuItem" href="alerts/new">
-                      Create Alert
-                    </Link>
-                  ),
-                },
-                { type: "divider" },
-              ]
-            : []),
           {
             key: "alerts-list",
             label: <Link href="alerts">Alerts</Link>,
@@ -271,60 +204,20 @@ export default function DesktopNavbar() {
                 },
               ]
             : []),
-          ...(canCreateDestination
-            ? [
-                {
-                  key: "new-destination",
-                  label: (
-                    <Link data-test="CreateDestinationMenuItem" href="destinations/new">
-                      Create Destination
-                    </Link>
-                  ),
-                },
-              ]
-            : []),
         ],
       });
     }
 
     if (currentUser.hasPermission("list_indexers")) {
-      if (canCreateIndexer) {
-        items.push({
-          key: "indexers",
-          popupClassName: "desktop-navbar-submenu",
-          className: activeState.indexers ? "navbar-active-item" : null,
-          label: (
-            <Link href="indexers" className="navbar-submenu-title">
-              <span className="desktop-navbar-label">Indexers</span>
-            </Link>
-          ),
-          children: [
-            {
-              key: "new-indexer",
-              label: (
-                <Link data-test="CreateIndexerMenuItem" href="indexers/new">
-                  Create Indexer
-                </Link>
-              ),
-            },
-            { type: "divider" },
-            {
-              key: "indexers-list",
-              label: <Link href="indexers">Indexers</Link>,
-            },
-          ],
-        });
-      } else {
-        items.push({
-          key: "indexers",
-          className: activeState.indexers ? "navbar-active-item" : null,
-          label: (
-            <Link href="indexers">
-              <span className="desktop-navbar-label">Indexers</span>
-            </Link>
-          ),
-        });
-      }
+      items.push({
+        key: "indexers",
+        className: activeState.indexers ? "navbar-active-item" : null,
+        label: (
+          <Link href="indexers">
+            <span className="desktop-navbar-label">Indexers</span>
+          </Link>
+        ),
+      });
     }
 
     if (canListModels) {
@@ -338,19 +231,6 @@ export default function DesktopNavbar() {
           </Link>
         ),
         children: [
-          ...(canCreateModel
-            ? [
-                {
-                  key: "new-model",
-                  label: (
-                    <Link data-test="CreateMLModelMenuItem" href="ml_models/new">
-                      Create Model
-                    </Link>
-                  ),
-                },
-                { type: "divider" },
-              ]
-            : []),
           {
             key: "models-list",
             label: <Link href="ml_models">Models</Link>,
@@ -402,16 +282,7 @@ export default function DesktopNavbar() {
     });
 
     return items;
-  }, [
-    activeState,
-    canCreateAlert,
-    canCreateDashboard,
-    canCreateDestination,
-    canCreateIndexer,
-    canCreateModel,
-    canCreateQuery,
-    canListModels,
-  ]);
+  }, [activeState, canListModels]);
 
   const utilityNavItems = useMemo(() => {
     const items = [];

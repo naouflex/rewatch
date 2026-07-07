@@ -128,45 +128,49 @@ function CommunityPostPage({ postId, onError }) {
       </PageHeader>
 
       {editing ? (
-        <Form form={form} layout="vertical" onFinish={handleSave}>
-          <Form.Item name="title" label="Title" rules={[{ required: true, message: "Title is required" }]}>
-            <Input maxLength={255} />
-          </Form.Item>
-          <Form.Item name="category" label="Category" rules={[{ required: true }]}>
-            <Select>
-              {COMMUNITY_CATEGORIES.map(item => (
-                <Select.Option key={item.value} value={item.value}>
-                  {item.label}
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
-          <Form.Item name="body" label="Body" rules={[{ required: true, message: "Body is required" }]}>
-            <TextArea rows={12} />
-          </Form.Item>
-          <Form.Item>
-            <Button type="primary" htmlType="submit" loading={saving} className="m-r-10">
-              Save
-            </Button>
-            <Button onClick={() => setEditing(false)} disabled={saving}>
-              Cancel
-            </Button>
-          </Form.Item>
-        </Form>
+        <div className="community-layout">
+          <Form form={form} layout="vertical" className="community-form" onFinish={handleSave}>
+            <Form.Item name="title" label="Title" rules={[{ required: true, message: "Title is required" }]}>
+              <Input maxLength={255} />
+            </Form.Item>
+            <Form.Item name="category" label="Category" rules={[{ required: true }]}>
+              <Select>
+                {COMMUNITY_CATEGORIES.map(item => (
+                  <Select.Option key={item.value} value={item.value}>
+                    {item.label}
+                  </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+            <Form.Item name="body" label="Body" rules={[{ required: true, message: "Body is required" }]}>
+              <TextArea rows={12} />
+            </Form.Item>
+            <Form.Item>
+              <Button type="primary" htmlType="submit" loading={saving} className="m-r-10">
+                Save
+              </Button>
+              <Button onClick={() => setEditing(false)} disabled={saving}>
+                Cancel
+              </Button>
+            </Form.Item>
+          </Form>
+        </div>
       ) : (
-        <>
+        <div className="community-layout">
           <article className="community-post-view">
             <div className="community-post-view__meta">
               <span className="community-post-view__category">
                 <i className={`fa ${categoryMeta.icon} m-r-5`} aria-hidden="true" />
                 {categoryMeta.label}
               </span>
-              <img
-                className="profile__image_thumb community-post-view__avatar"
-                src={post.user.profile_image_url}
-                alt=""
-              />
-              <span>{post.user.name}</span>
+              <span className="community-post-view__author">
+                <img
+                  className="profile__image_thumb community-post-view__avatar"
+                  src={post.user.profile_image_url}
+                  alt=""
+                />
+                {post.user.name}
+              </span>
               <TimeAgo date={post.updated_at || post.created_at} />
               <ForumLikeButton
                 count={post.like_count}
@@ -177,7 +181,7 @@ function CommunityPostPage({ postId, onError }) {
             <div className="community-post-view__body">{post.body}</div>
           </article>
           <ForumThread post={post} onChange={setPost} />
-        </>
+        </div>
       )}
     </div>
   );

@@ -2,13 +2,10 @@ import React from "react";
 import cx from "classnames";
 import { toUpper } from "lodash";
 
-import Button from "antd/lib/button";
 import Modal from "antd/lib/modal";
 
 import routeWithUserSession from "@/components/ApplicationArea/routeWithUserSession";
-import navigateTo from "@/components/ApplicationArea/navigateTo";
 import Link from "@/components/Link";
-import PageHeader from "@/components/PageHeader";
 import Paginator from "@/components/Paginator";
 import EmptyState, { EmptyStateHelpMessage } from "@/components/empty-state/EmptyState";
 import DynamicComponent from "@/components/DynamicComponent";
@@ -21,16 +18,15 @@ import { ResourceItemsSource } from "@/components/items-list/classes/ItemsSource
 import { UrlStateStorage } from "@/components/items-list/classes/StateStorage";
 
 import * as Sidebar from "@/components/items-list/components/Sidebar";
+import ListPageToolbar from "@/components/items-list/components/ListPageToolbar";
 import ItemsTable, { Columns } from "@/components/items-list/components/ItemsTable";
 
-import Layout from "@/components/layouts/ContentWithSidebar";
+import { AlertTagsControl } from "@/components/tags-control/TagsControl";
 
 import AlertService, { Alert } from "@/services/alert";
 import { currentUser } from "@/services/auth";
 import location from "@/services/location";
 import routes from "@/services/routes";
-
-import { AlertTagsControl } from "@/components/tags-control/TagsControl";
 
 export const STATE_CLASS = {
   unknown: "label-warning",
@@ -162,19 +158,6 @@ function buildColumns(currentPage, refresh) {
   ];
 }
 
-function pageTitleFor(currentPage) {
-  switch (currentPage) {
-    case "my":
-      return "My Alerts";
-    case "favorites":
-      return "Favorite Alerts";
-    case "archive":
-      return "Archived Alerts";
-    default:
-      return "Alerts";
-  }
-}
-
 function emptyStateContentFor(currentPage) {
   switch (currentPage) {
     case "my":
@@ -210,34 +193,19 @@ class AlertsList extends React.Component {
     return (
       <div className="page-alerts-list">
         <div className="container">
-          <PageHeader
-            title={pageTitleFor(currentPage)}
-            actions={
-              currentUser.hasPermission("list_alerts") ? (
-                <Button block type="primary" onClick={() => navigateTo("alerts/new")}>
-                  <i className="fa fa-plus m-r-5" aria-hidden="true" />
-                  New Alert
-                </Button>
-              ) : null
-            }
+          <ListPageToolbar
+            searchPlaceholder="Search Alerts..."
+            searchLabel="Search alerts"
+            searchValue={controller.searchTerm}
+            onSearchChange={controller.updateSearch}
+            menu={sidebarMenu}
+            selected={currentPage}
+            tagsUrl="api/alerts/tags"
+            onTagsChange={controller.updateSelectedTags}
+            selectedTags={controller.selectedTags}
           />
-          <Layout>
-            <Layout.Sidebar className="m-b-0">
-              <Sidebar.SearchInput
-                placeholder="Search Alerts..."
-                label="Search alerts"
-                value={controller.searchTerm}
-                onChange={controller.updateSearch}
-              />
-              <Sidebar.Menu items={sidebarMenu} selected={currentPage} />
-              <Sidebar.Tags
-                url="api/alerts/tags"
-                onChange={controller.updateSelectedTags}
-                showUnselectAll
-              />
-            </Layout.Sidebar>
-            <Layout.Content>
-              {controller.isLoaded && controller.isEmpty ? (
+          <div className="list-page-layout__content">
+            {controller.isLoaded && controller.isEmpty ? (
                 <DynamicComponent name="AlertsList.EmptyState">
                   {customEmptyText ? (
                     <div className="text-center bg-white tiled p-30">
@@ -258,7 +226,7 @@ class AlertsList extends React.Component {
                   )}
                 </DynamicComponent>
               ) : (
-                <div className="bg-white tiled table-responsive">
+                <div className="list-page-table">
                   <ItemsTable
                     items={controller.pageItems}
                     loading={!controller.isLoaded}
@@ -279,8 +247,7 @@ class AlertsList extends React.Component {
                   />
                 </div>
               )}
-            </Layout.Content>
-          </Layout>
+          </div>
         </div>
       </div>
     );

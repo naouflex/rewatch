@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import ConfigProvider from "antd/lib/config-provider";
 
 import { buildAntdTheme } from "@/config/antdTheme";
+import { syncAntdGlobalTheme } from "@/config/syncAntdGlobalTheme";
 import routes from "@/services/routes";
 import { getResolvedTheme, subscribeToTheme } from "@/services/theme";
 import Router from "./Router";
@@ -14,6 +15,10 @@ export default function ApplicationArea() {
   const [resolvedTheme, setResolvedTheme] = useState(getResolvedTheme);
 
   const antdTheme = useMemo(() => buildAntdTheme(resolvedTheme), [resolvedTheme]);
+
+  useEffect(() => {
+    syncAntdGlobalTheme(resolvedTheme);
+  }, [resolvedTheme]);
 
   useEffect(() => {
     return subscribeToTheme(({ resolved }) => {

@@ -12,6 +12,10 @@ import TimeAgo from "@/components/TimeAgo";
 import PlainButton from "@/components/PlainButton";
 
 import AlertEvents from "@/services/alert-events";
+import AlertHistoryWhen from "./AlertHistoryWhen";
+
+import "@/components/items-list/list-page-layout.less";
+import "./AlertHistory.less";
 
 const STATUS_COLORS = {
   ok: "green",
@@ -100,8 +104,9 @@ export default class AlertHistory extends React.Component {
       {
         title: "When",
         dataIndex: "created_at",
-        render: value => <TimeAgo date={value} />,
-        width: 160,
+        render: value => <AlertHistoryWhen date={value} />,
+        width: 140,
+        ellipsis: true,
       },
       {
         title: "Status",
@@ -161,22 +166,24 @@ export default class AlertHistory extends React.Component {
 
     return (
       <div className="alert-history" data-test="AlertHistory">
-        <div className="d-flex align-items-center m-b-10">
-          <h4 className="flex-fill m-0">History</h4>
+        <div className="alert-history__header">
+          <h4 className="alert-history__title">History</h4>
           <Button size="small" onClick={this.refresh} loading={loading}>
             <i className="fa fa-refresh m-r-5" aria-hidden="true" />
             Refresh
           </Button>
         </div>
-        <Table
-          rowKey="id"
-          size="small"
-          loading={loading}
-          dataSource={events}
-          columns={columns}
-          pagination={{ pageSize: 10, hideOnSinglePage: true, showSizeChanger: false }}
-          locale={{ emptyText: "No notifications have been recorded for this alert yet." }}
-        />
+        <div className="list-page-table">
+          <Table
+            rowKey="id"
+            size="small"
+            loading={loading}
+            dataSource={events}
+            columns={columns}
+            pagination={{ pageSize: 10, hideOnSinglePage: true, showSizeChanger: false }}
+            locale={{ emptyText: "No notifications have been recorded for this alert yet." }}
+          />
+        </div>
         <Modal
           title="Notification content"
           open={!!selectedEvent}

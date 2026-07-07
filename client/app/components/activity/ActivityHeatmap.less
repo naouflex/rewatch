@@ -18,7 +18,9 @@
     width: 11px;
     height: 11px;
     border-radius: 2px;
-    display: block;
+    display: inline-block;
+    flex-shrink: 0;
+    box-sizing: border-box;
     background: var(--rd-color-surface);
     border: 1px solid var(--rd-color-divider);
 
@@ -29,27 +31,33 @@
 
     &--level-0 {
       background: var(--rd-color-surface);
+      border-color: var(--rd-color-divider);
     }
 
     &--level-1 {
-      background: color-mix(in srgb, var(--rd-color-brand) 25%, var(--rd-color-surface));
-      border-color: color-mix(in srgb, var(--rd-color-brand) 25%, var(--rd-color-divider));
+      background: rgba(var(--rd-brand-rgb), 0.28);
+      border-color: rgba(var(--rd-brand-rgb), 0.38);
     }
 
     &--level-2 {
-      background: color-mix(in srgb, var(--rd-color-brand) 45%, var(--rd-color-surface));
-      border-color: color-mix(in srgb, var(--rd-color-brand) 45%, var(--rd-color-divider));
+      background: rgba(var(--rd-brand-rgb), 0.48);
+      border-color: rgba(var(--rd-brand-rgb), 0.58);
     }
 
     &--level-3 {
-      background: color-mix(in srgb, var(--rd-color-brand) 70%, var(--rd-color-surface));
-      border-color: color-mix(in srgb, var(--rd-color-brand) 70%, var(--rd-color-divider));
+      background: rgba(var(--rd-brand-rgb), 0.72);
+      border-color: rgba(var(--rd-brand-rgb), 0.82);
     }
 
     &--level-4 {
-      background: var(--rd-color-brand);
-      border-color: var(--rd-color-brand);
+      background: rgb(var(--rd-brand-rgb));
+      border-color: rgb(var(--rd-brand-rgb));
     }
+  }
+
+  .ant-tooltip-open {
+    display: inline-block;
+    line-height: 0;
   }
 
   &__legend {
@@ -60,5 +68,29 @@
     margin-top: 10px;
     font-size: 11px;
     color: var(--rd-color-text-secondary);
+  }
+}
+
+[data-theme="dark"] .activity-heatmap {
+  &__cell {
+    &--level-0 {
+      background: var(--rd-color-surface-hover);
+      border-color: var(--rd-color-border);
+    }
+
+    &--level-1 {
+      background: rgba(var(--rd-brand-rgb), 0.42);
+      border-color: rgba(var(--rd-brand-rgb), 0.52);
+    }
+
+    &--level-2 {
+      background: rgba(var(--rd-brand-rgb), 0.58);
+      border-color: rgba(var(--rd-brand-rgb), 0.68);
+    }
+
+    &--level-3 {
+      background: rgba(var(--rd-brand-rgb), 0.78);
+      border-color: rgba(var(--rd-brand-rgb), 0.88);
+    }
   }
 }
