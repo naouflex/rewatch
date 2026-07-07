@@ -134,7 +134,7 @@ export class ParameterMappingInput extends React.Component {
     inputError: null,
   };
 
- = (type) => {
+  updateSourceType = (type) => {
     let {
       mapping: { mapTo },
     } = this.props;

@@ -1,6 +1,6 @@
 import React from "react";
 import DynamicComponent from "@/components/DynamicComponent";
-import SettingsSection from "./SettingsSection";
+import SettingsSection from "../SettingsSection";
 
 import FormatSettings from "./FormatSettings";
 import ChartSettings from "./ChartSettings";
