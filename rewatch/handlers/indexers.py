@@ -15,6 +15,7 @@ from rewatch.permissions import (
     view_only,
 )
 from rewatch.serializers import serialize_indexer
+from rewatch.indexers.preview import fetch_indexer_table_preview
 
 
 class IndexerResource(BaseResource):
@@ -177,3 +178,16 @@ class IndexerTagsResource(BaseResource):
     def get(self):
         tags = models.Indexer.all_tags(self.current_org, self.current_user)
         return {"tags": [{"name": name, "count": count} for name, count in tags]}
+
+
+class IndexerPreviewResource(BaseResource):
+    @require_permission("view_indexer")
+    def get(self, indexer_id):
+        indexer = get_object_or_404(models.Indexer.get_by_id_and_org, indexer_id, self.current_org)
+        require_access(indexer, self.current_user, view_only)
+
+        limit = request.args.get("limit", type=int)
+        preview = fetch_indexer_table_preview(indexer, limit=limit)
+
+        self.record_event({"action": "preview", "object_id": indexer.id, "object_type": "indexer"})
+        return preview

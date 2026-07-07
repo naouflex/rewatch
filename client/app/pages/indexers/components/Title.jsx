@@ -12,7 +12,7 @@ export default function Title({ indexer, editMode, name, onChange, children }) {
           {editMode ? (
             <Input
               className="f-inherit"
-              placeholder={defaultName}
+              placeholder={indexer.query ? defaultName : "Indexer name"}
               value={name}
               aria-label="Indexer title"
               onChange={e => onChange(e.target.value)}

@@ -208,3 +208,32 @@ class TestIndexQueryResultsTask(BaseTestCase):
         with mock.patch("rewatch.tasks.indexers.get_query_runner", return_value=runner):
             self.assertTrue(index_query_results(indexer, query_result))
         runner.run_query.assert_not_called()
+
+
+class TestIndexerPreviewResource(BaseTestCase):
+    def test_preview_returns_table_rows(self):
+        indexer = self.factory.create_indexer(
+            options={"target_table": "demo_idx", "insert_strategy": "append"}
+        )
+        runner = mock.Mock()
+        runner.supports_auto_limit = False
+        runner.run_query.return_value = (
+            {
+                "columns": [{"name": "ethereum", "friendly_name": "ethereum", "type": "integer"}],
+                "rows": [{"ethereum": 1}, {"ethereum": 2}],
+            },
+            None,
+        )
+        with mock.patch("rewatch.indexers.preview.get_query_runner", return_value=runner):
+            rv = self.make_request("get", "/api/indexers/{}/preview".format(indexer.id))
+
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(rv.json["target_table"], "demo_idx")
+        self.assertEqual(len(rv.json["rows"]), 2)
+        runner.run_query.assert_called_once()
+        self.assertIn("SELECT * FROM demo_idx", runner.run_query.call_args[0][0])
+
+    def test_preview_rejects_invalid_table_name(self):
+        indexer = self.factory.create_indexer(options={"target_table": "bad;drop"})
+        rv = self.make_request("get", "/api/indexers/{}/preview".format(indexer.id))
+        self.assertEqual(rv.status_code, 400)

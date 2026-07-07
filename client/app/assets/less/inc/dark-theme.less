@@ -633,6 +633,7 @@
   .page-queries-list,
   .page-dashboard-list,
   .page-alerts-list,
+  .page-create-form,
   .home-page,
   .dashboard-page,
   .public-dashboard-page,
@@ -940,15 +941,13 @@
   /* Parameters row */
 
   .parameter-block {
-    background: transparent;
+    background: var(--rd-color-bg-subtle);
     color: var(--rd-color-text);
   }
 
-  .parameter-container .parameter-apply-button {
-    @media (min-width: 768px) {
-      background-color: var(--rd-color-surface);
-      border-color: var(--rd-color-divider);
-    }
+  .parameters-panel {
+    background: var(--rd-color-surface);
+    border-color: var(--rd-color-divider);
   }
 
   /* Visualization renderer wrapper */

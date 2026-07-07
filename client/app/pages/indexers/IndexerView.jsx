@@ -9,6 +9,7 @@ import Title from "./components/Title";
 import Query from "./components/Query";
 import HorizontalFormItem from "./components/HorizontalFormItem";
 import IndexerDestination from "./components/IndexerDestination";
+import IndexerTablePreview from "./components/IndexerTablePreview";
 import { getStrategyDisplayName } from "./components/IndexerInsertStrategy";
 
 export default function IndexerView({ indexer, queryResult, canEdit, onEdit, menuButton }) {
@@ -19,16 +20,18 @@ export default function IndexerView({ indexer, queryResult, canEdit, onEdit, men
 
   return (
     <>
-      <Title indexer={indexer} name={name}>
-        {canEdit && (
-          <Button type="default" onClick={() => onEdit()}>
-            <i className="fa fa-edit m-r-5" aria-hidden="true" />
-            Edit
-          </Button>
-        )}
-        {menuButton}
-      </Title>
-      <div className="bg-white tiled p-20">
+      <div className="create-page-form__header">
+        <Title indexer={indexer} name={name}>
+          {canEdit && (
+            <Button type="default" onClick={() => onEdit()}>
+              <i className="fa fa-edit m-r-5" aria-hidden="true" />
+              Edit
+            </Button>
+          )}
+          {menuButton}
+        </Title>
+      </div>
+      <div className="create-page-form__body">
         <Form>
           <HorizontalFormItem label="Query">
             <Query query={query} queryResult={queryResult} editMode={false} />
@@ -50,6 +53,9 @@ export default function IndexerView({ indexer, queryResult, canEdit, onEdit, men
             </HorizontalFormItem>
           )}
         </Form>
+        {indexer.id && dataSourceId && (
+          <IndexerTablePreview indexerId={indexer.id} targetTable={targetTable} />
+        )}
       </div>
     </>
   );

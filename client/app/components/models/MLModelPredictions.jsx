@@ -6,11 +6,11 @@ import Link from "@/components/Link";
 import Tooltip from "@/components/Tooltip";
 import ItemsTable, { Columns } from "@/components/items-list/components/ItemsTable";
 import LoadingState from "@/components/items-list/components/LoadingState";
-import * as Grid from "antd/lib/grid";
-import JsonViewInteractive from "@/components/json-view-interactive/JsonViewInteractive";
 import { PredictionsTagsControl } from "@/components/tags-control/TagsControl";
 import Button from "antd/lib/button";
 import { useTheme } from "@/components/ThemeProvider";
+import "@/components/items-list/list-page-layout.less";
+import "@/components/items-list/create-page-layout.less";
 import "./MLModelPredictions.less";
 
 // Add this helper function at the top of the file, after the imports
@@ -157,21 +157,19 @@ function MLModelPredictions({ predictions }) {
   }
 
   return (
-    <div className={`model-predictions ${isDarkMode ? 'dark-mode' : ''}`}>
-      <h3 className={`model-predictions-title ${isDarkMode ? 'dark-mode' : ''}`}>Model Predictions</h3>
-      <div className={`bg-white tiled p-20 ${isDarkMode ? 'dark-mode' : ''}`}>
+    <div className={`model-predictions ${isDarkMode ? "dark-mode" : ""}`}>
+      <h3 className="create-page-form__section-title">Model Predictions</h3>
+      <div className={`create-page-form__body ${isDarkMode ? "dark-mode" : ""}`}>
         <input
           type="text"
           placeholder="Search..."
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
-          className={`search-input ${isDarkMode ? 'dark-mode' : ''}`}
+          className={`search-input ${isDarkMode ? "dark-mode" : ""}`}
           style={{ marginBottom: "20px", padding: "10px", width: "100%", borderRadius: "2px" }}
         />
-        <Grid.Row gutter={16}>
-          <Grid.Col xs={24}>
-            <div className={`bg-white tiled table-responsive ${isDarkMode ? 'dark-mode' : ''}`}>
-              <ItemsTable
+        <div className="list-page-table">
+          <ItemsTable
                 items={currentItems}
                 columns={columns}
                 orderByField={orderByField}
@@ -186,11 +184,9 @@ function MLModelPredictions({ predictions }) {
                 onPageSizeChange={setPageSize}
                 page={currentPage}
                 onChange={setCurrentPage}
-                className={isDarkMode ? 'dark-mode' : ''}
+                className={isDarkMode ? "dark-mode" : ""}
               />
-            </div>
-          </Grid.Col>
-        </Grid.Row>
+        </div>
       </div>
     </div>
   );

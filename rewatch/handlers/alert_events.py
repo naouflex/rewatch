@@ -1,7 +1,7 @@
 from flask import request
 
 from rewatch import models
-from rewatch.handlers.base import BaseResource, get_object_or_404
+from rewatch.handlers.base import BaseResource, get_object_or_404, paginate
 from rewatch.permissions import (
     require_access,
     require_admin_or_owner,
@@ -26,13 +26,10 @@ class AlertEventListResource(BaseResource):
         include_archived = _bool_arg(request.args.get("include_archived"))
         events = models.AlertEvent.for_alert(alert.id, include_archived=include_archived)
 
-        try:
-            limit = int(request.args.get("limit", "100"))
-        except (TypeError, ValueError):
-            limit = 100
-        limit = max(1, min(limit, 500))
+        page = request.args.get("page", 1, type=int)
+        page_size = request.args.get("page_size", 20, type=int)
 
-        return [serialize_alert_event(e) for e in events.limit(limit)]
+        return paginate(events, page, page_size, serialize_alert_event)
 
 
 class AlertEventResource(BaseResource):

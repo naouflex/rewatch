@@ -25,8 +25,75 @@ import routes from "@/services/routes";
 import PredictionResultsListEmptyState from "./PredictionResultsListEmptyState";
 
 import "./predictions-list.css";
+import { FIXED_TABLE_WIDTHS as W } from "@/components/items-list/fixedTableWidths";
 
-import JsonViewInteractive from "@/components/json-view-interactive/JsonViewInteractive";
+function getPredictionSummary(item) {
+  const props = item.additional_properties || {};
+  const overall = props.overall || {};
+  if (overall.r2_score !== undefined && overall.r2_score !== null) {
+    return `R² ${Number(overall.r2_score).toFixed(4)}`;
+  }
+  if (overall.is_overfitted !== undefined) {
+    return overall.is_overfitted ? "Overfitted" : "Not overfitted";
+  }
+  const rows = item.content && item.content.rows;
+  if (Array.isArray(rows)) {
+    return `${rows.length} rows`;
+  }
+  return "View details";
+}
+
+const listColumns = [
+  Columns.favorites({ className: "p-r-0", width: W.favorite }),
+  Columns.custom.sortable(
+    (text, item) => {
+      const label = item.model && item.model.name ? item.model.name : `Prediction #${item.id}`;
+      return (
+        <Link href={"predictions/" + item.id} className="table-main-title list-page-table__truncate" title={label}>
+          {label}
+        </Link>
+      );
+    },
+    { title: "Model", field: "model.name", ellipsis: true }
+  ),
+  Columns.custom(
+    (text, item) => {
+      let icon;
+      let color;
+      if (item.status === "success") {
+        icon = <CheckCircleOutlined style={{ color: "green" }} />;
+        color = "green";
+      } else if (item.status === "error") {
+        icon = <CloseCircleOutlined style={{ color: "red" }} />;
+        color = "red";
+      } else {
+        icon = <InfoCircleOutlined style={{ color: "blue" }} />;
+        color = "blue";
+      }
+      return (
+        <Tooltip title={item.status || "unknown"}>
+          <span style={{ color }} className="text-nowrap">
+            {icon} {item.status || "unknown"}
+          </span>
+        </Tooltip>
+      );
+    },
+    { title: "Status", field: "status", width: W.status, className: "text-nowrap" }
+  ),
+  Columns.custom(
+    (text, item) => (
+      <span className="text-muted list-page-table__truncate" title={getPredictionSummary(item)}>
+        {getPredictionSummary(item)}
+      </span>
+    ),
+    { title: "Summary", ellipsis: true, width: W.summary }
+  ),
+  Columns.custom(
+    (text, item) => (item.model_version ? `v${item.model_version}` : "—"),
+    { title: "Version", field: "model_version", width: W.version, className: "text-nowrap" }
+  ),
+  Columns.timeAgo.sortable({ title: "Created", field: "created_at", width: W.timeAgo }),
+];
 
 const sidebarMenu = [
   {
@@ -53,60 +120,6 @@ const sidebarMenu = [
     title: "Archived Predictions",
     icon: () => <Sidebar.MenuIcon icon="fa fa-archive" />,
   },
-];
-
-const listColumns = [
-  Columns.favorites({ className: "p-r-0" }),
-  Columns.custom(
-    (text, item) => (
-      <Link href={"predictions/" + item.id} className="table-main-title">
-        {item.id}
-      </Link>
-    ),
-    { title: "ID", field: "id", width: "1%" }
-  ),
-  
-  Columns.dateTime.sortable({ title: "Created At", field: "created_at", width: "15%" }),
-  Columns.custom(
-    (text, item) => {
-      let icon, color;
-      if (item.status === 'success') {
-        icon = <CheckCircleOutlined style={{ color: 'green' }} />;
-        color = 'green';
-      } else if (item.status === 'error') {
-        icon = <CloseCircleOutlined style={{ color: 'red' }} />;
-        color = 'red';
-      } else {
-        icon = <InfoCircleOutlined style={{ color: 'blue' }} />;
-        color = 'blue';
-      }
-      return (
-        <Tooltip title={item.status}>
-          <span style={{ color }}>{icon} {item.status}</span>
-        </Tooltip>
-      );
-    },
-    { title: "Status", field: "status", width: "1%" }
-  ),
-  Columns.custom(
-    (text, item) => item.query.name,
-    { title: "Query", field: "query.name", width: "15%" }
-  ),
-  Columns.custom(
-    (text, item) => item.model.name,
-    { title: "Model", field: "model.name", width: "15%" }
-  ),
-  Columns.custom(
-    (text, item) => {
-      const content = typeof item.content === 'string' ? JSON.parse(item.content) : item.content;
-      return (
-        <div style={{ maxWidth: '300px', overflow: 'hidden' }}>
-          <JsonViewInteractive value={content} />
-        </div>
-      );
-    },
-    { title: "Content Preview", field: "content", width: "30%" }
-  ),
 ];
 
 function PredictionResultsListExtraActions(props) {
@@ -163,11 +176,12 @@ function PredictionResultsList({ controller }) {
               <div className={cx({ "m-b-10": areExtraActionsAvailable })}>
                 <ExtraActionsComponent selectedItems={selectedItems} />
               </div>
-              <div className="list-page-table">
+              <div className="list-page-table list-page-table--fixed">
                 <ItemsTable
                   items={controller.pageItems}
                   loading={!controller.isLoaded}
                   columns={tableColumns}
+                  tableLayout="fixed"
                   orderByField={controller.orderByField}
                   orderByReverse={controller.orderByReverse}
                   toggleSorting={controller.toggleSorting}

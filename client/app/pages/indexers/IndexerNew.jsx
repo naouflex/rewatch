@@ -8,6 +8,7 @@ import Checkbox from "antd/lib/checkbox";
 import Title from "./components/Title";
 import Query from "./components/Query";
 import HorizontalFormItem from "./components/HorizontalFormItem";
+import CreatePageLayout from "@/components/items-list/CreatePageLayout";
 import IndexerDestination from "./components/IndexerDestination";
 import IndexerInsertStrategy from "./components/IndexerInsertStrategy";
 import IndexerTargetTable from "./components/IndexerTargetTable";
@@ -33,15 +34,17 @@ export default class IndexerNew extends React.Component {
 
     return (
       <>
-        <Title indexer={indexer} name={name} onChange={onNameChange} editMode />
-        <div className="bg-white tiled p-20">
+        <CreatePageLayout backHref="indexers" backLabel="Back to Indexers" />
+        <div className="create-page-form__header">
+          <Title indexer={indexer} name={name} onChange={onNameChange} editMode />
+        </div>
+        <div className="create-page-form__body">
+          <p className="create-page-form__intro">
+            Select the query whose results you want to copy into another data source. Indexers run after every
+            successful query execution, so a refresh schedule is highly recommended.
+          </p>
           <div className="d-flex">
             <Form className="flex-fill">
-              <div className="m-b-30">
-                Start by selecting the query whose results you want to copy into another data source.
-                <br />
-                Indexers run after every successful execution of the query, so a refresh schedule is highly recommended.
-              </div>
               <HorizontalFormItem label="Query">
                 <Query query={query} queryResult={queryResult} onChange={onQuerySelected} editMode />
               </HorizontalFormItem>

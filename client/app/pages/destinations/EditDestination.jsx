@@ -5,7 +5,7 @@ import PropTypes from "prop-types";
 import routeWithUserSession from "@/components/ApplicationArea/routeWithUserSession";
 import { confirmDialog } from "@/components/ModalShell/confirmDialog";
 import navigateTo from "@/components/ApplicationArea/navigateTo";
-import Link from "@/components/Link";
+import CreatePageLayout from "@/components/items-list/CreatePageLayout";
 import LoadingState from "@/components/items-list/components/LoadingState";
 import DynamicForm from "@/components/dynamic-form/DynamicForm";
 import helper from "@/components/dynamic-form/dynamicFormHelper";
@@ -13,6 +13,8 @@ import helper from "@/components/dynamic-form/dynamicFormHelper";
 import DestinationService, { IMG_ROOT } from "@/services/destination";
 import notification from "@/services/notification";
 import routes from "@/services/routes";
+
+import "@/components/items-list/create-page-layout.less";
 
 class EditDestination extends React.Component {
   static propTypes = {
@@ -88,29 +90,24 @@ class EditDestination extends React.Component {
     };
 
     return (
-      <div className="row" data-test="Destination">
-        <div className="text-center m-b-10">
+      <div data-test="Destination">
+        <div className="text-center m-b-20">
           <img className="p-5" src={`${IMG_ROOT}/${type.type}.png`} alt={type.name} width="64" />
           <h3 className="m-0">{type.name}</h3>
         </div>
-        <div className="col-md-4 col-md-offset-4 m-b-10">
-          <DynamicForm {...formProps} />
-        </div>
+        <DynamicForm {...formProps} />
       </div>
     );
   }
 
   render() {
     return (
-      <div className="page-destination-edit">
+      <div className="page-create-form">
         <div className="container">
-          <div className="m-b-15">
-            <Link href="destinations">
-              <i className="fa fa-angle-left m-r-5" aria-hidden="true" />
-              Back to Alert Destinations
-            </Link>
+          <CreatePageLayout backHref="destinations" backLabel="Back to Alert Destinations" />
+          <div className="create-page-form__body">
+            {this.state.loading ? <LoadingState className="" /> : this.renderForm()}
           </div>
-          {this.state.loading ? <LoadingState className="" /> : this.renderForm()}
         </div>
       </div>
     );
@@ -125,3 +122,5 @@ routes.register(
     render: pageProps => <EditDestination {...pageProps} />,
   })
 );
+
+export default EditDestination;

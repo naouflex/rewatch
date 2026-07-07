@@ -4,11 +4,14 @@ import UserGroups from "@/components/UserGroups";
 
 import useUserGroups from "../hooks/useUserGroups";
 
+import "@/components/items-list/create-page-layout.less";
+
 export default function ReadOnlyUserProfile({ user }) {
   const { groups, isLoading: isLoadingGroups } = useUserGroups(user);
 
   return (
-    <div className="col-md-4 col-md-offset-4 profile__container">
+    <div className="settings-detail-form">
+      <div className="create-page-form__body profile__container">
       <img alt="profile" src={user.profileImageUrl} className="profile__image" width="40" />
       <h3 className="profile__h3">{user.name}</h3>
       <hr />
@@ -20,6 +23,7 @@ export default function ReadOnlyUserProfile({ user }) {
         <dt className="m-b-5">Groups:</dt>
         <dd>{isLoadingGroups ? "Loading..." : <UserGroups groups={groups} />}</dd>
       </dl>
+      </div>
     </div>
   );
 }

@@ -1,120 +1,179 @@
 @import (reference, less) "~@/assets/less/ant";
 
-.parameter-block {
-  display: inline-block;
-  background: transparent;
-  padding: 0 12px 6px 0;
-  vertical-align: top;
-  z-index: 1;
-  white-space: nowrap;
+.parameters-panel {
+  margin-bottom: 12px;
+  padding: 14px 16px;
+  background: var(--rd-color-surface);
+  border: 1px solid var(--rd-color-divider);
+  border-radius: var(--rd-radius-sm);
 
-  .drag-handle {
-    padding: 0 5px;
-    margin-left: -5px;
-    height: 36px;
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--rd-color-divider);
   }
 
-  .parameter-container.sortable-container & {
-    margin: 4px 0 0 4px;
-    padding: 3px 6px 6px;
+  &__heading {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  &__title {
+    font-size: var(--rd-font-size-sm);
+    font-weight: var(--rd-font-weight-semibold);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--rd-color-text-secondary);
+  }
+
+  &__count {
+    font-size: var(--rd-font-size-xs);
+    color: var(--rd-color-text-muted);
+  }
+}
+
+.parameter-block {
+  display: flex;
+  align-items: flex-start;
+  flex: 1 1 220px;
+  max-width: 320px;
+  min-width: 0;
+  background: var(--rd-color-bg-subtle);
+  border: 1px solid var(--rd-color-divider);
+  border-radius: var(--rd-radius-sm);
+  padding: 10px 12px;
+  z-index: 1;
+
+  .drag-handle {
+    flex: 0 0 auto;
+    padding: 0 6px 0 0;
+    margin-top: 22px;
+    height: auto;
+    color: var(--rd-color-text-muted);
+    cursor: grab;
+  }
+
+  &__content {
+    flex: 1 1 auto;
+    min-width: 0;
   }
 
   &.parameter-dragged {
     z-index: 2;
-    margin: 4px 0 0 4px;
-    padding: 3px 6px 6px;
-    box-shadow: 0 4px 9px -3px rgba(102, 136, 153, 0.15);
+    box-shadow: var(--rd-shadow-2);
+    background: var(--rd-color-surface);
   }
 }
 
 .parameter-heading {
   display: flex;
-  align-items: center;
-  padding-bottom: 4px;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
 
-  label {
-    margin-bottom: 1px;
+  &__labels {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  &__title {
+    display: block;
+    margin: 0;
+    font-size: var(--rd-font-size-sm);
+    font-weight: var(--rd-font-weight-medium);
+    color: var(--rd-color-text);
     overflow: hidden;
     text-overflow: ellipsis;
-    min-width: 100%;
-    max-width: 195px;
     white-space: nowrap;
+  }
 
-    .parameter-block[data-editable] & {
-      min-width: calc(100% - 27px); // make room for settings button
-      max-width: 195px - 27px;
+  &__keyword {
+    display: block;
+    margin-top: 2px;
+    padding: 0;
+    font-size: 11px;
+    line-height: 1.3;
+    color: var(--rd-color-text-muted);
+    background: transparent;
+    border: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__settings {
+    flex: 0 0 auto;
+    margin-top: 2px;
+    padding: 2px 6px;
+    color: var(--rd-color-text-muted);
+    border: none;
+    background: transparent;
+    border-radius: var(--rd-radius-xs);
+    line-height: 1;
+
+    &:hover,
+    &:focus {
+      color: var(--rd-color-text);
+      background: var(--rd-color-surface-hover);
     }
   }
 }
 
 .parameter-container {
   position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 
   &.sortable-container {
-    padding: 0 4px 4px 0;
+    padding: 0;
   }
 
   .parameter-apply-button {
-    display: none; // default for mobile
+    display: none;
 
-    // "floating" on desktop
-    @media (min-width: 768px) {
-      position: absolute;
-      bottom: -36px;
-      left: -15px;
-      border-radius: var(--rd-radius-sm);
-      z-index: 2;
-      transition: opacity 150ms ease-out;
-      box-shadow: var(--rd-shadow-2);
-      background-color: var(--rd-color-surface);
-      border: 1px solid var(--rd-color-divider);
-      padding: 4px;
-      padding-left: 16px;
-      opacity: 0;
+    &--inline {
       display: block;
-      pointer-events: none; // so tooltip doesn't remain after button hides
-    }
+      flex: 0 0 auto;
 
-    &[data-show="true"] {
-      opacity: 1;
-      display: block;
-      pointer-events: auto;
-    }
-
-    button {
-      padding: 0 8px 0 6px;
-      color: var(--rd-color-brand);
-      border-color: var(--rd-color-brand);
-
-      // smaller on desktop
-      @media (min-width: 768px) {
+      button {
+        padding: 0 10px;
+        height: 28px;
         font-size: 12px;
-        height: 27px;
+        color: var(--rd-color-brand);
+        border-color: var(--rd-color-brand);
+
+        &:hover,
+        &:focus,
+        &:active {
+          background-color: var(--rd-color-brand-soft);
+        }
+
+        i {
+          margin-right: 4px;
+        }
       }
 
-      &:hover,
-      &:focus,
-      &:active {
-        background-color: var(--rd-color-brand-soft);
+      .ant-badge-count {
+        min-width: 15px;
+        height: 15px;
+        padding: 0 5px;
+        font-size: 10px;
+        line-height: 15px;
+        background: var(--rd-color-danger);
+        color: var(--rd-color-text-inverse);
+        border-radius: 7px;
+        box-shadow:
+          0 0 0 1px var(--rd-color-surface),
+          -1px 1px 0 1px rgba(0, 0, 0, 0.25);
       }
-
-      i {
-        margin-right: 3px;
-      }
-    }
-
-    .ant-badge-count {
-      min-width: 15px;
-      height: 15px;
-      padding: 0 5px;
-      font-size: 10px;
-      line-height: 15px;
-      background: var(--rd-color-danger);
-      color: var(--rd-color-text-inverse);
-      border-radius: 7px;
-      box-shadow:
-        0 0 0 1px var(--rd-color-surface),
-        -1px 1px 0 1px rgba(0, 0, 0, 0.25);
     }
   }
 }

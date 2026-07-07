@@ -7,6 +7,8 @@ import ApiKeyForm from "./ApiKeyForm";
 import PasswordForm from "./PasswordForm";
 import ToggleUserForm from "./ToggleUserForm";
 
+import "@/components/items-list/create-page-layout.less";
+
 export default function EditableUserProfile(props) {
   const [user, setUser] = useState(props.user);
 
@@ -15,7 +17,8 @@ export default function EditableUserProfile(props) {
   }, [props.user]);
 
   return (
-    <div className="col-md-4 col-md-offset-4">
+    <div className="settings-detail-form">
+      <div className="create-page-form__body">
       {user.isDisabled ? (
         <React.Fragment>
           <img alt="Profile" src={user.profileImageUrl} className="profile__image" width="40" />
@@ -38,6 +41,7 @@ export default function EditableUserProfile(props) {
       )}
       <hr />
       <ToggleUserForm user={user} onChange={setUser} />
+      </div>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { get, map } from "lodash";
+import { get } from "lodash";
 import React from "react";
 
 import routeWithUserSession from "@/components/ApplicationArea/routeWithUserSession";
@@ -7,7 +7,6 @@ import navigateTo from "@/components/ApplicationArea/navigateTo";
 import Paginator from "@/components/Paginator";
 import Tooltip from "@/components/Tooltip";
 import PlainButton from "@/components/PlainButton";
-import QuerySnippetDialog from "@/components/query-snippets/QuerySnippetDialog";
 
 import { wrap as itemsList, ControllerType } from "@/components/items-list/ItemsList";
 import { ResourceItemsSource } from "@/components/items-list/classes/ItemsSource";
@@ -19,18 +18,12 @@ import ItemsTable, { Columns } from "@/components/items-list/components/ItemsTab
 
 import QuerySnippetService, { QuerySnippet } from "@/services/query-snippet";
 import { currentUser } from "@/services/auth";
-import { policy } from "@/services/policy";
-import getTags from "@/services/getTags";
 import location from "@/services/location";
 import notification from "@/services/notification";
 import routes from "@/services/routes";
 
 import SnippetContentCell from "./SnippetContentCell";
 import "./QuerySnippetsList.less";
-
-function getQuerySnippetTags() {
-  return getTags("api/query_snippets/tags").then(tags => map(tags, t => t.name));
-}
 
 const sidebarMenu = [
   {
@@ -81,36 +74,22 @@ class QuerySnippetsList extends React.Component {
   };
 
   componentDidMount() {
-    const { isNewOrEditPage, querySnippetId } = this.props.controller.params;
-
     const searchTerm = location.search.q || "";
     if (searchTerm && searchTerm !== this.props.controller.searchTerm) {
       this.props.controller.updateSearch(searchTerm);
     }
-
-    if (isNewOrEditPage) {
-      if (querySnippetId === "new") {
-        if (policy.isCreateQuerySnippetEnabled()) {
-          this.showSnippetDialog();
-        } else {
-          navigateTo("query_snippets", true);
-        }
-      } else {
-        QuerySnippetService.get({ id: querySnippetId })
-          .then(this.showSnippetDialog)
-          .catch(error => {
-            this.props.controller.handleError(error);
-          });
-      }
-    }
   }
+
+  openQuerySnippet = (querySnippet = null) => {
+    navigateTo(`query_snippets/${get(querySnippet, "id", "new")}`);
+  };
 
   buildColumns() {
     return [
       Columns.favorites({ className: "p-r-0" }),
       Columns.custom.sortable(
         (text, querySnippet) => (
-          <PlainButton type="link" className="table-main-title" onClick={() => this.showSnippetDialog(querySnippet)}>
+          <PlainButton type="link" className="table-main-title" onClick={() => this.openQuerySnippet(querySnippet)}>
             {querySnippet.trigger}
           </PlainButton>
         ),
@@ -191,11 +170,6 @@ class QuerySnippetsList extends React.Component {
     });
   };
 
-  saveQuerySnippet = querySnippet => {
-    const saveSnippet = querySnippet.id ? QuerySnippetService.save : QuerySnippetService.create;
-    return saveSnippet(querySnippet);
-  };
-
   deleteQuerySnippet = (event, querySnippet) => {
     confirmDialog({
       title: "Delete Query Snippet",
@@ -214,24 +188,6 @@ class QuerySnippetsList extends React.Component {
           });
       },
     });
-  };
-
-  showSnippetDialog = (querySnippet = null) => {
-    const canSave = !querySnippet || canEditQuerySnippet(querySnippet);
-    navigateTo("query_snippets/" + get(querySnippet, "id", "new"), true);
-    const goToSnippetsList = () => navigateTo("query_snippets", true);
-    QuerySnippetDialog.showModal({
-      querySnippet,
-      readOnly: !canSave,
-      getAvailableTags: getQuerySnippetTags,
-    })
-      .onClose(querySnippet =>
-        this.saveQuerySnippet(querySnippet).then(() => {
-          this.props.controller.update();
-          goToSnippetsList();
-        })
-      )
-      .onDismiss(goToSnippetsList);
   };
 
   render() {
@@ -339,13 +295,5 @@ routes.register(
     path: "/query_snippets/archive",
     title: "Archived Query Snippets",
     render: pageProps => <QuerySnippetsListPage {...pageProps} currentPage="archive" />,
-  })
-);
-routes.register(
-  "QuerySnippets.NewOrEdit",
-  routeWithUserSession({
-    path: "/query_snippets/:querySnippetId",
-    title: "Query Snippets",
-    render: pageProps => <QuerySnippetsListPage {...pageProps} currentPage="all" isNewOrEditPage />,
   })
 );

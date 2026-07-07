@@ -1,19 +1,23 @@
-@import (reference, less) "~@/assets/less/ant"; // for ant @vars
+@import (reference, less) "~@/assets/less/ant";
 
-@input-dirty: #fffce1;
+@input-dirty: var(--rd-color-warning-soft, #fffce1);
 
 .parameter-input {
-  display: inline-block;
+  display: block;
   position: relative;
   width: 100%;
+  min-width: 160px;
 
   .@{ant-prefix}-input,
   .@{ant-prefix}-input-number {
-    min-width: 100% !important;
+    width: 100% !important;
+    min-width: 0 !important;
   }
 
-  .@{ant-prefix}-select {
+  .@{ant-prefix}-select,
+  .@{ant-prefix}-picker {
     width: 100%;
+    min-width: 0;
   }
 
   &[data-dirty] {
@@ -22,6 +26,7 @@
     .@{ant-prefix}-select-selector,
     .@{ant-prefix}-picker {
       background-color: @input-dirty;
+      border-color: var(--rd-color-warning, #f0ad4e);
     }
   }
 }

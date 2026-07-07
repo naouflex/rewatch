@@ -5,6 +5,7 @@ import PropTypes from "prop-types";
 import { trim, template, values } from "lodash";
 
 import LoadingState from "@/components/items-list/components/LoadingState";
+import CreatePageLayout from "@/components/items-list/CreatePageLayout";
 import routeWithUserSession from "@/components/ApplicationArea/routeWithUserSession";
 import navigateTo from "@/components/ApplicationArea/navigateTo";
 
@@ -16,6 +17,8 @@ import routes from "@/services/routes";
 
 import MenuButton from "../../components/predictions/MenuButton";
 import PredictionView from "../../components/predictions/PredictionResultView";
+
+import "@/components/items-list/create-page-layout.less";
 
 const MODES = {
   VIEW: 1,
@@ -220,8 +223,9 @@ class Prediction extends React.Component {
     };
 
     return (
-      <div className="predictions-page">
+      <div className="page-create-form">
         <div className="container">
+          <CreatePageLayout backHref="predictions" backLabel="Back to Predictions" />
           {mode === MODES.VIEW && (
             <PredictionView canEdit={canEdit}   {...commonProps} />
           )}

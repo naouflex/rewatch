@@ -13,12 +13,13 @@ import { getHorizontalFormProps, getHorizontalFormItemWithoutLabelProps } from "
 import useOrganizationSettings from "./hooks/useOrganizationSettings";
 import GeneralSettings from "./components/GeneralSettings";
 import AuthSettings from "./components/AuthSettings";
+import "./OrganizationSettings.less";
 
 function OrganizationSettings({ onError }) {
   const { settings, currentValues, isLoading, isSaving, handleSubmit, handleChange } = useOrganizationSettings(onError);
   return (
-    <div className="row" data-test="OrganizationSettings">
-      <div className="m-r-20 m-l-20">
+    <div className="organization-settings" data-test="OrganizationSettings">
+      <div className="organization-settings__content">
         <Form {...getHorizontalFormProps()} onFinish={handleSubmit}>
           <GeneralSettings loading={isLoading} settings={settings} values={currentValues} onChange={handleChange} />
           <AuthSettings loading={isLoading} settings={settings} values={currentValues} onChange={handleChange} />

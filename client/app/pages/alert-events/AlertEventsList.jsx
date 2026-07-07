@@ -1,5 +1,5 @@
 import React from "react";
-import { isEmpty, get } from "lodash";
+import { get } from "lodash";
 
 import Tag from "antd/lib/tag";
 
@@ -7,7 +7,6 @@ import routeWithUserSession from "@/components/ApplicationArea/routeWithUserSess
 import Link from "@/components/Link";
 import Paginator from "@/components/Paginator";
 import Tooltip from "@/components/Tooltip";
-import TimeAgo from "@/components/TimeAgo";
 import PlainButton from "@/components/PlainButton";
 import NotificationContentModal from "@/components/alerts/NotificationContentModal";
 import { confirmDialog } from "@/components/ModalShell/confirmDialog";

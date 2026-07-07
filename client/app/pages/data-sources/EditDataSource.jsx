@@ -17,6 +17,7 @@ import routes from "@/services/routes";
 import DataSourceIconForm from "@/pages/data-sources/components/DataSourceIconForm";
 
 import "./data-sources.less";
+import "@/components/items-list/create-page-layout.less";
 
 class EditDataSource extends React.Component {
   static propTypes = {
@@ -117,8 +118,8 @@ class EditDataSource extends React.Component {
     };
 
     return (
-      <div className="row" data-test="DataSource">
-        <div className="text-right m-r-10">
+      <div className="settings-detail-form" data-test="DataSource">
+        <div className="text-right m-b-10">
           {HELP_TRIGGER_TYPES[helpTriggerType] && (
             <HelpTrigger className="f-13" type={helpTriggerType}>
               Setup Instructions <i className="fa fa-question-circle" aria-hidden="true" />
@@ -126,14 +127,14 @@ class EditDataSource extends React.Component {
             </HelpTrigger>
           )}
         </div>
-        <div className="text-center m-b-10">
-          <DataSourceIconForm
-            dataSource={dataSource}
-            onChange={updatedDataSource => this.setState({ dataSource: updatedDataSource })}
-          />
-          <h3 className="m-0">{type.name}</h3>
-        </div>
-        <div className="col-md-4 col-md-offset-4 m-b-10">
+        <div className="create-page-form__body">
+          <div className="text-center m-b-20">
+            <DataSourceIconForm
+              dataSource={dataSource}
+              onChange={updatedDataSource => this.setState({ dataSource: updatedDataSource })}
+            />
+            <h3 className="m-0">{type.name}</h3>
+          </div>
           <DynamicForm {...formProps} />
         </div>
       </div>

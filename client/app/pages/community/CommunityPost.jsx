@@ -12,6 +12,7 @@ import Link from "@/components/Link";
 import PageHeader from "@/components/PageHeader";
 import TimeAgo from "@/components/TimeAgo";
 import LoadingState from "@/components/items-list/components/LoadingState";
+import CreatePageLayout from "@/components/items-list/CreatePageLayout";
 import { currentUser } from "@/services/auth";
 import Community, { COMMUNITY_CATEGORIES, getCategoryMeta } from "@/services/community";
 import notification from "@/services/notification";
@@ -20,6 +21,7 @@ import routes from "@/services/routes";
 import ForumLikeButton from "./components/ForumLikeButton";
 import ForumThread from "./components/ForumThread";
 
+import "@/components/items-list/create-page-layout.less";
 import "./Community.less";
 
 const { TextArea } = Input;
@@ -92,7 +94,13 @@ function CommunityPostPage({ postId, onError }) {
   };
 
   if (loading) {
-    return <LoadingState className="" />;
+    return (
+      <div className="page-create-form community-page">
+        <div className="container">
+          <LoadingState className="" />
+        </div>
+      </div>
+    );
   }
 
   if (!post) {
@@ -102,34 +110,41 @@ function CommunityPostPage({ postId, onError }) {
   const categoryMeta = getCategoryMeta(post.category);
 
   return (
-    <div className="community-page container">
-      <PageHeader
-        title={editing ? "Edit post" : post.title}
-        description={
-          !editing && (
-            <>
-              <Link href="community">Community</Link>
-              {" / "}
-              {categoryMeta.label}
-            </>
-          )
-        }
-      >
-        {!editing && canEdit && (
-          <>
-            <Button className="m-r-10" onClick={() => setEditing(true)}>
-              Edit
-            </Button>
-            <Button danger onClick={handleDelete}>
-              Delete
-            </Button>
-          </>
-        )}
-      </PageHeader>
+    <div className="page-create-form community-page">
+      <div className="container">
+      <CreatePageLayout backHref="community" backLabel="Back to Community" />
+      <div className="community-layout">
+        <div className="create-page-form__header">
+          <PageHeader
+            title={editing ? "Edit post" : post.title}
+            description={
+              !editing && (
+                <>
+                  <Link href="community">Community</Link>
+                  {" / "}
+                  {categoryMeta.label}
+                </>
+              )
+            }
+            actions={
+              !editing &&
+              canEdit && (
+                <>
+                  <Button className="m-r-10" onClick={() => setEditing(true)}>
+                    Edit
+                  </Button>
+                  <Button danger onClick={handleDelete}>
+                    Delete
+                  </Button>
+                </>
+              )
+            }
+          />
+        </div>
 
-      {editing ? (
-        <div className="community-layout">
-          <Form form={form} layout="vertical" className="community-form" onFinish={handleSave}>
+        {editing ? (
+          <div className="create-page-form__body">
+            <Form form={form} layout="vertical" onFinish={handleSave}>
             <Form.Item name="title" label="Title" rules={[{ required: true, message: "Title is required" }]}>
               <Input maxLength={255} />
             </Form.Item>
@@ -154,10 +169,10 @@ function CommunityPostPage({ postId, onError }) {
               </Button>
             </Form.Item>
           </Form>
-        </div>
-      ) : (
-        <div className="community-layout">
-          <article className="community-post-view">
+          </div>
+        ) : (
+          <>
+            <article className="community-post-view">
             <div className="community-post-view__meta">
               <span className="community-post-view__category">
                 <i className={`fa ${categoryMeta.icon} m-r-5`} aria-hidden="true" />
@@ -181,8 +196,10 @@ function CommunityPostPage({ postId, onError }) {
             <div className="community-post-view__body">{post.body}</div>
           </article>
           <ForumThread post={post} onChange={setPost} />
-        </div>
-      )}
+          </>
+        )}
+      </div>
+      </div>
     </div>
   );
 }

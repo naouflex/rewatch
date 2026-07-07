@@ -36,10 +36,10 @@ export default function Title({
           <div className={`d-flex align-items-center ${isDarkMode ? 'dark-mode' : ''}`}>
             {model.id && <FavoritesControl item={model} />}
             <h3>
-              {editMode && model.query ? (
+              {editMode ? (
                 <Input
                   className="f-inherit"
-                  placeholder={defaultName}
+                  placeholder={model.query ? defaultName : "Model name"}
                   value={name}
                   aria-label="Model title"
                   onChange={e => onChange(e.target.value)}

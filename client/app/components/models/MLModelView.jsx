@@ -179,18 +179,19 @@ export default class ModelView extends React.Component {
 
     return (
       <>
-        <Title name={name} model={model} editMode={false} tagsExtra={null} onChange={onChange} canEdit={canEdit} setModelTags={setModelTags}>
-          <DynamicComponent name="ModelView.HeaderExtra" model={model} />
-          <Tooltip title={canEdit ? "" : "You do not have sufficient permissions to edit this model"}>
-            <Button type="default" onClick={canEdit ? onEdit : null} className={cx({ disabled: !canEdit })}>
-              <i className="fa fa-edit m-r-5" aria-hidden="true" />
-              Edit
-            </Button>
-            {menuButton}
-          </Tooltip>
-        </Title>
-        <h3>Model Settings</h3>
-        <div className="bg-white tiled p-20">
+        <div className="create-page-form__header">
+          <Title name={name} model={model} editMode={false} tagsExtra={null} onChange={onChange} canEdit={canEdit} setModelTags={setModelTags}>
+            <DynamicComponent name="ModelView.HeaderExtra" model={model} />
+            <Tooltip title={canEdit ? "" : "You do not have sufficient permissions to edit this model"}>
+              <Button type="default" onClick={canEdit ? onEdit : null} className={cx({ disabled: !canEdit })}>
+                <i className="fa fa-edit m-r-5" aria-hidden="true" />
+                Edit
+              </Button>
+              {menuButton}
+            </Tooltip>
+          </Title>
+        </div>
+        <div className="create-page-form__body">
           <Grid.Row type="flex" gutter={16}>
             <Grid.Col xs={24} md={16} className="d-flex">
               <Form className="flex-fill">

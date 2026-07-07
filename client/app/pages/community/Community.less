@@ -1,6 +1,28 @@
 .community-page {
-  padding-top: 24px;
   padding-bottom: 48px;
+
+  .page-header-wrapper {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+
+    .page-header-main {
+      width: 100%;
+    }
+
+    h3 {
+      text-align: center;
+    }
+
+    .page-header-description {
+      text-align: center;
+    }
+
+    .page-header-actions {
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+  }
 }
 
 .community-layout {
@@ -29,7 +51,20 @@
     flex-wrap: wrap;
     gap: 8px;
     justify-content: center;
+    flex: 1 1 auto;
+  }
+
+  &__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
     width: 100%;
+  }
+
+  &__create {
+    flex: 0 0 auto;
   }
 }
 
@@ -97,6 +132,7 @@
     line-height: 1.35;
     letter-spacing: -0.01em;
     color: var(--rd-color-text);
+    text-align: center;
   }
 
   &__excerpt {

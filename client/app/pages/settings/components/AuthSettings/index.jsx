@@ -3,6 +3,7 @@ import HelpTrigger from "@/components/HelpTrigger";
 import DynamicComponent from "@/components/DynamicComponent";
 import { clientConfig } from "@/services/auth";
 import { SettingsEditorPropTypes, SettingsEditorDefaultProps } from "../prop-types";
+import SettingsSection from "../SettingsSection";
 
 import PasswordLoginSettings from "./PasswordLoginSettings";
 import GoogleLoginSettings from "./GoogleLoginSettings";
@@ -25,13 +26,14 @@ export default function AuthSettings(props) {
 
   return (
     <DynamicComponent name="OrganizationSettings.AuthSettings" {...props}>
-      <h3 className="m-t-0">
-        Authentication <HelpTrigger type="AUTHENTICATION_OPTIONS" />
-      </h3>
-      <hr />
-      <PasswordLoginSettings {...props} onChange={handleChange} />
-      <GoogleLoginSettings {...props} onChange={handleChange} />
-      <SAMLSettings {...props} onChange={handleChange} />
+      <SettingsSection
+        title="Authentication"
+        description="Control how users sign in to this organization."
+        helpTrigger={<HelpTrigger type="AUTHENTICATION_OPTIONS" />}>
+        <PasswordLoginSettings {...props} onChange={handleChange} />
+        <GoogleLoginSettings {...props} onChange={handleChange} />
+        <SAMLSettings {...props} onChange={handleChange} />
+      </SettingsSection>
     </DynamicComponent>
   );
 }

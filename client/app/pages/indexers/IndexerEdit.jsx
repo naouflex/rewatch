@@ -56,25 +56,27 @@ export default class IndexerEdit extends React.Component {
 
     return (
       <>
-        <Title indexer={indexer} name={name} onChange={onNameChange} editMode>
-          <Button className="m-r-5" onClick={() => this.cancel()}>
-            <i className="fa fa-times m-r-5" aria-hidden="true" />
-            Cancel
-          </Button>
-          <Button type="primary" onClick={() => this.save()}>
-            {saving ? (
-              <span role="status" aria-live="polite" aria-relevant="additions removals">
-                <i className="fa fa-spinner fa-pulse m-r-5" aria-hidden="true" />
-                <span className="sr-only">Saving...</span>
-              </span>
-            ) : (
-              <i className="fa fa-check m-r-5" aria-hidden="true" />
-            )}
-            Save Changes
-          </Button>
-          {menuButton}
-        </Title>
-        <div className="bg-white tiled p-20">
+        <div className="create-page-form__header">
+          <Title indexer={indexer} name={name} onChange={onNameChange} editMode>
+            <Button className="m-r-5" onClick={() => this.cancel()}>
+              <i className="fa fa-times m-r-5" aria-hidden="true" />
+              Cancel
+            </Button>
+            <Button type="primary" onClick={() => this.save()}>
+              {saving ? (
+                <span role="status" aria-live="polite" aria-relevant="additions removals">
+                  <i className="fa fa-spinner fa-pulse m-r-5" aria-hidden="true" />
+                  <span className="sr-only">Saving...</span>
+                </span>
+              ) : (
+                <i className="fa fa-check m-r-5" aria-hidden="true" />
+              )}
+              Save Changes
+            </Button>
+            {menuButton}
+          </Title>
+        </div>
+        <div className="create-page-form__body">
           <div className="d-flex">
             <Form className="flex-fill">
               <HorizontalFormItem label="Query">

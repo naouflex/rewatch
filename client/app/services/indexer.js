@@ -32,6 +32,8 @@ const IndexerService = {
   doArchive: data => axios.post(`api/indexers/${data.id}/archive`).then(wrap),
   favorite: data => axios.post(`api/indexers/${data.id}/favorite`),
   unfavorite: data => axios.delete(`api/indexers/${data.id}/favorite`),
+  preview: ({ id, limit }) =>
+    axios.get(`api/indexers/${id}/preview`, { params: limit ? { limit } : undefined }),
 };
 
 export default IndexerService;

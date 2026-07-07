@@ -134,13 +134,7 @@ export class ParameterMappingInput extends React.Component {
     inputError: null,
   };
 
-  formItemProps = {
-    labelCol: { span: 5 },
-    wrapperCol: { span: 16 },
-    className: "form-item",
-  };
-
-  updateSourceType = (type) => {
+ = (type) => {
     let {
       mapping: { mapTo },
     } = this.props;
@@ -236,11 +230,11 @@ export class ParameterMappingInput extends React.Component {
     const { mapping } = this.props;
     switch (mapping.type) {
       case MappingType.DashboardAddNew:
-        return ["Key", "Enter a new parameter keyword", this.renderDashboardAddNew()];
+        return ["Keyword", "Name used for the new dashboard-level parameter", this.renderDashboardAddNew()];
       case MappingType.DashboardMapToExisting:
-        return ["Key", "Select from a list of existing parameters", this.renderDashboardMapToExisting()];
+        return ["Keyword", "Select an existing dashboard parameter", this.renderDashboardMapToExisting()];
       case MappingType.StaticValue:
-        return ["Value", null, this.renderStaticValue()];
+        return ["Value", "Fixed value used every time this widget runs", this.renderStaticValue()];
       default:
         return [];
     }
@@ -251,19 +245,19 @@ export class ParameterMappingInput extends React.Component {
     const [label, help, input] = this.renderInputBlock();
 
     return (
-      <Form layout="horizontal">
-        <Form.Item label="Source" {...this.formItemProps}>
+      <Form layout="vertical" className="parameter-mapping-form">
+        <Form.Item label="Value source" className="parameter-mapping-form__source">
           {this.renderMappingTypeSelector()}
         </Form.Item>
-        <Form.Item
-          style={{ height: 60, visibility: input ? "visible" : "hidden" }}
-          label={label}
-          {...this.formItemProps}
-          validateStatus={inputError ? "error" : ""}
-          help={inputError || help} // empty space so line doesn't collapse
-        >
-          {input}
-        </Form.Item>
+        {input && (
+          <Form.Item
+            label={label}
+            className="parameter-mapping-form__value"
+            validateStatus={inputError ? "error" : ""}
+            help={inputError || help}>
+            {input}
+          </Form.Item>
+        )}
       </Form>
     );
   }
@@ -326,7 +320,8 @@ class MappingEditor extends React.Component {
     return (
       <div className="parameter-mapping-editor" data-test="EditParamMappingPopover">
         <header>
-          Edit Source and Value <HelpTrigger type="VALUE_SOURCE_OPTIONS" />
+          <span>Edit parameter mapping</span>
+          <HelpTrigger type="VALUE_SOURCE_OPTIONS" />
         </header>
         <ParameterMappingInput
           mapping={mapping}
@@ -581,40 +576,35 @@ export class ParameterMappingListInput extends React.Component {
 
     return (
       <div className="parameters-mapping-list">
-        <Table dataSource={dataSource} size="medium" pagination={false} rowKey={(record, idx) => `row${idx}`}>
-          <Table.Column
-            title="Title"
-            dataIndex="mapping"
-            key="title"
-            render={(mapping) => (
-              <TitleEditor
-                existingParams={existingParams}
-                mapping={mapping}
-                onChange={(newMapping) => this.updateParamMapping(mapping, newMapping)}
-              />
-            )}
-          />
+        <Table dataSource={dataSource} size="middle" pagination={false} rowKey={(record, idx) => `row${idx}`}>
           <Table.Column
             title="Keyword"
             dataIndex="mapping"
             key="keyword"
             className="keyword"
-            render={(mapping) => <code>{`{{ ${mapping.name} }}`}</code>}
+            width={140}
+            render={mapping => <code>{`{{ ${mapping.name} }}`}</code>}
           />
           <Table.Column
-            title="Default Value"
+            title="Title"
             dataIndex="mapping"
-            key="value"
-            render={(mapping) => this.constructor.getDefaultValue(mapping, this.props.existingParams)}
+            key="title"
+            render={mapping => (
+              <TitleEditor
+                existingParams={existingParams}
+                mapping={mapping}
+                onChange={newMapping => this.updateParamMapping(mapping, newMapping)}
+              />
+            )}
           />
           <Table.Column
-            title="Value Source"
+            title="Value source"
             dataIndex="mapping"
             key="source"
-            render={(mapping) => {
+            render={mapping => {
               const existingParamsNames = existingParams
-                .filter(({ type }) => type === mapping.param.type) // exclude mismatching param types
-                .map(({ name }) => name); // keep names only
+                .filter(({ type }) => type === mapping.param.type)
+                .map(({ name }) => name);
 
               return (
                 <Fragment>
@@ -627,6 +617,13 @@ export class ParameterMappingListInput extends React.Component {
                 </Fragment>
               );
             }}
+          />
+          <Table.Column
+            title="Default value"
+            dataIndex="mapping"
+            key="value"
+            className="default-value"
+            render={mapping => this.constructor.getDefaultValue(mapping, this.props.existingParams)}
           />
         </Table>
       </div>

@@ -25,32 +25,9 @@ import MLModelListEmptyState from "./MLModelsVersionsListEmptyState";
 
 import "./models-versions-list.css";
 import { MLModelsVersionsTagsControl } from "@/components/tags-control/TagsControl";
+import { FIXED_TABLE_WIDTHS as W } from "@/components/items-list/fixedTableWidths";
 
 import {STATE_CLASS} from "../ml-models/MLModelsList";
-
-// Add this helper function at the top of the file
-function formatDuration(seconds) {
-  if (!seconds) return 'N/A';
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const remainingSeconds = seconds % 60;
-  return [
-    hours > 0 ? `${hours}h` : null,
-    minutes > 0 ? `${minutes}m` : null,
-    `${remainingSeconds}s`
-  ].filter(Boolean).join(' ');
-}
-
-const formatDate = (date) => {
-  if (!date) return 'N/A';
-  return new Intl.DateTimeFormat('en-GB', {
-    year: '2-digit', 
-    month: '2-digit', 
-    day: '2-digit', 
-    hour: '2-digit', 
-    minute: '2-digit'
-  }).format(new Date(date)).replace(/,/g, '');
-};
 
 const sidebarMenu = [
   {
@@ -80,221 +57,73 @@ const sidebarMenu = [
 ];
 
 const listColumns = [
-  Columns.favorites({ className: "p-r-0" }),
+  Columns.favorites({ className: "p-r-0", width: W.favorite }),
   Columns.custom.sortable(
     (text, model) => (
-      <span title={model.options.muted ? "Muted" : "Active"}>
-        <i className={`fa fa-bell-${model.options.muted ? "slash" : "o"} p-r-0`} aria-hidden="true" />
-        <span className="sr-only">{model.options.muted ? "Muted" : "Active"}</span>
-      </span>
-    ),
-    {
-      title: (
-        <>
-          <i className="fa fa-bell p-r-0" aria-hidden="true" />
-          <span className="sr-only">Sort by notification status.</span>
-        </>
-      ),
-      field: "muted",
-      width: "1%",
-    }
-  ),
-  Columns.custom(
-    (text, model) => (
-      <div>
-        <Link href={`ml_models/${model.id}/predictions`}>
-          <i className="fa fa-history" aria-hidden="true" />
-        </Link>
-      </div>
-    ),
-    {
-      title: (
-        <>
-          <i className="fa fa-history" aria-hidden="true" />
-          <span className="sr-only">Model History</span>
-        </>
-      ),
-      width: "1%",
-    }
-  ),
-  Columns.custom(
-    (text, model) => (
-      <div>
-        <Link href={`ml_models/${model.id}/stats`}>
-          <i className="fa fa-bar-chart" aria-hidden="true" />
-        </Link>
-      </div>
-    ),
-    {
-      title: (
-        <>
-          <i className="fa  fa-bar-chart" aria-hidden="true" />
-          <span className="sr-only">Model Statistics</span>
-        </>
-      ),
-      width: "1%",
-    }
-  ),
-  Columns.custom.sortable(
-    (text, model) => (
-      <React.Fragment>
-          <Link className="table-main-title" href={"ml_models_versions/" + model.id}>
+      <div className="list-page-table__cell-stack">
+        <Link
+          className="table-main-title"
+          href={"ml_models_versions/" + model.id}
+          title={`${model.name} v${model.version}`}>
+          <span className="list-page-table__truncate">
             {model.name}
-          </Link>
-          <MLModelsVersionsTagsControl className="d-block" tags={model.tags} isArchived={model.is_archived} />
-        </React.Fragment>
+            <span className="text-muted"> v{model.version}</span>
+          </span>
+        </Link>
+        <MLModelsVersionsTagsControl className="d-block" tags={model.tags} isArchived={model.is_archived} />
+      </div>
     ),
     {
       title: "Name",
       field: "name",
+      ellipsis: true,
     }
   ),
   Columns.custom.sortable(
-    (text, model) => (
-      <React.Fragment>
-          <Link className="table-main-title" href={"ml_models_versions/" + model.id}>
-            v{model.version}
-          </Link>
-        </React.Fragment>
-    ),
-    {
-      title: "Version",
-      field: "version",
-    }
-  ),
-  Columns.custom.sortable(
-    (text, model) => (
-      <div>
-        {model.query 
-          ? <>
-              {formatDate(model.query.retrieved_at)}
-            </>
-          : 'No query'}
-      </div>
-    ),
-    {
-      title: "Last Retrieved At",
-      field: "query.retrieved_at",
-      width: "1%"
-    }
-  ),
-  Columns.custom.sortable(
-    (text, model) => (
-      <div>
-        {model.query 
-          ? <Link href={"queries/" + model.query.id}>{model.query.name}</Link>
-          : 'No query'}
-      </div>
-    ),
+    (text, model) =>
+      model.query ? (
+        <Link href={"queries/" + model.query.id} className="list-page-table__truncate" title={model.query.name}>
+          {model.query.name}
+        </Link>
+      ) : (
+        "No query"
+      ),
     {
       title: "Query",
       field: "query.name",
-      width: "1%"
-      
+      ellipsis: true,
+      width: W.query,
     }
   ),
-  Columns.custom((text, item) => item.user.name, { title: "Created By", width: "1%" }),
-
-  //state
+  Columns.custom((text, item) => (item.user ? item.user.name : ""), {
+    title: "Created By",
+    width: W.author,
+    ellipsis: true,
+  }),
   Columns.custom.sortable(
     (text, item) => (
-      <div>
-        <span className={`label ${STATE_CLASS[item.state]}`}>{toUpper(item.state)}</span>
-      </div>
-    ),
-    {
-      title: "State",
-      field: "state",
-      width: "1%",
-      className: "text-nowrap",
-    }
-  ),
-  //state_train
-  Columns.custom.sortable(
-    (text, item) => (
-      <div>
-        <span className={`label ${STATE_CLASS[item.state_train]}`}>{toUpper(item.state_train)}</span>
-      </div>
+      <span className={`label ${STATE_CLASS[item.state_train]}`}>{toUpper(item.state_train)}</span>
     ),
     {
       title: "Training",
       field: "state_train",
-      width: "1%",
+      width: W.stateLabel,
       className: "text-nowrap",
     }
   ),
-  //state_predict
   Columns.custom.sortable(
     (text, item) => (
-      <div>
-        <span className={`label ${STATE_CLASS[item.state_predict]}`}>{toUpper(item.state_predict)}</span>
-      </div>
+      <span className={`label ${STATE_CLASS[item.state_predict]}`}>{toUpper(item.state_predict)}</span>
     ),
     {
       title: "Predicting",
       field: "state_predict",
-      width: "1%",
+      width: W.stateLabel,
       className: "text-nowrap",
     }
   ),
-  Columns.custom.sortable(
-    (text, item) => <div>{formatDate(item.created_at)}</div>,
-    { title: "Created At", field: "created_at", width: "1%" }
-  ),
-  Columns.custom.sortable(
-    (text, item) => <div>{formatDate(item.updated_at)}</div>,
-    { title: "Last Updated At", field: "updated_at", width: "1%" }
-  ),
-  Columns.custom.sortable(
-    (text, item) => (
-      <div>
-        {item.options.train_last_triggered_at && (
-          <span title="Training Last Triggered">
-            {formatDate(item.options.train_last_triggered_at)}
-          </span>
-        )}
-      </div>
-    ),
-    {
-      title: "Training Last Triggered",
-      field: "options.train_last_triggered_at",
-      width: "1%",
-    }
-  ),
-  Columns.custom.sortable(
-    (text, item) => (
-      <div>
-        {item.options.predict_last_triggered_at && (
-          <span title="Predicting Last Triggered">
-            {formatDate(item.options.predict_last_triggered_at)}
-          </span>
-        )}
-      </div>
-    ),
-    {
-      title: "Predicting Last Triggered",
-      field: "options.predict_last_triggered_at",
-      width: "1%",
-    }
-  ),
-  Columns.custom.sortable(
-    (text, item) => (
-      <div>
-        {item.options.train_duration !== undefined ? (
-          <span title="Training Duration">
-            {formatDuration(item.options.train_duration)}
-          </span>
-        ) : (
-          'N/A'
-        )}
-      </div>
-    ),
-    {
-      title: "Training Duration",
-      field: "options.train_duration",
-      width: "1%",
-    }
-  ),
+  Columns.timeAgo.sortable({ title: "Last Updated", field: "updated_at", width: W.timeAgo }),
+  Columns.dateTime.sortable({ title: "Created At", field: "created_at", width: W.dateTime }),
 ];
 
 function MLModelsListExtraActions(props) {
@@ -351,11 +180,12 @@ function MLModelsVersionsList({ controller }) {
               <div className={cx({ "m-b-10": areExtraActionsAvailable })}>
                 <ExtraActionsComponent selectedItems={selectedItems} />
               </div>
-              <div className="list-page-table">
+              <div className="list-page-table list-page-table--fixed">
                 <ItemsTable
                   items={controller.pageItems}
                   loading={!controller.isLoaded}
                   columns={tableColumns}
+                  tableLayout="fixed"
                   orderByField={controller.orderByField}
                   orderByReverse={controller.orderByReverse}
                   toggleSorting={controller.toggleSorting}

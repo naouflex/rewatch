@@ -113,6 +113,7 @@ export default class ItemsTable extends React.Component {
     setSorting: PropTypes.func,
     "data-test": PropTypes.string,
     rowKey: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
+    tableLayout: PropTypes.oneOf(["auto", "fixed"]),
   };
 
   static defaultProps = {
@@ -125,6 +126,7 @@ export default class ItemsTable extends React.Component {
     orderByField: null,
     orderByReverse: false,
     toggleSorting: () => {},
+    tableLayout: "auto",
   };
 
   prepareColumns() {
@@ -197,7 +199,7 @@ export default class ItemsTable extends React.Component {
       }
     };
 
-    const { showHeader } = this.props;
+    const { showHeader, tableLayout } = this.props;
     if (this.props.loading) {
       if (isEmpty(tableDataProps.dataSource)) {
         tableDataProps.columns = tableDataProps.columns.map((column) => ({
@@ -217,6 +219,7 @@ export default class ItemsTable extends React.Component {
         showHeader={showHeader}
         rowKey={this.getRowKey}
         pagination={false}
+        tableLayout={tableLayout}
         onRow={onTableRow}
         onChange={onChange}
         data-test={this.props["data-test"]}

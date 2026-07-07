@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import Form from "antd/lib/form";
 import Button from "antd/lib/button";
 import HelpTrigger from "@/components/HelpTrigger";
+import CreatePageLayout from "@/components/items-list/CreatePageLayout";
 import { MLModel as ModelType } from "@/components/proptypes";
 import Title from "./Title";
 import Criteria from "./Criteria";
@@ -85,27 +86,29 @@ export default class ModelNew extends React.Component {
 
     return (
       <>
-        <Title name={name} model={model} onChange={onNameChange} editMode>
-          <DynamicComponent name="ModelNew.HeaderExtra" model={model} />
-          <Button type="primary" onClick={this.save} disabled={!query}>
-            {saving && (
-              <span role="status" aria-live="polite" aria-relevant="additions removals">
-                <i className="fa fa-spinner fa-pulse m-r-5" aria-hidden="true" />
-                <span className="sr-only">Saving...</span>
-              </span>
-            )}
-            Create Model
-          </Button>
-          {menuButton}
-        </Title>
-        <div className="bg-white tiled p-20">
+        <CreatePageLayout backHref="ml_models" backLabel="Back to Models" />
+        <div className="create-page-form__header">
+          <Title name={name} model={model} onChange={onNameChange} editMode>
+            <DynamicComponent name="ModelNew.HeaderExtra" model={model} />
+            <Button type="primary" onClick={this.save} disabled={!query}>
+              {saving && (
+                <span role="status" aria-live="polite" aria-relevant="additions removals">
+                  <i className="fa fa-spinner fa-pulse m-r-5" aria-hidden="true" />
+                  <span className="sr-only">Saving...</span>
+                </span>
+              )}
+              Create Model
+            </Button>
+            {menuButton}
+          </Title>
+        </div>
+        <div className="create-page-form__body">
+          <p className="create-page-form__intro">
+            Select the query you want to use for training and predictions. Models do not work with queries that use
+            parameters.
+          </p>
           <div className="d-flex">
             <Form className="flex-fill">
-              <div className="m-b-30">
-                Start by selecting the query that you would like to monitor using the search bar.
-                <br />
-                Keep in mind that Models do not work with queries that use parameters.
-              </div>
               <HorizontalFormItem label="Query">
                 <Query
                   query={query}

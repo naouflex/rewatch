@@ -7,6 +7,11 @@
   justify-content: stretch;
   gap: 16px;
 
+  .page-header-main {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
   h3 {
     margin: 0;
     line-height: 1.25;
@@ -14,7 +19,12 @@
     font-size: var(--rd-font-size-2xl);
     color: var(--rd-color-text);
     letter-spacing: -0.018em;
-    flex: 1 1 auto;
+  }
+
+  .page-header-description {
+    margin-top: 6px;
+    font-size: 13px;
+    color: var(--rd-color-text-secondary);
   }
 
   .page-header-actions {

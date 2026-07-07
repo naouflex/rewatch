@@ -68,27 +68,29 @@ export default class AlertView extends React.Component {
 
     return (
       <>
-        <Title name={name} alert={alert}>
-          <DynamicComponent name="AlertView.HeaderExtra" alert={alert} />
-          {canEdit ? (
-            <>
-              <Button type="default" onClick={canEdit ? onEdit : null} className={cx({ disabled: !canEdit })}>
-                <i className="fa fa-edit m-r-5" aria-hidden="true" />
-                Edit
-              </Button>
-              {menuButton}
-            </>
-          ) : (
-            <Tooltip title="You do not have sufficient permissions to edit this alert">
-              <Button type="default" onClick={canEdit ? onEdit : null} className={cx({ disabled: !canEdit })}>
-                <i className="fa fa-edit m-r-5" aria-hidden="true" />
-                Edit
-              </Button>
-              {menuButton}
-            </Tooltip>
-          )}
-        </Title>
-        <div className="bg-white tiled p-20">
+        <div className="create-page-form__header">
+          <Title name={name} alert={alert}>
+            <DynamicComponent name="AlertView.HeaderExtra" alert={alert} />
+            {canEdit ? (
+              <>
+                <Button type="default" onClick={canEdit ? onEdit : null} className={cx({ disabled: !canEdit })}>
+                  <i className="fa fa-edit m-r-5" aria-hidden="true" />
+                  Edit
+                </Button>
+                {menuButton}
+              </>
+            ) : (
+              <Tooltip title="You do not have sufficient permissions to edit this alert">
+                <Button type="default" onClick={canEdit ? onEdit : null} className={cx({ disabled: !canEdit })}>
+                  <i className="fa fa-edit m-r-5" aria-hidden="true" />
+                  Edit
+                </Button>
+                {menuButton}
+              </Tooltip>
+            )}
+          </Title>
+        </div>
+        <div className="create-page-form__body">
           <Grid.Row type="flex" gutter={16}>
             <Grid.Col xs={24} md={16} className="d-flex">
               <Form className="flex-fill">
@@ -98,15 +100,6 @@ export default class AlertView extends React.Component {
                 <HorizontalFormItem label="Query">
                   <Query query={query} queryResult={queryResult} />
                 </HorizontalFormItem>
-                {alert.tags && alert.tags.length > 0 && (
-                  <HorizontalFormItem label="Tags">
-                    {alert.tags.map(t => (
-                      <Tag key={t} color="blue">
-                        {t}
-                      </Tag>
-                    ))}
-                  </HorizontalFormItem>
-                )}
                 {queryResult && options && (
                   <>
                     <HorizontalFormItem label="Trigger when" className="alert-criteria">
@@ -123,6 +116,15 @@ export default class AlertView extends React.Component {
                       template.
                     </HorizontalFormItem>
                   </>
+                )}
+                {alert.tags && alert.tags.length > 0 && (
+                  <HorizontalFormItem label="Tags">
+                    {alert.tags.map(t => (
+                      <Tag key={t} color="blue">
+                        {t}
+                      </Tag>
+                    ))}
+                  </HorizontalFormItem>
                 )}
               </Form>
             </Grid.Col>

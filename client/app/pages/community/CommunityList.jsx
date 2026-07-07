@@ -13,6 +13,7 @@ import Community, { COMMUNITY_CATEGORIES, getCategoryMeta } from "@/services/com
 import routes from "@/services/routes";
 
 import "@/components/items-list/list-page-layout.less";
+import "@/components/items-list/create-page-layout.less";
 import "./Community.less";
 
 function CategoryBadge({ category }) {
@@ -88,7 +89,8 @@ function CommunityListPage() {
   }, [category]);
 
   return (
-    <div className="community-page container">
+    <div className="page-create-form community-page">
+      <div className="container">
       <div className="community-layout community-layout--wide">
         <div className="community-toolbar">
           <Sidebar.SearchInput
@@ -100,25 +102,33 @@ function CommunityListPage() {
             liveSearch={false}
             className="page-toolbar-search"
           />
-          <div className="community-toolbar__categories">
-            <Button
-              type={category === "all" ? "primary" : "default"}
-              size="small"
-              onClick={() => setCategory("all")}
-            >
-              All
-            </Button>
-            {COMMUNITY_CATEGORIES.map(item => (
+          <div className="community-toolbar__row">
+            <div className="community-toolbar__categories">
               <Button
-                key={item.value}
-                type={category === item.value ? "primary" : "default"}
+                type={category === "all" ? "primary" : "default"}
                 size="small"
-                onClick={() => setCategory(item.value)}
+                onClick={() => setCategory("all")}
               >
-                <i className={`fa ${item.icon} m-r-5`} aria-hidden="true" />
-                {item.label}
+                All
               </Button>
-            ))}
+              {COMMUNITY_CATEGORIES.map(item => (
+                <Button
+                  key={item.value}
+                  type={category === item.value ? "primary" : "default"}
+                  size="small"
+                  onClick={() => setCategory(item.value)}
+                >
+                  <i className={`fa ${item.icon} m-r-5`} aria-hidden="true" />
+                  {item.label}
+                </Button>
+              ))}
+            </div>
+            {canCreate && (
+              <Link.Button type="primary" href="community/new" className="community-toolbar__create">
+                <i className="fa fa-plus m-r-5" aria-hidden="true" />
+                New post
+              </Link.Button>
+            )}
           </div>
         </div>
 
@@ -143,6 +153,7 @@ function CommunityListPage() {
             )}
           </BigMessage>
         )}
+      </div>
       </div>
     </div>
   );

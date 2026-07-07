@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import Button from "antd/lib/button";
 import Form from "antd/lib/form";
@@ -8,11 +8,13 @@ import Select from "antd/lib/select";
 import routeWithUserSession from "@/components/ApplicationArea/routeWithUserSession";
 import navigateTo from "@/components/ApplicationArea/navigateTo";
 import Link from "@/components/Link";
-import PageHeader from "@/components/PageHeader";
+import CreatePageLayout from "@/components/items-list/CreatePageLayout";
+import { currentUser } from "@/services/auth";
 import Community, { COMMUNITY_CATEGORIES } from "@/services/community";
 import notification from "@/services/notification";
 import routes from "@/services/routes";
 
+import "@/components/items-list/create-page-layout.less";
 import "./Community.less";
 
 const { TextArea } = Input;
@@ -20,6 +22,17 @@ const { TextArea } = Input;
 function CommunityNewPage() {
   const [saving, setSaving] = useState(false);
   const [form] = Form.useForm();
+  const canCreate = currentUser.hasPermission("create_community_post");
+
+  useEffect(() => {
+    if (!canCreate) {
+      navigateTo("community", true);
+    }
+  }, [canCreate]);
+
+  if (!canCreate) {
+    return null;
+  }
 
   const handleSubmit = values => {
     setSaving(true);
@@ -33,49 +46,43 @@ function CommunityNewPage() {
   };
 
   return (
-    <div className="community-page container">
-      <PageHeader
-        title="New post"
-        description={
-          <>
-            <Link href="community">Community</Link>
-            {" / New post"}
-          </>
-        }
-      />
-
+    <div className="page-create-form community-page">
+      <div className="container">
+      <CreatePageLayout backHref="community" backLabel="Back to Community" />
       <div className="community-layout">
-        <Form
-          form={form}
-          layout="vertical"
-          initialValues={{ category: "general" }}
-          onFinish={handleSubmit}
-          className="community-form"
-        >
-          <Form.Item name="title" label="Title" rules={[{ required: true, message: "Title is required" }]}>
-            <Input maxLength={255} placeholder="What would you like to discuss?" />
-          </Form.Item>
-          <Form.Item name="category" label="Category" rules={[{ required: true }]}>
-            <Select>
-              {COMMUNITY_CATEGORIES.map(item => (
-                <Select.Option key={item.value} value={item.value}>
-                  {item.label}
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
-          <Form.Item name="body" label="Body" rules={[{ required: true, message: "Body is required" }]}>
-            <TextArea rows={12} placeholder="Share your question, tip, or dashboard idea..." />
-          </Form.Item>
-          <Form.Item>
-            <Button type="primary" htmlType="submit" loading={saving} className="m-r-10">
-              Publish
-            </Button>
-            <Link.Button href="community" disabled={saving}>
-              Cancel
-            </Link.Button>
-          </Form.Item>
-        </Form>
+        <div className="create-page-form__body">
+          <Form
+            form={form}
+            layout="vertical"
+            initialValues={{ category: "general" }}
+            onFinish={handleSubmit}
+          >
+            <Form.Item name="title" label="Title" rules={[{ required: true, message: "Title is required" }]}>
+              <Input maxLength={255} placeholder="What would you like to discuss?" />
+            </Form.Item>
+            <Form.Item name="category" label="Category" rules={[{ required: true }]}>
+              <Select>
+                {COMMUNITY_CATEGORIES.map(item => (
+                  <Select.Option key={item.value} value={item.value}>
+                    {item.label}
+                  </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+            <Form.Item name="body" label="Body" rules={[{ required: true, message: "Body is required" }]}>
+              <TextArea rows={12} placeholder="Share your question, tip, or dashboard idea..." />
+            </Form.Item>
+            <Form.Item>
+              <Button type="primary" htmlType="submit" loading={saving} className="m-r-10">
+                Publish
+              </Button>
+              <Link.Button href="community" disabled={saving}>
+                Cancel
+              </Link.Button>
+            </Form.Item>
+          </Form>
+        </div>
+      </div>
       </div>
     </div>
   );

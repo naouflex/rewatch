@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import { trim, template, values } from "lodash";
 
 import LoadingState from "@/components/items-list/components/LoadingState";
+import CreatePageLayout from "@/components/items-list/CreatePageLayout";
 import routeWithUserSession from "@/components/ApplicationArea/routeWithUserSession";
 import navigateTo from "@/components/ApplicationArea/navigateTo";
 
@@ -16,6 +17,8 @@ import MenuButton from "./components/MenuButton";
 import IndexerView from "./IndexerView";
 import IndexerEdit from "./IndexerEdit";
 import IndexerNew from "./IndexerNew";
+
+import "@/components/items-list/create-page-layout.less";
 
 const MODES = {
   NEW: 0,
@@ -233,8 +236,9 @@ class Indexer extends React.Component {
     };
 
     return (
-      <div className="indexer-page alert-page">
+      <div className="page-create-form">
         <div className="container">
+          {mode !== MODES.NEW && <CreatePageLayout backHref="indexers" backLabel="Back to Indexers" />}
           {mode === MODES.NEW && <IndexerNew {...commonProps} />}
           {mode === MODES.VIEW && (
             <IndexerView canEdit={canEdit} onEdit={this.edit} {...commonProps} />

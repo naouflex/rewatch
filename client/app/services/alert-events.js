@@ -1,9 +1,9 @@
 import { axios } from "@/services/axios";
 
 const AlertEvents = {
-  forAlert: ({ alertId, includeArchived = false, limit = 100 } = {}) =>
+  forAlert: ({ alertId, includeArchived = false, page = 1, pageSize = 20 } = {}) =>
     axios.get(`api/alerts/${alertId}/events`, {
-      params: { include_archived: includeArchived, limit },
+      params: { include_archived: includeArchived, page, page_size: pageSize },
     }),
   get: ({ alertId, eventId }) => axios.get(`api/alerts/${alertId}/events/${eventId}`),
   archive: ({ alertId, eventId }) => axios.post(`api/alerts/${alertId}/events/${eventId}`),

@@ -5,6 +5,7 @@ import PropTypes from "prop-types";
 import { head, includes, template, values } from "lodash";
 
 import LoadingState from "@/components/items-list/components/LoadingState";
+import CreatePageLayout from "@/components/items-list/CreatePageLayout";
 import routeWithUserSession from "@/components/ApplicationArea/routeWithUserSession";
 import navigateTo from "@/components/ApplicationArea/navigateTo";
 
@@ -17,6 +18,8 @@ import routes from "@/services/routes";
 
 import MenuButton from "../../components/models/MenuButton";
 import MLModelVersionView from "../../components/models/MLModelView";
+
+import "@/components/items-list/create-page-layout.less";
 
 
 const MODES = {
@@ -271,8 +274,9 @@ class MLModelVersion extends React.Component {
     };
 
     return (
-      <div className="models-versions-page">
+      <div className="page-create-form">
         <div className="container">
+          <CreatePageLayout backHref="ml_models_versions" backLabel="Back to Model Versions" />
           {mode === MODES.VIEW && (
             <MLModelVersionView {...commonProps} />
           )}

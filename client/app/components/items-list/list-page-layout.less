@@ -1,6 +1,8 @@
 .list-page-layout {
   &__content {
     width: 100%;
+    min-width: 0;
+    max-width: 100%;
   }
 }
 
@@ -185,9 +187,37 @@
 
 .list-page-table {
   .list-page-card-mixin();
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
 
   .table-data.ant-table-wrapper {
     background: transparent;
+    max-width: 100%;
+
+    .ant-table-content {
+      overflow-x: auto;
+    }
+
+    .ant-table-cell {
+      overflow: hidden;
+    }
+
+    .list-page-table__truncate,
+    .list-page-table__cell-stack > .table-main-title,
+    .list-page-table__cell-stack .list-page-table__truncate {
+      display: block;
+      min-width: 0;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .list-page-table__cell-stack {
+      min-width: 0;
+      max-width: 100%;
+    }
 
     .ant-spin-nested-loading,
     .ant-spin-container {
@@ -224,6 +254,15 @@
 
     .ant-table-tbody > tr:last-child > td {
       border-bottom: none !important;
+    }
+  }
+
+  &--fixed {
+    .table-data.ant-table-wrapper {
+      .ant-table {
+        table-layout: fixed;
+        width: 100% !important;
+      }
     }
   }
 

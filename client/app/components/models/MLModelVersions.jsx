@@ -5,7 +5,8 @@ import Paginator from "@/components/Paginator";
 import Tooltip from "@/components/Tooltip";
 import ItemsTable, { Columns } from "@/components/items-list/components/ItemsTable";
 import LoadingState from "@/components/items-list/components/LoadingState";
-import * as Grid from "antd/lib/grid";
+import "@/components/items-list/list-page-layout.less";
+import "@/components/items-list/create-page-layout.less";
 import JsonViewInteractive from "@/components/json-view-interactive/JsonViewInteractive";
 import Button from "antd/lib/button";
 import ModelVersionPickModal from "./ModelVersionPickModal";
@@ -204,26 +205,24 @@ function MLModelVersions({ versions, revertToVersion }) {
   ];
 
   return (
-    <div className={`model-versions ${isDarkMode ? 'dark-mode' : ''}`}>
-      <h3 className={`model-versions-title ${isDarkMode ? 'dark-mode' : ''}`}>Model Versions</h3>
+    <div className={`model-versions ${isDarkMode ? "dark-mode" : ""}`}>
+      <h3 className="create-page-form__section-title">Model Versions</h3>
       {loading ? (
         <LoadingState />
       ) : sortedVersions.length === 0 ? (
         <div className="text-center">No versions available.</div>
       ) : (
-        <div className={`bg-white tiled p-20 ${isDarkMode ? 'dark-mode' : ''}`}>
+        <div className={`create-page-form__body ${isDarkMode ? "dark-mode" : ""}`}>
           <input
             type="text"
             placeholder="Search..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className={`search-input ${isDarkMode ? 'dark-mode' : ''}`}
+            className={`search-input ${isDarkMode ? "dark-mode" : ""}`}
             style={{ marginBottom: "20px", padding: "10px", width: "100%", borderRadius: "2px" }}
           />
-          <Grid.Row gutter={16}>
-            <Grid.Col xs={24}>
-              <div className={`bg-white tiled table-responsive ${isDarkMode ? 'dark-mode' : ''}`}>
-                <ItemsTable
+          <div className="list-page-table">
+            <ItemsTable
                   items={currentItems}
                   columns={columnsWithActions}
                   loading={loading}
@@ -241,11 +240,9 @@ function MLModelVersions({ versions, revertToVersion }) {
                   onPageSizeChange={setPageSize}
                   page={currentPage}
                   onChange={setCurrentPage}
-                  className={isDarkMode ? 'dark-mode' : ''}
+                  className={isDarkMode ? "dark-mode" : ""}
                 />
-              </div>
-            </Grid.Col>
-          </Grid.Row>
+          </div>
         </div>
       )}
       <ModelVersionPickModal

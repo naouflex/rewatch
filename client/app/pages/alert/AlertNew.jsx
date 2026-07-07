@@ -2,6 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 
 import HelpTrigger from "@/components/HelpTrigger";
+import CreatePageLayout from "@/components/items-list/CreatePageLayout";
 import { Alert as AlertType } from "@/components/proptypes";
 
 import Form from "antd/lib/form";
@@ -34,15 +35,16 @@ export default class AlertNew extends React.Component {
 
     return (
       <>
-        <Title alert={alert} name={name} onChange={onNameChange} editMode />
-        <div className="bg-white tiled p-20">
+        <CreatePageLayout backHref="alerts" backLabel="Back to Alerts" />
+        <div className="create-page-form__header">
+          <Title alert={alert} name={name} onChange={onNameChange} editMode />
+        </div>
+        <div className="create-page-form__body">
+          <p className="create-page-form__intro">
+            Select the query you want to monitor. Alerts do not work with queries that use parameters.
+          </p>
           <div className="d-flex">
             <Form className="flex-fill">
-              <div className="m-b-30">
-                Start by selecting the query that you would like to monitor using the search bar.
-                <br />
-                Keep in mind that Alerts do not work with queries that use parameters.
-              </div>
               <HorizontalFormItem label="Query">
                 <Query query={query} queryResult={queryResult} onChange={onQuerySelected} editMode />
               </HorizontalFormItem>

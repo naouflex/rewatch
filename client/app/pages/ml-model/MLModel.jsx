@@ -5,6 +5,7 @@ import PropTypes from "prop-types";
 import { head, includes, trim, template, values } from "lodash";
 
 import LoadingState from "@/components/items-list/components/LoadingState";
+import CreatePageLayout from "@/components/items-list/CreatePageLayout";
 import routeWithUserSession from "@/components/ApplicationArea/routeWithUserSession";
 import navigateTo from "@/components/ApplicationArea/navigateTo";
 
@@ -24,6 +25,8 @@ import MLModelVersions from "../../components/models/MLModelVersions";
 import MLModelMetrics from "../../components/models/MLModelMetrics";
 import MLModelMetricsHistory from "../../components/models/MLModelMetricsHistory";
 import MLModelMetricsHistoryTrain from "../../components/models/MLModelMetricsHistoryTrain";
+
+import "@/components/items-list/create-page-layout.less";
 
 
 const MODES = {
@@ -703,8 +706,9 @@ class MLModel extends React.Component {
     };
 
     return (
-      <div className="model-page">
+      <div className="page-create-form">
         <div className="container">
+          {mode !== MODES.NEW && <CreatePageLayout backHref="ml_models" backLabel="Back to Models" />}
           {mode === MODES.NEW && <MLModelNew canEdit={canEdit} {...commonProps} />}
           {mode === MODES.VIEW && <MLModelView canEdit={canEdit} onEdit={this.edit} muted={muted} unmute={this.unmute} trainModel={this.trainModel} stopTraining={this.stopTraining} stopPredicting={this.stopPredicting} predict={this.predict} {...commonProps} />}
           {mode === MODES.EDIT && <MLModelEdit cancel={this.cancel} {...commonProps} />}

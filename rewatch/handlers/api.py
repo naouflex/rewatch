@@ -71,6 +71,7 @@ from rewatch.handlers.indexers import (
     IndexerFavoriteListResource,
     IndexerFavoriteResource,
     IndexerListResource,
+    IndexerPreviewResource,
     IndexerResource,
     IndexerTagsResource,
     MyIndexersResource,
@@ -272,6 +273,11 @@ api.add_org_resource(
     endpoint="indexer_favorites",
 )
 api.add_org_resource(IndexerTagsResource, "/api/indexers/tags", endpoint="indexers_tags")
+api.add_org_resource(
+    IndexerPreviewResource,
+    "/api/indexers/<indexer_id>/preview",
+    endpoint="indexer_preview",
+)
 
 # --- ML Models ---
 api.add_org_resource(MLModelSearchResource, "/api/ml_models/search", endpoint="ml_models_search")

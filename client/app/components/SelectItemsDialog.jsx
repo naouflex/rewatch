@@ -5,7 +5,7 @@ import classNames from "classnames";
 import Input from "antd/lib/input";
 import List from "antd/lib/list";
 import { wrap as wrapDialog, DialogPropType } from "@/components/DialogWrapper";
-import { ModalShell, ModalSection } from "@/components/ModalShell";
+import { ModalShell } from "@/components/ModalShell";
 import BigMessage from "@/components/BigMessage";
 import LoadingState from "@/components/items-list/components/LoadingState";
 import notification from "@/services/notification";

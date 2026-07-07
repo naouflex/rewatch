@@ -118,10 +118,6 @@ function buildColumns(currentPage, refresh) {
         field: "name",
       }
     ),
-    Columns.custom((text, item) => (item.user ? item.user.name : ""), {
-      title: "Created By",
-      width: "1%",
-    }),
     Columns.custom.sortable(
       (text, alert) => (
         <span className={`label ${STATE_CLASS[alert.state]}`}>{toUpper(alert.state)}</span>
@@ -133,6 +129,25 @@ function buildColumns(currentPage, refresh) {
         className: "text-nowrap",
       }
     ),
+    Columns.custom(
+      (text, alert) =>
+        alert.query ? (
+          <Link
+            href={`queries/${alert.query.id}`}
+            className="list-page-table__truncate"
+            title={alert.query.name}>
+            {alert.query.name}
+          </Link>
+        ) : (
+          "—"
+        ),
+      { title: "Query", width: "20%" }
+    ),
+    Columns.timeAgo.sortable({ title: "Last Triggered", field: "last_triggered_at", width: "1%" }),
+    Columns.custom((text, item) => (item.user ? item.user.name : ""), {
+      title: "Created By",
+      width: "1%",
+    }),
     Columns.timeAgo.sortable({ title: "Last Updated At", field: "updated_at", width: "1%" }),
     Columns.dateTime.sortable({ title: "Created At", field: "created_at", width: "1%" }),
     Columns.custom(

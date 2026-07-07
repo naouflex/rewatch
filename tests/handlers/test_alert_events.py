@@ -71,7 +71,23 @@ class TestAlertEventListResource(BaseTestCase):
 
         rv = self.make_request("get", "/api/alerts/{}/events".format(alert.id))
         self.assertEqual(rv.status_code, 200)
-        self.assertEqual(len(rv.json), 3)
+        self.assertEqual(rv.json["count"], 3)
+        self.assertEqual(len(rv.json["results"]), 3)
+
+    def test_paginates_events_for_an_alert(self):
+        alert = self.factory.create_alert()
+        for i in range(25):
+            self.factory.create_alert_event(alert=alert, content="row {}".format(i))
+        db.session.commit()
+
+        rv = self.make_request(
+            "get", "/api/alerts/{}/events".format(alert.id), query_string={"page": 2, "page_size": 10}
+        )
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(rv.json["count"], 25)
+        self.assertEqual(rv.json["page"], 2)
+        self.assertEqual(rv.json["page_size"], 10)
+        self.assertEqual(len(rv.json["results"]), 10)
 
     def test_excludes_archived_events_by_default(self):
         alert = self.factory.create_alert()
@@ -81,7 +97,7 @@ class TestAlertEventListResource(BaseTestCase):
         db.session.commit()
 
         rv = self.make_request("get", "/api/alerts/{}/events".format(alert.id))
-        ids = [e["id"] for e in rv.json]
+        ids = [e["id"] for e in rv.json["results"]]
         self.assertIn(e1.id, ids)
         self.assertNotIn(e2.id, ids)
 

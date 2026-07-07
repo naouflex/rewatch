@@ -47,20 +47,16 @@ function UserProfile({ userId, onError }) {
   return (
     <React.Fragment>
       <EmailSettingsWarning featureName="invite emails" className="m-b-20" adminOnly />
-      <div className="row">
-        {!user && <LoadingState className="" />}
-        {user && (
-          <DynamicComponent name="UserProfile" user={user}>
-            {!canEdit && <ReadOnlyUserProfile user={user} />}
-            {canEdit && <EditableUserProfile user={user} />}
-          </DynamicComponent>
-        )}
-      </div>
+      {!user && <LoadingState className="" />}
+      {user && (
+        <DynamicComponent name="UserProfile" user={user}>
+          {!canEdit && <ReadOnlyUserProfile user={user} />}
+          {canEdit && <EditableUserProfile user={user} />}
+        </DynamicComponent>
+      )}
       {user && isOwnProfile && (
-        <div className="row">
-          <div className="col-md-10 col-md-offset-1">
-            <ProfileActivityPanel />
-          </div>
+        <div className="settings-detail-form settings-detail-form--wide m-t-20">
+          <ProfileActivityPanel />
         </div>
       )}
     </React.Fragment>

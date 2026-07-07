@@ -3,6 +3,7 @@ import React from "react";
 import PropTypes from "prop-types";
 
 import LoadingState from "@/components/items-list/components/LoadingState";
+import CreatePageLayout from "@/components/items-list/CreatePageLayout";
 import routeWithUserSession from "@/components/ApplicationArea/routeWithUserSession";
 import navigateTo from "@/components/ApplicationArea/navigateTo";
 
@@ -17,6 +18,8 @@ import AlertView from "./AlertView";
 import AlertEdit from "./AlertEdit";
 import AlertNew from "./AlertNew";
 import notifications from "@/services/notifications";
+
+import "@/components/items-list/create-page-layout.less";
 
 const MODES = {
   NEW: 0,
@@ -268,8 +271,9 @@ class Alert extends React.Component {
     };
 
     return (
-      <div className="alert-page">
+      <div className="page-create-form">
         <div className="container">
+          {mode !== MODES.NEW && <CreatePageLayout backHref="alerts" backLabel="Back to Alerts" />}
           {mode === MODES.NEW && <AlertNew {...commonProps} />}
           {mode === MODES.VIEW && (
             <AlertView canEdit={canEdit} onEdit={this.edit} muted={muted} unmute={this.unmute} {...commonProps} />

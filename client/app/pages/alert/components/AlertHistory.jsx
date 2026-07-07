@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 
 import Table from "antd/lib/table";
 import Button from "antd/lib/button";
+import Tag from "antd/lib/tag";
 import Tooltip from "@/components/Tooltip";
 import notification from "@/services/notification";
 import PlainButton from "@/components/PlainButton";
@@ -15,6 +16,8 @@ import AlertHistoryWhen from "./AlertHistoryWhen";
 
 import "@/components/items-list/list-page-layout.less";
 import "./AlertHistory.less";
+
+const DEFAULT_PAGE_SIZE = 20;
 
 export default class AlertHistory extends React.Component {
   static propTypes = {
@@ -29,31 +32,52 @@ export default class AlertHistory extends React.Component {
   state = {
     events: [],
     loading: true,
+    totalCount: 0,
+    page: 1,
+    pageSize: DEFAULT_PAGE_SIZE,
     selectedEvent: null,
   };
 
   componentDidMount() {
-    this.refresh();
+    this.loadPage();
   }
 
-  refresh = () => {
+  loadPage = (page = this.state.page, pageSize = this.state.pageSize) => {
     const { alertId } = this.props;
-    this.setState({ loading: true });
-    AlertEvents.forAlert({ alertId, limit: 100 })
-      .then(events => this.setState({ events, loading: false }))
+    this.setState({ loading: true, page, pageSize });
+
+    AlertEvents.forAlert({ alertId, page, pageSize })
+      .then(({ results, count }) =>
+        this.setState({
+          events: results,
+          totalCount: count,
+          loading: false,
+        })
+      )
       .catch(() => {
         notification.error("Failed to load alert history.");
         this.setState({ loading: false });
       });
   };
 
+  refresh = () => {
+    this.loadPage(this.state.page, this.state.pageSize);
+  };
+
+  handlePageChange = (page, pageSize) => {
+    this.loadPage(page, pageSize);
+  };
+
+  afterEventRemoved = () => {
+    const { page, pageSize, totalCount } = this.state;
+    const newCount = Math.max(0, totalCount - 1);
+    const maxPage = Math.max(1, Math.ceil(newCount / pageSize) || 1);
+    this.loadPage(Math.min(page, maxPage), pageSize);
+  };
+
   archiveEvent = event => {
     AlertEvents.archive({ alertId: event.alert_id, eventId: event.id })
-      .then(() => {
-        this.setState(({ events }) => ({
-          events: events.filter(e => e.id !== event.id),
-        }));
-      })
+      .then(() => this.afterEventRemoved())
       .catch(() => notification.error("Failed to archive event."));
   };
 
@@ -64,18 +88,14 @@ export default class AlertHistory extends React.Component {
       variant: "danger",
       onConfirm: () =>
         AlertEvents.delete({ alertId: event.alert_id, eventId: event.id })
-          .then(() => {
-            this.setState(({ events }) => ({
-              events: events.filter(e => e.id !== event.id),
-            }));
-          })
+          .then(() => this.afterEventRemoved())
           .catch(() => notification.error("Failed to delete event.")),
     });
   };
 
   render() {
     const { canManage } = this.props;
-    const { events, loading, selectedEvent } = this.state;
+    const { events, loading, totalCount, page, pageSize, selectedEvent } = this.state;
 
     const columns = [
       {
@@ -86,21 +106,22 @@ export default class AlertHistory extends React.Component {
         ellipsis: true,
       },
       {
-        title: "Status",
-        dataIndex: "status",
-        render: statusTag,
-        width: 100,
-      },
-      {
         title: "State",
         dataIndex: "state",
         render: value => (value ? <Tag>{value.toUpperCase()}</Tag> : null),
         width: 110,
       },
       {
+        title: "Status",
+        dataIndex: "status",
+        render: statusTag,
+        width: 100,
+      },
+      {
         title: "Destination",
         dataIndex: "destination",
         render: (_value, event) => destinationLabel(event),
+        ellipsis: true,
       },
       {
         title: "Row",
@@ -157,7 +178,16 @@ export default class AlertHistory extends React.Component {
             loading={loading}
             dataSource={events}
             columns={columns}
-            pagination={{ pageSize: 10, hideOnSinglePage: true, showSizeChanger: false }}
+            pagination={{
+              current: page,
+              pageSize,
+              total: totalCount,
+              hideOnSinglePage: true,
+              showSizeChanger: true,
+              pageSizeOptions: ["10", "20", "50"],
+              onChange: this.handlePageChange,
+              onShowSizeChange: this.handlePageChange,
+            }}
             locale={{ emptyText: "No notifications have been recorded for this alert yet." }}
           />
         </div>

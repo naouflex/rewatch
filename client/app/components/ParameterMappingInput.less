@@ -1,20 +1,22 @@
-@import (reference, less) "~@/assets/less/ant"; // for ant @vars
+@import (reference, less) "~@/assets/less/ant";
 
 .parameters-mapping-list {
-  .keyword {
-    max-width: 100px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-
-    code {
-      white-space: nowrap; // so the curly braces don't line break
-    }
+  .keyword code {
+    white-space: nowrap;
+    font-size: 12px;
   }
 
-  // Ant <Tag> overrides
+  .default-value {
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--rd-color-text-secondary);
+  }
+
   .tag {
     margin: 0;
-    pointer-events: none; // unclickable
+    pointer-events: none;
 
     &:empty {
       display: none;
@@ -23,38 +25,51 @@
 }
 
 .parameter-mapping-editor {
-  width: 390px;
+  width: 420px;
+  max-width: 90vw;
 
   .radio {
     display: block;
-    height: 30px;
-    line-height: 30px;
-  }
-
-  .form-item {
-    margin-bottom: 10px;
+    height: auto;
+    min-height: 30px;
+    line-height: 1.4;
+    margin-bottom: 4px;
+    white-space: normal;
   }
 
   header {
     padding: 0 16px 10px;
-    margin: 0 -16px 20px;
-    border-bottom: @border-width-base @border-style-base @border-color-split;
-    font-size: @font-size-lg;
-    font-weight: 500;
-    color: @heading-color;
+    margin: 0 -16px 16px;
+    border-bottom: 1px solid var(--rd-color-divider);
+    font-size: var(--rd-font-size-md);
+    font-weight: var(--rd-font-weight-semibold);
+    color: var(--rd-color-text);
     display: flex;
     justify-content: space-between;
+    align-items: center;
+    gap: 8px;
   }
 
   footer {
-    border-top: @border-width-base @border-style-base @border-color-split;
-    padding: 10px 16px 0;
-    margin: 0 -16px;
+    border-top: 1px solid var(--rd-color-divider);
+    padding: 12px 16px 0;
+    margin: 16px -16px 0;
     text-align: right;
 
     button {
       margin-left: 8px;
     }
+  }
+}
+
+.parameter-mapping-form {
+  &__source,
+  &__value {
+    margin-bottom: 12px;
+  }
+
+  .ant-form-item-label > label {
+    font-weight: var(--rd-font-weight-medium);
   }
 }
 
@@ -74,11 +89,11 @@
 }
 
 .parameter-mapping-title-editor {
-  input {
-    width: 100px;
-  }
+  display: flex;
+  align-items: center;
+  gap: 4px;
 
-  button {
-    margin-left: 2px;
+  input {
+    width: 140px;
   }
 }

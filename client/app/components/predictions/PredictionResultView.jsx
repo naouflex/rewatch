@@ -40,21 +40,22 @@ export default function PredictionView({ prediction, canEdit, menuButton, onChan
 
 
   return (
-    <div className={`prediction-result-view ${isDarkMode ? 'dark-mode' : ''}`}>
-      <Title
-        name={name}
-        prediction={prediction}
-        editMode={false}
-        tagsExtra={null}
-        onChange={onChange}
-        canEdit={canEdit}
-        setPredictionTags={setPredictionTags}
-      >
-        <DynamicComponent name="PredictionView.HeaderExtra" prediction={prediction} />
-        {menuButton}
-      </Title>
-      <h3>Prediction Settings</h3>
-      <div className="bg-white tiled p-20">
+    <>
+      <div className="create-page-form__header">
+        <Title
+          name={name}
+          prediction={prediction}
+          editMode={false}
+          tagsExtra={null}
+          onChange={onChange}
+          canEdit={canEdit}
+          setPredictionTags={setPredictionTags}
+        >
+          <DynamicComponent name="PredictionView.HeaderExtra" prediction={prediction} />
+          {menuButton}
+        </Title>
+      </div>
+      <div className="create-page-form__body">
         <Grid.Row type="flex" gutter={16}>
           <Grid.Col xs={24} md={16} className="d-flex">
             <Form className="flex-fill">
@@ -85,7 +86,7 @@ export default function PredictionView({ prediction, canEdit, menuButton, onChan
           </Grid.Col>
         </Grid.Row>
       </div>
-    </div>
+    </>
   );
 }
 

@@ -8,8 +8,7 @@ import Steps from "antd/lib/steps";
 
 import routeWithUserSession from "@/components/ApplicationArea/routeWithUserSession";
 import navigateTo from "@/components/ApplicationArea/navigateTo";
-import Link from "@/components/Link";
-import PageHeader from "@/components/PageHeader";
+import CreatePageLayout from "@/components/items-list/CreatePageLayout";
 import LoadingState from "@/components/items-list/components/LoadingState";
 import { PreviewCard } from "@/components/PreviewCard";
 import EmptyState from "@/components/items-list/components/EmptyState";
@@ -133,37 +132,27 @@ class NewDestination extends React.Component {
     const { loading, currentStep } = this.state;
 
     return (
-      <div className="page-new-destination">
+      <div className="page-create-form">
         <div className="container">
-          <div className="m-b-15">
-            <Link href="destinations">
-              <i className="fa fa-angle-left m-r-5" aria-hidden="true" />
-              Back to Alert Destinations
-            </Link>
-          </div>
-          <PageHeader title="New Alert Destination" />
-          <div className="row">
-            <div className="col-md-8 col-md-offset-2">
-              <div className="bg-white tiled p-20">
-                <Steps className="hidden-xs m-b-10" size="small" current={currentStep} progressDot>
-                  <Step title="Type Selection" />
-                  <Step title="Configuration" />
-                </Steps>
-                {loading && <LoadingState className="" />}
-                {!loading && currentStep === StepEnum.SELECT_TYPE && this.renderTypeSelector()}
-                {!loading && currentStep === StepEnum.CONFIGURE_IT && (
-                  <React.Fragment>
-                    <div className="m-b-10">
-                      <Button onClick={this.resetType}>
-                        <i className="fa fa-angle-left m-r-5" aria-hidden="true" />
-                        Change type
-                      </Button>
-                    </div>
-                    {this.renderForm()}
-                  </React.Fragment>
-                )}
-              </div>
-            </div>
+          <CreatePageLayout backHref="destinations" backLabel="Back to Alert Destinations" />
+          <div className="create-page-form__body">
+            <Steps className="hidden-xs m-b-20" size="small" current={currentStep} progressDot>
+              <Step title="Type Selection" />
+              <Step title="Configuration" />
+            </Steps>
+            {loading && <LoadingState className="" />}
+            {!loading && currentStep === StepEnum.SELECT_TYPE && this.renderTypeSelector()}
+            {!loading && currentStep === StepEnum.CONFIGURE_IT && (
+              <React.Fragment>
+                <div className="m-b-10">
+                  <Button onClick={this.resetType}>
+                    <i className="fa fa-angle-left m-r-5" aria-hidden="true" />
+                    Change type
+                  </Button>
+                </div>
+                {this.renderForm()}
+              </React.Fragment>
+            )}
           </div>
         </div>
       </div>

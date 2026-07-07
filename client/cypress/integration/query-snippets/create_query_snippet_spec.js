@@ -10,7 +10,7 @@ describe("Create Query Snippet", () => {
       .then(({ body }) => body.filter(snippet => snippet.trigger === "example-snippet"))
       .each(snippet => cy.request("DELETE", `api/query_snippets/${snippet.id}`));
 
-    cy.getByTestId("QuerySnippetDialog").within(() => {
+    cy.getByTestId("QuerySnippetForm").within(() => {
       cy.getByTestId("Trigger").type("example-snippet");
       cy.getByTestId("Snippet")
         .find(".ace_text-input")

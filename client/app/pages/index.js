@@ -47,6 +47,7 @@ import "./queries/QueryView";
 import "./queries/VisualizationEmbed";
 
 import "./query-snippets/QuerySnippetsList";
+import "./query-snippets/QuerySnippetFormPage";
 
 import "./settings/OrganizationSettings";
 
