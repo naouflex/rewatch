@@ -300,14 +300,18 @@ def build_dashboard_from_spec(
     publish: bool = True,
     results_data_source_id: Optional[int] = None,
     timeout_seconds: int = 300,
+    validate_before_create: bool = True,
 ) -> dict[str, Any]:
     """Build a complete dashboard from a declarative spec in one call.
 
     ``queries``: [{key?, name, description?, data_source_id, query,
     visualizations: [{type, name, chart_type?, column_mapping?,
-    counter_column?, counter_label?, options?}]}]. Every query is executed for
-    validation before anything is created; visualization column mappings are
-    checked against real result columns.
+    counter_column?, counter_label?, options?}]}]. By default every query is
+    executed for validation before anything is created; visualization column
+    mappings are checked against real result columns. Set
+    ``validate_before_create=False`` for expensive external API queries that
+    should run only once (create → refresh → derived) to avoid doubling API
+    quota usage.
 
     ``derived``: same shape minus ``data_source_id`` (defaults to the Query
     Results source). Their ``query`` text may reference base queries with
@@ -320,7 +324,7 @@ def build_dashboard_from_spec(
     {text: "markdown"}, each with optional {position: {col,row,sizeX,sizeY}}
     or {role: "title"|"section"|"kpi"|"half"|"third"|"full"}. Widgets without
     explicit positions are packed onto the 12-column grid with type-aware
-    sizes (counters 3x8 four-per-row, charts 6x8, tables 12x8).
+    sizes (counters 3x3 four-per-row, charts 6x8, tables 12x8).
     """
     deadline = time.monotonic() + timeout_seconds
     warnings: list[str] = []
@@ -328,30 +332,43 @@ def build_dashboard_from_spec(
     def remaining() -> int:
         return max(10, int(deadline - time.monotonic()))
 
-    # Phase 0: validate every base query before creating anything.
+    # Phase 0: optionally validate every base query before creating anything.
     validated: list[dict[str, Any]] = []
     validation_errors: list[str] = []
-    for query_spec in queries:
-        query_name = query_spec.get("name") or "(unnamed)"
-        data_source_id = query_spec.get("data_source_id")
-        if not data_source_id:
-            validation_errors.append(f"{query_name}: missing data_source_id.")
-            continue
-        try:
-            columns, rows = run_adhoc_query(
-                request, query_spec["query"], data_source_id, timeout_seconds=remaining()
-            )
-            if not columns:
-                validation_errors.append(f"{query_name}: query returned no columns.")
+    if validate_before_create:
+        for query_spec in queries:
+            query_name = query_spec.get("name") or "(unnamed)"
+            data_source_id = query_spec.get("data_source_id")
+            if not data_source_id:
+                validation_errors.append(f"{query_name}: missing data_source_id.")
                 continue
-            validated.append({**query_spec, "_columns": columns, "_rows": rows})
-        except (RuntimeError, DashboardBuildError) as exc:
-            validation_errors.append(f"{query_name}: {exc}")
-    if validation_errors:
-        raise DashboardBuildError(
-            "Query validation failed — nothing was created. Fix these and retry:\n- "
-            + "\n- ".join(validation_errors)
-        )
+            try:
+                columns, rows = run_adhoc_query(
+                    request, query_spec["query"], data_source_id, timeout_seconds=remaining()
+                )
+                if not columns:
+                    validation_errors.append(f"{query_name}: query returned no columns.")
+                    continue
+                validated.append({**query_spec, "_columns": columns, "_rows": rows})
+            except (RuntimeError, DashboardBuildError) as exc:
+                validation_errors.append(f"{query_name}: {exc}")
+        if validation_errors:
+            raise DashboardBuildError(
+                "Query validation failed — nothing was created. Fix these and retry:\n- "
+                + "\n- ".join(validation_errors)
+            )
+    else:
+        for query_spec in queries:
+            query_name = query_spec.get("name") or "(unnamed)"
+            if not query_spec.get("data_source_id"):
+                validation_errors.append(f"{query_name}: missing data_source_id.")
+            else:
+                validated.append({**query_spec, "_columns": [], "_rows": []})
+        if validation_errors:
+            raise DashboardBuildError(
+                "Query spec invalid — nothing was created. Fix these and retry:\n- "
+                + "\n- ".join(validation_errors)
+            )
 
     # Phase 1: create base queries + visualizations.
     viz_name_to_id: dict[str, int] = {}
@@ -418,6 +435,18 @@ def build_dashboard_from_spec(
         refresh_result = refresh_queries_and_wait(request, base_ids, timeout_seconds=remaining())
         for failure in refresh_result["failures"]:
             warnings.append(f"Refresh failed for query {failure['query_id']}: {failure['message']}")
+        if refresh_result["failures"] and not validate_before_create:
+            failed_ids = {f["query_id"] for f in refresh_result["failures"]}
+            failure_msgs = {f["query_id"]: f["message"] for f in refresh_result["failures"]}
+            lines = [
+                f"{e['name']} (id {e['query_id']}): {failure_msgs.get(e['query_id'], 'refresh failed')}"
+                for e in created_queries
+                if e["query_id"] in failed_ids
+            ]
+            raise DashboardBuildError(
+                "Base query refresh failed — nothing else was created. Fix these and retry:\n- "
+                + "\n- ".join(lines)
+            )
 
         if results_data_source_id is None:
             results_data_source_id = _find_results_data_source_id(request)
@@ -488,7 +517,7 @@ def build_dashboard_from_spec(
     positions = plan_dashboard_layout(layout_items)
 
     created_widgets: list[dict[str, Any]] = []
-    for widget_spec, position in zip(widget_specs, positions):
+    for layout_item, widget_spec, position in zip(layout_items, widget_specs, positions):
         widget = request(
             "POST",
             "/api/widgets",
@@ -496,7 +525,10 @@ def build_dashboard_from_spec(
                 "dashboard_id": dashboard_id,
                 "visualization_id": widget_spec["visualization_id"],
                 "text": widget_spec["text"],
-                "options": normalize_widget_options(position=position),
+                "options": normalize_widget_options(
+                    position=position,
+                    visualization_type=layout_item.get("visualization_type"),
+                ),
                 "width": 1,
             },
         )

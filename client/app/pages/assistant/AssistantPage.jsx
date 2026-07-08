@@ -42,10 +42,6 @@ function AssistantPage() {
           Assistant.setStoredThreadId(nextId);
           return nextId;
         }
-        if (!currentId && data.length) {
-          Assistant.setStoredThreadId(data[0].id);
-          return data[0].id;
-        }
         return currentId;
       });
     } finally {
@@ -65,9 +61,14 @@ function AssistantPage() {
   }, []);
 
   useEffect(() => {
-    if (enabled) {
-      refreshThreads();
+    if (!enabled) {
+      return undefined;
     }
+    const stored = Assistant.getStoredThreadId();
+    if (stored) {
+      setActiveThreadId(current => current || stored);
+    }
+    refreshThreads();
   }, [enabled, refreshThreads]);
 
   const handleThreadIdFromChat = useCallback(id => {
@@ -83,13 +84,13 @@ function AssistantPage() {
     Assistant.setStoredThreadId(id);
   }, []);
 
-  const handleCreateThread = useCallback(async () => {
-    const thread = await Assistant.createThread();
-    await refreshThreads();
+  const handleCreateThread = useCallback(() => {
+    setActiveThreadId(null);
+    Assistant.setStoredThreadId(null);
     setConversationMessages([]);
     setLiveGraph(null);
-    handleSelectThread(thread.id);
-  }, [handleSelectThread, refreshThreads]);
+    setGraphModalOpen(false);
+  }, []);
 
   const handleDeleteThread = useCallback(
     async id => {

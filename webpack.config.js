@@ -124,10 +124,9 @@ const config = {
       filename: "multi_org.html",
       excludeChunks: ["server"]
     }),
-    isProduction &&
-      new MiniCssExtractPlugin({
-        filename: "[name].[chunkhash].css"
-      }),
+    new MiniCssExtractPlugin({
+      filename: isProduction ? "[name].[chunkhash].css" : "[name].css"
+    }),
     new WebpackManifestPlugin({
       fileName: "asset-manifest.json",
       publicPath: ""
@@ -222,7 +221,28 @@ const config = {
         ]
       },
       {
+        // Server-rendered pages (login, setup, etc.) link to server.css directly.
+        test: /server\.less$/,
+        use: [
+          MiniCssExtractPlugin.loader,
+          "css-loader",
+          {
+            loader: "less-loader",
+            options: {
+              sourceMap: false,
+              lessOptions: {
+                plugins: [
+                  new LessPluginAutoPrefix({ browsers: ["last 3 versions"] })
+                ],
+                javascriptEnabled: true
+              }
+            }
+          }
+        ]
+      },
+      {
         test: /\.less$/,
+        exclude: /server\.less$/,
         use: [
           {
             loader: isProduction ? MiniCssExtractPlugin.loader : "style-loader"
@@ -286,7 +306,7 @@ const config = {
     ? process.env.SOURCE_MAP === "true"
       ? "hidden-source-map"
       : false
-    : "eval-cheap-module-source-map",
+    : "cheap-module-source-map",
   stats: {
     children: false,
     modules: false,
@@ -296,6 +316,7 @@ const config = {
     ignored: /\.sw.$/
   },
   devServer: {
+    port: 8080,
     devMiddleware: {
       index: "/static/index.html",
       publicPath: staticPath,

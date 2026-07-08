@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Create the Montpellier Airport (LFMT/MPL) dashboard from FlightAware AeroAPI.
 
-Uses a single Python query to fetch all AeroAPI data (one validation run, minimal
-API quota), then derived SQL queries on cached results for boards and charts.
+Uses one Python feed query (5 AeroAPI calls, run once at refresh time), then
+derived SQL on cached results for live boards, delays, and 10-day history.
 """
 
 from __future__ import annotations
@@ -10,7 +10,6 @@ from __future__ import annotations
 from dashboard_script_utils import build_and_report
 
 DS_PYTHON = 4
-DS_RESULTS = 1
 
 AIRPORT_ICAO = "LFMT"
 AIRPORT_IATA = "MPL"
@@ -21,8 +20,6 @@ COLORS = {
     "arrivals": "#4263EB",
     "departures": "#12B886",
     "delay": "#FA5252",
-    "history_arrivals": "#4263EB",
-    "history_departures": "#12B886",
     "history_total": "#7950F2",
 }
 
@@ -33,12 +30,13 @@ import time
 
 AEROAPI_BASE = "https://aeroapi.flightaware.com/aeroapi"
 AEROAPI_KEY = "%(api_key)s"
+API_PAUSE = 2
 
 
 def aeroapi_get(path, params=None, requests=requests, AEROAPI_BASE=AEROAPI_BASE, AEROAPI_KEY=AEROAPI_KEY, time=time):
     params = params or {}
     last_error = None
-    for attempt in range(5):
+    for attempt in range(8):
         resp = requests.get(
             AEROAPI_BASE + path,
             headers={"x-apikey": AEROAPI_KEY},
@@ -47,7 +45,7 @@ def aeroapi_get(path, params=None, requests=requests, AEROAPI_BASE=AEROAPI_BASE,
         )
         if resp.status_code == 429:
             last_error = resp.text[:300]
-            time.sleep(min(8, 2 ** attempt))
+            time.sleep(min(30, 3 * (2 ** attempt)))
             continue
         if resp.status_code >= 400:
             raise Exception("AeroAPI %%s: %%s" %% (resp.status_code, resp.text[:300]))
@@ -85,7 +83,24 @@ def airport_label(ap):
     return code or ap.get("name") or ""
 
 
-def flight_row(flight, direction, board_type, fmt_time=fmt_time, fmt_delay=fmt_delay, airport_label=airport_label):
+def event_ts(flight, direction):
+    if direction == "arrival":
+        return (
+            flight.get("actual_on") or flight.get("actual_in")
+            or flight.get("scheduled_on") or flight.get("scheduled_in") or ""
+        )
+    return (
+        flight.get("actual_off") or flight.get("actual_out")
+        or flight.get("scheduled_off") or flight.get("scheduled_out") or ""
+    )
+
+
+def flight_date(flight, direction, datetime=datetime, event_ts=event_ts):
+    ts = event_ts(flight, direction)
+    return ts[:10] if ts else ""
+
+
+def flight_row(flight, direction, board_type, fmt_time=fmt_time, fmt_delay=fmt_delay, airport_label=airport_label, event_ts=event_ts, flight_date=flight_date):
     if direction == "arrival":
         other = flight.get("origin") or {}
         sched = flight.get("scheduled_in")
@@ -106,6 +121,8 @@ def flight_row(flight, direction, board_type, fmt_time=fmt_time, fmt_delay=fmt_d
     ident = flight.get("ident_iata") or flight.get("ident") or ""
     return {
         "board_type": board_type,
+        "flight_date": flight_date(flight, direction),
+        "event_at": event_ts(flight, direction),
         "flight": ident,
         "airline": flight.get("operator_iata") or flight.get("operator") or "",
         "route": airport_label(other),
@@ -129,39 +146,32 @@ def flight_row(flight, direction, board_type, fmt_time=fmt_time, fmt_delay=fmt_d
         "longitude": 0.0,
         "timezone": "",
     }
-
-
-def flight_date(flight, direction, datetime=datetime):
-    if direction == "arrival":
-        ts = (
-            flight.get("actual_on") or flight.get("actual_in")
-            or flight.get("scheduled_on") or flight.get("scheduled_in")
-        )
-    else:
-        ts = (
-            flight.get("actual_off") or flight.get("actual_out")
-            or flight.get("scheduled_off") or flight.get("scheduled_out")
-        )
-    if not ts:
-        return ""
-    return ts[:10]
 """ % {"api_key": AEROAPI_KEY}
 
 FLIGHTS_QUERY = PY_COMMON + """
 icao = "%(icao)s"
-info = aeroapi_get("/airports/" + icao)
-time.sleep(0.5)
+time.sleep(1)
 
-arrivals = aeroapi_get("/airports/" + icao + "/flights/arrivals", {"max_pages": 1}).get("arrivals") or []
-time.sleep(0.5)
-departures = aeroapi_get("/airports/" + icao + "/flights/departures", {"max_pages": 1}).get("departures") or []
-time.sleep(0.5)
+info = aeroapi_get("/airports/" + icao)
+time.sleep(API_PAUSE)
+
+today = datetime.datetime.utcnow().date()
+start = (today - datetime.timedelta(days=9)).isoformat()
+end = (today + datetime.timedelta(days=1)).isoformat()
+range_params = {"start": start, "end": end, "max_pages": 1}
+
+arrivals = aeroapi_get("/airports/" + icao + "/flights/arrivals", range_params).get("arrivals") or []
+time.sleep(API_PAUSE)
+departures = aeroapi_get("/airports/" + icao + "/flights/departures", range_params).get("departures") or []
+time.sleep(API_PAUSE)
 sched_arr = aeroapi_get("/airports/" + icao + "/flights/scheduled_arrivals", {"max_pages": 1}).get("scheduled_arrivals") or []
-time.sleep(0.5)
+time.sleep(API_PAUSE)
 sched_dep = aeroapi_get("/airports/" + icao + "/flights/scheduled_departures", {"max_pages": 1}).get("scheduled_departures") or []
 
 result = {}
 add_result_column(result, "board_type", "Board", "string")
+add_result_column(result, "flight_date", "Date", "date")
+add_result_column(result, "event_at", "Event At", "string")
 add_result_column(result, "flight", "Flight", "string")
 add_result_column(result, "airline", "Airline", "string")
 add_result_column(result, "route", "Route", "string")
@@ -187,6 +197,7 @@ add_result_column(result, "timezone", "Timezone", "string")
 
 add_result_row(result, {
     "board_type": "airport",
+    "flight_date": "", "event_at": "",
     "flight": "", "airline": "", "route": "", "aircraft": "", "status": "",
     "scheduled": "", "estimated": "", "actual": "", "delay": "", "delay_min": 0,
     "gate": "", "terminal": "", "registration": "",
@@ -211,39 +222,8 @@ for f in sched_dep:
     add_result_row(result, flight_row(f, "departure", "scheduled_departure"))
 """ % {"icao": AIRPORT_ICAO, "iata": AIRPORT_IATA, "tz": TIMEZONE}
 
-HISTORY_QUERY = PY_COMMON + """
-icao = "%(icao)s"
-today = datetime.datetime.utcnow().date()
-start = (today - datetime.timedelta(days=9)).isoformat()
-end = (today + datetime.timedelta(days=1)).isoformat()
-params = {"start": start, "end": end, "max_pages": 2}
-
-hist_arr = aeroapi_get("/airports/" + icao + "/flights/arrivals", params).get("arrivals") or []
-time.sleep(0.5)
-hist_dep = aeroapi_get("/airports/" + icao + "/flights/departures", params).get("departures") or []
-
-result = {}
-add_result_column(result, "board_type", "Board", "string")
-add_result_column(result, "flight_date", "Date", "date")
-add_result_column(result, "flight", "Flight", "string")
-add_result_column(result, "airline", "Airline", "string")
-add_result_column(result, "route", "Route", "string")
-add_result_column(result, "aircraft", "Aircraft", "string")
-add_result_column(result, "status", "Status", "string")
-add_result_column(result, "delay_min", "Delay (min)", "integer")
-
-for f in hist_arr:
-    row = flight_row(f, "arrival", "history_arrival")
-    row["flight_date"] = flight_date(f, "arrival")
-    add_result_row(result, row)
-for f in hist_dep:
-    row = flight_row(f, "departure", "history_departure")
-    row["flight_date"] = flight_date(f, "departure")
-    add_result_row(result, row)
-""" % {"icao": AIRPORT_ICAO}
-
 CACHED = "{{cached_query.flights}}"
-HISTORY = "{{cached_query.history}}"
+RECENT = "datetime(replace(substr(event_at, 1, 19), 'T', ' ')) >= datetime('now', '-1 day')"
 
 
 def counter(name: str, column: str, label: str = "") -> dict:
@@ -282,17 +262,9 @@ QUERIES = [
     {
         "key": "flights",
         "name": "Montpellier Airport - AeroAPI Feed",
-        "description": "Single fetch of airport info and all flight boards from AeroAPI.",
+        "description": "Airport info, 10-day arrivals/departures, and scheduled flights (5 AeroAPI calls).",
         "data_source_id": DS_PYTHON,
         "query": FLIGHTS_QUERY,
-        "visualizations": [],
-    },
-    {
-        "key": "history",
-        "name": "Montpellier Airport - 10-Day History Feed",
-        "description": "Arrivals and departures over the last 10 days from AeroAPI.",
-        "data_source_id": DS_PYTHON,
-        "query": HISTORY_QUERY,
         "visualizations": [],
     },
 ]
@@ -325,9 +297,9 @@ LIMIT 1
 SELECT
   flight, airline, route, aircraft, status,
   scheduled, estimated, actual, delay, delay_min, gate, terminal, registration,
-  (SELECT COUNT(*) FROM {CACHED} WHERE board_type = 'arrival') AS total_arrivals
+  (SELECT COUNT(*) FROM {CACHED} WHERE board_type = 'arrival' AND event_at != '' AND {RECENT}) AS total_arrivals
 FROM {CACHED}
-WHERE board_type = 'arrival'
+WHERE board_type = 'arrival' AND event_at != '' AND {RECENT}
 ORDER BY scheduled
 """,
         "visualizations": [
@@ -349,9 +321,9 @@ ORDER BY scheduled
 SELECT
   flight, airline, route, aircraft, status,
   scheduled, estimated, actual, delay, delay_min, gate, terminal, registration,
-  (SELECT COUNT(*) FROM {CACHED} WHERE board_type = 'departure') AS total_departures
+  (SELECT COUNT(*) FROM {CACHED} WHERE board_type = 'departure' AND event_at != '' AND {RECENT}) AS total_departures
 FROM {CACHED}
-WHERE board_type = 'departure'
+WHERE board_type = 'departure' AND event_at != '' AND {RECENT}
 ORDER BY scheduled
 """,
         "visualizations": [
@@ -402,21 +374,21 @@ ORDER BY scheduled
     {
         "key": "delays",
         "name": "Montpellier Airport - Delay Summary",
-        "description": "Average and per-flight delays for arrivals and departures.",
+        "description": "Average and per-flight delays for arrivals and departures (24h).",
         "query": f"""
 SELECT
   direction,
   flight,
   route,
   delay_min,
-  (SELECT ROUND(AVG(CAST(delay_min AS REAL)), 1) FROM {CACHED} WHERE board_type = 'arrival') AS avg_arrival_delay_min,
-  (SELECT ROUND(AVG(CAST(delay_min AS REAL)), 1) FROM {CACHED} WHERE board_type = 'departure') AS avg_departure_delay_min
+  (SELECT ROUND(AVG(CAST(delay_min AS REAL)), 1) FROM {CACHED} WHERE board_type = 'arrival' AND event_at != '' AND {RECENT}) AS avg_arrival_delay_min,
+  (SELECT ROUND(AVG(CAST(delay_min AS REAL)), 1) FROM {CACHED} WHERE board_type = 'departure' AND event_at != '' AND {RECENT}) AS avg_departure_delay_min
 FROM (
   SELECT 'Arrival' AS direction, flight, route, delay_min
-  FROM {CACHED} WHERE board_type = 'arrival'
+  FROM {CACHED} WHERE board_type = 'arrival' AND event_at != '' AND {RECENT}
   UNION ALL
   SELECT 'Departure', flight, route, delay_min
-  FROM {CACHED} WHERE board_type = 'departure'
+  FROM {CACHED} WHERE board_type = 'departure' AND event_at != '' AND {RECENT}
 )
 ORDER BY direction, delay_min DESC
 """,
@@ -438,21 +410,20 @@ ORDER BY direction, delay_min DESC
         "query": f"""
 SELECT
   flight_date AS day,
-  SUM(CASE WHEN board_type = 'history_arrival' THEN 1 ELSE 0 END) AS arrivals,
-  SUM(CASE WHEN board_type = 'history_departure' THEN 1 ELSE 0 END) AS departures,
+  SUM(CASE WHEN board_type = 'arrival' THEN 1 ELSE 0 END) AS arrivals,
+  SUM(CASE WHEN board_type = 'departure' THEN 1 ELSE 0 END) AS departures,
   COUNT(*) AS total_flights,
   ROUND(AVG(CAST(delay_min AS REAL)), 1) AS avg_delay_min,
-  (SELECT COUNT(*) FROM {HISTORY} WHERE board_type LIKE 'history_%%') AS total_10d,
+  (SELECT COUNT(*) FROM {CACHED} WHERE board_type IN ('arrival', 'departure')) AS total_10d,
   (SELECT ROUND(CAST(COUNT(*) AS REAL) / COUNT(DISTINCT flight_date), 1)
-   FROM {HISTORY} WHERE board_type LIKE 'history_%%') AS avg_daily_flights,
+   FROM {CACHED} WHERE board_type IN ('arrival', 'departure') AND flight_date != '') AS avg_daily_flights,
   (SELECT MAX(daily_total) FROM (
      SELECT flight_date, COUNT(*) AS daily_total
-     FROM {HISTORY} WHERE board_type LIKE 'history_%%'
+     FROM {CACHED} WHERE board_type IN ('arrival', 'departure') AND flight_date != ''
      GROUP BY flight_date
    )) AS peak_day_flights
-FROM {HISTORY}
-WHERE board_type IN ('history_arrival', 'history_departure')
-  AND flight_date != ''
+FROM {CACHED}
+WHERE board_type IN ('arrival', 'departure') AND flight_date != ''
 GROUP BY flight_date
 ORDER BY flight_date
 """,
@@ -464,8 +435,8 @@ ORDER BY flight_date
                 "Flights per Day",
                 {"day": "x", "arrivals": "y", "departures": "y", "total_flights": "y"},
                 {
-                    "arrivals": {"name": "Arrivals", "color": COLORS["history_arrivals"], "type": "line"},
-                    "departures": {"name": "Departures", "color": COLORS["history_departures"], "type": "line"},
+                    "arrivals": {"name": "Arrivals", "color": COLORS["arrivals"], "type": "line"},
+                    "departures": {"name": "Departures", "color": COLORS["departures"], "type": "line"},
                     "total_flights": {"name": "Total", "color": COLORS["history_total"], "type": "line"},
                 },
             ),
@@ -492,12 +463,11 @@ ORDER BY flight_date
 SELECT
   airline,
   COUNT(*) AS flights,
-  SUM(CASE WHEN board_type = 'history_arrival' THEN 1 ELSE 0 END) AS arrivals,
-  SUM(CASE WHEN board_type = 'history_departure' THEN 1 ELSE 0 END) AS departures,
+  SUM(CASE WHEN board_type = 'arrival' THEN 1 ELSE 0 END) AS arrivals,
+  SUM(CASE WHEN board_type = 'departure' THEN 1 ELSE 0 END) AS departures,
   ROUND(AVG(CAST(delay_min AS REAL)), 1) AS avg_delay_min
-FROM {HISTORY}
-WHERE board_type IN ('history_arrival', 'history_departure')
-  AND airline != ''
+FROM {CACHED}
+WHERE board_type IN ('arrival', 'departure') AND airline != ''
 GROUP BY airline
 ORDER BY flights DESC
 LIMIT 15
@@ -524,9 +494,9 @@ WIDGETS = [
         "text": (
             "# ✈️ Montpellier Airport (LFMT / MPL)\n\n"
             "Live flight board for **Montpellier-Méditerranée Airport** — arrivals, "
-            "departures, scheduled flights, and delay stats powered by "
+            "departures, scheduled flights, 10-day history, and delay stats powered by "
             "[FlightAware AeroAPI](https://www.flightaware.com/commercial/aeroapi/). "
-            "Refresh the **AeroAPI Feed** query to pull the latest data."
+            "Refresh **AeroAPI Feed** to update all widgets."
         ),
         "position": pos(0, 0, 12, 3),
     },
@@ -566,9 +536,8 @@ WIDGETS = [
     {
         "text": (
             "Data: [FlightAware AeroAPI](https://www.flightaware.com/commercial/aeroapi/) "
-            "for LFMT (Montpellier-Méditerranée). Times shown in local timezone "
-            "(Europe/Paris). Refresh **AeroAPI Feed** for live boards and "
-            "**10-Day History Feed** for historical charts (AeroAPI limit: 10 days)."
+            "for LFMT. One feed query = 5 API calls. AeroAPI history limit: 10 days. "
+            "Wait a few minutes between re-runs if you hit rate limits."
         ),
         "position": pos(0, 123, 12, 3),
     },
@@ -581,4 +550,5 @@ if __name__ == "__main__":
         queries=QUERIES,
         derived=DERIVED,
         widgets=WIDGETS,
+        validate_before_create=False,
     )

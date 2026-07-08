@@ -19,6 +19,14 @@ def test_normalize_widget_options_nests_flat_position():
     assert "col" not in options
 
 
+def test_normalize_widget_options_counter_min_size():
+    from rewatch.assistant.dashboard_layout import normalize_widget_options
+
+    options = normalize_widget_options(visualization_type="COUNTER")
+    assert options["position"]["minSizeX"] == 1
+    assert options["position"]["minSizeY"] == 1
+
+
 def test_suggest_chart_options_maps_date_and_numeric():
     columns = ["date", "tvl", "name"]
     rows = [{"date": "2024-01-01", "tvl": 100, "name": "eth"}]
@@ -129,7 +137,7 @@ def test_enrich_visualizations_for_assistant_adds_options_health():
 def test_suggest_widget_size_is_type_aware():
     from rewatch.assistant.dashboard_layout import suggest_widget_size
 
-    assert suggest_widget_size(visualization_type="COUNTER") == {"sizeX": 3, "sizeY": 8}
+    assert suggest_widget_size(visualization_type="COUNTER") == {"sizeX": 3, "sizeY": 3}
     assert suggest_widget_size(visualization_type="CHART") == {"sizeX": 6, "sizeY": 8}
     assert suggest_widget_size(visualization_type="TABLE") == {"sizeX": 12, "sizeY": 8}
     assert suggest_widget_size(text="# Big Title") == {"sizeX": 12, "sizeY": 3}
@@ -180,14 +188,14 @@ def test_suggest_next_position_packs_counters_side_by_side():
     from rewatch.assistant.dashboard_layout import suggest_next_position
 
     widgets = [
-        {"options": {"position": {"col": 0, "row": 0, "sizeX": 3, "sizeY": 8}}},
+        {"options": {"position": {"col": 0, "row": 0, "sizeX": 3, "sizeY": 3}}},
     ]
     pos = suggest_next_position(widgets, visualization_type="COUNTER")
-    assert pos == {"col": 3, "row": 0, "sizeX": 3, "sizeY": 8}
+    assert pos == {"col": 3, "row": 0, "sizeX": 3, "sizeY": 3}
 
     # A chart after a counter starts a new row with chart sizing.
     pos = suggest_next_position(widgets, visualization_type="CHART")
-    assert pos == {"col": 0, "row": 8, "sizeX": 6, "sizeY": 8}
+    assert pos == {"col": 0, "row": 3, "sizeX": 6, "sizeY": 8}
 
 
 def test_suggest_next_position_defaults_unchanged_without_type():

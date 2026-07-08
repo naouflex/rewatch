@@ -150,8 +150,27 @@ QUERY_RUNNER_NOTES: dict[str, dict[str, Any]] = {
         ],
     },
     "graphql": {
-        "summary": "GraphQL HTTP endpoint.",
-        "example_query": "query {\n  users {\n    id\n    name\n  }\n}",
+        "summary": "GraphQL HTTP endpoint (often The Graph protocol subgraphs).",
+        "example_query": (
+            "{\n"
+            "  erc20Transfers(\n"
+            "    first: $first\n"
+            "    where: { contract: \"0x...\", id_gt: \"$id_gt\" }\n"
+            "    orderBy: timestamp\n"
+            "    orderDirection: asc\n"
+            "  ) {\n"
+            "    timestamp\n"
+            "    id\n"
+            "    value\n"
+            "  }\n"
+            "}"
+        ),
+        "tips": [
+            "Subgraph entities use cursor pagination: first + id_gt parameters.",
+            "Nested objects flatten to dotted columns (e.g. from.id → from_id in results).",
+            "Pair with Query Results SQL for daily aggregation and CHART visualizations.",
+            "Production pattern: base GraphQL query → derived query_{id} CTE pipeline.",
+        ],
     },
     "defillama": {
         "summary": "DefiLlama DeFi analytics REST API (TVL, yields, DEX volumes, stablecoins, etc.).",
@@ -218,7 +237,64 @@ QUERY_RUNNER_NOTES: dict[str, dict[str, Any]] = {
     },
     "python": {
         "summary": "Python script data source.",
-        "tips": ["Script must define how to fetch/return rows; validate with run_query."],
+        "tips": [
+            "Script must define how to fetch/return rows; validate with run_query.",
+            "get_query_result(query_id) loads another query's cached {columns, rows}.",
+            "Common pattern: pd.DataFrame(get_query_result(N)['rows']) → merge/aggregate → return rows.",
+            "Use df_to_result(df) from scripts.tools.common when available.",
+            "Production FiRM/Dola dashboards use Python for wide KPI rows + CHART outputs.",
+            "Call list_instance_examples(category='python') for chaining examples.",
+        ],
+        "example_query": (
+            "import pandas as pd\n"
+            "\n"
+            "raw = get_query_result(123)\n"
+            "df = pd.DataFrame(raw['rows'])\n"
+            "summary = df.groupby('day').agg(total=('value', 'sum')).reset_index()\n"
+            "return summary.to_dict('records')"
+        ),
+    },
+    "evmlogs": {
+        "summary": "Scan EVM event logs across configured chains.",
+        "query_keys": ["contract_address", "event_name", "start_block", "end_block"],
+        "example_query": (
+            'contract_address: "0x865377367054516e17014ccded1e7d814edc9ce4"\n'
+            "event_name: Transfer\n"
+            "start_block: -1000\n"
+            "end_block: 'latest'"
+        ),
+        "tips": [
+            "YAML-style keys — not SQL. contract_address accepts one address or a list.",
+            "start_block: -N scans the last N blocks; end_block: 'latest' is common.",
+            "Use {{parameter}} placeholders for reusable event-scan templates.",
+            "Aggregate in Query Results SQL (query_{id}) for time-series charts.",
+            "Production: Transfer, PoolBalanceChanged, TokenBridge events → derived burns/volume.",
+        ],
+    },
+    "evmstate": {
+        "summary": "Read EVM contract state (balances, view functions) across blocks.",
+        "query_keys": [
+            "contract_address",
+            "implementation_address",
+            "function_name",
+            "args",
+            "start_block",
+            "end_block",
+        ],
+        "example_query": (
+            "contract_address: {{contract_address}}\n"
+            "implementation_address: {{implementation_address}}\n"
+            "function_name: balanceOf\n"
+            'args: "0x..."\n'
+            "start_block: -500\n"
+            "end_block: 'latest'"
+        ),
+        "tips": [
+            "Returns block_time + value columns — chart with contract_address as series.",
+            "param_query_* templates parameterize contract_address and function_name.",
+            "Treasury monitoring: multiple addresses in one query, USD conversion in derived SQL.",
+            "columnMapping for multi-contract lines: block_time→x, value→y, contract_address→series.",
+        ],
     },
     "script": {
         "summary": "Shell/script runner.",

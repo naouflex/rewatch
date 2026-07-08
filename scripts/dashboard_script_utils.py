@@ -8,13 +8,14 @@ authenticated with the workspace API key.
 from __future__ import annotations
 
 import json
+import os
 import sys
 import types
 import urllib.request
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-BASE_URL = "https://rewatch.naoufel.io"
+BASE_URL = os.environ.get("REWATCH_BASE_URL", "https://rewatch.naoufel.io").rstrip("/")
 
 
 def _read_api_key() -> str:

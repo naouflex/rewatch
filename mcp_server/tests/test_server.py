@@ -49,12 +49,12 @@ def test_get_dashboard_returns_layout_summary(fake_request):
 def test_add_widget_auto_places_with_type_aware_size(fake_request):
     payload = json.loads(server.add_widget_to_dashboard(dashboard_id=7, visualization_id=5))
     position = payload["options"]["position"]
-    # Existing widget occupies rows 0-2; a counter goes below at 3x8.
+    # Existing widget occupies rows 0-2; a counter goes below at 3x3.
     assert {k: position[k] for k in ("col", "row", "sizeX", "sizeY")} == {
         "col": 0,
         "row": 3,
         "sizeX": 3,
-        "sizeY": 8,
+        "sizeY": 3,
     }
 
 

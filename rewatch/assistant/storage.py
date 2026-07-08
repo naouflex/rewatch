@@ -69,6 +69,8 @@ def list_threads(user, org, limit: int = MAX_THREADS) -> list[dict[str, Any]]:
     )
     results = []
     for thread in threads:
+        if not thread.messages.count():
+            continue
         last_user = (
             thread.messages.filter(AssistantMessage.role == "user")
             .order_by(AssistantMessage.id.desc())
@@ -116,6 +118,13 @@ def add_message(
     )
     db.session.add(message)
     db.session.flush()
+    return message
+
+
+def save_user_message(thread_id: str, content: str) -> AssistantMessage:
+    """Persist the user turn before a long-running assistant reply starts."""
+    message = add_message(thread_id, "user", content)
+    db.session.commit()
     return message
 
 

@@ -66,7 +66,7 @@ Key rules:
 
 - **Base query `key`** lets `derived` queries reference its cached results as `{{cached_query.KEY}}`. The builder creates base queries, refreshes them, substitutes real `cached_query_{id}` table names, then creates the derived queries on the Query Results source.
 - **Derived SQL runs on SQLite** — no PostgreSQL casts (`::numeric`, `COUNT(*)::int`). Use `ROUND(x, 2)`, `CAST(x AS INTEGER)`.
-- **Widgets auto-layout** with type-aware sizes: counters 3×8 packed 4 per row, charts 6×8 side by side, tables 12×8, text headers full width. Override with `role` (`title`, `section`, `kpi`, `half`, `third`, `full`) or explicit `position`.
+- **Widgets auto-layout** with type-aware sizes: counters 3×3 packed 4 per row, charts 6×8 side by side, tables 12×8, text headers full width. Override with `role` (`title`, `section`, `kpi`, `half`, `third`, `full`) or explicit `position`.
 - Widget `visualization` references the viz **name** from the spec — names must be unique.
 - Queries and the dashboard are **published automatically** (pass `publish: false` for a draft).
 

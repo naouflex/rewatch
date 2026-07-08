@@ -1,14 +1,18 @@
-@import "../Assistant/AssistantChat.less";
-
 @assistant-bubble-size: 52px;
 @assistant-panel-width: 400px;
 @assistant-panel-height: 560px;
+@assistant-mobile-breakpoint: ~"(max-width: 767px)";
+@assistant-top-nav-height: 48px;
+
+.assistant-bubble-backdrop {
+  display: none;
+}
 
 .assistant-bubble-root {
   position: fixed;
   right: 24px;
   bottom: 24px;
-  z-index: 1001;
+  z-index: 1002;
   font-family: inherit;
   color: var(--rd-color-text);
 }
@@ -47,7 +51,7 @@
   width: @assistant-panel-width;
   max-width: calc(100vw - 48px);
   height: @assistant-panel-height;
-  max-height: calc(100vh - 120px);
+  max-height: calc(100dvh - 120px);
   background: var(--rd-color-surface);
   border: 1px solid var(--rd-color-divider);
   border-radius: var(--rd-radius-md);
@@ -55,16 +59,53 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+
+  &.hidden {
+    display: none;
+  }
 }
 
-@media (max-width: 480px) {
+@media @assistant-mobile-breakpoint {
+  .assistant-bubble-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 1001;
+    background: rgba(0, 0, 0, 0.45);
+  }
+
   .assistant-bubble-root {
     right: 16px;
-    bottom: 16px;
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    z-index: 1002;
+  }
+
+  .assistant-bubble-root.open .assistant-bubble-toggle {
+    display: none;
   }
 
   .assistant-bubble-panel {
-    width: calc(100vw - 32px);
-    height: calc(100vh - 100px);
+    position: fixed;
+    top: @assistant-top-nav-height;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: auto;
+    height: auto;
+    max-width: none;
+    max-height: none;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    box-shadow: none;
+    z-index: 1002;
+  }
+}
+
+@media (max-width: 480px) {
+  .assistant-bubble-root:not(.open) {
+    right: 16px;
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
   }
 }

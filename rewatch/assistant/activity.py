@@ -90,6 +90,8 @@ TOOL_START_LABELS: dict[str, Callable[[dict[str, Any]], str]] = {
     "call_api": lambda a: f"Calling {a.get('method', 'GET').upper()} {a.get('path', '')}",
     "list_dashboard_examples": lambda a: "Listing dashboard examples",
     "get_dashboard_example": lambda a: f"Loading dashboard example {a.get('id', '')!r}",
+    "list_instance_examples": lambda a: "Listing production query/viz patterns",
+    "get_instance_example": lambda a: f"Loading instance example {a.get('id', '')!r}",
 }
 
 

@@ -72,7 +72,7 @@ def _prepare_thread(current_user, current_org, thread_id, message):
         thread = storage.create_thread(current_user, current_org)
         thread_id = thread.id
 
-    storage.add_message(thread_id, "user", message)
+    storage.save_user_message(thread_id, message)
     history = storage.list_messages(thread_id, current_user, current_org)
     llm_messages, session_context = storage.prepare_messages_for_llm(history)
     return thread, thread_id, llm_messages, session_context
@@ -255,9 +255,19 @@ class AssistantChatStreamResource(BaseResource):
                 logger.exception("Assistant stream worker failed")
                 error_holder["error"] = exc
                 try:
-                    db.session.rollback()
+                    db.session.remove()
+                    storage.add_message(
+                        thread_id,
+                        "assistant",
+                        f"Sorry, I ran into an error talking to the AI service. Please try again. ({exc})",
+                    )
+                    db.session.commit()
                 except Exception:
-                    pass
+                    logger.exception("Failed to persist assistant stream error reply")
+                    try:
+                        db.session.rollback()
+                    except Exception:
+                        pass
             finally:
                 events.put({"type": "_done"})
 
@@ -265,6 +275,7 @@ class AssistantChatStreamResource(BaseResource):
         worker.start()
 
         def generate():
+            yield f"data: {json.dumps({'type': 'thread_started', 'thread_id': thread_id})}\n\n"
             while True:
                 event = events.get()
                 if event.get("type") == "_done":

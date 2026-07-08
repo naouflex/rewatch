@@ -9,6 +9,8 @@ import Assistant from "@/services/assistant";
 
 import "./index.less";
 
+const MOBILE_MEDIA_QUERY = "(max-width: 767px)";
+
 export default function AssistantBubble() {
   const currentRoute = useCurrentRoute();
   const [enabled, setEnabled] = useState(!!clientConfig.assistantEnabled);
@@ -31,6 +33,21 @@ export default function AssistantBubble() {
     return undefined;
   }, []);
 
+  useEffect(() => {
+    if (!open) {
+      return undefined;
+    }
+    const mediaQuery = window.matchMedia(MOBILE_MEDIA_QUERY);
+    if (!mediaQuery.matches) {
+      return undefined;
+    }
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open]);
+
   const handleThreadChange = useCallback(id => {
     setThreadId(id);
     Assistant.setStoredThreadId(id);
@@ -39,14 +56,31 @@ export default function AssistantBubble() {
   const onAssistantPage =
     currentRoute?.id === "Assistant" || location.path === "/assistant" || location.path.startsWith("/assistant/");
 
+  useEffect(() => {
+    if (!open) {
+      return undefined;
+    }
+    const stored = Assistant.getStoredThreadId();
+    if (stored && stored !== threadId) {
+      setThreadId(stored);
+    }
+    return undefined;
+  }, [open, threadId]);
+
   if (!enabled || onAssistantPage) {
     return null;
   }
 
   return (
-    <div className="assistant-bubble-root">
-      {open && (
-        <div className="assistant-bubble-panel" role="dialog" aria-label="Rewatch Assistant">
+    <>
+      {open && <div className="assistant-bubble-backdrop" aria-hidden="true" onClick={() => setBubbleOpen(false)} />}
+      <div className={`assistant-bubble-root${open ? " open" : ""}`}>
+        <div
+          className={`assistant-bubble-panel${open ? "" : " hidden"}`}
+          role="dialog"
+          aria-label="Rewatch Assistant"
+          aria-hidden={!open}
+        >
           <AssistantChat
             compact
             threadId={threadId}
@@ -55,16 +89,16 @@ export default function AssistantBubble() {
             showOpenFullPage
           />
         </div>
-      )}
 
-      <button
-        type="button"
-        className={`assistant-bubble-toggle${open ? " open" : ""}`}
-        aria-label={open ? "Close assistant" : "Open assistant"}
-        onClick={() => setBubbleOpen(prev => !prev)}
-      >
-        {open ? <CloseOutlined /> : <MessageOutlined />}
-      </button>
-    </div>
+        <button
+          type="button"
+          className={`assistant-bubble-toggle${open ? " open" : ""}`}
+          aria-label={open ? "Close assistant" : "Open assistant"}
+          onClick={() => setBubbleOpen(prev => !prev)}
+        >
+          {open ? <CloseOutlined /> : <MessageOutlined />}
+        </button>
+      </div>
+    </>
   );
 }

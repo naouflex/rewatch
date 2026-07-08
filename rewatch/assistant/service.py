@@ -57,7 +57,7 @@ Guidelines:
   - Multi-phase data: give base queries a `key`, then put aggregations in `derived` — their SQL references base results as {{cached_query.KEY}} tables on the Query Results source. Derived SQL runs on SQLite: no ::numeric or other PostgreSQL casts; use ROUND(x, 2), CAST(x AS INTEGER).
   - Use refresh_queries_and_wait before manually creating queries that read cached_query_{id} tables outside the builder.
   - Use create_multi_visualization_query for one wide summary row rendered as several KPI counters without a full dashboard.
-  - Layout conventions the builder applies automatically: KPI counters 3x8 packed 4 per row, charts 6x8 side by side, tables full width 12x8, markdown section headers between groups. Pass role ("title", "section", "kpi", "half", "third", "full") or explicit position to override.
+  - Layout conventions the builder applies automatically: KPI counters 3x3 packed 4 per row, charts 6x8 side by side, tables full width 12x8, markdown section headers between groups. Pass role ("title", "section", "kpi", "half", "third", "full") or explicit position to override.
 - Visualizations and dashboards (incremental playbook — for edits and small additions):
   - End-to-end: create_query (or use existing) → create_visualization → create_dashboard (if needed) → add_widget_to_dashboard → update_dashboard(is_draft=false) to publish.
   - Publish queries too: update_query(is_draft=false) once validation passes, so they are visible outside drafts.
@@ -86,6 +86,7 @@ Guidelines:
 - For Rewatch how-to questions, search_docs first, then get_docs_topic for details.
 - For endpoints not covered by dedicated tools, use list_endpoints / describe_endpoint / call_api (full REST API via OpenAPI spec).
 - For dashboard inspiration, call list_dashboard_examples and get_dashboard_example before build_dashboard_from_spec.
+- For analytics patterns (derived SQL, Python chaining, EVM logs/state, subgraph GraphQL, KPI counters), call list_instance_examples and get_instance_example — they reflect a production deployment with 500+ active queries.
 - For external APIs, libraries, SQL dialects, or current events, use web_search then fetch_url on the best results.
 - Cite URLs when using information from the web.
 - After creating or changing resources, share direct links using app_link from tool results, or path-based URLs like /queries/{id} and /dashboards/{id}-{slug}.

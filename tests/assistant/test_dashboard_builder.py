@@ -222,7 +222,7 @@ def test_build_dashboard_counters_pack_into_kpi_row():
     # Four 3-wide counters share one row.
     assert [p["col"] for p in positions] == [0, 3, 6, 9]
     assert len({p["row"] for p in positions}) == 1
-    assert all(p["sizeX"] == 3 and p["sizeY"] == 8 for p in positions)
+    assert all(p["sizeX"] == 3 and p["sizeY"] == 3 for p in positions)
 
 
 def test_build_dashboard_skips_unknown_widget_refs_with_warning():

@@ -21,8 +21,12 @@ _POSITION_KEYS = frozenset(
 
 # Curated widget sizes matching the polished reference dashboards
 # (KPI counters in 4-per-row grids, tall charts, full-width tables).
+WIDGET_MIN_SIZE_BY_VIZ_TYPE = {
+    "COUNTER": {"minSizeX": 1, "minSizeY": 1},
+}
+
 WIDGET_SIZE_BY_VIZ_TYPE = {
-    "COUNTER": {"sizeX": 3, "sizeY": 8},
+    "COUNTER": {"sizeX": 3, "sizeY": 3},
     "CHART": {"sizeX": 6, "sizeY": 8},
     "TABLE": {"sizeX": 12, "sizeY": 8},
     "PIVOT": {"sizeX": 12, "sizeY": 8},
@@ -33,7 +37,7 @@ WIDGET_SIZE_BY_VIZ_TYPE = {
 WIDGET_SIZE_BY_ROLE = {
     "title": {"sizeX": 12, "sizeY": 3},
     "section": {"sizeX": 12, "sizeY": 2},
-    "kpi": {"sizeX": 3, "sizeY": 8},
+    "kpi": {"sizeX": 3, "sizeY": 3},
     "third": {"sizeX": 4, "sizeY": 8},
     "half": {"sizeX": 6, "sizeY": 8},
     "full": {"sizeX": 12, "sizeY": 8},
@@ -46,7 +50,7 @@ def suggest_widget_size(
     text: Optional[str] = None,
     layout_role: Optional[str] = None,
 ) -> dict[str, int]:
-    """Type-aware widget size: counters 3x8, charts 6x8, tables 12x8, text headers full width."""
+    """Type-aware widget size: counters 3x3, charts 6x8, tables 12x8, text headers full width."""
     if layout_role:
         size = WIDGET_SIZE_BY_ROLE.get(layout_role.lower())
         if size:
@@ -117,10 +121,20 @@ def widget_position(widget: dict[str, Any]) -> dict[str, Any]:
     return dict(position)
 
 
+def widget_min_size(*, visualization_type: Optional[str] = None) -> dict[str, int]:
+    """Per-viz minimum resize constraints (mirrors viz-lib minColumns/minRows)."""
+    if visualization_type:
+        mins = WIDGET_MIN_SIZE_BY_VIZ_TYPE.get(visualization_type.upper())
+        if mins:
+            return dict(mins)
+    return {"minSizeX": DASHBOARD_GRID["min_size_x"], "minSizeY": DASHBOARD_GRID["min_size_y"]}
+
+
 def normalize_widget_options(
     options: Optional[dict[str, Any]] = None,
     *,
     position: Optional[dict[str, Any]] = None,
+    visualization_type: Optional[str] = None,
 ) -> dict[str, Any]:
     """Ensure widget options use the nested ``options.position`` shape the UI expects."""
     normalized = dict(options or {})
@@ -137,9 +151,10 @@ def normalize_widget_options(
     pos.setdefault("row", 0)
     pos.setdefault("sizeX", DASHBOARD_GRID["default_size_x"])
     pos.setdefault("sizeY", DASHBOARD_GRID["default_size_y"])
-    pos.setdefault("minSizeX", DASHBOARD_GRID["min_size_x"])
+    mins = widget_min_size(visualization_type=visualization_type)
+    pos.setdefault("minSizeX", mins["minSizeX"])
     pos.setdefault("maxSizeX", DASHBOARD_GRID["max_size_x"])
-    pos.setdefault("minSizeY", DASHBOARD_GRID["min_size_y"])
+    pos.setdefault("minSizeY", mins["minSizeY"])
     pos.setdefault("maxSizeY", 1000)
     pos.setdefault("autoHeight", False)
 

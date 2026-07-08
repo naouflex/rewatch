@@ -85,7 +85,12 @@ const Assistant = {
 
     let result = null;
     await consumeSseStream(response, event => {
-      if (event.type === "complete") {
+      if (event.type === "thread_started" && event.thread_id) {
+        Assistant.setStoredThreadId(event.thread_id);
+      } else if (event.type === "complete") {
+        if (event.thread_id) {
+          Assistant.setStoredThreadId(event.thread_id);
+        }
         result = event;
       } else if (event.type === "error") {
         throw new Error(event.message || "Assistant request failed.");

@@ -15,6 +15,7 @@ from rewatch.assistant import catalog as platform_catalog
 from rewatch.assistant import alert_catalog
 from rewatch.assistant import dashboard_builder
 from rewatch.assistant import dashboard_examples
+from rewatch.assistant import instance_examples
 from rewatch.assistant import docs as docs_catalog
 from rewatch.assistant import web as web_tools
 from rewatch.assistant.dashboard_layout import (
@@ -535,7 +536,7 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
                 "results: reference base queries as {{cached_query.KEY}} in derived query text (base "
                 "queries need a `key`). Derived queries run on SQLite — no PostgreSQL casts like "
                 "::numeric. Widgets are auto-placed on a 12-column grid with type-aware sizes "
-                "(counters 3x8 packed 4 per row, charts 6x8, tables 12x8, text headers full width); "
+                "(counters 3x3 packed 4 per row, charts 6x8, tables 12x8, text headers full width); "
                 "pass position or role ('title', 'section', 'kpi', 'half', 'third', 'full') to override."
             ),
             "parameters": {
@@ -1177,6 +1178,52 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
             },
         },
     },
+    # --- Production instance patterns ---
+    {
+        "type": "function",
+        "function": {
+            "name": "list_instance_examples",
+            "description": (
+                "List real-world query and visualization patterns from a production Rewatch "
+                "deployment (derived SQL, Python chaining, EVM logs/state, GraphQL subgraphs, "
+                "KPI counters, dashboard layouts). Use before building analytics dashboards."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "q": {"type": "string", "description": "Optional search filter"},
+                    "category": {
+                        "type": "string",
+                        "description": (
+                            "Optional category: query_results, python, evmlogs, evmstate, "
+                            "graphql, pg, dashboard, visualization, coingecko, dune"
+                        ),
+                    },
+                },
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_instance_example",
+            "description": (
+                "Get query text, visualization mappings, and layout snippets for one production "
+                "instance pattern by id (e.g. results_derived_cte, python_get_query_result, "
+                "dola_health_dashboard_layout, counter_wide_row)."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "Instance example id",
+                    }
+                },
+                "required": ["id"],
+            },
+        },
+    },
     # --- Web ---
     {
         "type": "function",
@@ -1728,24 +1775,25 @@ class ToolContext:
         _require_widget_content(args.get("visualization_id"), args.get("text"))
         dashboard_id = args["dashboard_id"]
         raw_options = args.get("options")
+        viz_type = None
+        if args.get("visualization_id"):
+            try:
+                viz = _as_dict(
+                    self.request("GET", f"/api/visualizations/{args['visualization_id']}"),
+                    "visualization",
+                )
+                viz_type = viz.get("type")
+            except RuntimeError:
+                viz_type = None
         if has_explicit_position(raw_options):
-            options = normalize_widget_options(raw_options)
+            options = normalize_widget_options(raw_options, visualization_type=viz_type)
         else:
             dashboard = _as_dict(self.request("GET", f"/api/dashboards/{dashboard_id}"), "dashboard")
             widgets = dashboard.get("widgets") if isinstance(dashboard.get("widgets"), list) else []
-            viz_type = None
-            if args.get("visualization_id"):
-                try:
-                    viz = _as_dict(
-                        self.request("GET", f"/api/visualizations/{args['visualization_id']}"),
-                        "visualization",
-                    )
-                    viz_type = viz.get("type")
-                except RuntimeError:
-                    viz_type = None
             options = normalize_widget_options(
                 raw_options,
                 position=suggest_next_position(widgets, visualization_type=viz_type, text=args.get("text")),
+                visualization_type=viz_type,
             )
 
         body = _merge_body(
@@ -2065,6 +2113,10 @@ def execute_tool(ctx: ToolContext, name: str, arguments: dict) -> str:
         ),
         "list_dashboard_examples": lambda a: dashboard_examples.list_dashboard_examples(a.get("q")),
         "get_dashboard_example": lambda a: dashboard_examples.get_dashboard_example(a["id"]),
+        "list_instance_examples": lambda a: instance_examples.list_instance_examples(
+            a.get("q"), a.get("category")
+        ),
+        "get_instance_example": lambda a: instance_examples.get_instance_example(a["id"]),
     }
     handler = handlers.get(name)
     if not handler:

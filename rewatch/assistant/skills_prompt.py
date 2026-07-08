@@ -15,6 +15,7 @@ _GUIDE_SOURCES = (
     ("visualizations.md", "rewatch-visualizations-dashboards/SKILL.md"),
     ("visualization_reference.md", "rewatch-visualizations-dashboards/reference.md"),
     ("alerts.md", "rewatch-alerts-destinations/SKILL.md"),
+    ("production_patterns.md", None),
 )
 
 
@@ -32,10 +33,12 @@ def _read_guide(path: Path) -> Optional[str]:
     return _strip_frontmatter(path.read_text(encoding="utf-8")).strip()
 
 
-def _resolve_guide(bundled_name: str, cursor_relative: str) -> Optional[str]:
+def _resolve_guide(bundled_name: str, cursor_relative: Optional[str]) -> Optional[str]:
     bundled = _read_guide(_PACKAGE_GUIDES / bundled_name)
     if bundled:
         return bundled
+    if not cursor_relative:
+        return None
     cursor_path = _REPO_SKILLS / cursor_relative
     return _read_guide(cursor_path)
 

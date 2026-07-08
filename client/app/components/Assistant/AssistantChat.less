@@ -206,7 +206,6 @@
 .assistant-chat-history {
   border-bottom: 1px solid var(--rd-color-divider);
   background: var(--rd-color-surface);
-  max-height: 55%;
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -466,12 +465,25 @@
 }
 
 .assistant-chat.compact {
+  position: relative;
   height: 100%;
+  overflow: hidden;
+
+  .assistant-chat-history {
+    position: absolute;
+    top: 52px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 5;
+    max-height: none;
+    border-bottom: none;
+  }
 }
 
 .assistant-page-layout {
   display: flex;
-  height: calc(100vh - 120px);
+  height: calc(100dvh - 120px);
   min-height: 520px;
   border: 1px solid var(--rd-color-divider);
   border-radius: var(--rd-radius-sm);
@@ -484,4 +496,85 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
+}
+
+@media (max-width: 767px) {
+  .assistant-chat.compact {
+    .assistant-chat-header {
+      flex-wrap: nowrap;
+      gap: 8px;
+      padding: 10px 12px;
+
+      > div:first-child {
+        flex: 1;
+        min-width: 0;
+      }
+
+      h4 {
+        font-size: 14px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .subtitle {
+        display: none;
+      }
+
+      .assistant-chat-header-actions {
+        flex-shrink: 0;
+        gap: 4px;
+
+        .assistant-header-btn:not(.assistant-header-btn--graph) {
+          display: none;
+        }
+      }
+    }
+
+    .assistant-chat-messages {
+      padding: 12px;
+    }
+
+    .assistant-chat-input {
+      padding: 10px 12px;
+      padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    }
+  }
+
+  .assistant-chat:not(.compact) .assistant-chat-header {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 12px;
+
+    .subtitle {
+      display: none;
+    }
+
+    .assistant-chat-header-actions {
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .assistant-header-btn--graph span:not(.assistant-header-btn__badge) {
+      display: none;
+    }
+  }
+
+  .assistant-page-layout {
+    flex-direction: column;
+    height: calc(100dvh - 48px - 32px);
+    min-height: 0;
+    border: none;
+    border-radius: 0;
+  }
+
+  .page-assistant .container {
+    padding-left: 0;
+    padding-right: 0;
+    padding-top: 8px;
+  }
+
+  .page-assistant .container.m-b-20 {
+    margin-bottom: 0 !important;
+  }
 }

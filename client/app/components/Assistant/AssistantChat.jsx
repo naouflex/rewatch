@@ -88,10 +88,13 @@ export default function AssistantChat({
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const streamActiveRef = useRef(false);
+  const streamingThreadIdRef = useRef(null);
   const pollGenerationRef = useRef(0);
   const skipThreadReloadRef = useRef(false);
   const currentRoute = useCurrentRoute();
   const pageContext = useMemo(() => buildAssistantPageContext(currentRoute), [currentRoute]);
+
+  const isStreamingThread = useCallback(thread => streamActiveRef.current && streamingThreadIdRef.current === thread, []);
 
   useEffect(() => {
     if (!onMessagesChange) {
@@ -132,6 +135,9 @@ export default function AssistantChat({
             return;
           }
           if (!isAwaitingReply(history)) {
+            if (pollGenerationRef.current !== generation || isStreamingThread(id)) {
+              return;
+            }
             setMessages(history.length ? history : [WELCOME]);
             return;
           }
@@ -151,17 +157,19 @@ export default function AssistantChat({
         setDraftReply("");
       }
     }
-  }, []);
+  }, [isStreamingThread]);
 
   const loadThread = useCallback(
     async (id, generation) => {
       if (!id) {
-        setMessages([WELCOME]);
+        if (!isStreamingThread(null) && pollGenerationRef.current === generation) {
+          setMessages([WELCOME]);
+        }
         return;
       }
       try {
         const history = await Assistant.getMessages(id);
-        if (pollGenerationRef.current !== generation) {
+        if (pollGenerationRef.current !== generation || isStreamingThread(id)) {
           return;
         }
         const nextMessages = history.length ? history : [WELCOME];
@@ -170,6 +178,9 @@ export default function AssistantChat({
           await pollForPendingReply(id, generation);
         }
       } catch (err) {
+        if (pollGenerationRef.current !== generation || isStreamingThread(id)) {
+          return;
+        }
         const status = err?.response?.status;
         if (status === 404) {
           Assistant.setStoredThreadId(null);
@@ -179,7 +190,7 @@ export default function AssistantChat({
         throw err;
       }
     },
-    [onThreadIdChange, pollForPendingReply]
+    [isStreamingThread, onThreadIdChange, pollForPendingReply]
   );
 
   useEffect(() => {
@@ -188,13 +199,18 @@ export default function AssistantChat({
       return undefined;
     }
 
+    streamActiveRef.current = false;
+    streamingThreadIdRef.current = null;
+    setLoading(false);
+    setDraftReply("");
+
     const generation = pollGenerationRef.current + 1;
     pollGenerationRef.current = generation;
     let cancelled = false;
     setBootstrapping(true);
     loadThread(threadId, generation)
       .catch(() => {
-        if (!cancelled && pollGenerationRef.current === generation) {
+        if (!cancelled && pollGenerationRef.current === generation && !isStreamingThread(threadId)) {
           setMessages([WELCOME]);
         }
       })
@@ -206,6 +222,24 @@ export default function AssistantChat({
     return () => {
       cancelled = true;
       pollGenerationRef.current += 1;
+    };
+  }, [threadId, loadThread, isStreamingThread]);
+
+  useEffect(() => {
+    const resumePendingReply = () => {
+      if (document.visibilityState !== "visible" || !threadId || streamActiveRef.current) {
+        return;
+      }
+      const generation = pollGenerationRef.current + 1;
+      pollGenerationRef.current = generation;
+      loadThread(threadId, generation);
+    };
+
+    document.addEventListener("visibilitychange", resumePendingReply);
+    window.addEventListener("focus", resumePendingReply);
+    return () => {
+      document.removeEventListener("visibilitychange", resumePendingReply);
+      window.removeEventListener("focus", resumePendingReply);
     };
   }, [threadId, loadThread]);
 
@@ -270,36 +304,46 @@ export default function AssistantChat({
     [threadId, onThreadIdChange, onThreadsChanged, refreshHistory]
   );
 
-  const handleStreamEvent = useCallback(event => {
-    if (event.type === "graph") {
-      setThinkingGraph({ nodes: event.nodes || [] });
-      return;
-    }
-    if (event.type === "status") {
-      setThinkingStatus(event.message);
-      return;
-    }
-    if (event.type === "reply_delta") {
-      setDraftReply(prev => prev + (event.text || ""));
-      return;
-    }
-    if (event.type === "reply_reset") {
-      setDraftReply("");
-      return;
-    }
-    if (event.type === "tool_start") {
-      setThinkingActivities(prev => {
-        const next = prev.filter(item => item.id !== event.id);
-        return [...next, { id: event.id, tool: event.tool, label: event.label, status: "running" }];
-      });
-      return;
-    }
-    if (event.type === "tool_done") {
-      setThinkingActivities(prev =>
-        prev.map(item => (item.id === event.id ? { ...item, status: "done" } : item))
-      );
-    }
-  }, []);
+  const handleStreamEvent = useCallback(
+    event => {
+      if (event.type === "thread_started" && event.thread_id) {
+        streamingThreadIdRef.current = event.thread_id;
+        skipThreadReloadRef.current = true;
+        Assistant.setStoredThreadId(event.thread_id);
+        onThreadIdChange(event.thread_id);
+        return;
+      }
+      if (event.type === "graph") {
+        setThinkingGraph({ nodes: event.nodes || [] });
+        return;
+      }
+      if (event.type === "status") {
+        setThinkingStatus(event.message);
+        return;
+      }
+      if (event.type === "reply_delta") {
+        setDraftReply(prev => prev + (event.text || ""));
+        return;
+      }
+      if (event.type === "reply_reset") {
+        setDraftReply("");
+        return;
+      }
+      if (event.type === "tool_start") {
+        setThinkingActivities(prev => {
+          const next = prev.filter(item => item.id !== event.id);
+          return [...next, { id: event.id, tool: event.tool, label: event.label, status: "running" }];
+        });
+        return;
+      }
+      if (event.type === "tool_done") {
+        setThinkingActivities(prev =>
+          prev.map(item => (item.id === event.id ? { ...item, status: "done" } : item))
+        );
+      }
+    },
+    [onThreadIdChange]
+  );
 
   const runChat = useCallback(
     async ({ threadId: currentThreadId, message }) =>
@@ -328,6 +372,7 @@ export default function AssistantChat({
       setThinkingGraph(null);
       setDraftReply("");
       setMessages(prev => [...prev, { role: "user", content: text }]);
+      streamingThreadIdRef.current = threadId;
       streamActiveRef.current = true;
       setLoading(true);
 
@@ -360,6 +405,7 @@ export default function AssistantChat({
         setMessages(prev => [...prev, { role: "assistant", content: `Sorry, I ran into an error: ${detail}` }]);
       } finally {
         streamActiveRef.current = false;
+        streamingThreadIdRef.current = null;
         setLoading(false);
         setThinkingActivities([]);
         setThinkingStatus("Thinking…");

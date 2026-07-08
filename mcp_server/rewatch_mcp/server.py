@@ -1254,27 +1254,28 @@ def add_widget_to_dashboard(
     """Add a widget to a dashboard. Pass ``visualization_id`` for a chart/table, or ``text`` for a text box.
 
     Omit ``options`` to auto-place below existing widgets with a type-aware size
-    (counters 3x8 packed side by side, charts 6x8, tables 12x8). Pass explicit
+    (counters 3x3 packed side by side, charts 6x8, tables 12x8). Pass explicit
     ``options.position`` (col, row, sizeX, sizeY on a 12-column grid) to override.
     """
     _ensure_writable()
     _require_widget_content(visualization_id, text)
+    viz_type = None
+    if visualization_id:
+        try:
+            viz = _request("GET", f"/api/visualizations/{visualization_id}")
+            viz_type = viz.get("type") if isinstance(viz, dict) else None
+        except RuntimeError:
+            viz_type = None
     if normalize_widget_options is not None and has_explicit_position is not None:
         if has_explicit_position(options):
-            options = normalize_widget_options(options)
+            options = normalize_widget_options(options, visualization_type=viz_type)
         else:
             dashboard = _request("GET", f"/api/dashboards/{dashboard_id}")
             widgets = dashboard.get("widgets") if isinstance(dashboard.get("widgets"), list) else []
-            viz_type = None
-            if visualization_id:
-                try:
-                    viz = _request("GET", f"/api/visualizations/{visualization_id}")
-                    viz_type = viz.get("type") if isinstance(viz, dict) else None
-                except RuntimeError:
-                    viz_type = None
             options = normalize_widget_options(
                 options,
                 position=suggest_next_position(widgets, visualization_type=viz_type, text=text),
+                visualization_type=viz_type,
             )
     body = _merge_body(
         dashboard_id=dashboard_id,
@@ -1333,7 +1334,7 @@ def build_dashboard_from_spec(
     each with optional {position: {col,row,sizeX,sizeY}} or {role: "title" |
     "section" | "kpi" | "half" | "third" | "full"}. Widgets without explicit
     positions are packed onto a 12-column grid with type-aware sizes (counters
-    3x8 four per row, charts 6x8, tables 12x8, text headers full width).
+    3x3 four per row, charts 6x8, tables 12x8, text headers full width).
     """
     _ensure_writable()
     if dashboard_builder is None:
