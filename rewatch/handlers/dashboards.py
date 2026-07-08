@@ -1,6 +1,7 @@
 from flask import Response, request, url_for
 from flask_restful import abort
 from funcy import partial, project
+from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.exc import StaleDataError
 
 from rewatch import models
@@ -29,6 +30,8 @@ order_map = {
     "-name": "-lowercase_name",
     "created_at": "created_at",
     "-created_at": "-created_at",
+    "updated_at": "updated_at",
+    "-updated_at": "-updated_at",
     "starred_at": "favorites-created_at",
     "-starred_at": "-favorites-created_at",
 }
@@ -285,7 +288,18 @@ class DashboardPreviewResource(BaseResource):
         """
         dashboard = get_object_or_404(models.Dashboard.get_by_id_and_org, dashboard_id, self.current_org)
         require_access(dashboard, self.current_user, view_only)
-        svg = render_dashboard_svg(dashboard)
+        theme = request.args.get("theme", "light")
+        if theme not in ("light", "dark"):
+            theme = "light"
+        widgets = (
+            dashboard.widgets.options(
+                joinedload(models.Widget.visualization)
+                .joinedload(models.Visualization.query_rel)
+                .joinedload(models.Query.latest_query_data)
+            )
+            .all()
+        )
+        svg = render_dashboard_svg(dashboard, theme=theme, widgets=widgets, user=self.current_user)
         return Response(svg, mimetype="image/svg+xml", headers={"Cache-Control": "private, max-age=120"})
 
 

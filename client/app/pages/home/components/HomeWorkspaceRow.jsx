@@ -1,10 +1,11 @@
-import { isEmpty, keyBy, orderBy, take } from "lodash";
-import React, { useEffect, useState } from "react";
+import { isEmpty, keyBy, take } from "lodash";
+import React, { useCallback, useEffect, useState } from "react";
 import PropTypes from "prop-types";
 
 import Button from "antd/lib/button";
 import BigMessage from "@/components/BigMessage";
 import Link from "@/components/Link";
+import Paginator from "@/components/Paginator";
 import TimeAgo from "@/components/TimeAgo";
 import CreateDashboardDialog from "@/components/dashboards/CreateDashboardDialog";
 import DashboardThumbnail from "@/components/dashboards/DashboardThumbnail";
@@ -16,7 +17,9 @@ import { Query } from "@/services/query";
 
 import HomeSection, { HomeListItem, HomeListSkeleton } from "./HomeSection";
 
-const ITEM_LIMIT = 3;
+const QUERIES_PANEL_PAGE_SIZE = 6;
+const DASHBOARDS_PANEL_PAGE_SIZE = 6;
+const FAVORITES_PANEL_LIMIT = 3;
 
 function DraftBadge() {
   return <span className="label label-default home-list-item__badge">Unpublished</span>;
@@ -34,7 +37,7 @@ function FavoriteSublist({ title, resource, itemUrl, viewAllHref, emptyState, sh
 
     Promise.all([favoritesPromise, dataSourcesPromise])
       .then(([favoritesResult, dataSources]) => {
-        setItems(take(favoritesResult.results, ITEM_LIMIT));
+        setItems(take(favoritesResult.results, FAVORITES_PANEL_LIMIT));
         if (showDataSourceIcon) {
           setDataSourcesById(keyBy(dataSources, "id"));
         }
@@ -52,7 +55,7 @@ function FavoriteSublist({ title, resource, itemUrl, viewAllHref, emptyState, sh
           </Link>
         )}
       </div>
-      {loading && <HomeListSkeleton rows={ITEM_LIMIT} compact />}
+      {loading && <HomeListSkeleton rows={FAVORITES_PANEL_LIMIT} compact />}
       {!loading && !isEmpty(items) && (
         <div role="list" className="home-list home-list--compact">
           {items.map(item => {
@@ -128,17 +131,37 @@ function RecentQueriesList() {
   const [queries, setQueries] = useState([]);
   const [dataSourcesById, setDataSourcesById] = useState({});
   const [loading, setLoading] = useState(true);
+  const [hasLoaded, setHasLoaded] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+
+  const loadQueries = useCallback((nextPage = 1) => {
+    setLoading(true);
+    const queriesPromise = Query.myQueries({
+      page: nextPage,
+      page_size: QUERIES_PANEL_PAGE_SIZE,
+      order: "-updated_at",
+    });
+    const dataSourcesPromise = hasLoaded ? Promise.resolve(null) : DataSource.query();
+
+    Promise.all([queriesPromise, dataSourcesPromise])
+      .then(([queriesResult, dataSources]) => {
+        setQueries(queriesResult.results);
+        setTotalCount(queriesResult.count);
+        setPage(nextPage);
+        if (dataSources) {
+          setDataSourcesById(keyBy(dataSources, "id"));
+        }
+      })
+      .finally(() => {
+        setLoading(false);
+        setHasLoaded(true);
+      });
+  }, [hasLoaded]);
 
   useEffect(() => {
-    setLoading(true);
-    Promise.all([Query.recent(), DataSource.query()])
-      .then(([recentQueries, dataSources]) => {
-        const published = recentQueries.filter(query => !query.is_draft);
-        setQueries(take(published, ITEM_LIMIT));
-        setDataSourcesById(keyBy(dataSources, "id"));
-      })
-      .finally(() => setLoading(false));
-  }, []);
+    loadQueries(1);
+  }, [loadQueries]);
 
   const emptyState = currentUser.hasPermission("create_query") ? (
     <BigMessage icon="fa-code" className="home-section-empty home-section-empty--compact">
@@ -154,37 +177,48 @@ function RecentQueriesList() {
     <HomeSection
       title="Recently edited queries"
       viewAllHref="queries/my"
-      loading={loading}
+      loading={loading && !hasLoaded}
       compact
-      skeletonRows={ITEM_LIMIT}
+      skeletonRows={QUERIES_PANEL_PAGE_SIZE}
       className="home-workspace-row__panel"
     >
       {!isEmpty(queries) && (
-        <div role="list" className="home-list home-list--compact">
-          {queries.map(query => {
-            const dataSource = dataSourcesById[query.data_source_id];
-            return (
-              <HomeListItem
-                key={query.id}
-                href={`queries/${query.id}`}
-                className="home-list-item--compact"
-                icon={
-                  dataSource ? (
-                    <QuerySourceTypeIcon dataSource={dataSource} alt={dataSource.name} width={20} height={20} />
-                  ) : (
-                    <i className="fa fa-code home-list-item__fallback-icon" aria-hidden="true" />
-                  )
-                }
-                title={query.name}
-                meta={
-                  <>
-                    Edited <TimeAgo date={query.updated_at} />
-                  </>
-                }
-              />
-            );
-          })}
-        </div>
+        <>
+          <div role="list" className="home-list home-list--compact">
+            {queries.map(query => {
+              const dataSource = dataSourcesById[query.data_source_id];
+              return (
+                <HomeListItem
+                  key={query.id}
+                  href={`queries/${query.id}`}
+                  className="home-list-item--compact"
+                  icon={
+                    dataSource ? (
+                      <QuerySourceTypeIcon dataSource={dataSource} alt={dataSource.name} width={20} height={20} />
+                    ) : (
+                      <i className="fa fa-code home-list-item__fallback-icon" aria-hidden="true" />
+                    )
+                  }
+                  title={query.name}
+                  meta={
+                    <>
+                      Edited <TimeAgo date={query.updated_at} />
+                    </>
+                  }
+                  badge={query.is_draft ? <DraftBadge /> : null}
+                />
+              );
+            })}
+          </div>
+          <Paginator
+            page={page}
+            pageSize={QUERIES_PANEL_PAGE_SIZE}
+            totalCount={totalCount}
+            onChange={loadQueries}
+            size="small"
+            simple
+          />
+        </>
       )}
       {isEmpty(queries) && !loading && emptyState}
     </HomeSection>
@@ -194,15 +228,27 @@ function RecentQueriesList() {
 function RecentDashboardsList() {
   const [dashboards, setDashboards] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [hasLoaded, setHasLoaded] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+
+  const loadDashboards = useCallback((nextPage = 1) => {
+    setLoading(true);
+    Dashboard.myDashboards({ page: nextPage, page_size: DASHBOARDS_PANEL_PAGE_SIZE, order: "-updated_at" })
+      .then(({ results, count }) => {
+        setDashboards(results);
+        setTotalCount(count);
+        setPage(nextPage);
+      })
+      .finally(() => {
+        setLoading(false);
+        setHasLoaded(true);
+      });
+  }, []);
 
   useEffect(() => {
-    setLoading(true);
-    Dashboard.myDashboards({ page_size: ITEM_LIMIT })
-      .then(({ results }) => {
-        setDashboards(take(orderBy(results, item => item.updated_at, "desc"), ITEM_LIMIT));
-      })
-      .finally(() => setLoading(false));
-  }, []);
+    loadDashboards(1);
+  }, [loadDashboards]);
 
   const emptyState = currentUser.hasPermission("create_dashboard") ? (
     <BigMessage icon="zmdi zmdi-view-quilt" className="home-section-empty home-section-empty--compact">
@@ -218,29 +264,39 @@ function RecentDashboardsList() {
     <HomeSection
       title="My dashboards"
       viewAllHref="dashboards/my"
-      loading={loading}
+      loading={loading && !hasLoaded}
       compact
-      skeletonRows={ITEM_LIMIT}
+      skeletonRows={DASHBOARDS_PANEL_PAGE_SIZE}
       className="home-workspace-row__panel"
     >
       {!isEmpty(dashboards) && (
-        <div role="list" className="home-list home-list--compact">
-          {dashboards.map(dashboard => (
-            <HomeListItem
-              key={dashboard.id}
-              href={dashboard.url}
-              className="home-list-item--compact"
-              thumbnail={<DashboardThumbnail dashboardId={dashboard.id} alt={dashboard.name} size="home" />}
-              title={dashboard.name}
-              meta={
-                <>
-                  Updated <TimeAgo date={dashboard.updated_at} />
-                </>
-              }
-              badge={dashboard.is_draft ? <DraftBadge /> : null}
-            />
-          ))}
-        </div>
+        <>
+          <div role="list" className="home-list home-list--compact">
+            {dashboards.map(dashboard => (
+              <HomeListItem
+                key={dashboard.id}
+                href={dashboard.url}
+                className="home-list-item--compact"
+                thumbnail={<DashboardThumbnail dashboardId={dashboard.id} alt={dashboard.name} size="home" />}
+                title={dashboard.name}
+                meta={
+                  <>
+                    Updated <TimeAgo date={dashboard.updated_at} />
+                  </>
+                }
+                badge={dashboard.is_draft ? <DraftBadge /> : null}
+              />
+            ))}
+          </div>
+          <Paginator
+            page={page}
+            pageSize={DASHBOARDS_PANEL_PAGE_SIZE}
+            totalCount={totalCount}
+            onChange={loadDashboards}
+            size="small"
+            simple
+          />
+        </>
       )}
       {isEmpty(dashboards) && !loading && emptyState}
     </HomeSection>

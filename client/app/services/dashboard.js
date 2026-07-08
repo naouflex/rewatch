@@ -136,7 +136,11 @@ export function Dashboard(dashboard) {
 }
 
 function prepareDashboardWidgets(widgets) {
-  return prepareWidgetsForDashboard(_.map(widgets, (widget) => new Widget(widget)));
+  // Keep existing Widget instances so in-flight query results aren't lost when
+  // the dashboard state is cloned for a React re-render.
+  return prepareWidgetsForDashboard(
+    _.map(widgets, (widget) => (widget instanceof Widget ? widget : new Widget(widget)))
+  );
 }
 
 function transformSingle(dashboard) {
@@ -176,7 +180,6 @@ const DashboardService = {
   favorite: ({ id }) => axios.post(`api/dashboards/${id}/favorite`),
   unfavorite: ({ id }) => axios.delete(`api/dashboards/${id}/favorite`),
   fork: ({ id }) => axios.post(`api/dashboards/${id}/fork`, { id }).then(transformResponse),
-  previewUrl: (id) => `api/dashboards/${id}/preview`,
 };
 
 _.extend(Dashboard, DashboardService);
@@ -185,7 +188,12 @@ Dashboard.prepareDashboardWidgets = prepareDashboardWidgets;
 Dashboard.prepareWidgetsForDashboard = prepareWidgetsForDashboard;
 
 export function cloneDashboard(dashboard, patch = {}) {
-  return transformSingle(_.extend({}, dashboard, patch));
+  const merged = _.extend({}, dashboard, patch);
+  // Re-render only: shallow-clone the dashboard without rebuilding widgets.
+  if (_.isEmpty(patch)) {
+    return new Dashboard(merged);
+  }
+  return transformSingle(merged);
 }
 
 Dashboard.clone = cloneDashboard;

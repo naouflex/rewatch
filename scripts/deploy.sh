@@ -399,7 +399,7 @@ cmd_push() {
   log "Pushing code (no rebuild)..."
   cmd_upload
   log "Restarting Python services..."
-  vm_compose 'up -d --remove-orphans server worker scheduler ml-worker'
+  vm_compose 'restart server worker scheduler ml-worker'
   ok "Push complete. Tail logs with: $0 logs server"
 }
 
