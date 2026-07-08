@@ -147,6 +147,34 @@ def _parse_dsn(configuration):
     return params
 
 
+def _connection_string(configuration):
+    return (configuration.get("connectionString") or "").strip()
+
+
+def _connect_params(configuration):
+    ssl_config = _get_ssl_config(configuration)
+    extra_dsn = _parse_dsn(configuration)
+
+    connection_string = _connection_string(configuration)
+    if connection_string:
+        params = dict(psycopg2.extensions.parse_dsn(connection_string))
+        params.update(extra_dsn)
+        params.update(ssl_config)
+        return params, ssl_config, extra_dsn
+
+    params = {
+        "user": configuration.get("user"),
+        "password": configuration.get("password"),
+        "host": configuration.get("host"),
+        "port": configuration.get("port"),
+        "dbname": configuration.get("dbname"),
+    }
+    params = {key: value for key, value in params.items() if value is not None and value != ""}
+    params.update(ssl_config)
+    params.update(extra_dsn)
+    return params, ssl_config, extra_dsn
+
+
 class PostgreSQL(BaseSQLQueryRunner):
     noop_query = "SELECT 1"
 
@@ -155,6 +183,11 @@ class PostgreSQL(BaseSQLQueryRunner):
         return {
             "type": "object",
             "properties": {
+                "connectionString": {
+                    "type": "string",
+                    "title": "Connection String",
+                    "placeholder": "postgresql://user:password@host:5432/database",
+                },
                 "user": {"type": "string"},
                 "password": {"type": "string"},
                 "host": {"type": "string", "default": "127.0.0.1"},
@@ -178,9 +211,9 @@ class PostgreSQL(BaseSQLQueryRunner):
                 "sslcertFile": {"type": "string", "title": "SSL Client Certificate"},
                 "sslkeyFile": {"type": "string", "title": "SSL Client Key"},
             },
-            "order": ["host", "port", "user", "password"],
-            "required": ["dbname"],
-            "secret": ["password", "sslrootcertFile", "sslcertFile", "sslkeyFile"],
+            "order": ["connectionString", "host", "port", "user", "password"],
+            "anyOf": [{"required": ["connectionString"]}, {"required": ["dbname"]}],
+            "secret": ["password", "connectionString", "sslrootcertFile", "sslcertFile", "sslkeyFile"],
             "extra_options": [
                 "sslmode",
                 "sslrootcertFile",
@@ -253,18 +286,8 @@ class PostgreSQL(BaseSQLQueryRunner):
         return list(schema.values())
 
     def _get_connection(self):
-        self.ssl_config = _get_ssl_config(self.configuration)
-        self.dsn = _parse_dsn(self.configuration)
-        connection = psycopg2.connect(
-            user=self.configuration.get("user"),
-            password=self.configuration.get("password"),
-            host=self.configuration.get("host"),
-            port=self.configuration.get("port"),
-            dbname=self.configuration.get("dbname"),
-            async_=True,
-            **self.ssl_config,
-            **self.dsn,
-        )
+        params, self.ssl_config, self.dsn = _connect_params(self.configuration)
+        connection = psycopg2.connect(async_=True, **params)
 
         return connection
 

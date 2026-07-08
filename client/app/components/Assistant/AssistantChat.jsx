@@ -14,6 +14,7 @@ import { useCurrentRoute } from "@/components/ApplicationArea/Router";
 import Assistant from "@/services/assistant";
 import { buildAssistantPageContext } from "@/services/assistantPageContext";
 import AssistantThinking from "@/components/Assistant/AssistantThinking";
+import AssistantDecisionGraph from "@/components/Assistant/AssistantDecisionGraph";
 
 import "./AssistantChat.less";
 
@@ -72,6 +73,7 @@ export default function AssistantChat({
   const [loading, setLoading] = useState(false);
   const [thinkingStatus, setThinkingStatus] = useState("Thinking…");
   const [thinkingActivities, setThinkingActivities] = useState([]);
+  const [thinkingGraph, setThinkingGraph] = useState(null);
   const [draftReply, setDraftReply] = useState("");
   const [bootstrapping, setBootstrapping] = useState(true);
   const [error, setError] = useState(null);
@@ -89,6 +91,7 @@ export default function AssistantChat({
     setLoading(true);
     setThinkingStatus("Assistant is still working…");
     setThinkingActivities([]);
+    setThinkingGraph(null);
     setDraftReply("");
     setError(null);
 
@@ -122,6 +125,7 @@ export default function AssistantChat({
         setLoading(false);
         setThinkingStatus("Thinking…");
         setThinkingActivities([]);
+        setThinkingGraph(null);
         setDraftReply("");
       }
     }
@@ -240,6 +244,10 @@ export default function AssistantChat({
   );
 
   const handleStreamEvent = useCallback(event => {
+    if (event.type === "graph") {
+      setThinkingGraph({ nodes: event.nodes || [] });
+      return;
+    }
     if (event.type === "status") {
       setThinkingStatus(event.message);
       return;
@@ -290,6 +298,7 @@ export default function AssistantChat({
       setHistoryOpen(false);
       setThinkingStatus("Analyzing your request…");
       setThinkingActivities([]);
+      setThinkingGraph(null);
       setDraftReply("");
       setMessages(prev => [...prev, { role: "user", content: text }]);
       streamActiveRef.current = true;
@@ -451,7 +460,12 @@ export default function AssistantChat({
           messages.map((msg, index) => (
             <div key={`${msg.role}-${index}`} className={`assistant-chat-message ${msg.role}`}>
               {msg.role === "assistant" ? (
-                <HtmlContent className="markdown">{renderMarkdown(msg.content)}</HtmlContent>
+                <>
+                  <HtmlContent className="markdown">{renderMarkdown(msg.content)}</HtmlContent>
+                  {msg.decision_graph && (
+                    <AssistantDecisionGraph graph={msg.decision_graph} defaultExpanded={false} />
+                  )}
+                </>
               ) : (
                 msg.content
               )}
@@ -463,7 +477,12 @@ export default function AssistantChat({
             <HtmlContent className="markdown">{renderMarkdown(draftReply)}</HtmlContent>
           </div>
         )}
-        {loading && !draftReply && <AssistantThinking status={thinkingStatus} activities={thinkingActivities} />}
+        {loading && !draftReply && (
+          <>
+            <AssistantThinking status={thinkingStatus} activities={thinkingActivities} />
+            {thinkingGraph && <AssistantDecisionGraph graph={thinkingGraph} live defaultExpanded />}
+          </>
+        )}
         <div ref={messagesEndRef} />
       </div>
 

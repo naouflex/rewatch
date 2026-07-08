@@ -1322,7 +1322,13 @@ class Dashboard(ChangeTrackingMixin, TimestampMixin, BelongsToOrgMixin, db.Model
 
     @classmethod
     def by_user(cls, user):
-        return cls.all(user.org, user.group_ids, user.id).filter(Dashboard.user == user)
+        # User-owned dashboards don't need the widget/data-source joins from all(),
+        # and skipping them avoids DISTINCT ON conflicts when ordering by updated_at.
+        return cls.query.filter(
+            Dashboard.is_archived.is_(False),
+            Dashboard.org == user.org,
+            Dashboard.user == user,
+        )
 
     @classmethod
     def get_by_slug_and_org(cls, slug, org):

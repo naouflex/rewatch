@@ -117,13 +117,18 @@ QUERY_RUNNER_NOTES: dict[str, dict[str, Any]] = {
         ],
     },
     "results": {
-        "summary": "Query cached results from other saved queries using SQL-like syntax.",
+        "summary": "Query cached results from other saved queries using SQLite SQL.",
         "tips": [
-            "Reference other queries as tables named query_<id> (see get_data_source_schema).",
-            "Standard SQL SELECT/JOIN/WHERE against those virtual tables.",
+            "Reference other queries as cached_query_<id> tables (uses the stored cached result; fast) "
+            "or query_<id> tables (re-executes the child query on every run; slow).",
+            "Refresh child queries first so cached results exist — use refresh_queries_and_wait.",
+            "SQL dialect is SQLite: no PostgreSQL casts like ::numeric or ::int. "
+            "Use ROUND(x, 2), CAST(x AS INTEGER), and standard SELECT/JOIN/WHERE/GROUP BY.",
             "Only queries with cached results appear in schema.",
+            "build_dashboard_from_spec handles this automatically via derived queries with "
+            "{{cached_query.KEY}} placeholders.",
         ],
-        "example_query": "SELECT * FROM query_123 LIMIT 100",
+        "example_query": "SELECT name, ROUND(tvl / 1e9, 2) AS tvl_b\nFROM cached_query_123\nORDER BY tvl DESC\nLIMIT 25",
     },
     "mongodb": {
         "summary": "MongoDB aggregation/find queries as JSON.",
@@ -161,6 +166,12 @@ QUERY_RUNNER_NOTES: dict[str, dict[str, Any]] = {
             "Optional query-string parameters go under `params:`.",
             "Schema browser lists endpoints by category (tvl.*, dex.*, coins.*, fees.*, ...); use insert templates from schema.",
             "Do not invent API URLs — pick endpoint slugs from schema or get_query_runner_type endpoint_catalog.",
+            "Chain ecosystem dashboard recipe (works well with build_dashboard_from_spec): "
+            "`historical-chain-tvl-chain` + chain for TVL history; `overview-dexs-chain` and "
+            "`overview-fees-chain` + chain for single-row volume/fee aggregates (total24h, total7d, "
+            "change_1d — render as counters); `chains` for cross-chain TVL ranking; `protocols` has "
+            "per-chain columns like chainTvls_Ethereum — give it a key and aggregate via derived "
+            "queries (top protocols, TVL by category). Combine with a coingecko source for price data.",
         ],
     },
     "coingecko": {
@@ -571,7 +582,9 @@ def get_visualization_type(viz_type: str) -> dict[str, Any]:
         }
     result = {"type": viz_type, **meta}
     result["dashboard_workflow"] = (
-        "Typical flow: run_query or create_query (read validation columns) → create_visualization "
+        "Full dashboards (3+ widgets): prefer build_dashboard_from_spec — one call validates queries, "
+        "creates visualizations and widgets with a curated grid layout, and publishes. "
+        "Incremental flow: run_query or create_query (read validation columns) → create_visualization "
         "→ add_widget_to_dashboard → get_dashboard to verify layout → update_dashboard(is_draft=false) to publish."
     )
     return result

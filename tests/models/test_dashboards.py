@@ -51,6 +51,20 @@ class TestDashboardsByUser(BaseTestCase):
         self.assertTrue(d in dashboards)
         self.assertFalse(d2 in dashboards)
 
+    def test_returns_one_row_per_dashboard_with_multiple_widgets(self):
+        usr = self.factory.create_user()
+        ds1 = self.factory.create_data_source()
+        ds2 = self.factory.create_data_source()
+        qry1 = self.factory.create_query(data_source=ds1, user=usr)
+        qry2 = self.factory.create_query(data_source=ds2, user=usr)
+        viz1 = self.factory.create_visualization(query_rel=qry1)
+        viz2 = self.factory.create_visualization(query_rel=qry2)
+        dash = self.factory.create_dashboard(name="multi-widget", user=usr)
+        self.factory.create_widget(dashboard=dash, visualization=viz1)
+        self.factory.create_widget(dashboard=dash, visualization=viz2)
+
+        self.assertEqual(Dashboard.by_user(usr).count(), 1)
+
     def test_returns_correct_number_of_dashboards(self):
         # Solving https://github.com/getrewatch/rewatch/issues/5466
 

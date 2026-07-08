@@ -126,6 +126,76 @@ def test_enrich_visualizations_for_assistant_adds_options_health():
     assert "Date" in visualizations[0]["options_health"]["invalid_columns"]
 
 
+def test_suggest_widget_size_is_type_aware():
+    from rewatch.assistant.dashboard_layout import suggest_widget_size
+
+    assert suggest_widget_size(visualization_type="COUNTER") == {"sizeX": 3, "sizeY": 8}
+    assert suggest_widget_size(visualization_type="CHART") == {"sizeX": 6, "sizeY": 8}
+    assert suggest_widget_size(visualization_type="TABLE") == {"sizeX": 12, "sizeY": 8}
+    assert suggest_widget_size(text="# Big Title") == {"sizeX": 12, "sizeY": 3}
+    assert suggest_widget_size(text="## Section") == {"sizeX": 12, "sizeY": 2}
+    assert suggest_widget_size(visualization_type="CHART", layout_role="full") == {"sizeX": 12, "sizeY": 8}
+
+
+def test_plan_dashboard_layout_packs_kpi_row_and_sections():
+    from rewatch.assistant.dashboard_layout import plan_dashboard_layout
+
+    positions = plan_dashboard_layout(
+        [
+            {"text": "# Title"},
+            {"visualization_type": "COUNTER"},
+            {"visualization_type": "COUNTER"},
+            {"visualization_type": "COUNTER"},
+            {"visualization_type": "COUNTER"},
+            {"visualization_type": "COUNTER"},
+            {"visualization_type": "TABLE"},
+        ]
+    )
+    # Title takes the full first band.
+    assert positions[0] == {"col": 0, "row": 0, "sizeX": 12, "sizeY": 3}
+    # First four counters pack into one row below the title.
+    kpi_row = positions[1]["row"]
+    assert [p["col"] for p in positions[1:5]] == [0, 3, 6, 9]
+    assert all(p["row"] == kpi_row for p in positions[1:5])
+    # Fifth counter wraps to the next row; the table goes below it, full width.
+    assert positions[5]["row"] > kpi_row
+    assert positions[6]["sizeX"] == 12
+    assert positions[6]["row"] > positions[5]["row"]
+
+
+def test_plan_dashboard_layout_respects_explicit_position():
+    from rewatch.assistant.dashboard_layout import plan_dashboard_layout
+
+    positions = plan_dashboard_layout(
+        [
+            {"visualization_type": "CHART", "position": {"col": 6, "row": 10, "sizeX": 6, "sizeY": 4}},
+            {"visualization_type": "CHART"},
+        ]
+    )
+    assert positions[0] == {"col": 6, "row": 10, "sizeX": 6, "sizeY": 4}
+    assert positions[1]["row"] >= 14
+
+
+def test_suggest_next_position_packs_counters_side_by_side():
+    from rewatch.assistant.dashboard_layout import suggest_next_position
+
+    widgets = [
+        {"options": {"position": {"col": 0, "row": 0, "sizeX": 3, "sizeY": 8}}},
+    ]
+    pos = suggest_next_position(widgets, visualization_type="COUNTER")
+    assert pos == {"col": 3, "row": 0, "sizeX": 3, "sizeY": 8}
+
+    # A chart after a counter starts a new row with chart sizing.
+    pos = suggest_next_position(widgets, visualization_type="CHART")
+    assert pos == {"col": 0, "row": 8, "sizeX": 6, "sizeY": 8}
+
+
+def test_suggest_next_position_defaults_unchanged_without_type():
+    from rewatch.assistant.dashboard_layout import suggest_next_position
+
+    assert suggest_next_position([]) == {"col": 0, "row": 0, "sizeX": 6, "sizeY": 3}
+
+
 def test_enrich_dashboard_adds_layout_summary():
     from rewatch.assistant.dashboard_layout import enrich_dashboard_for_assistant
 

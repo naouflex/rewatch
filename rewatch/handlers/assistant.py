@@ -77,10 +77,14 @@ def _prepare_thread(current_user, current_org, thread_id, message):
     return thread, thread_id, llm_messages
 
 
-def _finalize_chat(current_user, current_org, thread, thread_id, message, result, resource):
-    storage.add_message(thread_id, "assistant", result["reply"])
-    storage.touch_thread(thread, user_message=message)
-    db.session.refresh(thread)
+def _finalize_chat(current_user, current_org, thread_id, message, result, resource):
+    storage.add_message(
+        thread_id,
+        "assistant",
+        result["reply"],
+        decision_graph=result.get("decision_graph"),
+    )
+    thread = storage.touch_thread(thread_id, current_user, current_org, user_message=message)
     resource.record_event({"action": "assistant_chat", "object_id": thread_id, "object_type": "assistant"})
     return {
         "thread_id": thread_id,
@@ -190,7 +194,7 @@ class AssistantChatResource(BaseResource):
             db.session.rollback()
             abort(500, message=str(exc))
 
-        return _finalize_chat(self.current_user, self.current_org, thread, thread_id, message, result, self)
+        return _finalize_chat(self.current_user, self.current_org, thread_id, message, result, self)
 
 
 class AssistantChatStreamResource(BaseResource):
@@ -214,6 +218,8 @@ class AssistantChatStreamResource(BaseResource):
 
         def run_chat():
             try:
+                # Background thread shares the request context but needs its own session.
+                db.session.remove()
                 result_holder["result"] = chat(
                     messages=llm_messages,
                     base_url=chat_base_url,
@@ -226,7 +232,6 @@ class AssistantChatStreamResource(BaseResource):
                 result_holder["response"] = _finalize_chat(
                     self.current_user,
                     self.current_org,
-                    thread,
                     thread_id,
                     message,
                     result_holder["result"],

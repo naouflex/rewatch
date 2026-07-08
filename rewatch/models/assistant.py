@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import uuid
 
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import backref
 
 from rewatch.models.base import Column, db, key_type
 from rewatch.models.mixins import BelongsToOrgMixin, TimestampMixin
+from rewatch.models.types import MutableDict
 
 
 class AssistantThread(TimestampMixin, BelongsToOrgMixin, db.Model):
@@ -48,3 +50,4 @@ class AssistantMessage(TimestampMixin, db.Model):
     )
     role = Column(db.String(16))
     content = Column(db.Text)
+    decision_graph = Column(MutableDict.as_mutable(JSONB), nullable=True)

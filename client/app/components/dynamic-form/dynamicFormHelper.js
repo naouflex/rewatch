@@ -9,7 +9,8 @@ function orderedInputs(properties, order, targetOptions) {
       name: key,
       title: properties[key].title,
       type: properties[key].type,
-      placeholder: isNil(properties[key].default) ? null : properties[key].default.toString(),
+      placeholder: properties[key].placeholder
+        || (isNil(properties[key].default) ? null : properties[key].default.toString()),
       required: properties[key].required,
       extra: properties[key].extra,
       initialValue: targetOptions[key],
@@ -31,6 +32,10 @@ function orderedInputs(properties, order, targetOptions) {
 
 function normalizeSchema(configurationSchema) {
   each(configurationSchema.properties, (prop, name) => {
+    if (name === "connectionString") {
+      prop.type = "textarea";
+    }
+
     if (name === "password" || name === "passwd") {
       prop.type = "password";
     }

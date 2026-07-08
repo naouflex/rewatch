@@ -1,0 +1,117 @@
+.assistant-decision-graph {
+  margin-top: 10px;
+  border: 1px solid var(--rd-color-divider);
+  border-radius: var(--rd-radius-sm);
+  background: var(--rd-color-bg);
+  overflow: hidden;
+
+  &.live {
+    border-style: dashed;
+  }
+
+  &__toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 10px;
+    border: 0;
+    background: var(--rd-color-bg-subtle);
+    color: var(--rd-color-text-secondary);
+    font-size: 12px;
+    font-weight: var(--rd-font-weight-medium);
+    cursor: pointer;
+    text-align: left;
+
+    &:hover {
+      color: var(--rd-color-text);
+      background: var(--rd-color-bg-hover);
+    }
+  }
+
+  &__count {
+    margin-left: auto;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: var(--rd-color-bg);
+    color: var(--rd-color-text-muted);
+    font-size: 11px;
+  }
+
+  &__tree,
+  &__children {
+    list-style: none;
+    margin: 0;
+    padding: 8px 10px 10px calc(10px + var(--depth, 0) * 14px);
+  }
+
+  &__tree {
+    padding-top: 4px;
+  }
+
+  &__node {
+    margin: 0;
+    padding: 0;
+
+    &.running .assistant-decision-graph__node-label {
+      color: var(--rd-color-text);
+    }
+
+    &.error .assistant-decision-graph__node-icon {
+      color: var(--rd-color-danger);
+    }
+
+    &.done .assistant-decision-graph__node-icon {
+      color: var(--rd-color-success);
+    }
+
+    &.tool.running .assistant-decision-graph__node-icon {
+      color: var(--rd-color-brand);
+    }
+  }
+
+  &__node-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 4px 0;
+  }
+
+  &__node-icon {
+    flex: 0 0 auto;
+    width: 14px;
+    margin-top: 2px;
+    color: var(--rd-color-text-muted);
+    font-size: 12px;
+  }
+
+  &__node-body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__node-label {
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--rd-color-text-secondary);
+    word-break: break-word;
+  }
+
+  &__node-detail,
+  &__node-result,
+  &__node-tools {
+    margin-top: 2px;
+    font-size: 11px;
+    line-height: 1.35;
+    color: var(--rd-color-text-muted);
+    word-break: break-word;
+  }
+
+  &__node-error {
+    margin-top: 2px;
+    font-size: 11px;
+    line-height: 1.35;
+    color: var(--rd-color-danger);
+    word-break: break-word;
+  }
+}

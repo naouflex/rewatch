@@ -11,6 +11,7 @@ import requests
 
 from rewatch.assistant import catalog as platform_catalog
 from rewatch.assistant import alert_catalog
+from rewatch.assistant import dashboard_builder
 from rewatch.assistant import docs as docs_catalog
 from rewatch.assistant import web as web_tools
 from rewatch.assistant.dashboard_layout import (
@@ -515,6 +516,171 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
                 "type": "object",
                 "properties": {"widget_id": {"type": "integer"}},
                 "required": ["widget_id"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "build_dashboard_from_spec",
+            "description": (
+                "Build a complete dashboard in ONE call: validate + create + publish all queries, "
+                "visualizations, and widgets from a declarative spec. PREFER THIS over separate "
+                "create_query/create_visualization/add_widget_to_dashboard calls whenever a dashboard "
+                "needs 3+ widgets. Every query is executed for validation first — nothing is created "
+                "if any query fails. Use `derived` for queries that aggregate other queries' cached "
+                "results: reference base queries as {{cached_query.KEY}} in derived query text (base "
+                "queries need a `key`). Derived queries run on SQLite — no PostgreSQL casts like "
+                "::numeric. Widgets are auto-placed on a 12-column grid with type-aware sizes "
+                "(counters 3x8 packed 4 per row, charts 6x8, tables 12x8, text headers full width); "
+                "pass position or role ('title', 'section', 'kpi', 'half', 'third', 'full') to override."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "description": "Dashboard name"},
+                    "queries": {
+                        "type": "array",
+                        "description": "Base queries to create (validated before anything is saved)",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "key": {
+                                    "type": "string",
+                                    "description": "Short id so derived queries can reference {{cached_query.KEY}}",
+                                },
+                                "name": {"type": "string"},
+                                "description": {"type": "string"},
+                                "data_source_id": {"type": "integer"},
+                                "query": {"type": "string", "description": "Query text (syntax per data source type)"},
+                                "visualizations": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "type": {"type": "string", "description": "TABLE, CHART, COUNTER, MAP, ..."},
+                                            "name": {"type": "string"},
+                                            "chart_type": {
+                                                "type": "string",
+                                                "description": "For CHART: line, column, bar, area, pie, scatter",
+                                            },
+                                            "column_mapping": {
+                                                "type": "object",
+                                                "description": "For CHART: {column_name: x|y|series} using exact result columns",
+                                            },
+                                            "counter_column": {
+                                                "type": "string",
+                                                "description": "For COUNTER: numeric column to display",
+                                            },
+                                            "counter_label": {"type": "string"},
+                                            "options": {"type": "object", "description": "Raw options override"},
+                                        },
+                                        "required": ["type", "name"],
+                                    },
+                                },
+                            },
+                            "required": ["name", "data_source_id", "query"],
+                        },
+                    },
+                    "derived": {
+                        "type": "array",
+                        "description": (
+                            "Second-phase queries on the Query Results source. Query text may use "
+                            "{{cached_query.KEY}} placeholders; SQLite SQL syntax."
+                        ),
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "key": {"type": "string"},
+                                "name": {"type": "string"},
+                                "description": {"type": "string"},
+                                "query": {"type": "string"},
+                                "visualizations": {"type": "array", "items": {"type": "object"}},
+                            },
+                            "required": ["name", "query"],
+                        },
+                    },
+                    "widgets": {
+                        "type": "array",
+                        "description": "Ordered widget list; auto-laid-out unless position given",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "visualization": {
+                                    "type": "string",
+                                    "description": "Visualization name from the queries/derived specs",
+                                },
+                                "text": {"type": "string", "description": "Markdown for text-box widgets"},
+                                "role": {
+                                    "type": "string",
+                                    "description": "Layout role: title, section, kpi, half, third, full",
+                                },
+                                "position": {
+                                    "type": "object",
+                                    "description": "Explicit {col,row,sizeX,sizeY} to override auto-layout",
+                                },
+                            },
+                        },
+                    },
+                    "publish": {"type": "boolean", "default": True},
+                },
+                "required": ["name", "queries", "widgets"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "refresh_queries_and_wait",
+            "description": (
+                "Refresh saved queries and wait until their cached results are stored. Required before "
+                "creating queries on the Query Results data source that read cached_query_{id} tables."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query_ids": {"type": "array", "items": {"type": "integer"}},
+                    "timeout_seconds": {"type": "integer", "default": 180},
+                },
+                "required": ["query_ids"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "create_multi_visualization_query",
+            "description": (
+                "Create one query plus several visualizations in a single call (e.g. a wide summary row "
+                "rendered as multiple KPI counters). Query text is validated by execution first; column "
+                "names in visualization specs are checked against real result columns. The query is "
+                "published (is_draft=false) on success."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string"},
+                    "query": {"type": "string"},
+                    "data_source_id": {"type": "integer"},
+                    "description": {"type": "string"},
+                    "visualizations": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "type": {"type": "string"},
+                                "name": {"type": "string"},
+                                "chart_type": {"type": "string"},
+                                "column_mapping": {"type": "object"},
+                                "counter_column": {"type": "string"},
+                                "counter_label": {"type": "string"},
+                                "options": {"type": "object"},
+                            },
+                            "required": ["type", "name"],
+                        },
+                    },
+                },
+                "required": ["name", "query", "data_source_id", "visualizations"],
             },
         },
     },
@@ -1474,7 +1640,20 @@ class ToolContext:
         else:
             dashboard = _as_dict(self.request("GET", f"/api/dashboards/{dashboard_id}"), "dashboard")
             widgets = dashboard.get("widgets") if isinstance(dashboard.get("widgets"), list) else []
-            options = normalize_widget_options(raw_options, position=suggest_next_position(widgets))
+            viz_type = None
+            if args.get("visualization_id"):
+                try:
+                    viz = _as_dict(
+                        self.request("GET", f"/api/visualizations/{args['visualization_id']}"),
+                        "visualization",
+                    )
+                    viz_type = viz.get("type")
+                except RuntimeError:
+                    viz_type = None
+            options = normalize_widget_options(
+                raw_options,
+                position=suggest_next_position(widgets, visualization_type=viz_type, text=args.get("text")),
+            )
 
         body = _merge_body(
             dashboard_id=dashboard_id,
@@ -1500,6 +1679,39 @@ class ToolContext:
         if not body:
             raise RuntimeError("Provide text and/or options to update a widget.")
         return self.request("POST", f"/api/widgets/{widget_id}", body=body)
+
+    def build_dashboard_from_spec_tool(self, args: dict) -> Any:
+        try:
+            return dashboard_builder.build_dashboard_from_spec(
+                self.request,
+                name=args["name"],
+                queries=args["queries"],
+                widgets=args["widgets"],
+                derived=args.get("derived"),
+                publish=args.get("publish", True),
+            )
+        except dashboard_builder.DashboardBuildError as exc:
+            raise RuntimeError(str(exc)) from exc
+
+    def refresh_queries_and_wait_tool(self, args: dict) -> Any:
+        return dashboard_builder.refresh_queries_and_wait(
+            self.request,
+            args["query_ids"],
+            timeout_seconds=args.get("timeout_seconds", 180),
+        )
+
+    def create_multi_visualization_query_tool(self, args: dict) -> Any:
+        try:
+            return dashboard_builder.create_query_with_visualizations(
+                self.request,
+                name=args["name"],
+                query=args["query"],
+                data_source_id=args["data_source_id"],
+                visualizations=args["visualizations"],
+                description=args.get("description"),
+            )
+        except dashboard_builder.DashboardBuildError as exc:
+            raise RuntimeError(str(exc)) from exc
 
 
 # Keep tool results within a sane share of the model context. Oversized
@@ -1587,6 +1799,9 @@ def execute_tool(ctx: ToolContext, name: str, arguments: dict) -> str:
         "add_widget_to_dashboard": ctx.add_widget_tool,
         "update_widget": ctx.update_widget_tool,
         "delete_widget": lambda a: ctx.request("DELETE", f"/api/widgets/{a['widget_id']}"),
+        "build_dashboard_from_spec": ctx.build_dashboard_from_spec_tool,
+        "refresh_queries_and_wait": ctx.refresh_queries_and_wait_tool,
+        "create_multi_visualization_query": ctx.create_multi_visualization_query_tool,
         "list_alerts": lambda a: ctx.request("GET", "/api/alerts"),
         "get_alert": lambda a: ctx.request("GET", f"/api/alerts/{a['alert_id']}"),
         "get_alert_template_guide": lambda a: alert_catalog.alert_workflow(),

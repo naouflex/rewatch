@@ -1,4 +1,6 @@
-from rewatch.assistant.activity import tool_start_label
+"""Tests for assistant activity labels and summaries."""
+
+from rewatch.assistant.activity import tool_result_summary, tool_start_label
 
 
 def test_run_query_ad_hoc_label_is_not_sql_specific():
@@ -10,3 +12,15 @@ def test_run_query_ad_hoc_label_is_not_sql_specific():
 def test_run_query_saved_id_label():
     label = tool_start_label("run_query", {"query_id": 15})
     assert label == "Running query #15"
+
+
+def test_tool_result_summary_validation_ok():
+    assert tool_result_summary("create_query", {"validation": {"status": "ok"}}) == "Validation passed"
+
+
+def test_tool_result_summary_error():
+    assert tool_result_summary("run_query", {"error": "Query failed"}) == "Query failed"
+
+
+def test_tool_result_summary_count():
+    assert tool_result_summary("list_data_sources", {"count": 2}) == "2 items"

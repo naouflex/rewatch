@@ -44,6 +44,29 @@ except ImportError:
     suggest_visualization_options = None  # type: ignore[assignment,misc]
 
 try:
+    from rewatch.assistant import dashboard_builder
+except ImportError:
+    dashboard_builder = None  # type: ignore[assignment]
+
+try:
+    from rewatch.assistant.dashboard_layout import (
+        enrich_dashboard_for_assistant,
+        has_explicit_position,
+        normalize_widget_options,
+        suggest_next_position,
+    )
+except ImportError:
+    enrich_dashboard_for_assistant = None  # type: ignore[assignment,misc]
+    has_explicit_position = None  # type: ignore[assignment,misc]
+    normalize_widget_options = None  # type: ignore[assignment,misc]
+    suggest_next_position = None  # type: ignore[assignment,misc]
+
+try:
+    from rewatch.assistant.datasources import enrich_data_sources
+except ImportError:
+    enrich_data_sources = None  # type: ignore[assignment,misc]
+
+try:
     from rewatch_mcp.alert_catalog import alert_catalog
 except ImportError:
     alert_catalog = None  # type: ignore[assignment]
@@ -72,11 +95,14 @@ mcp = FastMCP(
         "Tools for the Rewatch (Rewatch) data platform: run SQL queries, create and "
         "update queries/alerts/dashboards/ML models, browse data sources and schemas, "
         "configure notification destinations (Slack, webhooks, Discord, email, …), "
-        "and call any REST API endpoint. For alerts: run_query first to validate columns, "
-        "get_destination_type for webhook template examples, create_destination, then "
-        "create_alert with destination_ids to subscribe. Use list_endpoints/describe_endpoint "
-        "to discover the full API surface, then call_api for anything not covered by a "
-        "dedicated tool."
+        "and call any REST API endpoint. For dashboards with 3+ widgets, prefer "
+        "build_dashboard_from_spec — it validates, creates, lays out, and publishes "
+        "everything in one call (use `derived` + {{cached_query.KEY}} for queries that "
+        "aggregate other queries' cached results). For alerts: run_query first to validate "
+        "columns, get_destination_type for webhook template examples, create_destination, "
+        "then create_alert with destination_ids to subscribe. Use list_endpoints/"
+        "describe_endpoint to discover the full API surface, then call_api for anything "
+        "not covered by a dedicated tool."
     ),
 )
 
@@ -450,6 +476,28 @@ def get_query(query_id: int) -> str:
     return _compact(query)
 
 
+def _test_query_text_before_save(query: str, data_source_id: int) -> dict[str, Any]:
+    try:
+        result = _run_query_internal(
+            query_text=query,
+            data_source_id=data_source_id,
+            max_age=0,
+            max_rows=10,
+            timeout_seconds=120,
+        )
+        return {
+            "status": "ok",
+            "phase": "pre_save",
+            "message": f"Query test passed ({result.get('row_count', 0)} rows returned).",
+            **result,
+        }
+    except RuntimeError as exc:
+        message = str(exc)
+        if "Missing parameter" in message:
+            return {"status": "needs_parameters", "phase": "pre_save", "message": message}
+        return {"status": "error", "phase": "pre_save", "message": message}
+
+
 @mcp.tool()
 def create_query(
     name: str,
@@ -462,10 +510,17 @@ def create_query(
 ) -> str:
     """Create a new saved query (starts as a draft).
 
-    ``query`` is the SQL text. ``data_source_id`` comes from list_data_sources.
+    ``query`` is the query text (syntax depends on the data source type — call
+    get_query_runner_type first for non-SQL sources). ``data_source_id`` comes
+    from list_data_sources. The query text is executed automatically before and
+    after saving; read the ``validation`` block in the response and fix errors
+    with update_query instead of creating duplicates.
     ``schedule`` example: ``{"interval": 3600, "time": null, "day_of_week": null, "until": null}``.
     """
     _ensure_writable()
+    pre_validation = _test_query_text_before_save(query, data_source_id)
+    if pre_validation.get("status") == "error":
+        raise RuntimeError(f"Query failed validation before save: {pre_validation['message']}")
     body = _merge_body(
         name=name,
         query=query,
@@ -475,7 +530,17 @@ def create_query(
         options=options,
         tags=tags,
     )
-    return _compact(_request("POST", "/api/queries", body=body))
+    saved = _request("POST", "/api/queries", body=body)
+    validation: dict[str, Any] = {"pre_save": pre_validation}
+    if isinstance(saved, dict) and saved.get("id"):
+        post_save = _execute_saved_query_validation(saved["id"])
+        validation["post_save"] = post_save
+        if post_save.get("status") == "error":
+            validation["action_required"] = (
+                f"Query #{saved['id']} was saved but failed to run. Fix it with update_query."
+            )
+        saved["validation"] = validation
+    return _compact(saved)
 
 
 @mcp.tool()
@@ -491,9 +556,19 @@ def update_query(
     is_draft: Optional[bool] = None,
     version: Optional[int] = None,
 ) -> str:
-    """Update a saved query. Fetches the current version automatically unless you pass one."""
+    """Update a saved query. Fetches the current version automatically unless you pass one.
+
+    When ``query`` text changes it is executed before and after saving; read the
+    ``validation`` block in the response.
+    """
     _ensure_writable()
     current = _request("GET", f"/api/queries/{query_id}")
+    pre_validation: Optional[dict[str, Any]] = None
+    if query is not None:
+        effective_ds = data_source_id or current.get("data_source_id")
+        pre_validation = _test_query_text_before_save(query, effective_ds)
+        if pre_validation.get("status") == "error":
+            raise RuntimeError(f"Query failed validation before save: {pre_validation['message']}")
     body = _merge_body(
         name=name,
         query=query,
@@ -505,7 +580,18 @@ def update_query(
         is_draft=is_draft,
         version=version if version is not None else current.get("version"),
     )
-    return _compact(_request("POST", f"/api/queries/{query_id}", body=body))
+    saved = _request("POST", f"/api/queries/{query_id}", body=body)
+    if query is not None and isinstance(saved, dict):
+        post_save = _execute_saved_query_validation(query_id)
+        validation: dict[str, Any] = {"post_save": post_save}
+        if pre_validation is not None:
+            validation["pre_save"] = pre_validation
+        if post_save.get("status") == "error":
+            validation["action_required"] = (
+                f"Query #{query_id} was updated but failed to run. Fix it with update_query."
+            )
+        saved["validation"] = validation
+    return _compact(saved)
 
 
 @mcp.tool()
@@ -523,8 +609,15 @@ def archive_query(query_id: int) -> str:
 
 @mcp.tool()
 def list_data_sources() -> str:
-    """List connected data sources (id, name, type). Needed to run ad-hoc queries."""
-    return _compact(_request("GET", "/api/data_sources"))
+    """List connected data sources (id, name, type) with query_runner syntax summaries.
+
+    Always call before create_query when the data source is unknown; each entry
+    includes query syntax hints and example queries for its runner type.
+    """
+    payload = _request("GET", "/api/data_sources")
+    if enrich_data_sources is not None:
+        payload = enrich_data_sources(payload)
+    return _compact(payload)
 
 
 @mcp.tool()
@@ -597,8 +690,15 @@ def list_dashboards(q: Optional[str] = None, page: int = 1, page_size: int = 25)
 
 @mcp.tool()
 def get_dashboard(dashboard_id: int) -> str:
-    """Get a dashboard with its widgets and the queries/visualizations they reference."""
-    return _compact(_request("GET", f"/api/dashboards/{dashboard_id}"))
+    """Get a dashboard with its widgets and the queries/visualizations they reference.
+
+    Includes ``layout_summary`` (widget ids, grid positions, placement hints).
+    Always call before rearranging widgets on an existing dashboard.
+    """
+    dashboard = _request("GET", f"/api/dashboards/{dashboard_id}")
+    if enrich_dashboard_for_assistant is not None and isinstance(dashboard, dict):
+        dashboard = enrich_dashboard_for_assistant(dashboard)
+    return _compact(dashboard)
 
 
 @mcp.tool()
@@ -1127,9 +1227,31 @@ def add_widget_to_dashboard(
     options: Optional[dict] = None,
     width: int = 1,
 ) -> str:
-    """Add a widget to a dashboard. Pass ``visualization_id`` for a chart/table, or ``text`` for a text box."""
+    """Add a widget to a dashboard. Pass ``visualization_id`` for a chart/table, or ``text`` for a text box.
+
+    Omit ``options`` to auto-place below existing widgets with a type-aware size
+    (counters 3x8 packed side by side, charts 6x8, tables 12x8). Pass explicit
+    ``options.position`` (col, row, sizeX, sizeY on a 12-column grid) to override.
+    """
     _ensure_writable()
     _require_widget_content(visualization_id, text)
+    if normalize_widget_options is not None and has_explicit_position is not None:
+        if has_explicit_position(options):
+            options = normalize_widget_options(options)
+        else:
+            dashboard = _request("GET", f"/api/dashboards/{dashboard_id}")
+            widgets = dashboard.get("widgets") if isinstance(dashboard.get("widgets"), list) else []
+            viz_type = None
+            if visualization_id:
+                try:
+                    viz = _request("GET", f"/api/visualizations/{visualization_id}")
+                    viz_type = viz.get("type") if isinstance(viz, dict) else None
+                except RuntimeError:
+                    viz_type = None
+            options = normalize_widget_options(
+                options,
+                position=suggest_next_position(widgets, visualization_type=viz_type, text=text),
+            )
     body = _merge_body(
         dashboard_id=dashboard_id,
         visualization_id=visualization_id,
@@ -1156,6 +1278,103 @@ def delete_widget(widget_id: int) -> str:
     _ensure_writable()
     _request("DELETE", f"/api/widgets/{widget_id}")
     return _compact({"deleted": True, "widget_id": widget_id})
+
+
+@mcp.tool()
+def build_dashboard_from_spec(
+    name: str,
+    queries: list[dict],
+    widgets: list[dict],
+    derived: Optional[list[dict]] = None,
+    publish: bool = True,
+) -> str:
+    """Build a complete dashboard in ONE call: validate, create, and publish all
+    queries, visualizations, and widgets from a declarative spec.
+
+    PREFER THIS over separate create_query / create_visualization /
+    add_widget_to_dashboard calls whenever a dashboard needs 3+ widgets. Every
+    query is executed for validation first — nothing is created if any fails.
+
+    ``queries``: [{key?, name, description?, data_source_id, query,
+    visualizations: [{type, name, chart_type?, column_mapping?, counter_column?,
+    counter_label?, options?}]}]. Give a query a ``key`` so derived queries can
+    reference its cached results.
+
+    ``derived``: second-phase queries on the Query Results data source. Their
+    query text may reference base queries as ``{{cached_query.KEY}}``
+    placeholders, resolved after base queries are created and refreshed.
+    Derived SQL runs on SQLite — no PostgreSQL casts like ``::numeric``.
+
+    ``widgets``: ordered [{visualization: "<viz name>"} or {text: "markdown"}],
+    each with optional {position: {col,row,sizeX,sizeY}} or {role: "title" |
+    "section" | "kpi" | "half" | "third" | "full"}. Widgets without explicit
+    positions are packed onto a 12-column grid with type-aware sizes (counters
+    3x8 four per row, charts 6x8, tables 12x8, text headers full width).
+    """
+    _ensure_writable()
+    if dashboard_builder is None:
+        raise RuntimeError("dashboard_builder is unavailable in this MCP install.")
+    try:
+        result = dashboard_builder.build_dashboard_from_spec(
+            _request,
+            name=name,
+            queries=queries,
+            widgets=widgets,
+            derived=derived,
+            publish=publish,
+        )
+    except dashboard_builder.DashboardBuildError as exc:
+        raise RuntimeError(str(exc)) from exc
+    return _compact(result)
+
+
+@mcp.tool()
+def refresh_queries_and_wait(query_ids: list[int], timeout_seconds: int = 180) -> str:
+    """Refresh saved queries and wait until their cached results are stored.
+
+    Required before creating queries on the Query Results data source that read
+    ``cached_query_{id}`` tables.
+    """
+    _ensure_writable()
+    if dashboard_builder is None:
+        raise RuntimeError("dashboard_builder is unavailable in this MCP install.")
+    return _compact(
+        dashboard_builder.refresh_queries_and_wait(_request, query_ids, timeout_seconds=timeout_seconds)
+    )
+
+
+@mcp.tool()
+def create_multi_visualization_query(
+    name: str,
+    query: str,
+    data_source_id: int,
+    visualizations: list[dict],
+    description: Optional[str] = None,
+) -> str:
+    """Create one query plus several visualizations in a single call.
+
+    Ideal for a wide summary row rendered as multiple KPI counters. The query
+    text is validated by execution first; visualization column names are checked
+    against real result columns. The query is published on success.
+
+    ``visualizations``: [{type, name, chart_type?, column_mapping?,
+    counter_column?, counter_label?, options?}].
+    """
+    _ensure_writable()
+    if dashboard_builder is None:
+        raise RuntimeError("dashboard_builder is unavailable in this MCP install.")
+    try:
+        result = dashboard_builder.create_query_with_visualizations(
+            _request,
+            name=name,
+            query=query,
+            data_source_id=data_source_id,
+            visualizations=visualizations,
+            description=description,
+        )
+    except dashboard_builder.DashboardBuildError as exc:
+        raise RuntimeError(str(exc)) from exc
+    return _compact(result)
 
 
 # ---------------------------------------------------------------------------

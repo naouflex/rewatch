@@ -91,26 +91,48 @@ def delete_thread(thread_id: str, user, org) -> None:
     db.session.commit()
 
 
-def list_messages(thread_id: str, user, org) -> list[dict[str, str]]:
+def list_messages(thread_id: str, user, org) -> list[dict[str, Any]]:
     thread = get_thread(thread_id, user, org)
-    return [{"role": m.role, "content": m.content} for m in thread.messages.order_by(AssistantMessage.id)]
+    results = []
+    for message in thread.messages.order_by(AssistantMessage.id):
+        item: dict[str, Any] = {"role": message.role, "content": message.content}
+        if message.decision_graph:
+            item["decision_graph"] = message.decision_graph
+        results.append(item)
+    return results
 
 
-def add_message(thread_id: str, role: str, content: str) -> AssistantMessage:
-    message = AssistantMessage(thread_id=thread_id, role=role, content=content)
+def add_message(
+    thread_id: str,
+    role: str,
+    content: str,
+    decision_graph: Optional[dict[str, Any]] = None,
+) -> AssistantMessage:
+    message = AssistantMessage(
+        thread_id=thread_id,
+        role=role,
+        content=content,
+        decision_graph=decision_graph,
+    )
     db.session.add(message)
     db.session.flush()
     return message
 
 
-def touch_thread(thread: AssistantThread, user_message: Optional[str] = None) -> None:
+def touch_thread(
+    thread_id: str,
+    user,
+    org,
+    user_message: Optional[str] = None,
+) -> AssistantThread:
+    thread = get_thread(thread_id, user, org)
     if thread.title == DEFAULT_TITLE and user_message:
         thread.title = _title_from_message(user_message)
     from rewatch.utils import utcnow
 
     thread.updated_at = utcnow()
-    db.session.add(thread)
     db.session.commit()
+    return thread
 
 
 def fit_messages_for_llm(messages: list[dict[str, str]]) -> list[dict[str, str]]:

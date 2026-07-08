@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable
+from typing import Any, Callable, Optional
 
 
 def _truncate(value: str, limit: int = 72) -> str:
@@ -46,6 +46,14 @@ TOOL_START_LABELS: dict[str, Callable[[dict[str, Any]], str]] = {
     "add_widget_to_dashboard": lambda a: f"Adding widget to dashboard #{a.get('dashboard_id')}",
     "update_widget": lambda a: f"Updating widget #{a.get('widget_id')}",
     "delete_widget": lambda a: f"Removing widget #{a.get('widget_id')}",
+    "build_dashboard_from_spec": lambda a: (
+        f"Building dashboard “{_truncate(a.get('name', ''), 40)}” "
+        f"({len(a.get('queries') or [])} queries, {len(a.get('widgets') or [])} widgets)"
+    ),
+    "refresh_queries_and_wait": lambda a: f"Refreshing {len(a.get('query_ids') or [])} queries",
+    "create_multi_visualization_query": lambda a: (
+        f"Creating query “{_truncate(a.get('name', ''), 40)}” with {len(a.get('visualizations') or [])} visualizations"
+    ),
     "list_alerts": lambda a: "Listing alerts",
     "get_alert": lambda a: f"Loading alert #{a.get('alert_id')}",
     "get_alert_template_guide": lambda a: "Loading alert template variables",
@@ -88,3 +96,56 @@ def tool_start_label(tool_name: str, args: dict[str, Any]) -> str:
         except Exception:
             pass
     return f"Using {tool_name.replace('_', ' ')}"
+
+
+def _truncate(value: str, limit: int = 96) -> str:
+    text = (value or "").strip()
+    if len(text) <= limit:
+        return text
+    return text[: limit - 1] + "…"
+
+
+def tool_result_summary(tool_name: str, payload: Any) -> Optional[str]:
+    """Short human-readable outcome for decision graph tool nodes."""
+    if not isinstance(payload, dict):
+        return None
+
+    if payload.get("error"):
+        return _truncate(str(payload["error"]), 120)
+
+    validation = payload.get("validation") or payload.get("query_validation")
+    if isinstance(validation, dict):
+        status = validation.get("status")
+        if status == "error":
+            return _truncate(validation.get("message") or "Validation failed", 120)
+        if status == "ok":
+            return "Validation passed"
+
+    for key, prefix in (
+        ("app_link", None),
+        ("name", None),
+        ("id", "#"),
+        ("query_id", "Query #"),
+        ("dashboard_id", "Dashboard #"),
+        ("visualization_id", "Visualization #"),
+        ("alert_id", "Alert #"),
+        ("destination_id", "Destination #"),
+        ("model_id", "Model #"),
+    ):
+        if payload.get(key) is not None and key != "app_link":
+            value = payload[key]
+            if prefix:
+                return f"{prefix}{value}"
+            return _truncate(str(value), 80)
+
+    if isinstance(payload.get("results"), list):
+        count = len(payload["results"])
+        return f"{count} result{'s' if count != 1 else ''}"
+
+    if isinstance(payload.get("count"), int):
+        return f"{payload['count']} item{'s' if payload['count'] != 1 else ''}"
+
+    if tool_name in ("web_search", "fetch_url") and payload.get("title"):
+        return _truncate(payload["title"], 80)
+
+    return None

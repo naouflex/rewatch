@@ -16,7 +16,8 @@ from openai import (
 )
 
 from rewatch import settings
-from rewatch.assistant.activity import tool_start_label
+from rewatch.assistant.activity import tool_result_summary, tool_start_label
+from rewatch.assistant.decision_graph import DecisionGraph
 from rewatch.assistant.links import append_preview_markdown, collect_previews, normalize_reply_links
 from rewatch.assistant.page_context import format_page_context
 from rewatch.assistant.tools import TOOL_DEFINITIONS, ToolContext, execute_tool
@@ -55,8 +56,15 @@ Guidelines:
   - Use validation.columns and visualization_hints when building charts — never invent column names.
 - When exploring unfamiliar data, use run_query with ad-hoc query_text first, then create_query once validation succeeds.
 - New queries get a default Table visualization automatically. For CHART/COUNTER, omit options in create_visualization unless the user asks for a specific chart style (e.g. globalSeriesType only).
-- Visualizations and dashboards (follow this playbook):
+- Dashboard fast path (STRONGLY preferred for any dashboard with 3+ widgets):
+  - Use build_dashboard_from_spec: one call validates every query, creates queries + visualizations + widgets, lays out the grid, and publishes. Explore data with run_query first, then emit the full spec.
+  - Multi-phase data: give base queries a `key`, then put aggregations in `derived` — their SQL references base results as {{cached_query.KEY}} tables on the Query Results source. Derived SQL runs on SQLite: no ::numeric or other PostgreSQL casts; use ROUND(x, 2), CAST(x AS INTEGER).
+  - Use refresh_queries_and_wait before manually creating queries that read cached_query_{id} tables outside the builder.
+  - Use create_multi_visualization_query for one wide summary row rendered as several KPI counters without a full dashboard.
+  - Layout conventions the builder applies automatically: KPI counters 3x8 packed 4 per row, charts 6x8 side by side, tables full width 12x8, markdown section headers between groups. Pass role ("title", "section", "kpi", "half", "third", "full") or explicit position to override.
+- Visualizations and dashboards (incremental playbook — for edits and small additions):
   - End-to-end: create_query (or use existing) → create_visualization → create_dashboard (if needed) → add_widget_to_dashboard → update_dashboard(is_draft=false) to publish.
+  - Publish queries too: update_query(is_draft=false) once validation passes, so they are visible outside drafts.
   - For CHART/COUNTER/MAP: read visualization_hints.recommended from run_query or query_validation. Omit options in create_visualization — the server maps exact column names from query results.
   - columnMapping keys must match validation.columns exactly (including dots, e.g. market_cap.usd). Placeholders like date/tvl/x_column are wrong unless that literal name appears in columns.
   - If you must pass options, only set globalSeriesType or legend — not columnMapping. Wrong names are auto-corrected but omitting options is more reliable.
@@ -173,6 +181,16 @@ def _emit(on_activity: Optional[ActivityCallback], event: dict[str, Any]) -> Non
         on_activity(event)
 
 
+def _wrap_activity(graph: DecisionGraph, on_activity: Optional[ActivityCallback]) -> ActivityCallback:
+    def callback(event: dict[str, Any]) -> None:
+        event_type = event.get("type")
+        if event_type == "status":
+            graph.add_status(event.get("message") or "Working…")
+        _emit(on_activity, event)
+
+    return callback
+
+
 def _emit_validation_status(on_activity: Optional[ActivityCallback], payload: Any) -> None:
     if not on_activity or not isinstance(payload, dict):
         return
@@ -233,13 +251,15 @@ def chat(
     ]
     conversation.extend(messages)
 
-    _emit(on_activity, {"type": "status", "message": "Analyzing your request…"})
+    graph = DecisionGraph(on_activity=on_activity)
+    graph.start("Analyzing your request…")
+    activity = _wrap_activity(graph, on_activity)
 
-    max_rounds = 18
+    max_rounds = 25
     collected_previews: list[dict[str, str]] = []
+    tool_graph_ids: dict[str, str] = {}
     for round_idx in range(max_rounds + 1):
-        if round_idx > 0:
-            _emit(on_activity, {"type": "status", "message": "Planning next step…"})
+        graph.start_step(round_idx)
 
         # Past the round budget, force a text answer so the user always gets
         # a summary of progress instead of a hard failure.
@@ -259,7 +279,7 @@ def chat(
             turn = _stream_completion(
                 client,
                 conversation,
-                on_activity,
+                activity,
                 tool_choice="none" if final_round else "auto",
             )
         except Exception as exc:
@@ -268,12 +288,23 @@ def chat(
                 "Sorry, I ran into an error talking to the AI service. "
                 f"Please try again. ({exc})"
             )
-            return {"reply": fallback, "messages": messages + [{"role": "assistant", "content": fallback}]}
+            graph.complete(label="Error")
+            return {
+                "reply": fallback,
+                "messages": messages + [{"role": "assistant", "content": fallback}],
+                "decision_graph": graph.to_dict(),
+            }
 
         if turn["tool_calls"]:
             # Interim content preceding tool calls is not the final reply —
             # tell the client to clear any streamed draft.
-            _emit(on_activity, {"type": "reply_reset"})
+            _emit(activity, {"type": "reply_reset"})
+            tool_names = [tc["name"] for tc in turn["tool_calls"]]
+            graph.add_decision(
+                label=f"Using {len(tool_names)} tool{'s' if len(tool_names) != 1 else ''}",
+                detail=turn["content"] or None,
+                tool_names=tool_names,
+            )
             conversation.append(
                 {
                     "role": "assistant",
@@ -303,7 +334,7 @@ def chat(
                         }
                     )
                     _emit(
-                        on_activity,
+                        activity,
                         {
                             "type": "tool_done",
                             "id": tool_call["id"],
@@ -311,6 +342,9 @@ def chat(
                             "label": f"Invalid arguments for {fn_name}",
                         },
                     )
+                    graph_id = tool_graph_ids.get(tool_call["id"])
+                    if graph_id:
+                        graph.finish_tool(graph_id, error="Invalid tool arguments")
                     conversation.append(
                         {
                             "role": "tool",
@@ -322,21 +356,40 @@ def chat(
 
                 label = tool_start_label(fn_name, fn_args)
                 activity_id = tool_call["id"]
+                graph_id = graph.start_tool(
+                    node_id=activity_id,
+                    tool=fn_name,
+                    label=label,
+                    arguments=fn_args,
+                )
+                tool_graph_ids[activity_id] = graph_id
                 _emit(
-                    on_activity,
+                    activity,
                     {"type": "tool_start", "id": activity_id, "tool": fn_name, "label": label},
                 )
                 logger.info("Assistant tool call: %s(%s)", fn_name, fn_args)
 
                 result = execute_tool(ctx, fn_name, fn_args)
+                result_summary = None
                 try:
                     payload = json.loads(result)
                     collected_previews.extend(collect_previews(payload))
-                    _emit_validation_status(on_activity, payload)
+                    _emit_validation_status(activity, payload)
+                    result_summary = tool_result_summary(fn_name, payload)
+                    if isinstance(payload, dict) and payload.get("error"):
+                        graph.finish_tool(
+                            graph_id,
+                            label=label,
+                            result_summary=result_summary,
+                            error=str(payload["error"]),
+                        )
+                    else:
+                        graph.finish_tool(graph_id, label=label, result_summary=result_summary)
                 except (json.JSONDecodeError, TypeError, AttributeError) as exc:
                     logger.warning("Assistant post-tool processing failed for %s: %s", fn_name, exc)
+                    graph.finish_tool(graph_id, label=label, error=str(exc))
                 _emit(
-                    on_activity,
+                    activity,
                     {"type": "tool_done", "id": activity_id, "tool": fn_name, "label": label},
                 )
                 conversation.append(
@@ -346,8 +399,11 @@ def chat(
                         "content": result,
                     }
                 )
+            graph.finish_step()
             continue
 
+        graph.add_decision(label="Composing final reply", detail=turn["content"] or None)
+        graph.finish_step()
         try:
             reply = normalize_reply_links(turn["content"] or "")
             reply = append_preview_markdown(reply, collected_previews)
@@ -355,7 +411,8 @@ def chat(
             logger.exception("Assistant reply formatting failed")
             reply = (turn["content"] or "").strip() or f"I finished the requested actions but hit a formatting error: {exc}"
         conversation.append({"role": "assistant", "content": reply})
+        graph.complete(label="Reply sent")
         client_messages = [m for m in conversation if m["role"] in ("user", "assistant") and m.get("content")]
-        return {"reply": reply, "messages": client_messages}
+        return {"reply": reply, "messages": client_messages, "decision_graph": graph.to_dict()}
 
     raise RuntimeError("Assistant exceeded maximum tool rounds")
