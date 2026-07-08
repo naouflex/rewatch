@@ -30,6 +30,30 @@ _WORKSPACE_ROOT = Path(__file__).resolve().parents[2]
 if str(_WORKSPACE_ROOT) not in sys.path:
     sys.path.insert(0, str(_WORKSPACE_ROOT))
 
+
+def _ensure_rewatch_importable() -> None:
+    """Make ``rewatch.assistant.*`` importable without the Flask app.
+
+    ``rewatch/__init__.py`` imports Flask and friends, which are not installed
+    in the MCP server's own environment. The assistant helper modules
+    (dashboard_builder, dashboard_layout, visualization_helpers) are
+    dependency-free, so register stub package entries that let Python locate
+    the submodules without executing the package __init__.
+    """
+    if "rewatch" in sys.modules:
+        return
+    try:
+        import rewatch  # noqa: F401  (full package when server deps are installed)
+    except Exception:
+        import types
+
+        stub = types.ModuleType("rewatch")
+        stub.__path__ = [str(_WORKSPACE_ROOT / "rewatch")]
+        sys.modules["rewatch"] = stub
+
+
+_ensure_rewatch_importable()
+
 try:
     from rewatch.assistant.visualization_helpers import (
         build_visualization_hints,

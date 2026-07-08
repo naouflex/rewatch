@@ -127,7 +127,10 @@ def _looks_like_id_column(column: str, rows: list[dict[str, Any]]) -> bool:
     if _ID_COLUMN_RE.match(column):
         return True
     values = _sample_values(column, rows, limit=20)
-    if not values:
+    # The all-ints-and-unique heuristic needs enough samples to be meaningful;
+    # with only a handful of rows (e.g. single-row KPI queries) any metric
+    # column would be misclassified as an id.
+    if len(values) < 5:
         return False
     if all(isinstance(value, int) for value in values):
         return len(set(values)) == len(values)

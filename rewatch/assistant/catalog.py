@@ -4,7 +4,12 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-from rewatch.query_runner import query_runners
+try:
+    from rewatch.query_runner import query_runners
+except ImportError:
+    # Flask-free environments (e.g. the standalone MCP server) can still use
+    # the static notes/guides below; live runner introspection is skipped.
+    query_runners = {}
 
 # --- Query syntax (shared across many data source types) ---
 
@@ -382,6 +387,13 @@ def _match_filter(text: str, query: str) -> bool:
 def _endpoint_catalog_for_runner(runner_type: str) -> list[dict[str, Any]]:
     """Compact endpoint list for API-style YAML runners."""
     runner_type = (runner_type or "").lower()
+    try:
+        return _endpoint_catalog_for_runner_impl(runner_type)
+    except ImportError:
+        return []
+
+
+def _endpoint_catalog_for_runner_impl(runner_type: str) -> list[dict[str, Any]]:
     if runner_type == "defillama":
         from rewatch.query_runner.defillama import DEFILLAMA_ENDPOINTS, _schema_for_endpoint
 
@@ -456,10 +468,30 @@ def build_query_generation_context(runner_type: str, syntax: Optional[str] = Non
     }
 
 
+def _notes_only_summary(runner_type: str) -> Optional[dict[str, Any]]:
+    """Fallback catalog entry from static notes when live runners are unavailable."""
+    notes = QUERY_RUNNER_NOTES.get(runner_type)
+    if not notes:
+        return None
+    result: dict[str, Any] = {
+        "type": runner_type,
+        "name": runner_type,
+        "summary": notes.get("summary"),
+        "tips": list(notes.get("tips") or [])[:8],
+    }
+    if notes.get("example_query"):
+        result["example_query"] = notes["example_query"]
+    if notes.get("query_keys"):
+        result["query_keys"] = notes["query_keys"]
+    return result
+
+
 def summarize_runner_for_type(runner_type: str) -> Optional[dict[str, Any]]:
     """Compact catalog entry for embedding in data source payloads."""
     runner_cls = _runner_class(runner_type)
     if runner_cls is None:
+        if not query_runners:
+            return _notes_only_summary((runner_type or "").lower())
         return None
 
     syntax = _runner_syntax(runner_cls)
@@ -489,10 +521,10 @@ def summarize_runner_for_type(runner_type: str) -> Optional[dict[str, Any]]:
 def list_query_runner_types(query: Optional[str] = None) -> dict[str, Any]:
     """All registered query runner types (optionally filtered)."""
     items: list[dict[str, Any]] = []
-    for runner_type in sorted(query_runners.keys()):
-        runner_cls = query_runners[runner_type]
+    for runner_type in sorted(query_runners.keys() or QUERY_RUNNER_NOTES.keys()):
+        runner_cls = query_runners.get(runner_type)
         syntax = _runner_syntax(runner_cls)
-        name = runner_cls.name()
+        name = runner_cls.name() if runner_cls is not None else runner_type
         haystack = f"{runner_type} {name} {syntax}"
         if not _match_filter(haystack, query or ""):
             continue
@@ -521,7 +553,15 @@ def get_query_runner_type(runner_type: str) -> dict[str, Any]:
     runner_type = (runner_type or "").strip().lower()
     runner_cls = _runner_class(runner_type)
     if runner_cls is None:
-        known = sorted(query_runners.keys())
+        if not query_runners and runner_type in QUERY_RUNNER_NOTES:
+            notes = dict(QUERY_RUNNER_NOTES[runner_type])
+            base = _notes_only_summary(runner_type) or {"type": runner_type}
+            base["type_notes"] = notes
+            endpoint_catalog = _endpoint_catalog_for_runner(runner_type)
+            if endpoint_catalog:
+                base["endpoint_catalog"] = endpoint_catalog
+            return base
+        known = sorted(query_runners.keys()) or sorted(QUERY_RUNNER_NOTES.keys())
         return {
             "error": f"Unknown query runner type {runner_type!r}.",
             "known_types": known[:40],
