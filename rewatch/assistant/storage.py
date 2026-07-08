@@ -142,3 +142,16 @@ def fit_messages_for_llm(messages: list[dict[str, str]]) -> list[dict[str, str]]
         trimmed.pop(0)
         total = sum(len(m.get("content") or "") for m in trimmed)
     return trimmed
+
+
+def prepare_messages_for_llm(messages: list[dict[str, Any]]) -> tuple[list[dict[str, str]], Optional[str]]:
+    """Trim chat history and build prior-turn tool context for the LLM."""
+    from rewatch.assistant.session_context import format_session_context
+
+    text_messages = [
+        {"role": message["role"], "content": message["content"]}
+        for message in messages
+        if message.get("role") in ("user", "assistant") and message.get("content")
+    ]
+    session_context = format_session_context(messages)
+    return fit_messages_for_llm(text_messages), session_context

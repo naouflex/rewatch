@@ -85,6 +85,11 @@ TOOL_START_LABELS: dict[str, Callable[[dict[str, Any]], str]] = {
     "get_docs_topic": lambda a: f"Opening docs topic “{a.get('topic_id')}”",
     "web_search": lambda a: f"Searching the web for “{_truncate(a.get('q', ''), 56)}”",
     "fetch_url": lambda a: f"Reading {_truncate(a.get('url', ''), 64)}",
+    "list_endpoints": lambda a: f"Browsing API endpoints{f' tagged {a.get('tag')!r}' if a.get('tag') else ''}",
+    "describe_endpoint": lambda a: f"Describing {a.get('method', 'GET').upper()} {a.get('path', '')}",
+    "call_api": lambda a: f"Calling {a.get('method', 'GET').upper()} {a.get('path', '')}",
+    "list_dashboard_examples": lambda a: "Listing dashboard examples",
+    "get_dashboard_example": lambda a: f"Loading dashboard example {a.get('id', '')!r}",
 }
 
 

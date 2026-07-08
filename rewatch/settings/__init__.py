@@ -277,7 +277,13 @@ OPENAI_API_KEY = os.environ.get("REDASH_OPENAI_API_KEY") or os.environ.get("OPEN
 OPENAI_MODEL = os.environ.get("REDASH_OPENAI_MODEL", "gpt-5.4-mini")
 # Optional reasoning effort for GPT-5+ models (none/low/medium/high). Empty = API default.
 OPENAI_REASONING_EFFORT = os.environ.get("REDASH_OPENAI_REASONING_EFFORT", "")
+# Assistant-specific model override (falls back to OPENAI_MODEL when unset).
+ASSISTANT_OPENAI_MODEL = os.environ.get("REDASH_ASSISTANT_OPENAI_MODEL", "") or OPENAI_MODEL
 ASSISTANT_ENABLED = parse_boolean(os.environ.get("REDASH_ASSISTANT_ENABLED", "true"))
+ASSISTANT_MAX_TOOL_ROUNDS = int(os.environ.get("REDASH_ASSISTANT_MAX_TOOL_ROUNDS", "40"))
+ASSISTANT_MAX_TOOL_RESULT_CHARS = int(os.environ.get("REDASH_ASSISTANT_MAX_TOOL_RESULT_CHARS", "48000"))
+ASSISTANT_INCLUDE_SKILL_GUIDES = parse_boolean(os.environ.get("REDASH_ASSISTANT_INCLUDE_SKILL_GUIDES", "true"))
+ASSISTANT_SKILL_GUIDES_MAX_CHARS = int(os.environ.get("REDASH_ASSISTANT_SKILL_GUIDES_MAX_CHARS", "32000"))
 HELP_BASE_URL = os.environ.get("REDASH_HELP_BASE_URL", "https://naoufel.io")
 
 SEND_FAILURE_EMAIL_INTERVAL = int(os.environ.get("REDASH_SEND_FAILURE_EMAIL_INTERVAL", 60))

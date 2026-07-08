@@ -152,6 +152,7 @@ class DecisionGraph:
         label: Optional[str] = None,
         result_summary: Optional[str] = None,
         error: Optional[str] = None,
+        resource_ids: Optional[dict[str, int]] = None,
     ) -> None:
         fields: dict[str, Any] = {
             "status": "error" if error else "done",
@@ -163,6 +164,8 @@ class DecisionGraph:
             fields["result_summary"] = result_summary
         if error:
             fields["error"] = error
+        if resource_ids:
+            fields["resource_ids"] = resource_ids
         self._update(graph_id, **fields)
 
     def complete(self, *, label: str = "Reply ready", parent_id: Optional[str] = None) -> str:

@@ -70,6 +70,11 @@ function AssistantPage() {
     }
   }, [enabled, refreshThreads]);
 
+  const handleThreadIdFromChat = useCallback(id => {
+    setActiveThreadId(id);
+    Assistant.setStoredThreadId(id);
+  }, []);
+
   const handleSelectThread = useCallback(id => {
     setActiveThreadId(id);
     setConversationMessages([]);
@@ -128,7 +133,7 @@ function AssistantPage() {
         <div className="assistant-page-main">
           <AssistantChat
             threadId={activeThreadId}
-            onThreadIdChange={handleSelectThread}
+            onThreadIdChange={handleThreadIdFromChat}
             onThreadsChanged={refreshThreads}
             onMessagesChange={setConversationMessages}
             onLiveGraphChange={setLiveGraph}

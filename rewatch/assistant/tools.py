@@ -9,9 +9,12 @@ from typing import Any, Callable, Optional
 
 import requests
 
+from rewatch import settings
+from rewatch.assistant import api_meta
 from rewatch.assistant import catalog as platform_catalog
 from rewatch.assistant import alert_catalog
 from rewatch.assistant import dashboard_builder
+from rewatch.assistant import dashboard_examples
 from rewatch.assistant import docs as docs_catalog
 from rewatch.assistant import web as web_tools
 from rewatch.assistant.dashboard_layout import (
@@ -134,7 +137,7 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
                         "description": "Cache age in seconds; -1 any cache, 0 always execute",
                         "default": -1,
                     },
-                    "max_rows": {"type": "integer", "default": 50},
+                    "max_rows": {"type": "integer", "default": 100},
                 },
             },
         },
@@ -1084,6 +1087,96 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
             },
         },
     },
+    # --- API meta (full REST coverage) ---
+    {
+        "type": "function",
+        "function": {
+            "name": "list_endpoints",
+            "description": (
+                "Browse all Rewatch REST API endpoints from the live OpenAPI spec. "
+                "Filter by tag (Queries, Dashboards, Alerts, ...) or free-text search. "
+                "Use describe_endpoint for parameters and call_api to invoke."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "tag": {"type": "string", "description": "Filter by OpenAPI tag"},
+                    "search": {"type": "string", "description": "Search path or summary text"},
+                },
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "describe_endpoint",
+            "description": (
+                "Get full OpenAPI details for one endpoint: parameters, request body, responses. "
+                "Path must use template form, e.g. /api/queries/{query_id}."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "method": {"type": "string", "description": "HTTP method, e.g. GET or POST"},
+                    "path": {"type": "string", "description": "OpenAPI path template"},
+                },
+                "required": ["method", "path"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "call_api",
+            "description": (
+                "Invoke any Rewatch REST API endpoint and return JSON. "
+                "Path must use real IDs (not {placeholders}). "
+                "Prefer dedicated tools when they cover the task."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "method": {"type": "string"},
+                    "path": {"type": "string", "description": "Concrete path, e.g. /api/queries/42"},
+                    "query_params": {"type": "object", "description": "URL query parameters"},
+                    "body": {"type": "object", "description": "JSON request body for POST/PUT/DELETE"},
+                },
+                "required": ["method", "path"],
+            },
+        },
+    },
+    # --- Dashboard examples ---
+    {
+        "type": "function",
+        "function": {
+            "name": "list_dashboard_examples",
+            "description": (
+                "List curated build_dashboard_from_spec examples (DeFi, weather, airport, SQL KPIs, viz gallery). "
+                "Use before building complex dashboards."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {"q": {"type": "string", "description": "Optional search filter"}},
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_dashboard_example",
+            "description": "Get a full spec snippet for one dashboard example by id.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "Example id, e.g. ethereum_defi, montpellier_weather, viz_demo",
+                    }
+                },
+                "required": ["id"],
+            },
+        },
+    },
     # --- Web ---
     {
         "type": "function",
@@ -1181,7 +1274,7 @@ class ToolContext:
 
     def run_query_tool(self, args: dict) -> dict:
         query_id = args.get("query_id")
-        max_rows = args.get("max_rows", 50)
+        max_rows = args.get("max_rows", 100)
         max_age = args.get("max_age", -1)
         if query_id is not None:
             body = {"max_age": max_age}
@@ -1208,7 +1301,7 @@ class ToolContext:
                 response = self.request("GET", f"/api/query_results/{result_id}")
 
         columns, rows = _extract_query_result_rows(response)
-        max_rows = args.get("max_rows", 50)
+        max_rows = args.get("max_rows", 100)
         query_result = response.get("query_result") if isinstance(response, dict) else {}
         query_result_id = query_result.get("id") if isinstance(query_result, dict) else None
         result = {
@@ -1715,41 +1808,136 @@ class ToolContext:
 
 
 # Keep tool results within a sane share of the model context. Oversized
-# payloads (huge schemas, wide query results) get structurally truncated
-# instead of silently eating the whole window.
-MAX_TOOL_RESULT_CHARS = 24000
+# payloads get structurally truncated while preserving ids, columns, and validation.
+_PRESERVE_KEYS = frozenset(
+    {
+        "columns",
+        "validation",
+        "query_validation",
+        "visualization_hints",
+        "options_health",
+        "visualization_action_required",
+        "column_corrections",
+        "auto_suggested_options",
+        "error",
+        "app_link",
+        "preview_image_url",
+        "name",
+        "id",
+        "query_id",
+        "dashboard_id",
+        "visualization_id",
+        "alert_id",
+        "destination_id",
+        "model_id",
+        "widget_id",
+        "row_count",
+        "count",
+        "status",
+        "message",
+        "layout_summary",
+        "spec_snippet",
+        "patterns",
+        "examples",
+        "known_ids",
+    }
+)
 _TRUNCATION_LIST_KEEP = 40
+_TRUNCATION_ROW_KEEP = 15
+_TRUNCATION_SCHEMA_TABLE_KEEP = 80
+
+
+def _max_tool_result_chars() -> int:
+    return settings.ASSISTANT_MAX_TOOL_RESULT_CHARS
+
+
+def _shrink_rows(rows: list[Any]) -> list[Any]:
+    if len(rows) <= _TRUNCATION_ROW_KEEP:
+        return [_shrink_payload(item, depth=1) for item in rows]
+    kept = [_shrink_payload(item, depth=1) for item in rows[:_TRUNCATION_ROW_KEEP]]
+    kept.append(f"... truncated {len(rows) - _TRUNCATION_ROW_KEEP} more rows ...")
+    return kept
+
+
+def _shrink_schema(value: Any) -> Any:
+    if not isinstance(value, dict):
+        return _shrink_payload(value, depth=0)
+    tables = value.get("schema") or value.get("tables")
+    if isinstance(tables, list):
+        trimmed_tables = []
+        for table in tables[:_TRUNCATION_SCHEMA_TABLE_KEEP]:
+            if not isinstance(table, dict):
+                trimmed_tables.append(table)
+                continue
+            columns = table.get("columns") or []
+            col_names = []
+            for column in columns:
+                if isinstance(column, dict) and column.get("name"):
+                    col_names.append(column["name"])
+                elif isinstance(column, str):
+                    col_names.append(column)
+            trimmed_tables.append(
+                {
+                    **{k: v for k, v in table.items() if k != "columns"},
+                    "columns": col_names[:200],
+                    **(
+                        {"column_count": len(columns), "columns_truncated": len(columns) > 200}
+                        if len(columns) > 200
+                        else {}
+                    ),
+                }
+            )
+        out = dict(value)
+        key = "schema" if "schema" in value else "tables"
+        out[key] = trimmed_tables
+        if len(tables) > _TRUNCATION_SCHEMA_TABLE_KEEP:
+            out[f"{key}_truncated"] = len(tables) - _TRUNCATION_SCHEMA_TABLE_KEEP
+        return out
+    return _shrink_payload(value, depth=0)
 
 
 def _shrink_payload(value: Any, depth: int = 0) -> Any:
-    if isinstance(value, list) and len(value) > _TRUNCATION_LIST_KEEP:
-        kept = value[:_TRUNCATION_LIST_KEEP]
-        return [_shrink_payload(item, depth + 1) for item in kept] + [
-            f"... truncated {len(value) - _TRUNCATION_LIST_KEEP} more items ..."
-        ]
-    if isinstance(value, list):
-        return [_shrink_payload(item, depth + 1) for item in value]
     if isinstance(value, dict):
-        return {k: _shrink_payload(v, depth + 1) for k, v in value.items()}
+        out: dict[str, Any] = {}
+        for key, item in value.items():
+            if key in ("rows", "results") and isinstance(item, list):
+                out[key] = _shrink_rows(item)
+            elif key in ("schema", "tables") and isinstance(item, (dict, list)):
+                out[key] = _shrink_schema({key: item}).get(key)
+            elif key in _PRESERVE_KEYS:
+                out[key] = item if not isinstance(item, (dict, list)) else _shrink_payload(item, depth + 1)
+            else:
+                out[key] = _shrink_payload(item, depth + 1)
+        return out
+    if isinstance(value, list):
+        if len(value) > _TRUNCATION_LIST_KEEP:
+            kept = [_shrink_payload(item, depth + 1) for item in value[:_TRUNCATION_LIST_KEEP]]
+            kept.append(f"... truncated {len(value) - _TRUNCATION_LIST_KEEP} more items ...")
+            return kept
+        return [_shrink_payload(item, depth + 1) for item in value]
     if isinstance(value, str) and len(value) > 4000:
         return value[:4000] + f"... truncated {len(value) - 4000} more characters ..."
     return value
 
 
 def _compact(value: Any) -> str:
+    limit = _max_tool_result_chars()
     text = json.dumps(value, separators=(",", ":"), default=str)
-    if len(text) <= MAX_TOOL_RESULT_CHARS:
+    if len(text) <= limit:
         return text
 
     shrunk = _shrink_payload(value)
     text = json.dumps(shrunk, separators=(",", ":"), default=str)
-    if len(text) <= MAX_TOOL_RESULT_CHARS:
+    if len(text) <= limit:
         return text
     return json.dumps(
         {
             "truncated": True,
-            "note": "Result was too large; showing a prefix. Narrow the request (fewer rows/fields) for full data.",
-            "preview": text[:MAX_TOOL_RESULT_CHARS],
+            "note": (
+                "Result was too large; structural fields (columns, ids, validation) were preserved. "
+                "Narrow the request for full row data."
+            ),
+            "preview": text[:limit],
         }
     )
 
@@ -1862,6 +2050,21 @@ def execute_tool(ctx: ToolContext, name: str, arguments: dict) -> str:
         "get_docs_topic": lambda a: docs_catalog.get_docs_topic(a["topic_id"], ctx.help_base_url),
         "web_search": lambda a: web_tools.web_search(a["q"], a.get("max_results", 5)),
         "fetch_url": lambda a: web_tools.fetch_url(a["url"]),
+        "list_endpoints": lambda a: api_meta.list_endpoints(
+            ctx.request, tag=a.get("tag"), search=a.get("search")
+        ),
+        "describe_endpoint": lambda a: api_meta.describe_endpoint(
+            ctx.request, method=a["method"], path=a["path"]
+        ),
+        "call_api": lambda a: api_meta.call_api(
+            ctx.request,
+            method=a["method"],
+            path=a["path"],
+            query_params=a.get("query_params"),
+            body=a.get("body"),
+        ),
+        "list_dashboard_examples": lambda a: dashboard_examples.list_dashboard_examples(a.get("q")),
+        "get_dashboard_example": lambda a: dashboard_examples.get_dashboard_example(a["id"]),
     }
     handler = handlers.get(name)
     if not handler:

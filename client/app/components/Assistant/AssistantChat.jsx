@@ -89,6 +89,7 @@ export default function AssistantChat({
   const inputRef = useRef(null);
   const streamActiveRef = useRef(false);
   const pollGenerationRef = useRef(0);
+  const skipThreadReloadRef = useRef(false);
   const currentRoute = useCurrentRoute();
   const pageContext = useMemo(() => buildAssistantPageContext(currentRoute), [currentRoute]);
 
@@ -182,6 +183,11 @@ export default function AssistantChat({
   );
 
   useEffect(() => {
+    if (skipThreadReloadRef.current) {
+      skipThreadReloadRef.current = false;
+      return undefined;
+    }
+
     const generation = pollGenerationRef.current + 1;
     pollGenerationRef.current = generation;
     let cancelled = false;
@@ -339,11 +345,12 @@ export default function AssistantChat({
             throw err;
           }
         }
-        if (response.thread_id && response.thread_id !== threadId) {
-          onThreadIdChange(response.thread_id);
-          Assistant.setStoredThreadId(response.thread_id);
-        }
         setMessages(response.messages || []);
+        if (response.thread_id && response.thread_id !== threadId) {
+          skipThreadReloadRef.current = true;
+          Assistant.setStoredThreadId(response.thread_id);
+          onThreadIdChange(response.thread_id);
+        }
         if (onThreadsChanged) {
           onThreadsChanged();
         }
@@ -372,7 +379,11 @@ export default function AssistantChat({
     [sendMessage]
   );
 
-  const showEmpty = !bootstrapping && messages.length <= 1 && messages[0]?.role === "assistant";
+  const showEmpty =
+    !bootstrapping &&
+    !messages.some(message => message.role === "user") &&
+    messages.length <= 1 &&
+    messages[0]?.role === "assistant";
 
   return (
     <div className={cx("assistant-chat", { compact })}>

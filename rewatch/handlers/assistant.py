@@ -74,8 +74,8 @@ def _prepare_thread(current_user, current_org, thread_id, message):
 
     storage.add_message(thread_id, "user", message)
     history = storage.list_messages(thread_id, current_user, current_org)
-    llm_messages = storage.fit_messages_for_llm(history)
-    return thread, thread_id, llm_messages
+    llm_messages, session_context = storage.prepare_messages_for_llm(history)
+    return thread, thread_id, llm_messages, session_context
 
 
 def _finalize_chat(current_user, current_org, thread_id, message, result, resource):
@@ -99,7 +99,7 @@ class AssistantStatusResource(BaseResource):
     def get(self):
         return {
             "enabled": bool(settings.ASSISTANT_ENABLED and settings.OPENAI_API_KEY),
-            "model": settings.OPENAI_MODEL if settings.OPENAI_API_KEY else None,
+            "model": settings.ASSISTANT_OPENAI_MODEL if settings.OPENAI_API_KEY else None,
         }
 
 
@@ -188,7 +188,9 @@ class AssistantChatResource(BaseResource):
 
         payload = request.get_json(force=True) or {}
         thread_id, message, page_context = _parse_chat_payload(payload)
-        thread, thread_id, llm_messages = _prepare_thread(self.current_user, self.current_org, thread_id, message)
+        thread, thread_id, llm_messages, session_context = _prepare_thread(
+            self.current_user, self.current_org, thread_id, message
+        )
 
         try:
             result = chat(
@@ -197,6 +199,7 @@ class AssistantChatResource(BaseResource):
                 api_key=_user_api_key(self.current_user),
                 help_base_url=_help_base_url(),
                 page_context=page_context,
+                session_context=session_context,
             )
         except Exception as exc:
             db.session.rollback()
@@ -211,7 +214,9 @@ class AssistantChatStreamResource(BaseResource):
 
         payload = request.get_json(force=True) or {}
         thread_id, message, page_context = _parse_chat_payload(payload)
-        thread, thread_id, llm_messages = _prepare_thread(self.current_user, self.current_org, thread_id, message)
+        thread, thread_id, llm_messages, session_context = _prepare_thread(
+            self.current_user, self.current_org, thread_id, message
+        )
 
         user_api_key = _user_api_key(self.current_user)
         chat_base_url = _assistant_base_url()
@@ -235,6 +240,7 @@ class AssistantChatStreamResource(BaseResource):
                     help_base_url=help_base_url,
                     on_activity=on_activity,
                     page_context=page_context,
+                    session_context=session_context,
                 )
                 # Persist the reply even if the client disconnects mid-stream.
                 result_holder["response"] = _finalize_chat(

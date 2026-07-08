@@ -14,6 +14,8 @@ from rewatch.assistant.activity import tool_result_summary, tool_start_label
 from rewatch.assistant.decision_graph import DecisionGraph
 from rewatch.assistant.links import append_preview_markdown, collect_previews, normalize_reply_links
 from rewatch.assistant.page_context import format_page_context
+from rewatch.assistant.session_context import extract_resource_ids_from_payload
+from rewatch.assistant.skills_prompt import build_skills_prompt
 from rewatch.assistant.tools import TOOL_DEFINITIONS, ToolContext, execute_tool
 
 logger = logging.getLogger(__name__)
@@ -82,6 +84,8 @@ Guidelines:
   - evaluate_alert manually tests against latest query results.
 - ML training and prediction are asynchronous — tell the user to check back or use get_predictions.
 - For Rewatch how-to questions, search_docs first, then get_docs_topic for details.
+- For endpoints not covered by dedicated tools, use list_endpoints / describe_endpoint / call_api (full REST API via OpenAPI spec).
+- For dashboard inspiration, call list_dashboard_examples and get_dashboard_example before build_dashboard_from_spec.
 - For external APIs, libraries, SQL dialects, or current events, use web_search then fetch_url on the best results.
 - Cite URLs when using information from the web.
 - After creating or changing resources, share direct links using app_link from tool results, or path-based URLs like /queries/{id} and /dashboards/{id}-{slug}.
@@ -110,7 +114,7 @@ def _stream_completion(
     Retries transient API errors with backoff.
     """
     kwargs: dict[str, Any] = {
-        "model": settings.OPENAI_MODEL,
+        "model": settings.ASSISTANT_OPENAI_MODEL,
         "messages": conversation,
         "tools": TOOL_DEFINITIONS,
         "tool_choice": tool_choice,
@@ -218,6 +222,7 @@ def chat(
     help_base_url: str,
     on_activity: Optional[ActivityCallback] = None,
     page_context: Optional[dict[str, Any]] = None,
+    session_context: Optional[str] = None,
 ) -> dict[str, Any]:
     """Run the assistant chat loop. Returns reply text and updated message history."""
     ctx = ToolContext(base_url=base_url, api_key=api_key, help_base_url=help_base_url)
@@ -225,6 +230,11 @@ def chat(
     web_base = base_url.rstrip("/")
 
     system_content = SYSTEM_PROMPT.replace("{base_url}", web_base)
+    skills_block = build_skills_prompt()
+    if skills_block:
+        system_content = f"{system_content}\n\n{skills_block}"
+    if session_context:
+        system_content = f"{system_content}\n\n{session_context}"
     page_block = format_page_context(page_context)
     if page_block:
         system_content = f"{system_content}\n\n{page_block}"
@@ -238,7 +248,7 @@ def chat(
     graph.start("Analyzing your request…")
     activity = _wrap_activity(graph, on_activity)
 
-    max_rounds = 25
+    max_rounds = settings.ASSISTANT_MAX_TOOL_ROUNDS
     collected_previews: list[dict[str, str]] = []
     tool_graph_ids: dict[str, str] = {}
     for round_idx in range(max_rounds + 1):
@@ -359,15 +369,22 @@ def chat(
                     collected_previews.extend(collect_previews(payload))
                     _emit_validation_status(activity, payload)
                     result_summary = tool_result_summary(fn_name, payload)
+                    resource_ids = extract_resource_ids_from_payload(payload)
                     if isinstance(payload, dict) and payload.get("error"):
                         graph.finish_tool(
                             graph_id,
                             label=label,
                             result_summary=result_summary,
                             error=str(payload["error"]),
+                            resource_ids=resource_ids or None,
                         )
                     else:
-                        graph.finish_tool(graph_id, label=label, result_summary=result_summary)
+                        graph.finish_tool(
+                            graph_id,
+                            label=label,
+                            result_summary=result_summary,
+                            resource_ids=resource_ids or None,
+                        )
                 except (json.JSONDecodeError, TypeError, AttributeError) as exc:
                     logger.warning("Assistant post-tool processing failed for %s: %s", fn_name, exc)
                     graph.finish_tool(graph_id, label=label, error=str(exc))
