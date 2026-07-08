@@ -94,7 +94,7 @@ function QueryView(props) {
 
   return (
     <div
-      className={cx("query-page-wrapper", {
+      className={cx("query-page-wrapper query-page-wrapper--constrained", {
         "query-view-fullscreen": fullscreen,
         "query-fixed-layout": isFixedLayout,
       })}>
@@ -237,5 +237,6 @@ routes.register(
   routeWithUserSession({
     path: "/queries/:queryId",
     render: pageProps => <QueryViewPage {...pageProps} />,
+    bodyClass: "fixed-layout",
   })
 );

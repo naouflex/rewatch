@@ -24,6 +24,7 @@ from rewatch.assistant.datasources import enrich_data_source, enrich_data_source
 from rewatch.assistant.links import enrich_tool_payload
 from rewatch.assistant.visualization_helpers import (
     build_visualization_hints,
+    enrich_visualizations_for_assistant,
     normalize_visualization_options,
     suggest_visualization_options,
 )
@@ -98,7 +99,11 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
         "type": "function",
         "function": {
             "name": "get_query",
-            "description": "Get a saved query including SQL, data source, parameters, schedule, and visualizations.",
+            "description": (
+                "Get a saved query including SQL, data source, parameters, schedule, and visualizations. "
+                "Also runs the query (max_age=0) and returns validation.columns, visualization_hints, "
+                "and per-visualization options_health showing broken column mappings."
+            ),
             "parameters": {
                 "type": "object",
                 "properties": {"query_id": {"type": "integer"}},
@@ -113,7 +118,8 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
             "description": (
                 "Execute a saved query or ad-hoc query text and return result rows. "
                 "Use query_text + data_source_id to test before create_query. "
-                "Query syntax depends on data source type — call get_query_runner_type first."
+                "Query syntax depends on data source type — call get_query_runner_type first. "
+                "When inspecting columns to fix visualizations, pass max_age=0 for fresh results."
             ),
             "parameters": {
                 "type": "object",
@@ -221,8 +227,10 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
         "function": {
             "name": "update_visualization",
             "description": (
-                "Update a visualization's name, type, or options. Column names in options are "
-                "validated against the parent query results and auto-corrected when wrong."
+                "Update a visualization's name, type, or options. By default remap_columns=true "
+                "re-validates the parent query and auto-corrects column names in options against "
+                "live query results (Date→date, FedFundsRate→FedFundsRate_lag_1, etc.). "
+                "Pass remap_columns=false to change only name/type without touching options."
             ),
             "parameters": {
                 "type": "object",
@@ -232,8 +240,44 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
                     "type": {"type": "string"},
                     "options": {"type": "object"},
                     "description": {"type": "string"},
+                    "remap_columns": {
+                        "type": "boolean",
+                        "description": "When true (default), validate and fix column mappings from query results.",
+                        "default": True,
+                    },
                 },
                 "required": ["visualization_id"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_visualization",
+            "description": (
+                "Get one visualization with diagnostics: invalid column mappings, suggested options, "
+                "and live query columns from the parent query."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {"visualization_id": {"type": "integer"}},
+                "required": ["visualization_id"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "fix_query_visualizations",
+            "description": (
+                "Fix all visualizations on a query by re-running it and auto-correcting column mappings "
+                "in every CHART/COUNTER/MAP/CHOROPLETH visualization. Use when charts are empty or show "
+                "wrong data after a query migration or column rename."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {"query_id": {"type": "integer"}},
+                "required": ["query_id"],
             },
         },
     },
@@ -1214,6 +1258,119 @@ class ToolContext:
             "Destination type",
         )
 
+    def get_query_tool(self, args: dict) -> Any:
+        query = _as_dict(self.request("GET", f"/api/queries/{args['query_id']}"), "query")
+        query = self._validate_saved_query(query)
+        validation = query.get("validation") or {}
+        if validation.get("status") == "ok":
+            columns = validation.get("columns") or []
+            rows = validation.get("rows") or []
+            query["visualization_hints"] = validation.get("visualization_hints") or build_visualization_hints(
+                columns, rows
+            )
+            visualizations = query.get("visualizations")
+            if isinstance(visualizations, list):
+                query["visualizations"] = enrich_visualizations_for_assistant(visualizations, columns, rows)
+            unhealthy = [
+                viz
+                for viz in (query.get("visualizations") or [])
+                if isinstance(viz, dict) and not (viz.get("options_health") or {}).get("is_healthy", True)
+            ]
+            if unhealthy:
+                query["visualization_action_required"] = {
+                    "action": "fix_query_visualizations",
+                    "query_id": query.get("id"),
+                    "broken_visualization_ids": [viz.get("id") for viz in unhealthy if viz.get("id")],
+                    "message": (
+                        f"{len(unhealthy)} visualization(s) reference columns not in query results. "
+                        "Call fix_query_visualizations to auto-correct mappings."
+                    ),
+                }
+        return query
+
+    def get_visualization_tool(self, args: dict) -> Any:
+        visualization = _as_dict(
+            self.request("GET", f"/api/visualizations/{args['visualization_id']}"),
+            "visualization",
+        )
+        query_id = visualization.get("query_id")
+        if not query_id:
+            return visualization
+
+        query_validation = self._execute_saved_query_validation(query_id)
+        visualization["query_validation"] = query_validation
+        if query_validation.get("status") != "ok":
+            return visualization
+
+        columns = query_validation.get("columns") or []
+        rows = query_validation.get("rows") or []
+        enriched = enrich_visualizations_for_assistant([visualization], columns, rows)
+        if enriched:
+            visualization = enriched[0]
+        visualization["visualization_hints"] = query_validation.get("visualization_hints") or build_visualization_hints(
+            columns, rows
+        )
+        return visualization
+
+    def fix_query_visualizations_tool(self, args: dict) -> dict[str, Any]:
+        query_id = args["query_id"]
+        query = _as_dict(self.request("GET", f"/api/queries/{query_id}"), "query")
+        query_validation = self._execute_saved_query_validation(query_id)
+        if query_validation.get("status") == "needs_parameters":
+            raise RuntimeError(
+                "Cannot fix visualizations: the linked query requires parameter values. "
+                "Run the query with parameters first or set defaults on the query."
+            )
+        if query_validation.get("status") == "error":
+            raise RuntimeError(
+                "Cannot fix visualizations because the query failed to run: "
+                f"{query_validation['message']}"
+            )
+
+        columns = query_validation.get("columns") or []
+        rows = query_validation.get("rows") or []
+        visualizations = query.get("visualizations") if isinstance(query.get("visualizations"), list) else []
+        fixed: list[dict[str, Any]] = []
+        skipped: list[dict[str, Any]] = []
+
+        for visualization in visualizations:
+            if not isinstance(visualization, dict):
+                continue
+            viz_id = visualization.get("id")
+            viz_type = (visualization.get("type") or "").upper()
+            if not viz_id or viz_type in {"TABLE", "DETAILS"}:
+                skipped.append({"id": viz_id, "name": visualization.get("name"), "reason": "no column mapping"})
+                continue
+
+            current_options = visualization.get("options") if isinstance(visualization.get("options"), dict) else {}
+            options, corrections = normalize_visualization_options(viz_type, current_options, columns, rows)
+            updated = _as_dict(
+                self.request(
+                    "POST",
+                    f"/api/visualizations/{viz_id}",
+                    body={"name": visualization.get("name"), "options": options},
+                ),
+                "visualization",
+            )
+            entry = {
+                "id": viz_id,
+                "name": updated.get("name") or visualization.get("name"),
+                "type": viz_type,
+                "resolved_options": options,
+            }
+            if corrections:
+                entry["column_corrections"] = corrections
+            fixed.append(entry)
+
+        return {
+            "query_id": query_id,
+            "query_validation": query_validation,
+            "fixed_count": len(fixed),
+            "skipped_count": len(skipped),
+            "fixed": fixed,
+            "skipped": skipped,
+        }
+
     def create_visualization_tool(self, args: dict) -> Any:
         query_validation = self._execute_saved_query_validation(args["query_id"])
         if query_validation.get("status") == "needs_parameters":
@@ -1261,11 +1418,16 @@ class ToolContext:
     def update_visualization_tool(self, args: dict) -> Any:
         args = dict(args)
         visualization_id = args.pop("visualization_id")
+        remap_columns = args.pop("remap_columns", True)
         current = _as_dict(self.request("GET", f"/api/visualizations/{visualization_id}"), "visualization")
         query_id = current.get("query_id")
         corrections: list[str] = []
+        query_validation: Optional[dict[str, Any]] = None
 
-        if "options" in args and query_id:
+        should_remap = remap_columns and query_id
+        if should_remap or "options" in args:
+            if not query_id:
+                raise RuntimeError("Cannot validate visualization options without a parent query_id.")
             query_validation = self._execute_saved_query_validation(query_id)
             if query_validation.get("status") == "needs_parameters":
                 raise RuntimeError(
@@ -1278,17 +1440,22 @@ class ToolContext:
                     f"{query_validation['message']}"
                 )
             viz_type = (args.get("type") or current.get("type") or "").upper()
+            current_options = current.get("options") if isinstance(current.get("options"), dict) else {}
+            merged_options = {**current_options, **(args.get("options") or {})}
             options, corrections = normalize_visualization_options(
                 viz_type,
-                args.get("options"),
+                merged_options,
                 query_validation.get("columns") or [],
                 query_validation.get("rows") or [],
             )
             args["options"] = options
 
         result = self.request("POST", f"/api/visualizations/{visualization_id}", body=_merge_body(**args))
-        if corrections and isinstance(result, dict):
-            result["column_corrections"] = corrections
+        if isinstance(result, dict):
+            if corrections:
+                result["column_corrections"] = corrections
+            if query_validation:
+                result["query_validation"] = query_validation
         return result
 
     def get_dashboard_tool(self, args: dict) -> Any:
@@ -1380,13 +1547,15 @@ def execute_tool(ctx: ToolContext, name: str, arguments: dict) -> str:
         "search_queries": lambda a: ctx.request(
             "GET", "/api/queries", params={"q": a["q"], "page_size": a.get("page_size", 10)}
         ),
-        "get_query": lambda a: ctx.request("GET", f"/api/queries/{a['query_id']}"),
+        "get_query": ctx.get_query_tool,
         "run_query": ctx.run_query_tool,
         "create_query": ctx.create_query_tool,
         "update_query": ctx.update_query_tool,
         "archive_query": lambda a: ctx.request("DELETE", f"/api/queries/{a['query_id']}"),
         "create_visualization": ctx.create_visualization_tool,
         "update_visualization": ctx.update_visualization_tool,
+        "get_visualization": ctx.get_visualization_tool,
+        "fix_query_visualizations": ctx.fix_query_visualizations_tool,
         "delete_visualization": lambda a: ctx.request("DELETE", f"/api/visualizations/{a['visualization_id']}"),
         "list_data_sources": lambda a: enrich_data_sources(ctx.request("GET", "/api/data_sources")),
         "list_query_runner_types": lambda a: platform_catalog.list_query_runner_types(a.get("q")),

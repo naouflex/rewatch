@@ -1,8 +1,9 @@
 import json
+import logging
 import queue
 import threading
 
-from flask import Response, request, stream_with_context
+from flask import Response, copy_current_request_context, request, stream_with_context
 from flask_restful import abort
 
 from rewatch import models, settings
@@ -13,6 +14,8 @@ from rewatch.assistant.query_generation import generate_query
 from rewatch.handlers.base import BaseResource, get_object_or_404
 from rewatch.models import db
 from rewatch.permissions import require_access, view_only
+
+logger = logging.getLogger(__name__)
 
 
 def _assistant_base_url():
@@ -219,12 +222,27 @@ class AssistantChatStreamResource(BaseResource):
                     on_activity=on_activity,
                     page_context=page_context,
                 )
+                # Persist the reply even if the client disconnects mid-stream.
+                result_holder["response"] = _finalize_chat(
+                    self.current_user,
+                    self.current_org,
+                    thread,
+                    thread_id,
+                    message,
+                    result_holder["result"],
+                    self,
+                )
             except Exception as exc:
+                logger.exception("Assistant stream worker failed")
                 error_holder["error"] = exc
+                try:
+                    db.session.rollback()
+                except Exception:
+                    pass
             finally:
                 events.put({"type": "_done"})
 
-        worker = threading.Thread(target=run_chat, daemon=True)
+        worker = threading.Thread(target=copy_current_request_context(run_chat), daemon=True)
         worker.start()
 
         def generate():
@@ -235,28 +253,13 @@ class AssistantChatStreamResource(BaseResource):
                 yield f"data: {json.dumps(event)}\n\n"
 
             if error_holder.get("error"):
-                db.session.rollback()
                 payload = {"type": "error", "message": str(error_holder["error"])}
                 yield f"data: {json.dumps(payload)}\n\n"
                 return
 
-            try:
-                response = _finalize_chat(
-                    self.current_user,
-                    self.current_org,
-                    thread,
-                    thread_id,
-                    message,
-                    result_holder["result"],
-                    self,
-                )
-            except Exception as exc:
-                db.session.rollback()
-                payload = {"type": "error", "message": str(exc)}
-                yield f"data: {json.dumps(payload)}\n\n"
-                return
-
-            yield f"data: {json.dumps({'type': 'complete', **response})}\n\n"
+            response = result_holder.get("response")
+            if response:
+                yield f"data: {json.dumps({'type': 'complete', **response})}\n\n"
 
         return Response(
             stream_with_context(generate()),

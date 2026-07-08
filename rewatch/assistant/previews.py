@@ -7,6 +7,7 @@ import math
 from typing import Any, Optional
 
 from rewatch import models
+from rewatch.assistant.dashboard_layout import widget_position
 
 WIDTH = 520
 HEIGHT = 300
@@ -235,6 +236,16 @@ def render_query_svg(query: models.Query) -> str:
     return render_table_svg(query.name or f"Query {query.id}", columns, rows)
 
 
+def _widget_layout(widget: models.Widget) -> tuple[int, int, int, int]:
+    pos = widget_position({"options": widget.options or {}})
+    return (
+        int(pos.get("col") or 0),
+        int(pos.get("row") or 0),
+        max(int(pos.get("sizeX") or 3), 1),
+        max(int(pos.get("sizeY") or 2), 1),
+    )
+
+
 def render_dashboard_svg(dashboard: models.Dashboard) -> str:
     widgets = list(dashboard.widgets)
     lines = _svg_open(dashboard.name or f"Dashboard {dashboard.id}", f"{len(widgets)} widgets")
@@ -242,7 +253,6 @@ def render_dashboard_svg(dashboard: models.Dashboard) -> str:
     grid_top = 62
     grid_height = HEIGHT - grid_top - 16
     cell_width = (WIDTH - PADDING * 2) / grid_cols
-    cell_height = 42
 
     lines.append(
         f'<rect x="{PADDING}" y="{grid_top}" width="{WIDTH - PADDING * 2}" height="{grid_height}" fill="{CARD}" stroke="{GRID}" rx="8"/>'
@@ -254,24 +264,27 @@ def render_dashboard_svg(dashboard: models.Dashboard) -> str:
         )
         return _svg_close(lines)
 
-    for widget in widgets[:8]:
-        opts = widget.options or {}
-        col = int(opts.get("col") or 0)
-        row = int(opts.get("row") or 0)
-        size_x = max(int(opts.get("sizeX") or 3), 1)
-        size_y = max(int(opts.get("sizeY") or 2), 1)
-        x = PADDING + col * cell_width + 4
-        y = grid_top + row * cell_height + 4
-        w = size_x * cell_width - 8
-        h = size_y * cell_height - 8
-        label = widget.visualization.name if widget.visualization else (widget.text or "Text")[:24]
-        lines.append(f'<rect x="{x:.1f}" y="{y:.1f}" width="{w:.1f}" height="{h:.1f}" fill="{ACCENT}22" stroke="{ACCENT}" rx="6"/>')
-        lines.append(
-            f'<text x="{x + 8:.1f}" y="{y + 18:.1f}" fill="{TEXT}" font-family="Inter, Arial, sans-serif" font-size="11" font-weight="600">{_escape(label)}</text>'
-        )
-        if widget.visualization:
+    layouts = [_widget_layout(widget) for widget in widgets[:12]]
+    max_row_end = max(row + size_y for _, row, _, size_y in layouts) or 1
+    cell_height = grid_height / max_row_end
+
+    palette = ["#2563eb", "#7c3aed", "#0891b2", "#059669", "#d97706", "#dc2626"]
+    for index, widget in enumerate(widgets[:12]):
+        col, row, size_x, size_y = layouts[index]
+        x = PADDING + col * cell_width + 3
+        y = grid_top + row * cell_height + 3
+        w = size_x * cell_width - 6
+        h = size_y * cell_height - 6
+        color = palette[index % len(palette)]
+        label = widget.visualization.name if widget.visualization else (widget.text or "Text")[:20]
+        lines.append(f'<rect x="{x:.1f}" y="{y:.1f}" width="{w:.1f}" height="{h:.1f}" fill="{color}22" stroke="{color}" rx="5"/>')
+        if h >= 22:
             lines.append(
-                f'<text x="{x + 8:.1f}" y="{y + 34:.1f}" fill="{MUTED}" font-family="Inter, Arial, sans-serif" font-size="10">{_escape(widget.visualization.type)}</text>'
+                f'<text x="{x + 6:.1f}" y="{y + 14:.1f}" fill="{TEXT}" font-family="Inter, Arial, sans-serif" font-size="10" font-weight="600">{_escape(label)}</text>'
+            )
+        if widget.visualization and h >= 34:
+            lines.append(
+                f'<text x="{x + 6:.1f}" y="{y + 28:.1f}" fill="{MUTED}" font-family="Inter, Arial, sans-serif" font-size="9">{_escape(widget.visualization.type)}</text>'
             )
 
     return _svg_close(lines)

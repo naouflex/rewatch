@@ -1,5 +1,7 @@
 from rewatch.assistant.visualization_helpers import (
     build_visualization_hints,
+    diagnose_visualization_options,
+    enrich_visualizations_for_assistant,
     normalize_visualization_options,
     resolve_column_name,
     suggest_chart_options,
@@ -91,6 +93,37 @@ def test_build_visualization_hints_includes_columns():
     assert hints["columns"] == ["date", "tvl"]
     assert hints["recommended"]["CHART"]["omit_options"] is True
     assert hints["recommended"]["CHART"]["suggested_options"]["columnMapping"]["tvl"] == "y"
+
+
+def test_resolve_column_name_matches_lagged_feature():
+    columns = ["date", "FedFundsRate_lag_1", "VIX_lag_1", "BTC_Close_Price"]
+    assert resolve_column_name("Date", columns) == "date"
+    assert resolve_column_name("FedFundsRate", columns) == "FedFundsRate_lag_1"
+    assert resolve_column_name("VIX", columns) == "VIX_lag_1"
+    assert resolve_column_name("BTC_Price", columns) == "BTC_Close_Price"
+
+
+def test_diagnose_visualization_options_flags_invalid_columns():
+    columns = ["date", "SP500_Price"]
+    diagnostics = diagnose_visualization_options(
+        "CHART",
+        {"columnMapping": {"Date": "x", "CPI_YoY": "y"}},
+        columns,
+        [{"date": "2018-01-01", "SP500_Price": 2500}],
+    )
+    assert diagnostics["is_healthy"] is False
+    assert "Date" in diagnostics["invalid_columns"]
+    assert "CPI_YoY" in diagnostics["invalid_columns"]
+
+
+def test_enrich_visualizations_for_assistant_adds_options_health():
+    visualizations = enrich_visualizations_for_assistant(
+        [{"id": 1, "type": "CHART", "name": "Broken", "options": {"columnMapping": {"Date": "x", "CPI_YoY": "y"}}}],
+        ["date", "SP500_Price"],
+        [{"date": "2018-01-01", "SP500_Price": 2500}],
+    )
+    assert visualizations[0]["options_health"]["is_healthy"] is False
+    assert "Date" in visualizations[0]["options_health"]["invalid_columns"]
 
 
 def test_enrich_dashboard_adds_layout_summary():

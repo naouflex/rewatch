@@ -1,9 +1,10 @@
-from flask import request, url_for
+from flask import Response, request, url_for
 from flask_restful import abort
 from funcy import partial, project
 from sqlalchemy.orm.exc import StaleDataError
 
 from rewatch import models
+from rewatch.assistant.previews import render_dashboard_svg
 from rewatch.handlers.base import (
     BaseResource,
     filter_by_tags,
@@ -13,9 +14,11 @@ from rewatch.handlers.base import (
 from rewatch.handlers.base import order_results as _order_results
 from rewatch.permissions import (
     can_modify,
+    require_access,
     require_admin_or_owner,
     require_object_modify_permission,
     require_permission,
+    view_only,
 )
 from rewatch.security import csp_allows_embeding
 from rewatch.serializers import DashboardSerializer, public_dashboard
@@ -270,6 +273,20 @@ class DashboardResource(BaseResource):
         self.record_event({"action": "archive", "object_id": dashboard.id, "object_type": "dashboard"})
 
         return d
+
+
+class DashboardPreviewResource(BaseResource):
+    @require_permission("list_dashboards")
+    def get(self, dashboard_id):
+        """
+        Returns an SVG layout preview for a dashboard.
+
+        Responds with ``image/svg+xml``.
+        """
+        dashboard = get_object_or_404(models.Dashboard.get_by_id_and_org, dashboard_id, self.current_org)
+        require_access(dashboard, self.current_user, view_only)
+        svg = render_dashboard_svg(dashboard)
+        return Response(svg, mimetype="image/svg+xml", headers={"Cache-Control": "private, max-age=120"})
 
 
 class PublicDashboardResource(BaseResource):

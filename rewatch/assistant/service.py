@@ -60,6 +60,9 @@ Guidelines:
   - For CHART/COUNTER/MAP: read visualization_hints.recommended from run_query or query_validation. Omit options in create_visualization — the server maps exact column names from query results.
   - columnMapping keys must match validation.columns exactly (including dots, e.g. market_cap.usd). Placeholders like date/tvl/x_column are wrong unless that literal name appears in columns.
   - If you must pass options, only set globalSeriesType or legend — not columnMapping. Wrong names are auto-corrected but omitting options is more reliable.
+  - To fix broken charts on a query: call get_query(query_id) — it returns options_health per visualization and visualization_action_required when mappings are broken. Then call fix_query_visualizations(query_id) to auto-correct all charts in one step. For a single chart, use update_visualization(visualization_id) with default remap_columns=true.
+  - When inspecting columns before fixing charts, use run_query(query_id, max_age=0) so cached results do not hide renamed columns.
+  - Read column_corrections in create/update/fix responses to confirm what was remapped.
   - To edit charts: update_visualization (options/name). To edit dashboard layout: get_dashboard (read layout_summary + widget ids) → update_widget (options.position) or add_widget_to_dashboard / delete_widget.
   - Widget grid: 12 columns. options.position uses col (0–11), row, sizeX (width), sizeY (height). Full-width chart: sizeX=12. Side-by-side: two widgets with sizeX=6 on same row.
   - add_widget_to_dashboard auto-places below existing widgets when position is omitted.

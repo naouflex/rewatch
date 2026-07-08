@@ -17,8 +17,9 @@ function getChangedPositions(widgets, nextPositions = {}) {
   });
 }
 
-export default function useEditModeHandler(canEditDashboard, widgets) {
-  const [editingLayout, setEditingLayout] = useState(canEditDashboard && has(location.search, "edit"));
+export default function useEditModeHandler(canEditDashboard, widgets, gridDisabled = false) {
+  const editModeAvailable = canEditDashboard && !gridDisabled;
+  const [editingLayout, setEditingLayout] = useState(editModeAvailable && has(location.search, "edit"));
   const [dashboardStatus, setDashboardStatus] = useState(DashboardStatusEnum.SAVED);
   const [recentPositions, setRecentPositions] = useState([]);
   const [doneBtnClickedWhileSaving, setDoneBtnClickedWhileSaving] = useState(false);
@@ -86,13 +87,20 @@ export default function useEditModeHandler(canEditDashboard, widgets) {
         setDoneBtnClickedWhileSaving(true);
         return;
       }
-      setEditingLayout(canEditDashboard && editing);
+      if (editing) {
+        if (!editModeAvailable) {
+          return;
+        }
+        setEditingLayout(true);
+      } else {
+        setEditingLayout(false);
+      }
     },
-    [dashboardStatus, canEditDashboard]
+    [dashboardStatus, editModeAvailable]
   );
 
   return {
-    editingLayout: canEditDashboard && editingLayout,
+    editingLayout: editModeAvailable && editingLayout,
     setEditingLayout: setEditing,
     saveDashboardLayout: editingLayout ? saveDashboardLayoutDebounced : saveDashboardLayout,
     retrySaveDashboardLayout,

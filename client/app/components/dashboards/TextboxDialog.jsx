@@ -3,6 +3,7 @@ import { markdown } from "markdown";
 import React, { useState, useEffect, useCallback } from "react";
 import PropTypes from "prop-types";
 import { useDebouncedCallback } from "use-debounce";
+import Checkbox from "antd/lib/checkbox";
 import Input from "antd/lib/input";
 import Tooltip from "@/components/Tooltip";
 import Link from "@/components/Link";
@@ -14,17 +15,26 @@ import notification from "@/services/notification";
 
 import "./TextboxDialog.less";
 
+function renderPreview(text, renderAsHtml) {
+  if (!text) {
+    return null;
+  }
+  return renderAsHtml ? text : markdown.toHTML(text);
+}
+
 function TextboxDialog({ dialog, isNew, ...props }) {
   const [text, setText] = useState(toString(props.text));
+  const [renderAsHtml, setRenderAsHtml] = useState(!!props.renderAsHtml);
   const [preview, setPreview] = useState(null);
 
   useEffect(() => {
     setText(props.text);
-    setPreview(markdown.toHTML(props.text));
-  }, [props.text]);
+    setRenderAsHtml(!!props.renderAsHtml);
+    setPreview(renderPreview(props.text, props.renderAsHtml));
+  }, [props.text, props.renderAsHtml]);
 
   const [updatePreview] = useDebouncedCallback(() => {
-    setPreview(markdown.toHTML(text));
+    setPreview(renderPreview(text, renderAsHtml));
   }, 200);
 
   const handleInputChange = useCallback(
@@ -35,15 +45,28 @@ function TextboxDialog({ dialog, isNew, ...props }) {
     [updatePreview]
   );
 
+  const handleRenderModeChange = useCallback(
+    event => {
+      setRenderAsHtml(event.target.checked);
+      updatePreview();
+    },
+    [updatePreview]
+  );
+
   const saveWidget = useCallback(() => {
-    dialog.close(text).catch(() => {
-      notification.error(isNew ? "Widget could not be added" : "Widget could not be saved");
+    dialog.close({ text, renderAsHtml }).catch(err => {
+      const detail = err?.response?.data?.message || err?.message;
+      notification.error(
+        isNew ? "Widget could not be added" : "Widget could not be saved",
+        detail || undefined
+      );
     });
-  }, [dialog, isNew, text]);
+  }, [dialog, isNew, text, renderAsHtml]);
 
   const confirmDialogDismiss = useCallback(() => {
     const originalText = props.text;
-    if (text !== originalText) {
+    const originalRenderAsHtml = !!props.renderAsHtml;
+    if (text !== originalText || renderAsHtml !== originalRenderAsHtml) {
       confirmDialog({
         title: "Quit editing?",
         description: "Changes you made so far will not be saved. Are you sure?",
@@ -54,13 +77,13 @@ function TextboxDialog({ dialog, isNew, ...props }) {
     } else {
       dialog.dismiss();
     }
-  }, [dialog, text, props.text]);
+  }, [dialog, text, renderAsHtml, props.text, props.renderAsHtml]);
 
   return (
     <ModalShell
       dialog={dialog}
       title={isNew ? "Add Textbox" : "Edit Textbox"}
-      description="Write markdown content to display on your dashboard."
+      description="Write markdown or HTML content to display on your dashboard."
       size="md"
       onOk={saveWidget}
       onCancel={confirmDialogDismiss}
@@ -74,18 +97,30 @@ function TextboxDialog({ dialog, isNew, ...props }) {
           aria-label="Textbox widget content"
           onChange={handleInputChange}
           autoFocus
-          placeholder="This is where you write some text"
+          placeholder={renderAsHtml ? "<p>Your HTML here</p>" : "This is where you write some text"}
         />
-        <small>
-          Supports basic{" "}
-          <Link
-            target="_blank"
-            rel="noopener noreferrer"
-            href="https://www.markdownguide.org/cheat-sheet/#basic-syntax">
-            <Tooltip title="Markdown guide opens in new window">Markdown</Tooltip>
-          </Link>
-          .
-        </small>
+        <div className="textbox-dialog__options">
+          <Checkbox checked={renderAsHtml} onChange={handleRenderModeChange} data-test="TextboxRenderAsHtml">
+            Render as HTML
+          </Checkbox>
+          <small>
+            {renderAsHtml ? (
+              <>HTML is sanitized before display. Scripts and unsafe tags are removed. Use for images:{" "}
+                <code>{`<img src="https://…" alt="…">`}</code></>
+            ) : (
+              <>
+                Supports basic{" "}
+                <Link
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  href="https://www.markdownguide.org/cheat-sheet/#basic-syntax">
+                  <Tooltip title="Markdown guide opens in new window">Markdown</Tooltip>
+                </Link>
+                .
+              </>
+            )}
+          </small>
+        </div>
       </ModalSection>
       {text && (
         <ModalSection title="Preview">
@@ -100,11 +135,13 @@ TextboxDialog.propTypes = {
   dialog: DialogPropType.isRequired,
   isNew: PropTypes.bool,
   text: PropTypes.string,
+  renderAsHtml: PropTypes.bool,
 };
 
 TextboxDialog.defaultProps = {
   isNew: false,
   text: "",
+  renderAsHtml: false,
 };
 
 export default wrapDialog(TextboxDialog);

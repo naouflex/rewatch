@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { isEmpty, includes, compact, map, has, pick, keys, extend, every, get } from "lodash";
+import { isEmpty, includes, compact, map, has, pick, keys, every, get } from "lodash";
 import notification from "@/services/notification";
 import location from "@/services/location";
 import url from "@/services/url";
-import { Dashboard, collectDashboardFilters } from "@/services/dashboard";
+import { Dashboard, collectDashboardFilters, cloneDashboard } from "@/services/dashboard";
 import { currentUser } from "@/services/auth";
 import recordEvent from "@/services/recordEvent";
 import { QueryResultError } from "@/services/query";
@@ -67,14 +67,14 @@ function useDashboard(dashboardData) {
 
   const updateDashboard = useCallback(
     (data, includeVersion = true) => {
-      setDashboard((currentDashboard) => extend({}, currentDashboard, data));
+      setDashboard(currentDashboard => cloneDashboard(currentDashboard, data));
       data = { ...data, id: dashboard.id };
       if (includeVersion) {
         data = { ...data, version: dashboard.version };
       }
       return Dashboard.save(data)
         .then((updatedDashboard) => {
-          setDashboard((currentDashboard) => extend({}, currentDashboard, pick(updatedDashboard, keys(data))));
+          setDashboard(currentDashboard => cloneDashboard(currentDashboard, pick(updatedDashboard, keys(data))));
           if (has(data, "name")) {
             location.setPath(url.parse(updatedDashboard.url).pathname, true);
           }
@@ -102,7 +102,6 @@ function useDashboard(dashboardData) {
 
   const loadWidget = useCallback((widget, forceRefresh = false) => {
     widget.getParametersDefs(); // Force widget to read parameters values from URL
-    setDashboard((currentDashboard) => extend({}, currentDashboard));
     return widget
       .load(forceRefresh)
       .catch((error) => {
@@ -112,15 +111,15 @@ function useDashboard(dashboardData) {
         }
         return Promise.reject(error);
       })
-      .finally(() => setDashboard((currentDashboard) => extend({}, currentDashboard)));
+      .finally(() => setDashboard(currentDashboard => cloneDashboard(currentDashboard)));
   }, []);
 
   const refreshWidget = useCallback((widget) => loadWidget(widget, true), [loadWidget]);
 
   const removeWidget = useCallback((widgetId) => {
-    setDashboard((currentDashboard) =>
-      extend({}, currentDashboard, {
-        widgets: currentDashboard.widgets.filter((widget) => widget.id !== undefined && widget.id !== widgetId),
+    setDashboard(currentDashboard =>
+      cloneDashboard(currentDashboard, {
+        widgets: currentDashboard.widgets.filter(widget => widget.id !== undefined && widget.id !== widgetId),
       })
     );
   }, []);
@@ -172,12 +171,12 @@ function useDashboard(dashboardData) {
   const archiveDashboard = useCallback(() => {
     recordEvent("archive", "dashboard", dashboard.id);
     Dashboard.delete(dashboard).then((updatedDashboard) =>
-      setDashboard((currentDashboard) => extend({}, currentDashboard, pick(updatedDashboard, ["is_archived"])))
+      setDashboard(currentDashboard => cloneDashboard(currentDashboard, pick(updatedDashboard, ["is_archived"])))
     );
   }, [dashboard]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const showShareDashboardDialog = useCallback(() => {
-    const handleDialogClose = () => setDashboard((currentDashboard) => extend({}, currentDashboard));
+    const handleDialogClose = () => setDashboard(currentDashboard => cloneDashboard(currentDashboard));
 
     ShareDashboardDialog.showModal({
       dashboard,
@@ -190,37 +189,39 @@ function useDashboard(dashboardData) {
   const showAddTextboxDialog = useCallback(() => {
     TextboxDialog.showModal({
       isNew: true,
-    }).onClose((text) =>
-      dashboard.addWidget(text).then(() => setDashboard((currentDashboard) => extend({}, currentDashboard)))
+    }).onClose(({ text, renderAsHtml }) =>
+      dashboardRef.current
+        .addWidget(text, { renderAsHtml: !!renderAsHtml })
+        .then(() => setDashboard(() => cloneDashboard(dashboardRef.current)))
     );
-  }, [dashboard]);
+  }, []);
 
   const showAddWidgetDialog = useCallback(() => {
     AddWidgetDialog.showModal({
-      dashboard,
+      dashboard: dashboardRef.current,
     }).onClose(({ visualization, parameterMappings }) =>
-      dashboard
+      dashboardRef.current
         .addWidget(visualization, {
           parameterMappings: editableMappingsToParameterMappings(parameterMappings),
         })
-        .then((widget) => {
+        .then(widget => {
           const widgetsToSave = [
             widget,
-            ...synchronizeWidgetTitles(widget.options.parameterMappings, dashboard.widgets),
+            ...synchronizeWidgetTitles(widget.options.parameterMappings, dashboardRef.current.widgets),
           ];
-          return Promise.all(widgetsToSave.map((w) => w.save())).then(() =>
-            setDashboard((currentDashboard) => extend({}, currentDashboard))
+          return Promise.all(widgetsToSave.map(w => w.save())).then(() =>
+            setDashboard(() => cloneDashboard(dashboardRef.current))
           );
         })
     );
-  }, [dashboard]);
+  }, []);
 
   const [refreshRate, setRefreshRate, disableRefreshRate] = useRefreshRateHandler(refreshDashboard);
   const [fullscreen, toggleFullscreen] = useFullscreenHandler();
-  const editModeHandler = useEditModeHandler(!gridDisabled && canEditDashboard, dashboard.widgets);
+  const editModeHandler = useEditModeHandler(canEditDashboard, dashboard.widgets, gridDisabled);
 
   useEffect(() => {
-    setDashboard(dashboardData);
+    setDashboard(cloneDashboard(dashboardData));
     loadDashboard();
   }, [dashboardData]); // eslint-disable-line react-hooks/exhaustive-deps
 

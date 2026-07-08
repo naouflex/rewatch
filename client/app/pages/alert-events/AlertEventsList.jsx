@@ -18,6 +18,7 @@ import { UrlStateStorage } from "@/components/items-list/classes/StateStorage";
 import * as Sidebar from "@/components/items-list/components/Sidebar";
 import ListPageToolbar from "@/components/items-list/components/ListPageToolbar";
 import ItemsTable, { Columns } from "@/components/items-list/components/ItemsTable";
+import TimeAgo from "@/components/TimeAgo";
 
 import AlertEvents from "@/services/alert-events";
 import { destinationLabel, statusTag } from "@/pages/alert-events/alertEventUtils";
@@ -67,7 +68,15 @@ class AlertEventsList extends React.Component {
     const refresh = () => this.props.controller.update();
 
     return [
-      Columns.timeAgo({ title: "When", field: "created_at", width: "1%" }),
+      Columns.custom(
+        (text, event) => <TimeAgo date={event.created_at} variation="timeAgoInTooltip" />,
+        {
+          title: "Date",
+          field: "created_at",
+          width: "1%",
+          className: "text-nowrap",
+        }
+      ),
       Columns.custom(
         (text, event) =>
           event.alert ? (

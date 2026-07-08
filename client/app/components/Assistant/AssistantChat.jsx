@@ -30,6 +30,17 @@ const SUGGESTIONS = [
   "Create a line chart dashboard",
 ];
 
+function isAwaitingReply(messages) {
+  if (!messages?.length) {
+    return false;
+  }
+  return messages[messages.length - 1].role === "user";
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 function normalizeAssistantLinks(text) {
   if (!text) {
     return text;
@@ -69,18 +80,69 @@ export default function AssistantChat({
   const [historyLoading, setHistoryLoading] = useState(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+  const streamActiveRef = useRef(false);
+  const pollGenerationRef = useRef(0);
   const currentRoute = useCurrentRoute();
   const pageContext = useMemo(() => buildAssistantPageContext(currentRoute), [currentRoute]);
 
+  const pollForPendingReply = useCallback(async (id, generation) => {
+    setLoading(true);
+    setThinkingStatus("Assistant is still working…");
+    setThinkingActivities([]);
+    setDraftReply("");
+    setError(null);
+
+    try {
+      for (let attempt = 0; attempt < 120; attempt += 1) {
+        if (pollGenerationRef.current !== generation) {
+          return;
+        }
+        await sleep(2000);
+        if (pollGenerationRef.current !== generation) {
+          return;
+        }
+        try {
+          const history = await Assistant.getMessages(id);
+          if (pollGenerationRef.current !== generation) {
+            return;
+          }
+          if (!isAwaitingReply(history)) {
+            setMessages(history.length ? history : [WELCOME]);
+            return;
+          }
+        } catch (err) {
+          // Ignore transient errors while the server finishes the reply.
+        }
+      }
+      if (pollGenerationRef.current === generation) {
+        setError("The assistant is taking longer than expected. Try refreshing or sending your message again.");
+      }
+    } finally {
+      if (pollGenerationRef.current === generation) {
+        setLoading(false);
+        setThinkingStatus("Thinking…");
+        setThinkingActivities([]);
+        setDraftReply("");
+      }
+    }
+  }, []);
+
   const loadThread = useCallback(
-    async id => {
+    async (id, generation) => {
       if (!id) {
         setMessages([WELCOME]);
         return;
       }
       try {
         const history = await Assistant.getMessages(id);
-        setMessages(history.length ? history : [WELCOME]);
+        if (pollGenerationRef.current !== generation) {
+          return;
+        }
+        const nextMessages = history.length ? history : [WELCOME];
+        setMessages(nextMessages);
+        if (isAwaitingReply(nextMessages)) {
+          await pollForPendingReply(id, generation);
+        }
       } catch (err) {
         const status = err?.response?.status;
         if (status === 404) {
@@ -91,25 +153,28 @@ export default function AssistantChat({
         throw err;
       }
     },
-    [onThreadIdChange]
+    [onThreadIdChange, pollForPendingReply]
   );
 
   useEffect(() => {
+    const generation = pollGenerationRef.current + 1;
+    pollGenerationRef.current = generation;
     let cancelled = false;
     setBootstrapping(true);
-    loadThread(threadId)
+    loadThread(threadId, generation)
       .catch(() => {
-        if (!cancelled) {
+        if (!cancelled && pollGenerationRef.current === generation) {
           setMessages([WELCOME]);
         }
       })
       .finally(() => {
-        if (!cancelled) {
+        if (!cancelled && pollGenerationRef.current === generation) {
           setBootstrapping(false);
         }
       });
     return () => {
       cancelled = true;
+      pollGenerationRef.current += 1;
     };
   }, [threadId, loadThread]);
 
@@ -227,6 +292,7 @@ export default function AssistantChat({
       setThinkingActivities([]);
       setDraftReply("");
       setMessages(prev => [...prev, { role: "user", content: text }]);
+      streamActiveRef.current = true;
       setLoading(true);
 
       try {
@@ -256,6 +322,7 @@ export default function AssistantChat({
         setError(detail);
         setMessages(prev => [...prev, { role: "assistant", content: `Sorry, I ran into an error: ${detail}` }]);
       } finally {
+        streamActiveRef.current = false;
         setLoading(false);
         setThinkingActivities([]);
         setThinkingStatus("Thinking…");

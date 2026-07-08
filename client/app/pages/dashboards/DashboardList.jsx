@@ -1,4 +1,4 @@
-import { map } from "lodash";
+import { map, isEmpty } from "lodash";
 import React from "react";
 import cx from "classnames";
 
@@ -21,6 +21,7 @@ import getTags from "@/services/getTags";
 import notification from "@/services/notification";
 import { policy } from "@/services/policy";
 import routes from "@/services/routes";
+import DashboardThumbnail from "@/components/dashboards/DashboardThumbnail";
 
 import DashboardListEmptyState from "./components/DashboardListEmptyState";
 
@@ -56,24 +57,27 @@ function buildColumns(refresh) {
     Columns.favorites({ className: "p-r-0" }),
     Columns.custom.sortable(
       (text, item) => (
-        <React.Fragment>
-          <Link className="table-main-title" href={item.url} data-test={`DashboardId${item.id}`}>
-            {item.name}
-          </Link>
-          <DashboardTagsControl
-            className="d-block"
-            tags={item.tags}
-            isDraft={item.is_draft}
-            isArchived={item.is_archived}
-            canEdit={!item.is_archived && policy.canEdit(item)}
-            getAvailableTags={getDashboardTags}
-            onEdit={tags =>
-              Dashboard.save({ id: item.id, tags, version: item.version })
-                .then(() => refresh())
-                .catch(() => notification.error("Failed to update tags."))
-            }
-          />
-        </React.Fragment>
+        <div className={cx("dashboard-list-item", { "dashboard-list-item--no-tags": isEmpty(item.tags) })}>
+          <DashboardThumbnail dashboardId={item.id} alt={item.name} size="list" />
+          <div className="dashboard-list-item__details">
+            <Link className="table-main-title" href={item.url} data-test={`DashboardId${item.id}`}>
+              {item.name}
+            </Link>
+            <DashboardTagsControl
+              className="d-block"
+              tags={item.tags}
+              isDraft={item.is_draft}
+              isArchived={item.is_archived}
+              canEdit={!item.is_archived && policy.canEdit(item)}
+              getAvailableTags={getDashboardTags}
+              onEdit={tags =>
+                Dashboard.save({ id: item.id, tags, version: item.version })
+                  .then(() => refresh())
+                  .catch(() => notification.error("Failed to update tags."))
+              }
+            />
+          </div>
+        </div>
       ),
       {
         title: "Name",

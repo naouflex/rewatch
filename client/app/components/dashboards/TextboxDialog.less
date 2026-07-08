@@ -1,21 +1,12 @@
 .textbox-dialog {
-  small {
-    display: block;
-    margin-top: 4px;
-  }
+  &__options {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 10px;
 
-  .preview {
-    padding: 9px 9px 1px;
-    background-color: var(--rd-color-surface-alt);
-    color: var(--rd-color-text);
-    border: 1px solid var(--rd-color-divider);
-    border-radius: var(--rd-radius-sm);
-    margin-top: 8px;
-    word-wrap: break-word
-  }
-
-  .preview-title {
-    display: block;
-    margin-top: -5px;
+    small {
+      color: var(--rd-color-text-muted);
+    }
   }
 }

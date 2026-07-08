@@ -39,6 +39,28 @@ def is_placeholder_column(name: str) -> bool:
     return bool(_PLACEHOLDER_COLUMN_RE.match(stripped))
 
 
+def _tokenize_column_name(name: str) -> list[str]:
+    return [token for token in re.split(r"[_\s.]+", name.lower()) if len(token) > 1]
+
+
+def _pick_best_partial_match(requested: str, matches: list[str]) -> Optional[str]:
+    if not matches:
+        return None
+    if len(matches) == 1:
+        return matches[0]
+
+    requested_lower = requested.lower()
+    if "price" in requested_lower:
+        close_match = next((column for column in matches if "close" in column.lower()), None)
+        if close_match:
+            return close_match
+    if "volume" in requested_lower:
+        log_match = next((column for column in matches if "volume" in column.lower()), None)
+        if log_match:
+            return log_match
+    return matches[0]
+
+
 def resolve_column_name(
     requested: str,
     available_columns: list[str],
@@ -68,6 +90,25 @@ def resolve_column_name(
             col_norm = _normalize_column_key(column)
             if normalized and (normalized in col_norm or col_norm in normalized):
                 return column
+        if not re.search(r"_lag_\d+$", requested, re.IGNORECASE):
+            for lag in (1, 7, 14, 30):
+                lagged = f"{requested}_lag_{lag}"
+                if lagged in available_columns:
+                    return lagged
+                lagged_lower = lagged.lower()
+                for column in available_columns:
+                    if column.lower() == lagged_lower:
+                        return column
+        req_tokens = _tokenize_column_name(requested)
+        if req_tokens:
+            partial_matches = [
+                column
+                for column in available_columns
+                if all(token in column.lower() for token in req_tokens)
+            ]
+            best = _pick_best_partial_match(requested, partial_matches)
+            if best:
+                return best
 
     if role_hint == "x":
         return next((col for col in available_columns if _looks_like_date_column(col, rows)), available_columns[0])
@@ -391,6 +432,83 @@ def normalize_visualization_options(
     if viz_type == "CHOROPLETH":
         return _normalize_choropleth_options(options, columns, rows)
     return options, []
+
+
+def _mapped_column_names(viz_type: str, options: Optional[dict[str, Any]]) -> list[str]:
+    options = options or {}
+    viz_type = (viz_type or "").upper()
+    if viz_type == "CHART":
+        mapping = options.get("columnMapping")
+        return list(mapping.keys()) if isinstance(mapping, dict) else []
+    if viz_type == "COUNTER":
+        value = options.get("counterColName")
+        return [str(value)] if value else []
+    if viz_type == "MAP":
+        return [name for name in (options.get("latColName"), options.get("lonColName")) if name]
+    if viz_type == "CHOROPLETH":
+        return [name for name in (options.get("keyColumn"), options.get("valueColumn")) if name]
+    return []
+
+
+def diagnose_visualization_options(
+    viz_type: str,
+    options: Optional[dict[str, Any]],
+    columns: list[str],
+    rows: Optional[list[dict[str, Any]]] = None,
+) -> dict[str, Any]:
+    """Report whether a visualization's options match live query columns."""
+    rows = rows or []
+    options = dict(options or {})
+    viz_type = (viz_type or "").upper()
+    mapped_columns = _mapped_column_names(viz_type, options)
+    available = set(columns)
+    invalid_columns = [
+        column
+        for column in mapped_columns
+        if column and not is_placeholder_column(column) and column not in available
+    ]
+    _, corrections = normalize_visualization_options(viz_type, options, columns, rows)
+    suggested_options, _ = normalize_visualization_options(
+        viz_type,
+        suggest_visualization_options(viz_type, columns, rows),
+        columns,
+        rows,
+    )
+    return {
+        "is_healthy": not invalid_columns,
+        "invalid_columns": invalid_columns,
+        "mapped_columns": mapped_columns,
+        "suggested_options": suggested_options,
+        "corrections_preview": corrections,
+    }
+
+
+def enrich_visualizations_for_assistant(
+    visualizations: list[dict[str, Any]],
+    columns: list[str],
+    rows: Optional[list[dict[str, Any]]] = None,
+) -> list[dict[str, Any]]:
+    """Attach per-visualization health diagnostics for get_query responses."""
+    enriched: list[dict[str, Any]] = []
+    for visualization in visualizations:
+        if not isinstance(visualization, dict):
+            continue
+        item = dict(visualization)
+        diagnostics = diagnose_visualization_options(
+            item.get("type") or "",
+            item.get("options"),
+            columns,
+            rows,
+        )
+        item["options_health"] = {
+            "is_healthy": diagnostics["is_healthy"],
+            "invalid_columns": diagnostics["invalid_columns"],
+            "corrections_preview": diagnostics["corrections_preview"],
+        }
+        if not diagnostics["is_healthy"]:
+            item["options_health"]["suggested_options"] = diagnostics["suggested_options"]
+        enriched.append(item)
+    return enriched
 
 
 def build_visualization_hints(columns: list[str], rows: Optional[list[dict[str, Any]]] = None) -> dict[str, Any]:

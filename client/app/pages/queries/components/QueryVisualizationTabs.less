@@ -32,7 +32,6 @@
     border-bottom: 0px !important;
     border-radius: 0 !important;
     color: var(--rd-color-text-secondary);
-    // border-width animation makes it flicker on Firefox
     transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1), border-width 0s !important;
 
     &:first-child {
@@ -58,12 +57,12 @@
       }
     }
 
-    // add internal bottom border to non-active tabs
     &:not(.ant-tabs-tab-active) {
       box-shadow: 0px -1px 0px var(--rd-color-divider) inset;
     }
   }
 
+  .ant-tabs-body-holder,
   .ant-tabs-content-holder {
     margin-top: -17px;
     border: 1px solid var(--rd-color-divider);
@@ -71,7 +70,8 @@
     border-radius: 0px var(--rd-radius-xs) 0px 0px;
 
     .ant-tabs-tabpane,
-    .ant-tabs-tabpanel {
+    .ant-tabs-tabpanel,
+    .ant-tabs-content {
       padding: 16px;
       background: var(--rd-color-surface);
       color: var(--rd-color-text);
@@ -110,85 +110,106 @@
   }
 }
 
-// hide delete button when it in the dropdown
 .ant-tabs-dropdown-menu-item .delete-visualization-button {
   display: none;
 }
 
+// Fill the tab body: body-holder gets flex height; children stretch via flex column.
 .query-fixed-layout .query-visualization-tabs {
   flex: 1 1 auto;
   min-height: 0;
+  height: 100%;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 
   .ant-tabs-nav {
     flex: 0 0 auto;
   }
 
+  .ant-tabs-body-holder,
   .ant-tabs-content-holder {
     flex: 1 1 auto;
     min-height: 0;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
+  }
 
-    .ant-tabs-content {
-      flex: 1 1 auto;
-      min-height: 0;
-      display: flex;
-      flex-direction: column;
-    }
+  .ant-tabs-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
 
-    .ant-tabs-tabpane,
-    .ant-tabs-tabpanel {
-      flex: 1 1 auto;
-      min-height: 0;
-      display: flex;
-      flex-direction: column;
-      overflow: auto;
-    }
+  .ant-tabs-content {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 0 !important;
+    overflow: hidden;
+    background: var(--rd-color-surface);
+  }
+
+  .ant-tabs-tabpane,
+  .ant-tabs-tabpanel {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100%;
+    padding: 0 !important;
+    overflow: hidden;
+    background: var(--rd-color-surface);
+  }
+
+  .query-visualization-pane {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
   }
 
   .visualization-renderer {
     flex: 1 1 auto;
     min-height: 0;
+    height: 100%;
     display: flex;
     flex-direction: column;
-    position: relative;
-    left: auto;
-    top: auto;
-    right: auto;
-    bottom: auto;
-    padding: 15px;
-    height: 100%;
+    overflow: hidden;
+
+    > .filters-wrapper {
+      flex: 0 0 auto;
+      flex-shrink: 0;
+    }
+
+    > .visualization-renderer-wrapper {
+      flex: 1 1 auto;
+      min-height: 0;
+      position: relative;
+      overflow: hidden;
+    }
   }
 
-  .visualization-renderer-wrapper {
-    flex: 1 1 auto;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    height: 100%;
-  }
-
-  .table-visualization-container,
-  .chart-visualization-container,
   .sunburst-visualization-container,
   .sankey-visualization-container,
   .funnel-visualization-container,
+  .map-visualization-container,
   .word-cloud-visualization-container,
   .box-plot-deprecated-visualization-container,
-  .details-visualization-container,
+  .chart-visualization-container,
   .pivot-table-visualization-container,
-  .cohort-visualization-container {
-    position: relative;
+  .cohort-visualization-container,
+  .details-visualization-container,
+  .table-visualization-container {
     flex: 1 1 auto;
-    min-height: 300px;
+    min-height: 0;
     height: 100%;
-    left: auto;
-    top: auto;
-    right: auto;
-    bottom: auto;
     width: 100%;
     overflow: hidden;
   }
@@ -200,37 +221,30 @@
     overflow: auto;
   }
 
-  // Leaflet needs a definite height; flex + height:auto collapses an empty map container.
-  .map-visualization-container {
-    position: relative;
-    flex: 1 1 auto;
-    min-height: 400px;
-    height: 100%;
-    left: auto;
-    top: auto;
-    right: auto;
-    bottom: auto;
-    width: 100%;
-    overflow: hidden;
-  }
-
   .table-visualization-container {
-    overflow: auto;
-
-    div {
-      height: auto;
-    }
-
     .ant-spin-container {
       display: flex;
       flex-direction: column;
-      flex: 1 1 auto;
-      min-height: 0;
       height: 100%;
 
       .ant-table {
         flex: 1 1 auto;
       }
+    }
+  }
+
+  .counter-visualization-container {
+    height: 100%;
+
+    .counter-visualization-content {
+      position: absolute;
+      inset: 10px 10px 15px 15px;
+      height: auto;
+      overflow: hidden;
+      padding: 0;
+      max-width: 600px;
+      max-height: 400px;
+      margin: auto;
     }
   }
 }

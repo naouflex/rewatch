@@ -46,6 +46,7 @@ from rewatch.handlers.dashboards import (
     DashboardFavoriteListResource,
     DashboardForkResource,
     DashboardListResource,
+    DashboardPreviewResource,
     DashboardResource,
     DashboardShareResource,
     DashboardTagsResource,
@@ -408,6 +409,11 @@ api.add_org_resource(
 
 api.add_org_resource(DashboardListResource, "/api/dashboards", endpoint="dashboards")
 api.add_org_resource(DashboardResource, "/api/dashboards/<dashboard_id>", endpoint="dashboard")
+api.add_org_resource(
+    DashboardPreviewResource,
+    "/api/dashboards/<dashboard_id>/preview",
+    endpoint="dashboard_preview",
+)
 api.add_org_resource(
     PublicDashboardResource,
     "/api/dashboards/public/<token>",

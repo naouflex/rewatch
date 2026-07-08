@@ -12,8 +12,13 @@ import "./index.less";
 export default function AssistantBubble() {
   const currentRoute = useCurrentRoute();
   const [enabled, setEnabled] = useState(!!clientConfig.assistantEnabled);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(() => Assistant.getStoredBubbleOpen());
   const [threadId, setThreadId] = useState(Assistant.getStoredThreadId());
+
+  const setBubbleOpen = useCallback(nextOpen => {
+    setOpen(nextOpen);
+    Assistant.setStoredBubbleOpen(nextOpen);
+  }, []);
 
   useEffect(() => {
     if (clientConfig.assistantEnabled) {
@@ -46,7 +51,7 @@ export default function AssistantBubble() {
             compact
             threadId={threadId}
             onThreadIdChange={handleThreadChange}
-            onClose={() => setOpen(false)}
+            onClose={() => setBubbleOpen(false)}
             showOpenFullPage
           />
         </div>
@@ -56,7 +61,7 @@ export default function AssistantBubble() {
         type="button"
         className={`assistant-bubble-toggle${open ? " open" : ""}`}
         aria-label={open ? "Close assistant" : "Open assistant"}
-        onClick={() => setOpen(prev => !prev)}
+        onClick={() => setBubbleOpen(prev => !prev)}
       >
         {open ? <CloseOutlined /> : <MessageOutlined />}
       </button>

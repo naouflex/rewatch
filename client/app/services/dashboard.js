@@ -123,7 +123,7 @@ function calculateNewWidgetPosition(existingWidgets, newWidget) {
     }))
     .sortBy("row")
     .first()
-    .value();
+    .value() || { col: 0, row: 0 };
 }
 
 export function Dashboard(dashboard) {
@@ -176,12 +176,19 @@ const DashboardService = {
   favorite: ({ id }) => axios.post(`api/dashboards/${id}/favorite`),
   unfavorite: ({ id }) => axios.delete(`api/dashboards/${id}/favorite`),
   fork: ({ id }) => axios.post(`api/dashboards/${id}/fork`, { id }).then(transformResponse),
+  previewUrl: (id) => `api/dashboards/${id}/preview`,
 };
 
 _.extend(Dashboard, DashboardService);
 
 Dashboard.prepareDashboardWidgets = prepareDashboardWidgets;
 Dashboard.prepareWidgetsForDashboard = prepareWidgetsForDashboard;
+
+export function cloneDashboard(dashboard, patch = {}) {
+  return transformSingle(_.extend({}, dashboard, patch));
+}
+
+Dashboard.clone = cloneDashboard;
 
 Dashboard.prototype.canEdit = function canEdit() {
   return policy.canEdit(this);

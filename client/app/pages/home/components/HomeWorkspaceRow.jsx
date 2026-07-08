@@ -7,6 +7,7 @@ import BigMessage from "@/components/BigMessage";
 import Link from "@/components/Link";
 import TimeAgo from "@/components/TimeAgo";
 import CreateDashboardDialog from "@/components/dashboards/CreateDashboardDialog";
+import DashboardThumbnail from "@/components/dashboards/DashboardThumbnail";
 import { QuerySourceTypeIcon } from "@/pages/queries/components/QuerySourceTypeIcon";
 import { currentUser } from "@/services/auth";
 import DataSource from "@/services/data-source";
@@ -21,17 +22,25 @@ function DraftBadge() {
   return <span className="label label-default home-list-item__badge">Unpublished</span>;
 }
 
-function FavoriteSublist({ title, resource, itemUrl, viewAllHref, emptyState }) {
+function FavoriteSublist({ title, resource, itemUrl, viewAllHref, emptyState, showThumbnail, showDataSourceIcon }) {
   const [items, setItems] = useState([]);
+  const [dataSourcesById, setDataSourcesById] = useState({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);
-    resource
-      .favorites({ order: "-starred_at" })
-      .then(({ results }) => setItems(take(results, ITEM_LIMIT)))
+    const favoritesPromise = resource.favorites({ order: "-starred_at" });
+    const dataSourcesPromise = showDataSourceIcon ? DataSource.query() : Promise.resolve([]);
+
+    Promise.all([favoritesPromise, dataSourcesPromise])
+      .then(([favoritesResult, dataSources]) => {
+        setItems(take(favoritesResult.results, ITEM_LIMIT));
+        if (showDataSourceIcon) {
+          setDataSourcesById(keyBy(dataSources, "id"));
+        }
+      })
       .finally(() => setLoading(false));
-  }, [resource]);
+  }, [resource, showDataSourceIcon]);
 
   return (
     <div className="home-favorites-sublist">
@@ -46,17 +55,40 @@ function FavoriteSublist({ title, resource, itemUrl, viewAllHref, emptyState }) 
       {loading && <HomeListSkeleton rows={ITEM_LIMIT} compact />}
       {!loading && !isEmpty(items) && (
         <div role="list" className="home-list home-list--compact">
-          {items.map(item => (
+          {items.map(item => {
+            const dataSource = showDataSourceIcon ? dataSourcesById[item.data_source_id] : null;
+
+            return (
             <HomeListItem
               key={itemUrl(item)}
               href={itemUrl(item)}
               className="home-list-item--compact"
-              icon={
-                <span className="btn-favorite home-list-item__star" aria-hidden="true">
-                  <i className="fa fa-star" />
-                </span>
+              thumbnail={
+                showThumbnail ? (
+                  <DashboardThumbnail dashboardId={item.id} alt={item.name} size="home" />
+                ) : null
               }
-              title={item.name}
+              icon={
+                showThumbnail ? null : showDataSourceIcon ? (
+                  dataSource ? (
+                    <QuerySourceTypeIcon dataSource={dataSource} alt={dataSource.name} width={20} height={20} />
+                  ) : (
+                    <i className="fa fa-code home-list-item__fallback-icon" aria-hidden="true" />
+                  )
+                ) : (
+                  <span className="btn-favorite home-list-item__star" aria-hidden="true">
+                    <i className="fa fa-star" />
+                  </span>
+                )
+              }
+              title={
+                <>
+                  {(showThumbnail || showDataSourceIcon) && (
+                    <i className="fa fa-star home-list-item__favorite-mark" aria-hidden="true" />
+                  )}
+                  {item.name}
+                </>
+              }
               meta={
                 item.updated_at ? (
                   <>
@@ -66,7 +98,8 @@ function FavoriteSublist({ title, resource, itemUrl, viewAllHref, emptyState }) 
               }
               badge={item.is_draft ? <DraftBadge /> : null}
             />
-          ))}
+            );
+          })}
         </div>
       )}
       {isEmpty(items) && !loading && emptyState}
@@ -80,11 +113,15 @@ FavoriteSublist.propTypes = {
   itemUrl: PropTypes.func.isRequired,
   viewAllHref: PropTypes.string,
   emptyState: PropTypes.node,
+  showThumbnail: PropTypes.bool,
+  showDataSourceIcon: PropTypes.bool,
 };
 
 FavoriteSublist.defaultProps = {
   viewAllHref: null,
   emptyState: null,
+  showThumbnail: false,
+  showDataSourceIcon: false,
 };
 
 function RecentQueriesList() {
@@ -193,7 +230,7 @@ function RecentDashboardsList() {
               key={dashboard.id}
               href={dashboard.url}
               className="home-list-item--compact"
-              icon={<i className="zmdi zmdi-view-quilt home-list-item__fallback-icon" aria-hidden="true" />}
+              thumbnail={<DashboardThumbnail dashboardId={dashboard.id} alt={dashboard.name} size="home" />}
               title={dashboard.name}
               meta={
                 <>
@@ -235,6 +272,7 @@ function FavoritesPanel() {
         itemUrl={dashboard => dashboard.url}
         viewAllHref="dashboards/favorites"
         emptyState={dashboardEmptyState}
+        showThumbnail
       />
       <FavoriteSublist
         title="Queries"
@@ -242,6 +280,7 @@ function FavoritesPanel() {
         itemUrl={query => `queries/${query.id}`}
         viewAllHref="queries/favorites"
         emptyState={queryEmptyState}
+        showDataSourceIcon
       />
     </HomeSection>
   );

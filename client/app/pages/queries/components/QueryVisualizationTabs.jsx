@@ -134,13 +134,15 @@ export default function QueryVisualizationTabs({
           />
         ),
         children: queryResult ? (
-          <VisualizationRenderer
-            visualization={visualization}
-            queryResult={queryResult}
-            context="query"
-            filters={filters}
-            onFiltersChange={setFilters}
-          />
+          <div className="query-visualization-pane">
+            <VisualizationRenderer
+              visualization={visualization}
+              queryResult={queryResult}
+              context="query"
+              filters={filters}
+              onFiltersChange={setFilters}
+            />
+          </div>
         ) : (
           <EmptyState
             title="Query has no result"

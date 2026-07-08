@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 import time
 from pathlib import Path
 from typing import Any, Optional
@@ -24,6 +25,23 @@ from typing import Any, Optional
 import httpx
 from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
+
+_WORKSPACE_ROOT = Path(__file__).resolve().parents[2]
+if str(_WORKSPACE_ROOT) not in sys.path:
+    sys.path.insert(0, str(_WORKSPACE_ROOT))
+
+try:
+    from rewatch.assistant.visualization_helpers import (
+        build_visualization_hints,
+        enrich_visualizations_for_assistant,
+        normalize_visualization_options,
+        suggest_visualization_options,
+    )
+except ImportError:
+    build_visualization_hints = None  # type: ignore[assignment,misc]
+    enrich_visualizations_for_assistant = None  # type: ignore[assignment,misc]
+    normalize_visualization_options = None  # type: ignore[assignment,misc]
+    suggest_visualization_options = None  # type: ignore[assignment,misc]
 
 try:
     from rewatch_mcp.alert_catalog import alert_catalog
@@ -256,13 +274,15 @@ def _format_query_result(query_result: dict, max_rows: int) -> str:
         "row_count": len(rows),
         "rows": rows[:max_rows],
     }
+    if build_visualization_hints is not None:
+        out["visualization_hints"] = build_visualization_hints(columns, rows)
     if len(rows) > max_rows:
         out["note"] = f"Showing first {max_rows} of {len(rows)} rows."
     return _compact(out)
 
 
-@mcp.tool()
-def run_query(
+def _run_query_internal(
+    *,
     query_id: Optional[int] = None,
     query_text: Optional[str] = None,
     data_source_id: Optional[int] = None,
@@ -270,17 +290,7 @@ def run_query(
     max_age: int = -1,
     max_rows: int = 100,
     timeout_seconds: int = 120,
-) -> str:
-    """Execute a query and return its result rows.
-
-    Two modes:
-    * Saved query: pass ``query_id`` (plus ``parameters`` if the query is parameterized).
-    * Ad-hoc query: pass ``query_text`` and ``data_source_id``.
-
-    ``max_age`` controls caching: -1 returns any cached result (executing only
-    if none exists), 0 forces execution, N accepts results up to N seconds old.
-    Handles the background-job polling automatically.
-    """
+) -> dict[str, Any]:
     if query_id is not None:
         body: dict[str, Any] = {"max_age": max_age}
         if parameters:
@@ -308,7 +318,83 @@ def run_query(
     query_result = response.get("query_result")
     if not query_result:
         raise RuntimeError(f"Unexpected response: {_compact(response)[:2000]}")
-    return _format_query_result(query_result, max_rows)
+    data = query_result.get("data", {})
+    rows = data.get("rows", [])
+    columns = [c.get("name") for c in data.get("columns", [])]
+    result = {
+        "query_result_id": query_result.get("id"),
+        "retrieved_at": query_result.get("retrieved_at"),
+        "runtime_seconds": query_result.get("runtime"),
+        "columns": columns,
+        "row_count": len(rows),
+        "rows": rows[:max_rows],
+    }
+    if build_visualization_hints is not None:
+        result["visualization_hints"] = build_visualization_hints(columns, rows)
+    if len(rows) > max_rows:
+        result["note"] = f"Showing first {max_rows} of {len(rows)} rows."
+    return result
+
+
+def _execute_saved_query_validation(query_id: int, parameters: Optional[dict] = None, max_rows: int = 10) -> dict[str, Any]:
+    try:
+        result = _run_query_internal(
+            query_id=query_id,
+            parameters=parameters,
+            max_age=0,
+            max_rows=max_rows,
+            timeout_seconds=120,
+        )
+        return {"status": "ok", "message": f"Query ran successfully ({result.get('row_count', 0)} rows returned).", **result}
+    except RuntimeError as exc:
+        message = str(exc)
+        if "Missing parameter" in message:
+            return {"status": "needs_parameters", "message": message}
+        return {"status": "error", "message": message}
+
+
+def _normalize_viz_options_or_raise(
+    viz_type: str,
+    options: Optional[dict],
+    columns: list[str],
+    rows: list[dict[str, Any]],
+) -> tuple[dict[str, Any], list[str]]:
+    if normalize_visualization_options is None:
+        return dict(options or {}), []
+    return normalize_visualization_options(viz_type, options, columns, rows)
+
+
+@mcp.tool()
+def run_query(
+    query_id: Optional[int] = None,
+    query_text: Optional[str] = None,
+    data_source_id: Optional[int] = None,
+    parameters: Optional[dict] = None,
+    max_age: int = -1,
+    max_rows: int = 100,
+    timeout_seconds: int = 120,
+) -> str:
+    """Execute a query and return its result rows.
+
+    Two modes:
+    * Saved query: pass ``query_id`` (plus ``parameters`` if the query is parameterized).
+    * Ad-hoc query: pass ``query_text`` and ``data_source_id``.
+
+    ``max_age`` controls caching: -1 returns any cached result (executing only
+    if none exists), 0 forces execution, N accepts results up to N seconds old.
+    Handles the background-job polling automatically.
+    """
+    return _compact(
+        _run_query_internal(
+            query_id=query_id,
+            query_text=query_text,
+            data_source_id=data_source_id,
+            parameters=parameters,
+            max_age=max_age,
+            max_rows=max_rows,
+            timeout_seconds=timeout_seconds,
+        )
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -335,8 +421,33 @@ def search_queries(q: str, page: int = 1, page_size: int = 25) -> str:
 
 @mcp.tool()
 def get_query(query_id: int) -> str:
-    """Get a saved query: its SQL text, data source, parameters, schedule and visualizations."""
-    return _compact(_request("GET", f"/api/queries/{query_id}"))
+    """Get a saved query: its SQL text, data source, parameters, schedule and visualizations.
+
+    Also runs the query (max_age=0) and returns validation columns, visualization_hints,
+    and per-visualization options_health when column mappings are broken.
+    """
+    query = _request("GET", f"/api/queries/{query_id}")
+    validation = _execute_saved_query_validation(query_id)
+    query["validation"] = validation
+    if validation.get("status") == "ok" and enrich_visualizations_for_assistant is not None:
+        columns = validation.get("columns") or []
+        rows = validation.get("rows") or []
+        query["visualization_hints"] = validation.get("visualization_hints") or build_visualization_hints(columns, rows)
+        visualizations = query.get("visualizations")
+        if isinstance(visualizations, list):
+            query["visualizations"] = enrich_visualizations_for_assistant(visualizations, columns, rows)
+        unhealthy = [
+            viz
+            for viz in (query.get("visualizations") or [])
+            if isinstance(viz, dict) and not (viz.get("options_health") or {}).get("is_healthy", True)
+        ]
+        if unhealthy:
+            query["visualization_action_required"] = {
+                "action": "fix_query_visualizations",
+                "query_id": query_id,
+                "broken_visualization_ids": [viz.get("id") for viz in unhealthy if viz.get("id")],
+            }
+    return _compact(query)
 
 
 @mcp.tool()
@@ -873,16 +984,42 @@ def create_visualization(
     options: Optional[dict] = None,
     description: Optional[str] = None,
 ) -> str:
-    """Add a visualization to a query. Common ``type`` values: TABLE, CHART, COUNTER, DETAILS."""
+    """Add a visualization to a query. Common ``type`` values: TABLE, CHART, COUNTER, DETAILS.
+
+    For CHART/COUNTER/MAP/CHOROPLETH, omit options to auto-map columns from query results.
+    Invalid column names in options are corrected automatically.
+    """
     _ensure_writable()
+    validation = _execute_saved_query_validation(query_id)
+    if validation.get("status") != "ok":
+        raise RuntimeError(f"Cannot create visualization: {validation.get('message', validation)}")
+
+    viz_type = (type or "").upper()
+    columns = validation.get("columns") or []
+    rows = validation.get("rows") or []
+    user_options = options
+    if not user_options and suggest_visualization_options is not None:
+        resolved_options, corrections = _normalize_viz_options_or_raise(
+            viz_type,
+            suggest_visualization_options(viz_type, columns, rows),
+            columns,
+            rows,
+        )
+    else:
+        resolved_options, corrections = _normalize_viz_options_or_raise(viz_type, user_options, columns, rows)
+
     body = _merge_body(
         query_id=query_id,
         type=type,
         name=name,
-        options=options or {},
+        options=resolved_options or {},
         description=description,
     )
-    return _compact(_request("POST", "/api/visualizations", body=body))
+    result = _request("POST", "/api/visualizations", body=body)
+    if corrections:
+        result["column_corrections"] = corrections
+    result["query_validation"] = validation
+    return _compact(result)
 
 
 @mcp.tool()
@@ -892,11 +1029,86 @@ def update_visualization(
     type: Optional[str] = None,
     options: Optional[dict] = None,
     description: Optional[str] = None,
+    remap_columns: bool = True,
 ) -> str:
-    """Update a visualization on a query."""
+    """Update a visualization on a query.
+
+    When ``remap_columns`` is true (default), re-validates the parent query and auto-corrects
+    column mappings in options against live query results.
+    """
     _ensure_writable()
-    body = _merge_body(name=name, type=type, options=options, description=description)
-    return _compact(_request("POST", f"/api/visualizations/{visualization_id}", body=body))
+    current = _request("GET", f"/api/visualizations/{visualization_id}")
+    query_id = current.get("query_id")
+    corrections: list[str] = []
+    validation: Optional[dict[str, Any]] = None
+    resolved_options = options
+
+    if remap_columns and query_id:
+        validation = _execute_saved_query_validation(query_id)
+        if validation.get("status") != "ok":
+            raise RuntimeError(f"Cannot update visualization: {validation.get('message', validation)}")
+        viz_type = (type or current.get("type") or "").upper()
+        current_options = current.get("options") if isinstance(current.get("options"), dict) else {}
+        merged_options = {**current_options, **(options or {})}
+        resolved_options, corrections = _normalize_viz_options_or_raise(
+            viz_type,
+            merged_options,
+            validation.get("columns") or [],
+            validation.get("rows") or [],
+        )
+
+    body = _merge_body(name=name, type=type, options=resolved_options, description=description)
+    result = _request("POST", f"/api/visualizations/{visualization_id}", body=body)
+    if corrections:
+        result["column_corrections"] = corrections
+    if validation:
+        result["query_validation"] = validation
+    return _compact(result)
+
+
+@mcp.tool()
+def fix_query_visualizations(query_id: int) -> str:
+    """Fix all visualizations on a query by auto-correcting column mappings from live query results."""
+    _ensure_writable()
+    query = _request("GET", f"/api/queries/{query_id}")
+    validation = _execute_saved_query_validation(query_id)
+    if validation.get("status") != "ok":
+        raise RuntimeError(f"Cannot fix visualizations: {validation.get('message', validation)}")
+
+    columns = validation.get("columns") or []
+    rows = validation.get("rows") or []
+    fixed = []
+    skipped = []
+    for visualization in query.get("visualizations") or []:
+        if not isinstance(visualization, dict):
+            continue
+        viz_id = visualization.get("id")
+        viz_type = (visualization.get("type") or "").upper()
+        if not viz_id or viz_type in {"TABLE", "DETAILS"}:
+            skipped.append({"id": viz_id, "name": visualization.get("name"), "reason": "no column mapping"})
+            continue
+        current_options = visualization.get("options") if isinstance(visualization.get("options"), dict) else {}
+        resolved_options, corrections = _normalize_viz_options_or_raise(viz_type, current_options, columns, rows)
+        updated = _request(
+            "POST",
+            f"/api/visualizations/{viz_id}",
+            body={"name": visualization.get("name"), "options": resolved_options},
+        )
+        entry = {"id": viz_id, "name": updated.get("name"), "type": viz_type, "resolved_options": resolved_options}
+        if corrections:
+            entry["column_corrections"] = corrections
+        fixed.append(entry)
+
+    return _compact(
+        {
+            "query_id": query_id,
+            "query_validation": validation,
+            "fixed_count": len(fixed),
+            "skipped_count": len(skipped),
+            "fixed": fixed,
+            "skipped": skipped,
+        }
+    )
 
 
 @mcp.tool()

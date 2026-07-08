@@ -130,7 +130,7 @@ function DashboardComponent(props) {
         }
       />
       {!isEmpty(globalParameters) && (
-        <div className="dashboard-parameters m-b-10" data-test="DashboardParameters">
+        <div className="m-b-10" data-test="DashboardParameters">
           <Parameters
             parameters={globalParameters}
             onValuesChange={refreshDashboard}

@@ -6,6 +6,22 @@ div.tags-list {
   -ms-user-select: none; /* IE10+ */
 }
 
+.dashboard-list-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+}
+
+.dashboard-list-item--no-tags {
+  align-items: center;
+}
+
+.dashboard-list-item__details {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 /* same rule as for sidebar */
 @media (max-width: 990px) {
   .page-dashboard-list .page-header-actions {

@@ -27,6 +27,8 @@ import { currentUser } from "@/services/auth";
 import location from "@/services/location";
 import routes from "@/services/routes";
 
+import "./AlertsList.less";
+
 export const STATE_CLASS = {
   unknown: "label-warning",
   ok: "label-success",
@@ -102,8 +104,8 @@ function buildColumns(currentPage, refresh) {
     ),
     Columns.custom.sortable(
       (text, alert) => (
-        <React.Fragment>
-          <Link className="table-main-title" href={"alerts/" + alert.id}>
+        <div className="list-page-table__cell-stack">
+          <Link className="table-main-title" href={"alerts/" + alert.id} title={alert.name}>
             {alert.name}
           </Link>
           <AlertTagsControl
@@ -111,11 +113,13 @@ function buildColumns(currentPage, refresh) {
             tags={alert.tags}
             isArchived={alert.is_archived}
           />
-        </React.Fragment>
+        </div>
       ),
       {
         title: "Name",
         field: "name",
+        minWidth: 220,
+        ellipsis: true,
       }
     ),
     Columns.custom.sortable(
@@ -141,15 +145,32 @@ function buildColumns(currentPage, refresh) {
         ) : (
           "—"
         ),
-      { title: "Query", width: "20%" }
+      { title: "Query", width: "1%", ellipsis: true }
     ),
-    Columns.timeAgo.sortable({ title: "Last Triggered", field: "last_triggered_at", width: "1%" }),
+    Columns.timeAgo.sortable({
+      title: "Last Triggered",
+      field: "last_triggered_at",
+      width: "1%",
+      className: "text-nowrap",
+    }),
     Columns.custom((text, item) => (item.user ? item.user.name : ""), {
       title: "Created By",
       width: "1%",
+      className: "text-nowrap",
+      ellipsis: true,
     }),
-    Columns.timeAgo.sortable({ title: "Last Updated At", field: "updated_at", width: "1%" }),
-    Columns.dateTime.sortable({ title: "Created At", field: "created_at", width: "1%" }),
+    Columns.timeAgo.sortable({
+      title: "Last Updated At",
+      field: "updated_at",
+      width: "1%",
+      className: "text-nowrap",
+    }),
+    Columns.dateTime.sortable({
+      title: "Created At",
+      field: "created_at",
+      width: "1%",
+      className: "text-nowrap",
+    }),
     Columns.custom(
       (text, alert) => {
         const canArchive =

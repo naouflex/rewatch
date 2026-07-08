@@ -151,6 +151,47 @@ strong {
   }
 }
 
+.dashboard-page,
+.public-dashboard-page {
+  .container {
+    width: 100%;
+    max-width: none;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 48px;
+    padding-right: 48px;
+    box-sizing: border-box;
+  }
+}
+
+.query-page-wrapper--constrained {
+  width: 100%;
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 40px;
+  padding-right: 40px;
+  box-sizing: border-box;
+
+  &.query-fixed-layout {
+    min-height: 0;
+    height: 100%;
+  }
+
+  .query-fullscreen {
+    border-radius: var(--rd-radius-sm);
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-page .container,
+  .public-dashboard-page .container,
+  .query-page-wrapper--constrained {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
 .scrollbox {
   overflow: auto;
   position: relative;

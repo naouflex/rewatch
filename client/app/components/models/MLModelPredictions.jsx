@@ -6,6 +6,7 @@ import Link from "@/components/Link";
 import Tooltip from "@/components/Tooltip";
 import ItemsTable, { Columns } from "@/components/items-list/components/ItemsTable";
 import LoadingState from "@/components/items-list/components/LoadingState";
+import JsonViewInteractive from "@/components/json-view-interactive/JsonViewInteractive";
 import { PredictionsTagsControl } from "@/components/tags-control/TagsControl";
 import Button from "antd/lib/button";
 import { useTheme } from "@/components/ThemeProvider";

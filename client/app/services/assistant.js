@@ -1,6 +1,7 @@
 import { axios } from "@/services/axios";
 
 const THREAD_STORAGE_KEY = "rewatch_assistant_thread";
+const BUBBLE_OPEN_STORAGE_KEY = "rewatch_assistant_bubble_open";
 
 function readCookie(name) {
   const match = document.cookie.match(new RegExp(`(?:^|; )${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}=([^;]*)`));
@@ -103,6 +104,14 @@ const Assistant = {
       window.sessionStorage.setItem(THREAD_STORAGE_KEY, threadId);
     } else {
       window.sessionStorage.removeItem(THREAD_STORAGE_KEY);
+    }
+  },
+  getStoredBubbleOpen: () => window.sessionStorage.getItem(BUBBLE_OPEN_STORAGE_KEY) === "1",
+  setStoredBubbleOpen: open => {
+    if (open) {
+      window.sessionStorage.setItem(BUBBLE_OPEN_STORAGE_KEY, "1");
+    } else {
+      window.sessionStorage.removeItem(BUBBLE_OPEN_STORAGE_KEY);
     }
   },
 };

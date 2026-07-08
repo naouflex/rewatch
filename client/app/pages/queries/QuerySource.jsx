@@ -193,7 +193,7 @@ function QuerySource(props) {
   const deleteVisualization = useDeleteVisualization(query, setQuery);
 
   return (
-    <div className={cx("query-page-wrapper", { "query-fixed-layout": !isMobile })}>
+    <div className={cx("query-page-wrapper query-page-wrapper--constrained", { "query-fixed-layout": !isMobile })}>
       <QuerySourceAlerts query={query} dataSourcesAvailable={!dataSourcesLoaded || dataSources.length > 0} />
       <div className="container w-100 p-b-10">
         <QueryPageHeader

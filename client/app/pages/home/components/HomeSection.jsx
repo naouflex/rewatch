@@ -31,10 +31,14 @@ HomeListSkeleton.defaultProps = {
   compact: false,
 };
 
-export function HomeListItem({ href, icon, title, meta, badge, className }) {
+export function HomeListItem({ href, icon, thumbnail, title, meta, badge, className }) {
   return (
     <Link className={classNames("home-list-item", className)} href={href}>
-      {icon && <span className="home-list-item__icon">{icon}</span>}
+      {thumbnail ? (
+        <span className="home-list-item__thumbnail">{thumbnail}</span>
+      ) : (
+        icon && <span className="home-list-item__icon">{icon}</span>
+      )}
       <span className="home-list-item__content">
         <span className="home-list-item__title">{title}</span>
         {meta && <span className="home-list-item__meta">{meta}</span>}
@@ -47,6 +51,7 @@ export function HomeListItem({ href, icon, title, meta, badge, className }) {
 HomeListItem.propTypes = {
   href: PropTypes.string.isRequired,
   icon: PropTypes.node,
+  thumbnail: PropTypes.node,
   title: PropTypes.node.isRequired,
   meta: PropTypes.node,
   badge: PropTypes.node,
@@ -55,6 +60,7 @@ HomeListItem.propTypes = {
 
 HomeListItem.defaultProps = {
   icon: null,
+  thumbnail: null,
   meta: null,
   badge: null,
   className: null,

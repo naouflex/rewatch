@@ -8,12 +8,15 @@ import Widget from "./Widget";
 function TextboxWidget(props) {
   const { widget, canEdit } = props;
   const [text, setText] = useState(widget.text);
+  const renderAsHtml = !!widget.options?.renderAsHtml;
 
   const editTextBox = () => {
     TextboxDialog.showModal({
       text: widget.text,
-    }).onClose(newText => {
+      renderAsHtml,
+    }).onClose(({ text: newText, renderAsHtml: newRenderAsHtml }) => {
       widget.text = newText;
+      widget.options = { ...widget.options, renderAsHtml: !!newRenderAsHtml };
       setText(newText);
       return widget.save();
     });
@@ -25,9 +28,11 @@ function TextboxWidget(props) {
     return null;
   }
 
+  const content = renderAsHtml ? text || "" : markdown.toHTML(text || "");
+
   return (
     <Widget {...props} menuOptions={canEdit ? TextboxMenuOptions : null} className="widget-text">
-      <HtmlContent className="body-row-auto scrollbox t-body p-15 markdown">{markdown.toHTML(text || "")}</HtmlContent>
+      <HtmlContent className="body-row-auto scrollbox t-body p-15 markdown">{content}</HtmlContent>
     </Widget>
   );
 }

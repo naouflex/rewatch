@@ -12,7 +12,9 @@ import { confirmDialog } from "@/components/ModalShell/confirmDialog";
 
 import AlertEvents from "@/services/alert-events";
 import { destinationLabel, statusTag } from "@/pages/alert-events/alertEventUtils";
-import AlertHistoryWhen from "./AlertHistoryWhen";
+import TimeAgo from "@/components/TimeAgo";
+import { FIXED_TABLE_WIDTHS as W } from "@/components/items-list/fixedTableWidths";
+import AlertHistoryChart from "./AlertHistoryChart";
 
 import "@/components/items-list/list-page-layout.less";
 import "./AlertHistory.less";
@@ -36,6 +38,7 @@ export default class AlertHistory extends React.Component {
     page: 1,
     pageSize: DEFAULT_PAGE_SIZE,
     selectedEvent: null,
+    refreshToken: 0,
   };
 
   componentDidMount() {
@@ -61,6 +64,7 @@ export default class AlertHistory extends React.Component {
   };
 
   refresh = () => {
+    this.setState(state => ({ refreshToken: state.refreshToken + 1 }));
     this.loadPage(this.state.page, this.state.pageSize);
   };
 
@@ -72,6 +76,7 @@ export default class AlertHistory extends React.Component {
     const { page, pageSize, totalCount } = this.state;
     const newCount = Math.max(0, totalCount - 1);
     const maxPage = Math.max(1, Math.ceil(newCount / pageSize) || 1);
+    this.setState(state => ({ refreshToken: state.refreshToken + 1 }));
     this.loadPage(Math.min(page, maxPage), pageSize);
   };
 
@@ -95,14 +100,14 @@ export default class AlertHistory extends React.Component {
 
   render() {
     const { canManage } = this.props;
-    const { events, loading, totalCount, page, pageSize, selectedEvent } = this.state;
+    const { events, loading, totalCount, page, pageSize, selectedEvent, refreshToken } = this.state;
 
     const columns = [
       {
-        title: "When",
+        title: "Date",
         dataIndex: "created_at",
-        render: value => <AlertHistoryWhen date={value} />,
-        width: 140,
+        render: value => <TimeAgo date={value} variation="timeAgoInTooltip" />,
+        width: W.dateTime,
         ellipsis: true,
       },
       {
@@ -171,6 +176,7 @@ export default class AlertHistory extends React.Component {
             Refresh
           </Button>
         </div>
+        <AlertHistoryChart alertId={this.props.alertId} refreshToken={refreshToken} />
         <div className="list-page-table">
           <Table
             rowKey="id"

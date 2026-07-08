@@ -9,7 +9,6 @@ import { confirmDialog } from "@/components/ModalShell/confirmDialog";
 import Tooltip from "@/components/Tooltip";
 import FavoritesControl from "@/components/FavoritesControl";
 import EditInPlace from "@/components/EditInPlace";
-import PlainButton from "@/components/PlainButton";
 import { DashboardTagsControl } from "@/components/tags-control/TagsControl";
 import getTags from "@/services/getTags";
 import { clientConfig } from "@/services/auth";
@@ -144,17 +143,17 @@ function DashboardMoreOptionsButton({ dashboardConfiguration }) {
       {
         key: "edit",
         className: cx({ hidden: gridDisabled }),
-        label: <PlainButton onClick={() => setEditingLayout(true)}>Edit</PlainButton>,
+        label: "Edit",
       },
       ...(!isDuplicating && dashboard.canEdit()
         ? [
             {
               key: "fork",
               label: (
-                <PlainButton onClick={duplicateDashboard}>
+                <>
                   Fork <i className="fa fa-external-link m-l-5" aria-hidden="true" />
                   <span className="sr-only">(opens in a new tab)</span>
-                </PlainButton>
+                </>
               ),
             },
           ]
@@ -163,7 +162,7 @@ function DashboardMoreOptionsButton({ dashboardConfiguration }) {
         ? [
             {
               key: "managePermissions",
-              label: <PlainButton onClick={managePermissions}>Manage Permissions</PlainButton>,
+              label: "Manage Permissions",
             },
           ]
         : []),
@@ -171,26 +170,41 @@ function DashboardMoreOptionsButton({ dashboardConfiguration }) {
         ? [
             {
               key: "unpublish",
-              label: <PlainButton onClick={togglePublished}>Unpublish</PlainButton>,
+              label: "Unpublish",
             },
           ]
         : []),
       {
         key: "archive",
-        label: <PlainButton onClick={archive}>Archive</PlainButton>,
+        label: "Archive",
       },
     ],
-    [
-      archive,
-      dashboard,
-      duplicateDashboard,
-      gridDisabled,
-      isDashboardOwnerOrAdmin,
-      isDuplicating,
-      managePermissions,
-      setEditingLayout,
-      togglePublished,
-    ]
+    [dashboard, gridDisabled, isDashboardOwnerOrAdmin, isDuplicating]
+  );
+
+  const onMoreOptionsMenuClick = useCallback(
+    ({ key }) => {
+      switch (key) {
+        case "edit":
+          setEditingLayout(true);
+          break;
+        case "fork":
+          duplicateDashboard();
+          break;
+        case "managePermissions":
+          managePermissions();
+          break;
+        case "unpublish":
+          togglePublished();
+          break;
+        case "archive":
+          archive();
+          break;
+        default:
+          break;
+      }
+    },
+    [archive, duplicateDashboard, managePermissions, setEditingLayout, togglePublished]
   );
 
   return (
@@ -199,6 +213,7 @@ function DashboardMoreOptionsButton({ dashboardConfiguration }) {
       placement="bottomRight"
       menu={{
         items: moreOptionsMenuItems,
+        onClick: onMoreOptionsMenuClick,
         "data-test": "DashboardMoreButtonMenu",
       }}>
       <Button className="icon-button m-l-5" data-test="DashboardMoreButton" aria-label="More actions">
