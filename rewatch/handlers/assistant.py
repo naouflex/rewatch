@@ -8,6 +8,7 @@ from flask_restful import abort
 
 from rewatch import models, settings
 from rewatch.assistant import storage
+from rewatch.assistant.decision_graph import merge_thread_decision_graph
 from rewatch.assistant.previews import render_dashboard_svg, render_query_svg, render_visualization_svg
 from rewatch.assistant.service import chat
 from rewatch.assistant.query_generation import generate_query
@@ -126,6 +127,13 @@ class AssistantThreadMessagesResource(BaseResource):
     def get(self, thread_id):
         _ensure_assistant_enabled(self.current_user)
         return storage.list_messages(thread_id, self.current_user, self.current_org)
+
+
+class AssistantThreadDecisionGraphResource(BaseResource):
+    def get(self, thread_id):
+        _ensure_assistant_enabled(self.current_user)
+        messages = storage.list_messages(thread_id, self.current_user, self.current_org)
+        return merge_thread_decision_graph(messages, thread_id)
 
 
 class AssistantGenerateQueryResource(BaseResource):

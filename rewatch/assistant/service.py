@@ -4,18 +4,12 @@ from __future__ import annotations
 
 import json
 import logging
-import time
 from typing import Any, Callable, Optional
 
-from openai import (
-    APIConnectionError,
-    APITimeoutError,
-    InternalServerError,
-    OpenAI,
-    RateLimitError,
-)
+from openai import OpenAI
 
 from rewatch import settings
+from rewatch.assistant.openai_retry import call_with_retry, create_openai_client
 from rewatch.assistant.activity import tool_result_summary, tool_start_label
 from rewatch.assistant.decision_graph import DecisionGraph
 from rewatch.assistant.links import append_preview_markdown, collect_previews, normalize_reply_links
@@ -100,13 +94,7 @@ Guidelines:
 
 
 def _client() -> OpenAI:
-    if not settings.OPENAI_API_KEY:
-        raise RuntimeError("OpenAI API key is not configured")
-    return OpenAI(api_key=settings.OPENAI_API_KEY)
-
-
-_RETRYABLE_ERRORS = (RateLimitError, APIConnectionError, APITimeoutError, InternalServerError)
-_MAX_API_ATTEMPTS = 3
+    return create_openai_client()
 
 
 def _stream_completion(
@@ -131,49 +119,44 @@ def _stream_completion(
     if settings.OPENAI_REASONING_EFFORT:
         kwargs["reasoning_effort"] = settings.OPENAI_REASONING_EFFORT
 
-    last_error: Optional[Exception] = None
-    for attempt in range(_MAX_API_ATTEMPTS):
+    emitted_any_delta = False
+
+    def _consume_stream() -> dict[str, Any]:
+        nonlocal emitted_any_delta
+        emitted_any_delta = False
         content_parts: list[str] = []
         tool_calls: dict[int, dict[str, str]] = {}
-        emitted_any_delta = False
-        try:
-            stream = client.chat.completions.create(**kwargs)
-            for chunk in stream:
-                if not chunk.choices:
-                    continue
-                delta = chunk.choices[0].delta
-                if delta is None:
-                    continue
-                if delta.content:
-                    content_parts.append(delta.content)
-                    emitted_any_delta = True
-                    _emit(on_activity, {"type": "reply_delta", "text": delta.content})
-                for tc in delta.tool_calls or []:
-                    entry = tool_calls.setdefault(tc.index, {"id": "", "name": "", "arguments": ""})
-                    if tc.id:
-                        entry["id"] = tc.id
-                    if tc.function:
-                        if tc.function.name:
-                            entry["name"] = tc.function.name
-                        if tc.function.arguments:
-                            entry["arguments"] += tc.function.arguments
-            return {
-                "content": "".join(content_parts),
-                "tool_calls": [tool_calls[i] for i in sorted(tool_calls)],
-            }
-        except _RETRYABLE_ERRORS as exc:
-            last_error = exc
-            # If tokens already reached the client we can't cleanly retry the
-            # same turn — surface the error instead of duplicating output.
-            if emitted_any_delta:
-                raise
-            if attempt < _MAX_API_ATTEMPTS - 1:
-                wait = 2**attempt
-                logger.warning("Assistant OpenAI transient error (attempt %s): %s", attempt + 1, exc)
-                _emit(on_activity, {"type": "status", "message": "AI service hiccup — retrying…"})
-                time.sleep(wait)
+        stream = client.chat.completions.create(**kwargs)
+        for chunk in stream:
+            if not chunk.choices:
+                continue
+            delta = chunk.choices[0].delta
+            if delta is None:
+                continue
+            if delta.content:
+                content_parts.append(delta.content)
+                emitted_any_delta = True
+                _emit(on_activity, {"type": "reply_delta", "text": delta.content})
+            for tc in delta.tool_calls or []:
+                entry = tool_calls.setdefault(tc.index, {"id": "", "name": "", "arguments": ""})
+                if tc.id:
+                    entry["id"] = tc.id
+                if tc.function:
+                    if tc.function.name:
+                        entry["name"] = tc.function.name
+                    if tc.function.arguments:
+                        entry["arguments"] += tc.function.arguments
+        return {
+            "content": "".join(content_parts),
+            "tool_calls": [tool_calls[i] for i in sorted(tool_calls)],
+        }
 
-    raise last_error  # type: ignore[misc]
+    return call_with_retry(
+        _consume_stream,
+        on_status=on_activity,
+        can_retry=lambda: not emitted_any_delta,
+        log_label="Assistant OpenAI",
+    )
 
 
 def _emit(on_activity: Optional[ActivityCallback], event: dict[str, Any]) -> None:
@@ -402,7 +385,7 @@ def chat(
             graph.finish_step()
             continue
 
-        graph.add_decision(label="Composing final reply", detail=turn["content"] or None)
+        compose_id = graph.add_decision(label="Composing final reply", detail=turn["content"] or None)
         graph.finish_step()
         try:
             reply = normalize_reply_links(turn["content"] or "")
@@ -411,7 +394,7 @@ def chat(
             logger.exception("Assistant reply formatting failed")
             reply = (turn["content"] or "").strip() or f"I finished the requested actions but hit a formatting error: {exc}"
         conversation.append({"role": "assistant", "content": reply})
-        graph.complete(label="Reply sent")
+        graph.complete(label="Reply sent", parent_id=compose_id)
         client_messages = [m for m in conversation if m["role"] in ("user", "assistant") and m.get("content")]
         return {"reply": reply, "messages": client_messages, "decision_graph": graph.to_dict()}
 

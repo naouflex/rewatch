@@ -1,0 +1,339 @@
+.assistant-conversation-graph {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 100%;
+  border-left: 1px solid var(--rd-color-divider);
+  background: var(--rd-color-bg-subtle);
+
+  &.is-embedded {
+    border-left: 0;
+    background: transparent;
+    height: 100%;
+  }
+
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--rd-color-divider);
+    background: var(--rd-color-surface-alt);
+
+    h3 {
+      margin: 0;
+      font-size: 14px;
+      font-weight: var(--rd-font-weight-semibold);
+      color: var(--rd-color-text);
+    }
+
+    p {
+      margin: 2px 0 0;
+      font-size: 11px;
+      color: var(--rd-color-text-secondary);
+    }
+
+    .anticon {
+      margin-top: 2px;
+      color: var(--rd-color-brand);
+    }
+  }
+
+  &__count {
+    margin-left: auto;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--rd-color-surface);
+    color: var(--rd-color-text-muted);
+    font-size: 11px;
+  }
+
+  &__canvas-wrap {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    overflow-x: auto;
+    overflow-y: auto;
+    padding: 12px 12px 20px;
+    scroll-behavior: smooth;
+    touch-action: none;
+
+    &.is-pannable {
+      cursor: grab;
+    }
+
+    &.is-dragging {
+      cursor: grabbing;
+      user-select: none;
+      scroll-behavior: auto;
+    }
+  }
+
+  &__timeline-hint {
+    position: sticky;
+    left: 0;
+    top: 0;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+    padding: 4px 10px;
+    border-radius: var(--rd-radius-sm);
+    background: color-mix(in srgb, var(--rd-color-brand-soft) 70%, var(--rd-color-surface));
+    color: var(--rd-color-text-secondary);
+    font-size: 11px;
+  }
+
+  &__zoom-controls {
+    position: sticky;
+    top: 0;
+    left: 0;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 8px;
+    padding: 4px;
+    border: 1px solid var(--rd-color-divider);
+    border-radius: var(--rd-radius-sm);
+    background: color-mix(in srgb, var(--rd-color-surface) 92%, transparent);
+    backdrop-filter: blur(4px);
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--rd-color-shadow) 12%, transparent);
+  }
+
+  &__zoom-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: 0;
+    border-radius: var(--rd-radius-sm);
+    background: transparent;
+    color: var(--rd-color-text-secondary);
+    cursor: pointer;
+
+    &:hover,
+    &:focus {
+      background: var(--rd-color-surface-hover);
+      color: var(--rd-color-text);
+    }
+  }
+
+  &__zoom-label {
+    min-width: 42px;
+    text-align: center;
+    font-size: 11px;
+    font-weight: var(--rd-font-weight-medium);
+    color: var(--rd-color-text-muted);
+  }
+
+  &__empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 180px;
+    padding: 16px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--rd-color-text-muted);
+  }
+
+  &__canvas {
+    display: block;
+    min-width: 100%;
+    height: auto;
+    pointer-events: none;
+  }
+
+  &__timeline-rail {
+    stroke: color-mix(in srgb, var(--rd-color-brand) 28%, var(--rd-color-divider));
+    stroke-width: 2;
+    stroke-dasharray: 6 5;
+  }
+
+  &__turn-label {
+    font-size: 10px;
+    font-weight: var(--rd-font-weight-semibold);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    fill: var(--rd-color-text-muted);
+  }
+
+  &__turn-divider {
+    stroke: color-mix(in srgb, var(--rd-color-brand) 16%, var(--rd-color-divider));
+    stroke-width: 1;
+    stroke-dasharray: 4 6;
+  }
+
+  &__arrow-head {
+    fill: var(--rd-color-brand);
+  }
+
+  &__edge {
+    fill: none;
+    stroke: color-mix(in srgb, var(--rd-color-brand) 55%, var(--rd-color-divider));
+    stroke-width: 2.2;
+    opacity: 0.95;
+
+    &.horizontal {
+      stroke: var(--rd-color-brand);
+      stroke-width: 2.6;
+    }
+
+    &.vertical {
+      stroke: color-mix(in srgb, var(--rd-color-text-muted) 70%, var(--rd-color-divider));
+      stroke-width: 2;
+    }
+  }
+
+  &__node {
+    &.user,
+    &.is-user {
+      .assistant-conversation-graph__node-bg {
+        fill: color-mix(in srgb, var(--rd-color-accent) 20%, var(--rd-color-surface));
+        stroke: var(--rd-color-accent);
+        stroke-width: 2;
+      }
+
+      .assistant-conversation-graph__node-type {
+        fill: var(--rd-color-accent);
+        font-weight: 700;
+      }
+
+      .assistant-conversation-graph__node-label {
+        font-size: 12px;
+        font-weight: var(--rd-font-weight-semibold);
+      }
+    }
+
+    &.root .assistant-conversation-graph__node-bg,
+    &.step .assistant-conversation-graph__node-bg {
+      fill: color-mix(in srgb, var(--rd-color-brand) 10%, var(--rd-color-surface));
+      stroke: color-mix(in srgb, var(--rd-color-brand) 30%, var(--rd-color-divider));
+    }
+
+    &.decision .assistant-conversation-graph__node-bg {
+      fill: color-mix(in srgb, var(--rd-color-warning) 12%, var(--rd-color-surface));
+      stroke: color-mix(in srgb, var(--rd-color-warning) 35%, var(--rd-color-divider));
+    }
+
+    &.tool .assistant-conversation-graph__node-bg {
+      fill: color-mix(in srgb, var(--rd-color-success) 10%, var(--rd-color-surface));
+      stroke: color-mix(in srgb, var(--rd-color-success) 30%, var(--rd-color-divider));
+    }
+
+    &.outcome .assistant-conversation-graph__node-bg {
+      fill: color-mix(in srgb, var(--rd-color-brand) 18%, var(--rd-color-surface));
+      stroke: var(--rd-color-brand);
+    }
+
+    &.running.is-live .assistant-conversation-graph__node-bg,
+    &.running .assistant-conversation-graph__node-bg {
+      stroke-dasharray: 4 3;
+      animation: assistant-graph-pulse 1.2s ease-in-out infinite;
+    }
+
+    &.error .assistant-conversation-graph__node-bg {
+      stroke: var(--rd-color-danger);
+    }
+
+    &.is-group {
+      .assistant-conversation-graph__node-bg {
+        fill: color-mix(in srgb, var(--rd-color-brand) 8%, var(--rd-color-surface));
+        stroke: color-mix(in srgb, var(--rd-color-brand) 40%, var(--rd-color-divider));
+        stroke-dasharray: 5 4;
+      }
+
+      .assistant-conversation-graph__node-type {
+        fill: var(--rd-color-brand);
+      }
+
+      &:hover .assistant-conversation-graph__node-bg {
+        fill: color-mix(in srgb, var(--rd-color-brand) 14%, var(--rd-color-surface));
+      }
+    }
+  }
+
+  &__node-toggle {
+    font-size: 10px;
+    font-weight: var(--rd-font-weight-semibold);
+    fill: var(--rd-color-brand);
+    text-decoration: underline;
+  }
+
+  &__node-expand {
+    font-size: 9px;
+    font-weight: var(--rd-font-weight-semibold);
+    fill: var(--rd-color-brand);
+  }
+
+  &__node-stripe {
+    fill: var(--rd-color-accent);
+  }
+
+  &__node-avatar {
+    fill: color-mix(in srgb, var(--rd-color-accent) 24%, var(--rd-color-surface));
+    stroke: var(--rd-color-accent);
+    stroke-width: 1.5;
+  }
+
+  &__node-avatar-label {
+    font-size: 8px;
+    font-weight: 700;
+    fill: var(--rd-color-accent);
+  }
+
+  &__node-bg {
+    fill: var(--rd-color-surface);
+    stroke: var(--rd-color-divider);
+    stroke-width: 1.2;
+  }
+
+  &__node-type {
+    font-size: 9px;
+    font-weight: var(--rd-font-weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    fill: var(--rd-color-text-muted);
+  }
+
+  &__node-turn {
+    font-size: 8px;
+    font-weight: var(--rd-font-weight-medium);
+    fill: var(--rd-color-text-muted);
+  }
+
+  &__node-label {
+    font-size: 11px;
+    font-weight: var(--rd-font-weight-medium);
+    fill: var(--rd-color-text);
+  }
+
+  &__node-meta {
+    font-size: 10px;
+    fill: var(--rd-color-text-secondary);
+
+    &.is-result {
+      fill: color-mix(in srgb, var(--rd-color-success) 70%, var(--rd-color-text));
+    }
+
+    &.is-error {
+      fill: var(--rd-color-danger);
+      font-weight: var(--rd-font-weight-semibold);
+    }
+  }
+}
+
+@keyframes assistant-graph-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.65;
+  }
+}
+

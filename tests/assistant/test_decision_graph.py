@@ -1,6 +1,6 @@
 """Tests for assistant decision graph tracking."""
 
-from rewatch.assistant.decision_graph import DecisionGraph
+from rewatch.assistant.decision_graph import DecisionGraph, merge_thread_decision_graph
 
 
 def test_decision_graph_builds_hierarchy():
@@ -34,3 +34,57 @@ def test_decision_graph_records_tool_error():
     assert len(tool_nodes) == 1
     assert tool_nodes[0]["status"] == "error"
     assert tool_nodes[0]["error"] == "Permission denied"
+
+
+def test_complete_outcome_follows_compose_decision():
+    graph = DecisionGraph()
+    graph.start()
+    graph.start_step(0)
+    compose_id = graph.add_decision(label="Composing final reply", detail="Here is the answer.")
+    graph.finish_step()
+    outcome_id = graph.complete(label="Reply sent", parent_id=compose_id)
+
+    nodes = graph.to_dict()["nodes"]
+    outcome = next(node for node in nodes if node["id"] == outcome_id)
+    compose = next(node for node in nodes if node["id"] == compose_id)
+
+    assert outcome["parent_id"] == compose_id
+    assert nodes.index(compose) < nodes.index(outcome)
+
+
+def test_merge_thread_decision_graph_links_turns():
+    messages = [
+        {"role": "user", "content": "List dashboards"},
+        {
+            "role": "assistant",
+            "content": "Here you go.",
+            "decision_graph": {
+                "nodes": [
+                    {"id": "g1", "parent_id": None, "type": "root", "label": "Analyzing"},
+                    {"id": "g2", "parent_id": "g1", "type": "tool", "label": "Listing dashboards"},
+                    {"id": "g3", "parent_id": "g1", "type": "outcome", "label": "Reply sent"},
+                ]
+            },
+        },
+        {"role": "user", "content": "Create one"},
+        {
+            "role": "assistant",
+            "content": "Done.",
+            "decision_graph": {
+                "nodes": [
+                    {"id": "g1", "parent_id": None, "type": "root", "label": "Planning"},
+                    {"id": "g2", "parent_id": "g1", "type": "outcome", "label": "Reply sent"},
+                ]
+            },
+        },
+    ]
+
+    merged = merge_thread_decision_graph(messages, "thread-1")
+
+    assert merged["thread_id"] == "thread-1"
+    assert any(node["type"] == "user" for node in merged["nodes"])
+    assert merged["nodes"][0]["id"] == "turn0_user"
+    assert merged["nodes"][1]["id"] == "turn0_g1"
+    assert merged["nodes"][1]["parent_id"] == "turn0_user"
+    assert merged["nodes"][4]["id"] == "turn1_user"
+    assert merged["nodes"][4]["parent_id"] == "turn0_g3"

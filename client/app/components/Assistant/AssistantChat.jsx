@@ -10,6 +10,7 @@ import CloseOutlined from "@ant-design/icons/CloseOutlined";
 import HistoryOutlined from "@ant-design/icons/HistoryOutlined";
 import PlusOutlined from "@ant-design/icons/PlusOutlined";
 import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
+import ApartmentOutlined from "@ant-design/icons/ApartmentOutlined";
 import { useCurrentRoute } from "@/components/ApplicationArea/Router";
 import Assistant from "@/services/assistant";
 import { buildAssistantPageContext } from "@/services/assistantPageContext";
@@ -65,6 +66,10 @@ export default function AssistantChat({
   threadId,
   onThreadIdChange,
   onThreadsChanged,
+  onMessagesChange,
+  onLiveGraphChange,
+  onOpenConversationGraph,
+  conversationGraphNodeCount,
   onClose,
   showOpenFullPage,
 }) {
@@ -86,6 +91,22 @@ export default function AssistantChat({
   const pollGenerationRef = useRef(0);
   const currentRoute = useCurrentRoute();
   const pageContext = useMemo(() => buildAssistantPageContext(currentRoute), [currentRoute]);
+
+  useEffect(() => {
+    if (!onMessagesChange) {
+      return;
+    }
+    const conversationMessages = messages.filter(
+      message => !(message.role === "assistant" && message.content === WELCOME.content && messages.length <= 1)
+    );
+    onMessagesChange(conversationMessages);
+  }, [messages, onMessagesChange]);
+
+  useEffect(() => {
+    if (onLiveGraphChange) {
+      onLiveGraphChange(thinkingGraph);
+    }
+  }, [thinkingGraph, onLiveGraphChange]);
 
   const pollForPendingReply = useCallback(async (id, generation) => {
     setLoading(true);
@@ -361,6 +382,19 @@ export default function AssistantChat({
           <div className="subtitle">Queries · Charts · Dashboards · Alerts · Web · ML</div>
         </div>
         <div className="assistant-chat-header-actions">
+          {onOpenConversationGraph && (
+            <button
+              type="button"
+              className="assistant-header-btn assistant-header-btn--graph"
+              onClick={onOpenConversationGraph}
+              disabled={!threadId}>
+              <ApartmentOutlined aria-hidden="true" />
+              <span>Decision graph</span>
+              {conversationGraphNodeCount > 0 && (
+                <span className="assistant-header-btn__badge">{conversationGraphNodeCount}</span>
+              )}
+            </button>
+          )}
           {showOpenFullPage && (
             <Link href="assistant" className="assistant-header-btn">
               Open full page
@@ -520,6 +554,10 @@ AssistantChat.propTypes = {
   threadId: PropTypes.string,
   onThreadIdChange: PropTypes.func.isRequired,
   onThreadsChanged: PropTypes.func,
+  onMessagesChange: PropTypes.func,
+  onLiveGraphChange: PropTypes.func,
+  onOpenConversationGraph: PropTypes.func,
+  conversationGraphNodeCount: PropTypes.number,
   onClose: PropTypes.func,
   showOpenFullPage: PropTypes.bool,
 };
@@ -528,6 +566,10 @@ AssistantChat.defaultProps = {
   compact: false,
   threadId: null,
   onThreadsChanged: null,
+  onMessagesChange: null,
+  onLiveGraphChange: null,
+  onOpenConversationGraph: null,
+  conversationGraphNodeCount: 0,
   onClose: null,
   showOpenFullPage: false,
 };

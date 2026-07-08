@@ -1,7 +1,9 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import routeWithUserSession from "@/components/ApplicationArea/routeWithUserSession";
 import AssistantChat from "@/components/Assistant/AssistantChat";
+import AssistantConversationGraphModal from "@/components/Assistant/AssistantConversationGraphModal";
 import AssistantThreadSidebar from "@/components/Assistant/AssistantThreadSidebar";
+import { mergeConversationGraph } from "@/components/Assistant/conversationGraph";
 import { clientConfig } from "@/services/auth";
 import Assistant from "@/services/assistant";
 import routes from "@/services/routes";
@@ -13,6 +15,21 @@ function AssistantPage() {
   const [threads, setThreads] = useState([]);
   const [threadsLoading, setThreadsLoading] = useState(true);
   const [activeThreadId, setActiveThreadId] = useState(Assistant.getStoredThreadId());
+  const [conversationMessages, setConversationMessages] = useState([]);
+  const [liveGraph, setLiveGraph] = useState(null);
+  const [graphModalOpen, setGraphModalOpen] = useState(false);
+
+  const conversationGraph = useMemo(() => {
+    if (!activeThreadId) {
+      return { thread_id: null, nodes: [] };
+    }
+    const liveTurnIndex = conversationMessages.filter(message => message.role === "assistant").length;
+    return mergeConversationGraph(conversationMessages, {
+      threadId: activeThreadId,
+      liveGraph,
+      liveTurnIndex,
+    });
+  }, [activeThreadId, conversationMessages, liveGraph]);
 
   const refreshThreads = useCallback(async () => {
     setThreadsLoading(true);
@@ -55,12 +72,17 @@ function AssistantPage() {
 
   const handleSelectThread = useCallback(id => {
     setActiveThreadId(id);
+    setConversationMessages([]);
+    setLiveGraph(null);
+    setGraphModalOpen(false);
     Assistant.setStoredThreadId(id);
   }, []);
 
   const handleCreateThread = useCallback(async () => {
     const thread = await Assistant.createThread();
     await refreshThreads();
+    setConversationMessages([]);
+    setLiveGraph(null);
     handleSelectThread(thread.id);
   }, [handleSelectThread, refreshThreads]);
 
@@ -108,9 +130,23 @@ function AssistantPage() {
             threadId={activeThreadId}
             onThreadIdChange={handleSelectThread}
             onThreadsChanged={refreshThreads}
+            onMessagesChange={setConversationMessages}
+            onLiveGraphChange={setLiveGraph}
+            onOpenConversationGraph={() => setGraphModalOpen(true)}
+            conversationGraphNodeCount={conversationGraph.nodes.length}
           />
         </div>
         </div>
+        <AssistantConversationGraphModal
+          open={graphModalOpen}
+          onClose={() => setGraphModalOpen(false)}
+          graph={conversationGraph}
+          emptyLabel={
+            activeThreadId
+              ? "Send a message to start building this conversation graph."
+              : "Select or start a chat to view its decision graph."
+          }
+        />
       </div>
     </div>
   );

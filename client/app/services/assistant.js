@@ -51,6 +51,7 @@ const Assistant = {
   createThread: () => axios.post("api/assistant/threads"),
   deleteThread: threadId => axios.delete(`api/assistant/threads/${threadId}`),
   getMessages: threadId => axios.get(`api/assistant/threads/${threadId}/messages`),
+  getThreadDecisionGraph: threadId => axios.get(`api/assistant/threads/${threadId}/decision_graph`),
   chat: ({ threadId, message, pageContext }) => axios.post("api/assistant/chat", { thread_id: threadId, message, page_context: pageContext }),
   generateQuery: ({
     prompt,

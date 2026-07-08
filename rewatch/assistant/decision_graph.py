@@ -165,18 +165,18 @@ class DecisionGraph:
             fields["error"] = error
         self._update(graph_id, **fields)
 
-    def complete(self, *, label: str = "Reply ready") -> str:
+    def complete(self, *, label: str = "Reply ready", parent_id: Optional[str] = None) -> str:
         if self._step_id:
             self.finish_step()
         if self._root_id:
             self._update(self._root_id, status="done", finished_at=_now_ms(), label=label)
 
-        parent_id = self._root_id
+        resolved_parent = parent_id or self._root_id
         node_id = self._next_id()
         self._append(
             {
                 "id": node_id,
-                "parent_id": parent_id,
+                "parent_id": resolved_parent,
                 "type": "outcome",
                 "label": label,
                 "status": "done",
@@ -188,3 +188,83 @@ class DecisionGraph:
 
     def to_dict(self) -> dict[str, Any]:
         return {"nodes": self.nodes}
+
+
+def _truncate_text(text: str, limit: int = 96) -> str:
+    value = (text or "").strip().replace("\n", " ")
+    if len(value) <= limit:
+        return value or "Message"
+    return value[: limit - 1] + "…"
+
+
+def merge_thread_decision_graph(messages: list[dict[str, Any]], thread_id: str) -> dict[str, Any]:
+    """Merge per-turn decision graphs into one conversation-level graph."""
+    nodes: list[dict[str, Any]] = []
+    previous_anchor_id: Optional[str] = None
+    turn_index = 0
+
+    for message in messages:
+        role = message.get("role")
+        if role == "user":
+            user_id = f"turn{turn_index}_user"
+            nodes.append(
+                {
+                    "id": user_id,
+                    "parent_id": previous_anchor_id,
+                    "type": "user",
+                    "label": _truncate_text(message.get("content") or "", limit=10000),
+                    "content": message.get("content") or "",
+                    "status": "done",
+                    "turn": turn_index,
+                    "turn_label": f"Turn {turn_index + 1}",
+                }
+            )
+            previous_anchor_id = user_id
+            continue
+
+        if role != "assistant":
+            continue
+
+        turn_nodes = (message.get("decision_graph") or {}).get("nodes") or []
+        if not turn_nodes:
+            turn_index += 1
+            continue
+
+        id_map: dict[str, str] = {}
+        turn_outcome_id: Optional[str] = None
+        for node in turn_nodes:
+            old_id = node["id"]
+            new_id = f"turn{turn_index}_{old_id}"
+            id_map[old_id] = new_id
+
+            parent_id = node.get("parent_id")
+            if parent_id and parent_id in id_map:
+                new_parent_id = id_map[parent_id]
+            elif parent_id is None:
+                new_parent_id = previous_anchor_id
+            else:
+                new_parent_id = previous_anchor_id
+
+            nodes.append(
+                {
+                    **node,
+                    "id": new_id,
+                    "parent_id": new_parent_id,
+                    "turn": turn_index,
+                }
+            )
+            if node.get("type") == "outcome":
+                turn_outcome_id = new_id
+
+        reply_text = (message.get("content") or "").strip()
+        if reply_text and turn_outcome_id:
+            for node in nodes:
+                if node["id"] == turn_outcome_id:
+                    node["reply_content"] = reply_text
+                    node["detail"] = reply_text
+                    break
+
+        previous_anchor_id = turn_outcome_id or next(reversed(id_map.values()), previous_anchor_id)
+        turn_index += 1
+
+    return {"thread_id": thread_id, "nodes": nodes}

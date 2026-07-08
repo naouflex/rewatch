@@ -1,0 +1,23 @@
+.assistant-conversation-graph-modal {
+  &__body {
+    padding: 0;
+    min-height: 420px;
+    max-height: ~"min(72vh, 720px)";
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .assistant-conversation-graph {
+    border: 0;
+    background: transparent;
+    min-height: 0;
+    height: 100%;
+
+    &__canvas-wrap {
+      flex: 1;
+      min-height: 380px;
+      max-height: ~"min(72vh, 720px)";
+    }
+  }
+}

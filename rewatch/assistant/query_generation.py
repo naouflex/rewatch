@@ -6,21 +6,14 @@ import logging
 import re
 from typing import Any, Optional
 
-from openai import (
-    APIConnectionError,
-    APITimeoutError,
-    InternalServerError,
-    OpenAI,
-    RateLimitError,
-)
+from openai import OpenAI
 
 from rewatch import settings
+from rewatch.assistant.openai_retry import call_with_retry, create_openai_client
 from rewatch.assistant.catalog import build_query_generation_context
 
 logger = logging.getLogger(__name__)
 
-_RETRYABLE_ERRORS = (RateLimitError, APIConnectionError, APITimeoutError, InternalServerError)
-_MAX_API_ATTEMPTS = 3
 _MAX_SCHEMA_TABLES = 50
 _MAX_SCHEMA_COLUMNS = 20
 _MAX_DYNAMIC_SCHEMA_ITEMS = 15
@@ -53,9 +46,7 @@ General rules:
 
 
 def _client() -> OpenAI:
-    if not settings.OPENAI_API_KEY:
-        raise RuntimeError("OpenAI API key is not configured")
-    return OpenAI(api_key=settings.OPENAI_API_KEY)
+    return create_openai_client()
 
 
 def _extract_query_text(content: str) -> str:
@@ -284,19 +275,13 @@ def generate_query(
         kwargs["reasoning_effort"] = settings.OPENAI_REASONING_EFFORT
 
     client = _client()
-    last_error: Optional[Exception] = None
-    for attempt in range(_MAX_API_ATTEMPTS):
-        try:
-            response = client.chat.completions.create(**kwargs)
-            content = response.choices[0].message.content or ""
-            query_text = _extract_query_text(content)
-            if not query_text:
-                raise RuntimeError("The AI returned an empty query.")
-            return query_text
-        except _RETRYABLE_ERRORS as exc:
-            last_error = exc
-            logger.warning("Query generation OpenAI transient error (attempt %s): %s", attempt + 1, exc)
-            if attempt < _MAX_API_ATTEMPTS - 1:
-                continue
 
-    raise last_error or RuntimeError("Query generation failed")
+    def _generate() -> str:
+        response = client.chat.completions.create(**kwargs)
+        content = response.choices[0].message.content or ""
+        query_text = _extract_query_text(content)
+        if not query_text:
+            raise RuntimeError("The AI returned an empty query.")
+        return query_text
+
+    return call_with_retry(_generate, log_label="Query generation OpenAI")

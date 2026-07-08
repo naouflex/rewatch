@@ -58,7 +58,9 @@
 }
 
 .assistant-header-btn {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 4px 10px;
   font-size: 12px;
   line-height: 1.4;
@@ -77,6 +79,32 @@
     border-color: var(--rd-color-border-strong);
     color: var(--rd-color-text);
     text-decoration: none;
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  &--graph {
+    .anticon {
+      color: var(--rd-color-brand);
+      font-size: 13px;
+    }
+  }
+
+  &__badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: var(--rd-color-brand-soft);
+    color: var(--rd-color-brand);
+    font-size: 10px;
+    font-weight: var(--rd-font-weight-semibold);
   }
 }
 
@@ -456,12 +484,4 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-}
-
-@media (max-width: 768px) {
-  .assistant-page-layout {
-    flex-direction: column;
-    height: auto;
-    min-height: calc(100vh - 160px);
-  }
 }

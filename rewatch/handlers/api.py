@@ -16,6 +16,7 @@ from rewatch.handlers.assistant import (
     AssistantStatusResource,
     AssistantThreadListResource,
     AssistantThreadMessagesResource,
+    AssistantThreadDecisionGraphResource,
     AssistantThreadResource,
     AssistantVisualizationPreviewResource,
 )
@@ -633,6 +634,11 @@ api.add_org_resource(
     AssistantThreadMessagesResource,
     "/api/assistant/threads/<thread_id>/messages",
     endpoint="assistant_thread_messages",
+)
+api.add_org_resource(
+    AssistantThreadDecisionGraphResource,
+    "/api/assistant/threads/<thread_id>/decision_graph",
+    endpoint="assistant_thread_decision_graph",
 )
 api.add_org_resource(
     AssistantThreadResource,
