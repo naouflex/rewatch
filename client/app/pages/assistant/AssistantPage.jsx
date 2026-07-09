@@ -110,9 +110,10 @@ function AssistantPage() {
     return (
       <div className="page-assistant">
         <div className="container">
-          <p className="text-muted">
-            The assistant is not configured. Set <code>REDASH_OPENAI_API_KEY</code> in the server environment and
-            restart Rewatch.
+            <p className="text-muted">
+            The assistant is not configured. Set{" "}
+            <code>REDASH_ANTHROPIC_API_KEY</code> (Claude Opus) or <code>REDASH_OPENAI_API_KEY</code> in the server
+            environment and restart Rewatch.
           </p>
         </div>
       </div>

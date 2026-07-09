@@ -1,11 +1,26 @@
 .alert-criteria {
-  margin-top: 40px !important;
+  .alert-criteria-prose {
+    margin: 0 0 8px;
+    font-size: var(--rd-font-size-md, 15px);
+    line-height: 1.55;
+    color: var(--rd-color-text);
+
+    strong {
+      font-weight: var(--rd-font-weight-semibold);
+      color: var(--rd-color-text);
+    }
+  }
+
+  .alert-criteria-meta {
+    font-size: var(--rd-font-size-sm);
+    color: var(--rd-color-text-secondary);
+  }
 
   .input-title {
     display: inline-block;
     width: auto;
     margin-right: 8px;
-    margin-bottom: 17px; // assure no collision when not enough room for horizontal layout
+    margin-bottom: 17px;
     position: relative;
     vertical-align: middle;
 
@@ -23,7 +38,7 @@
   }
 
   .ant-form-item-explain {
-    margin-top: -17px; // compensation for .input-title bottom margin
+    margin-top: -17px;
   }
 
   .alert-criteria-hint code {
@@ -34,20 +49,4 @@
     white-space: nowrap;
     vertical-align: middle;
   }
-}
-
-.criteria-disabled-input {
-  text-align: center;
-  line-height: 35px;
-  height: 35px;
-  max-width: 200px;
-  background: var(--rd-color-bg-subtle);
-  color: var(--rd-color-text-secondary);
-  border: 1px solid var(--rd-color-border);
-  border-radius: var(--rd-radius-xs);
-  margin-bottom: 5px;
-  text-overflow: ellipsis;
-  overflow: hidden;
-  white-space: nowrap;
-  padding: 0 8px;
 }

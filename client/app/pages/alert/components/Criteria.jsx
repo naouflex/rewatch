@@ -8,6 +8,7 @@ import Select from "antd/lib/select";
 import Divider from "antd/lib/divider";
 
 import { AlertOptions as AlertOptionsType } from "@/components/proptypes";
+import { getOperatorPhrase, getSelectorPhrase } from "./alertCriteriaUtils";
 
 import "./Criteria.less";
 
@@ -22,23 +23,23 @@ const CONDITIONS = {
 
 const VALID_STRING_CONDITIONS = ["==", "!="];
 
-function DisabledInput({ children, minWidth }) {
+function CriteriaProse({ alertOptions }) {
   return (
-    <div className="criteria-disabled-input" style={{ minWidth }}>
-      {children}
-    </div>
+    <p className="alert-criteria-prose" data-test="CriteriaProse">
+      Trigger when <strong>{getSelectorPhrase(alertOptions.selector)}</strong>{" "}
+      <strong>{alertOptions.column}</strong> {getOperatorPhrase(alertOptions.op)}{" "}
+      <strong>{alertOptions.value}</strong>
+    </p>
   );
 }
 
-DisabledInput.propTypes = {
-  children: PropTypes.node.isRequired,
-  minWidth: PropTypes.number.isRequired,
+CriteriaProse.propTypes = {
+  alertOptions: AlertOptionsType.isRequired,
 };
 
 export default function Criteria({ columnNames, resultValues, alertOptions, onChange, editMode }) {
   const columnValue = !isEmpty(resultValues) ? head(resultValues)[alertOptions.column] : null;
   const invalidMessage = (() => {
-    // bail if condition is valid for strings
     if (includes(VALID_STRING_CONDITIONS, alertOptions.op)) {
       return null;
     }
@@ -68,7 +69,7 @@ export default function Criteria({ columnNames, resultValues, alertOptions, onCh
         Max column value is{" "}
         <code className="p-0">
           {toString(
-            Math.max(...resultValues.map((o) => Number(o[alertOptions.column])).filter((value) => !isNaN(value)))
+            Math.max(...resultValues.map(o => Number(o[alertOptions.column])).filter(value => !isNaN(value)))
           ) || "unknown"}
         </code>
       </small>
@@ -79,10 +80,26 @@ export default function Criteria({ columnNames, resultValues, alertOptions, onCh
         Min column value is{" "}
         <code className="p-0">
           {toString(
-            Math.min(...resultValues.map((o) => Number(o[alertOptions.column])).filter((value) => !isNaN(value)))
+            Math.min(...resultValues.map(o => Number(o[alertOptions.column])).filter(value => !isNaN(value)))
           ) || "unknown"}
         </code>
       </small>
+    );
+  }
+
+  if (!editMode) {
+    return (
+      <div data-test="Criteria">
+        <CriteriaProse alertOptions={alertOptions} />
+        <div className="alert-criteria-meta">
+          {columnHint}
+          {invalidMessage && (
+            <small>
+              <WarningFilledIcon className="warning-icon-danger" /> {invalidMessage}
+            </small>
+          )}
+        </div>
+      </div>
     );
   }
 
@@ -90,98 +107,79 @@ export default function Criteria({ columnNames, resultValues, alertOptions, onCh
     <div data-test="Criteria">
       <div className="input-title">
         <span className="input-label">Selector</span>
-        {editMode ? (
-          <Select
-            value={alertOptions.selector}
-            onChange={(selector) => onChange({ selector })}
-            optionLabelProp="label"
-            popupMatchSelectWidth={false}
-            style={{ width: 80 }}
-          >
-            <Select.Option value="first" label="first">
-              first
-            </Select.Option>
-            <Select.Option value="min" label="min">
-              min
-            </Select.Option>
-            <Select.Option value="max" label="max">
-              max
-            </Select.Option>
-          </Select>
-        ) : (
-          <DisabledInput minWidth={60}>{alertOptions.selector}</DisabledInput>
-        )}
+        <Select
+          value={alertOptions.selector}
+          onChange={selector => onChange({ selector })}
+          optionLabelProp="label"
+          popupMatchSelectWidth={false}
+          style={{ width: 80 }}>
+          <Select.Option value="first" label="first">
+            first
+          </Select.Option>
+          <Select.Option value="min" label="min">
+            min
+          </Select.Option>
+          <Select.Option value="max" label="max">
+            max
+          </Select.Option>
+        </Select>
       </div>
       <div className="input-title">
         <span className="input-label">Value column</span>
-        {editMode ? (
-          <Select
-            value={alertOptions.column}
-            onChange={(column) => onChange({ column })}
-            popupMatchSelectWidth={false}
-            style={{ minWidth: 100 }}
-          >
-            {columnNames.map((name) => (
-              <Select.Option key={name}>{name}</Select.Option>
-            ))}
-          </Select>
-        ) : (
-          <DisabledInput minWidth={70}>{alertOptions.column}</DisabledInput>
-        )}
+        <Select
+          value={alertOptions.column}
+          onChange={column => onChange({ column })}
+          popupMatchSelectWidth={false}
+          style={{ minWidth: 100 }}>
+          {columnNames.map(name => (
+            <Select.Option key={name}>{name}</Select.Option>
+          ))}
+        </Select>
       </div>
       <div className="input-title">
         <span className="input-label">Condition</span>
-        {editMode ? (
-          <Select
-            value={alertOptions.op}
-            onChange={(op) => onChange({ op })}
-            optionLabelProp="label"
-            popupMatchSelectWidth={false}
-            style={{ width: 55 }}
-          >
-            <Select.Option value=">" label={CONDITIONS[">"]}>
-              {CONDITIONS[">"]} greater than
-            </Select.Option>
-            <Select.Option value=">=" label={CONDITIONS[">="]}>
-              {CONDITIONS[">="]} greater than or equals
-            </Select.Option>
-            <Select.Option disabled key="dv1">
-              <Divider className="select-option-divider m-t-10 m-b-5" />
-            </Select.Option>
-            <Select.Option value="<" label={CONDITIONS["<"]}>
-              {CONDITIONS["<"]} less than
-            </Select.Option>
-            <Select.Option value="<=" label={CONDITIONS["<="]}>
-              {CONDITIONS["<="]} less than or equals
-            </Select.Option>
-            <Select.Option disabled key="dv2">
-              <Divider className="select-option-divider m-t-10 m-b-5" />
-            </Select.Option>
-            <Select.Option value="==" label={CONDITIONS["=="]}>
-              {CONDITIONS["=="]} equals
-            </Select.Option>
-            <Select.Option value="!=" label={CONDITIONS["!="]}>
-              {CONDITIONS["!="]} not equal to
-            </Select.Option>
-          </Select>
-        ) : (
-          <DisabledInput minWidth={50}>{CONDITIONS[alertOptions.op]}</DisabledInput>
-        )}
+        <Select
+          value={alertOptions.op}
+          onChange={op => onChange({ op })}
+          optionLabelProp="label"
+          popupMatchSelectWidth={false}
+          style={{ width: 55 }}>
+          <Select.Option value=">" label={CONDITIONS[">"]}>
+            {CONDITIONS[">"]} greater than
+          </Select.Option>
+          <Select.Option value=">=" label={CONDITIONS[">="]}>
+            {CONDITIONS[">="]} greater than or equals
+          </Select.Option>
+          <Select.Option disabled key="dv1">
+            <Divider className="select-option-divider m-t-10 m-b-5" />
+          </Select.Option>
+          <Select.Option value="<" label={CONDITIONS["<"]}>
+            {CONDITIONS["<"]} less than
+          </Select.Option>
+          <Select.Option value="<=" label={CONDITIONS["<="]}>
+            {CONDITIONS["<="]} less than or equals
+          </Select.Option>
+          <Select.Option disabled key="dv2">
+            <Divider className="select-option-divider m-t-10 m-b-5" />
+          </Select.Option>
+          <Select.Option value="==" label={CONDITIONS["=="]}>
+            {CONDITIONS["=="]} equals
+          </Select.Option>
+          <Select.Option value="!=" label={CONDITIONS["!="]}>
+            {CONDITIONS["!="]} not equal to
+          </Select.Option>
+        </Select>
       </div>
       <div className="input-title">
         <label className="input-label" htmlFor="threshold-criterion">
           Threshold
         </label>
-        {editMode ? (
-          <Input
-            id="threshold-criterion"
-            style={{ width: 90 }}
-            value={alertOptions.value}
-            onChange={(e) => onChange({ value: e.target.value })}
-          />
-        ) : (
-          <DisabledInput minWidth={50}>{alertOptions.value}</DisabledInput>
-        )}
+        <Input
+          id="threshold-criterion"
+          style={{ width: 90 }}
+          value={alertOptions.value}
+          onChange={e => onChange({ value: e.target.value })}
+        />
       </div>
       <div className="ant-form-item-explain">
         {columnHint}

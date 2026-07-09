@@ -77,3 +77,21 @@ class WidgetAPITest(BaseTestCase):
         rv = self.make_request("post", f"/api/widgets/{widget.id}", data=data)
         self.assertEqual(rv.status_code, 200)
         self.assertEqual(rv.json["options"]["position"]["col"], 6)
+
+    def test_create_widget_auto_places_with_numeric_position(self):
+        dashboard = self.factory.create_dashboard()
+        vis = self.factory.create_visualization()
+
+        rv = self.create_widget(dashboard, vis)
+        self.assertEqual(rv.status_code, 200)
+        pos = rv.json["options"]["position"]
+        self.assertIsInstance(pos["col"], int)
+        self.assertIsInstance(pos["row"], int)
+        self.assertIsInstance(pos["sizeX"], int)
+        self.assertIsInstance(pos["sizeY"], int)
+
+    def test_get_widget(self):
+        widget = self.factory.create_widget()
+        rv = self.make_request("get", f"/api/widgets/{widget.id}")
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(rv.json["id"], widget.id)

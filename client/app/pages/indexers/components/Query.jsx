@@ -1,55 +1,13 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-import Link from "@/components/Link";
-import QuerySelector from "@/components/QuerySelector";
-import SchedulePhrase from "@/components/queries/SchedulePhrase";
-import Tooltip from "@/components/Tooltip";
+import MonitoringQuery from "@/components/monitoring/MonitoringQuery";
 
-import WarningFilledIcon from "@ant-design/icons/WarningFilled";
-import QuestionCircleTwoToneIcon from "@ant-design/icons/QuestionCircleTwoTone";
-import LoadingOutlinedIcon from "@ant-design/icons/LoadingOutlined";
+const SCHEDULE_WARNING =
+  "A query schedule is highly recommended for indexers; without one, indexing will only happen when a user manually executes the query.";
 
-export default function QueryFormItem({ query, queryResult, onChange, editMode }) {
-  const queryHint =
-    query && query.schedule ? (
-      <small>
-        Scheduled to refresh{" "}
-        <i className="alert-query-schedule">
-          <SchedulePhrase schedule={query.schedule} isNew={false} />
-        </i>
-      </small>
-    ) : (
-      <small>
-        <WarningFilledIcon className="warning-icon-danger" /> This query has no <i>refresh schedule</i>.{" "}
-        <Tooltip title="A query schedule is highly recommended for indexers; without one, indexing will only happen when a user manually executes the query.">
-          <a role="presentation">
-            Why it&apos;s recommended <QuestionCircleTwoToneIcon />
-          </a>
-        </Tooltip>
-      </small>
-    );
-
-  return (
-    <>
-      {editMode ? (
-        <QuerySelector onChange={onChange} selectedQuery={query} className="alert-query-selector" type="select" />
-      ) : (
-        <Tooltip title="Open query in a new tab.">
-          <Link href={`queries/${query.id}`} target="_blank" rel="noopener noreferrer" className="alert-query-link">
-            {query.name} <i className="fa fa-external-link" aria-hidden="true" />
-            <span className="sr-only">(opens in a new tab)</span>
-          </Link>
-        </Tooltip>
-      )}
-      <div className="ant-form-item-explain">{query && queryHint}</div>
-      {query && !queryResult && (
-        <div className="m-t-30">
-          <LoadingOutlinedIcon className="m-r-5" /> Loading query data
-        </div>
-      )}
-    </>
-  );
+export default function QueryFormItem(props) {
+  return <MonitoringQuery scheduleWarning={SCHEDULE_WARNING} {...props} />;
 }
 
 QueryFormItem.propTypes = {

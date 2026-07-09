@@ -7,6 +7,7 @@ import navigateTo from "@/components/ApplicationArea/navigateTo";
 import CreatePageLayout from "@/components/items-list/CreatePageLayout";
 import LoadingState from "@/components/items-list/components/LoadingState";
 import QuerySnippetForm from "@/components/query-snippets/QuerySnippetForm";
+import SnippetReadOnlyView from "@/components/query-snippets/SnippetReadOnlyView";
 
 import QuerySnippetService from "@/services/query-snippet";
 import { currentUser } from "@/services/auth";
@@ -112,13 +113,17 @@ class QuerySnippetFormPage extends React.Component {
                 ? "View snippet details and SQL template."
                 : "Define a trigger keyword and reusable SQL snippet for the query editor."}
             </p>
-            <QuerySnippetForm
-              querySnippet={querySnippet}
-              readOnly={readOnly}
-              getAvailableTags={getQuerySnippetTags}
-              onSubmit={this.saveQuerySnippet}
-              saving={saving}
-            />
+            {readOnly ? (
+              <SnippetReadOnlyView querySnippet={querySnippet} />
+            ) : (
+              <QuerySnippetForm
+                querySnippet={querySnippet}
+                readOnly={readOnly}
+                getAvailableTags={getQuerySnippetTags}
+                onSubmit={this.saveQuerySnippet}
+                saving={saving}
+              />
+            )}
           </div>
         </div>
       </div>

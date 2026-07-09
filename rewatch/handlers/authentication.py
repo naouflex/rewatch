@@ -6,6 +6,7 @@ from itsdangerous import BadSignature, SignatureExpired
 from sqlalchemy.orm.exc import NoResultFound
 
 from rewatch import __version__, limiter, models, settings
+from rewatch.assistant.llm_config import assistant_enabled
 from rewatch.authentication import current_org, get_login_url, get_next_path
 from rewatch.authentication.account import (
     send_password_reset_email,
@@ -288,7 +289,7 @@ def client_config():
         "pageSize": settings.PAGE_SIZE,
         "pageSizeOptions": settings.PAGE_SIZE_OPTIONS,
         "tableCellMaxJSONSize": settings.TABLE_CELL_MAX_JSON_SIZE,
-        "assistantEnabled": bool(settings.ASSISTANT_ENABLED and settings.OPENAI_API_KEY),
+        "assistantEnabled": assistant_enabled(),
     }
 
     client_config.update(defaults)

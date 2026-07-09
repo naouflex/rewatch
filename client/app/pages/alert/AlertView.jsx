@@ -3,15 +3,18 @@ import PropTypes from "prop-types";
 import cx from "classnames";
 
 import Link from "@/components/Link";
-import TimeAgo from "@/components/TimeAgo";
 import { Alert as AlertType } from "@/components/proptypes";
+import DynamicComponent from "@/components/DynamicComponent";
+import Tooltip from "@/components/Tooltip";
 
-import Form from "antd/lib/form";
 import Button from "antd/lib/button";
 import Tag from "antd/lib/tag";
-import Tooltip from "@/components/Tooltip";
 import AntAlert from "antd/lib/alert";
-import * as Grid from "antd/lib/grid";
+
+import EditOutlinedIcon from "@ant-design/icons/EditOutlined";
+import PlayCircleOutlinedIcon from "@ant-design/icons/PlayCircleOutlined";
+import PlusOutlinedIcon from "@ant-design/icons/PlusOutlined";
+import ExportOutlinedIcon from "@ant-design/icons/ExportOutlined";
 
 import Title from "./components/Title";
 import Criteria from "./components/Criteria";
@@ -19,40 +22,17 @@ import Rearm from "./components/Rearm";
 import Query from "./components/Query";
 import AlertDestinations from "./components/AlertDestinations";
 import AlertHistory from "./components/AlertHistory";
-import HorizontalFormItem from "./components/HorizontalFormItem";
-import { STATE_CLASS } from "../alerts/AlertsList";
-import DynamicComponent from "@/components/DynamicComponent";
+import AlertSection from "./components/AlertSection";
+import AlertStatusStrip from "./components/AlertStatusStrip";
+import NotificationTemplateView from "./components/NotificationTemplateView";
 
-function AlertState({ state, lastTriggered }) {
-  return (
-    <div className="alert-state">
-      <span className={`alert-state-indicator label ${STATE_CLASS[state]}`}>Status: {state}</span>
-      {state === "unknown" && <div className="ant-form-item-explain">Alert condition has not been evaluated.</div>}
-      {lastTriggered && (
-        <div className="ant-form-item-explain">
-          Last triggered{" "}
-          <span className="alert-last-triggered">
-            <TimeAgo date={lastTriggered} />
-          </span>
-        </div>
-      )}
-    </div>
-  );
-}
-
-AlertState.propTypes = {
-  state: PropTypes.string.isRequired,
-  lastTriggered: PropTypes.string,
-};
-
-AlertState.defaultProps = {
-  lastTriggered: null,
-};
-
-// eslint-disable-next-line react/prefer-stateless-function
 export default class AlertView extends React.Component {
+  destinationsRef = React.createRef();
+
   state = {
     unmuting: false,
+    evaluating: false,
+    subscriptionsRefresh: 0,
   };
 
   unmute = () => {
@@ -62,120 +42,155 @@ export default class AlertView extends React.Component {
     });
   };
 
+  evaluate = () => {
+    this.setState({ evaluating: true });
+    this.props.evaluate().finally(() => {
+      this.setState({ evaluating: false });
+    });
+  };
+
+  renderDestinationsAction = () => (
+    <Tooltip title='Add an existing alert destination' mouseEnterDelay={0.5}>
+      <Button
+        data-test="ShowAddAlertSubDialog"
+        type="primary"
+        size="small"
+        onClick={() => this.destinationsRef.current?.showAddAlertSubDialog()}>
+        <PlusOutlinedIcon /> Add
+      </Button>
+    </Tooltip>
+  );
+
   render() {
     const { alert, queryResult, canEdit, onEdit, menuButton } = this.props;
     const { query, name, options, rearm } = alert;
+    const queryDataAt = queryResult ? queryResult.getUpdatedAt() : null;
 
     return (
       <>
         <div className="create-page-form__header">
           <Title name={name} alert={alert}>
             <DynamicComponent name="AlertView.HeaderExtra" alert={alert} />
+            {canEdit && (
+              <Button type="default" onClick={() => this.evaluate()} loading={this.state.evaluating}>
+                <PlayCircleOutlinedIcon /> Evaluate
+              </Button>
+            )}
             {canEdit ? (
-              <>
-                <Button type="default" onClick={canEdit ? onEdit : null} className={cx({ disabled: !canEdit })}>
-                  <i className="fa fa-edit m-r-5" aria-hidden="true" />
-                  Edit
-                </Button>
-                {menuButton}
-              </>
+              <Button type="primary" onClick={onEdit}>
+                <EditOutlinedIcon /> Edit
+              </Button>
             ) : (
               <Tooltip title="You do not have sufficient permissions to edit this alert">
-                <Button type="default" onClick={canEdit ? onEdit : null} className={cx({ disabled: !canEdit })}>
-                  <i className="fa fa-edit m-r-5" aria-hidden="true" />
-                  Edit
+                <Button type="default" className={cx({ disabled: true })}>
+                  <EditOutlinedIcon /> Edit
                 </Button>
-                {menuButton}
               </Tooltip>
             )}
+            {menuButton}
           </Title>
         </div>
+
+        <AlertStatusStrip
+          state={alert.state}
+          lastTriggered={alert.last_triggered_at}
+          queryDataAt={queryDataAt}
+          muted={!!options.muted}
+        />
+
         <div className="create-page-form__body">
-          <Grid.Row type="flex" gutter={16}>
-            <Grid.Col xs={24} md={16} className="d-flex">
-              <Form className="flex-fill">
-                <HorizontalFormItem>
-                  <AlertState state={alert.state} lastTriggered={alert.last_triggered_at} />
-                </HorizontalFormItem>
-                <HorizontalFormItem label="Query">
-                  <Query query={query} queryResult={queryResult} />
-                </HorizontalFormItem>
-                {queryResult && options && (
-                  <>
-                    <HorizontalFormItem label="Trigger when" className="alert-criteria">
-                      <Criteria
-                        columnNames={queryResult.getColumnNames()}
-                        resultValues={queryResult.getData()}
-                        alertOptions={options}
-                      />
-                    </HorizontalFormItem>
-                    <HorizontalFormItem label="Notifications" className="form-item-line-height-normal">
-                      <Rearm value={rearm || 0} sendForEachRow={!!options.send_for_each_row} />
-                      <br />
-                      Set to {options.custom_subject || options.custom_body ? "custom" : "default"} notification
-                      template.
-                    </HorizontalFormItem>
-                  </>
-                )}
-                {alert.tags && alert.tags.length > 0 && (
-                  <HorizontalFormItem label="Tags">
-                    {alert.tags.map(t => (
-                      <Tag key={t} color="blue">
-                        {t}
-                      </Tag>
-                    ))}
-                  </HorizontalFormItem>
-                )}
-              </Form>
-            </Grid.Col>
-            <Grid.Col xs={24} md={8}>
+          <AlertSection title="Query">
+            <Query query={query} queryResult={queryResult} />
+          </AlertSection>
+
+          {queryResult && options && (
+            <>
+              <AlertSection title="Rule" className="alert-criteria">
+                <Criteria
+                  columnNames={queryResult.getColumnNames()}
+                  resultValues={queryResult.getData()}
+                  alertOptions={options}
+                />
+              </AlertSection>
+
               {options.muted && (
                 <AntAlert
                   className="m-b-20"
-                  message={
-                    <>
-                      <i className="fa fa-bell-slash-o" aria-hidden="true" /> Notifications are muted
-                    </>
-                  }
+                  message="Notifications are muted"
                   description={
-                    <>
-                      Notifications for this alert will not be sent.
-                      <br />
-                      {canEdit && (
-                        <>
-                          To restore notifications click
-                          <Button
-                            size="small"
-                            type="primary"
-                            onClick={this.unmute}
-                            loading={this.state.unmuting}
-                            className="m-t-5 m-l-5">
-                            Unmute
-                          </Button>
-                        </>
-                      )}
-                    </>
+                    canEdit ? (
+                      <>
+                        Notifications for this alert will not be sent.
+                        <Button
+                          size="small"
+                          type="primary"
+                          onClick={this.unmute}
+                          loading={this.state.unmuting}
+                          className="m-l-5">
+                          Unmute
+                        </Button>
+                      </>
+                    ) : (
+                      "Notifications for this alert will not be sent."
+                    )
                   }
                   type="warning"
+                  showIcon
                 />
               )}
-              <h4>
-                Destinations{" "}
-                <Tooltip title="Open Alert Destinations page in a new tab.">
-                  <Link href="destinations" target="_blank">
-                    <i className="fa fa-external-link f-13" aria-hidden="true" />
-                    <span className="sr-only">(opens in a new tab)</span>
-                  </Link>
-                </Tooltip>
-              </h4>
-              <AlertDestinations alertId={alert.id} />
-            </Grid.Col>
-          </Grid.Row>
-          <Grid.Row className="m-t-20">
-            <Grid.Col span={24}>
-              <AlertHistory alertId={alert.id} canManage={canEdit} />
-            </Grid.Col>
-          </Grid.Row>
+
+              <AlertSection
+                title="Destinations"
+                action={
+                  <>
+                    <Tooltip title="Open Alert Destinations page in a new tab.">
+                      <Link href="destinations" target="_blank" className="alert-destinations-manage-link">
+                        Manage <ExportOutlinedIcon aria-hidden="true" />
+                      </Link>
+                    </Tooltip>
+                    {this.renderDestinationsAction()}
+                  </>
+                }>
+                <AlertDestinations
+                  ref={this.destinationsRef}
+                  alertId={alert.id}
+                  hideAddButton
+                  onSubscriptionsChange={() =>
+                    this.setState(state => ({ subscriptionsRefresh: state.subscriptionsRefresh + 1 }))
+                  }
+                />
+              </AlertSection>
+
+              <AlertSection title="Notifications">
+                <Rearm value={rearm || 0} sendForEachRow={!!options.send_for_each_row} />
+                <div className="m-t-15">
+                    <NotificationTemplateView
+                      alert={alert}
+                      query={query}
+                      columnNames={queryResult.getColumnNames()}
+                      resultValues={queryResult.getData()}
+                      subject={options.custom_subject}
+                      body={options.custom_body}
+                      canEdit={canEdit}
+                      onEdit={onEdit}
+                      subscriptionsRefresh={this.state.subscriptionsRefresh}
+                    />
+                </div>
+              </AlertSection>
+            </>
+          )}
+
+          {alert.tags && alert.tags.length > 0 && (
+            <AlertSection title="Tags">
+              {alert.tags.map(t => (
+                <Tag key={t} color="blue">
+                  {t}
+                </Tag>
+              ))}
+            </AlertSection>
+          )}
+
+          <AlertHistory alertId={alert.id} canManage={canEdit} />
         </div>
       </>
     );
@@ -184,10 +199,11 @@ export default class AlertView extends React.Component {
 
 AlertView.propTypes = {
   alert: AlertType.isRequired,
-  queryResult: PropTypes.object, // eslint-disable-line react/forbid-prop-types,
+  queryResult: PropTypes.object, // eslint-disable-line react/forbid-prop-types
   canEdit: PropTypes.bool.isRequired,
   onEdit: PropTypes.func.isRequired,
   menuButton: PropTypes.node.isRequired,
+  evaluate: PropTypes.func.isRequired,
   unmute: PropTypes.func,
 };
 

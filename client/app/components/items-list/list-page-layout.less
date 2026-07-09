@@ -185,13 +185,16 @@
   }
 }
 
-.list-page-table {
+// Shared card shell for list tables — clips square ant-table corners in dark mode.
+.list-page-table-shell() {
   .list-page-card-mixin();
   min-width: 0;
   max-width: 100%;
   overflow: hidden;
+}
 
-  .table-data.ant-table-wrapper {
+.list-page-table-ant-styles() {
+  .ant-table-wrapper {
     background: transparent;
     max-width: 100%;
 
@@ -255,14 +258,29 @@
     .ant-table-tbody > tr:last-child > td {
       border-bottom: none !important;
     }
-  }
 
-  &--fixed {
-    .table-data.ant-table-wrapper {
-      .ant-table {
-        table-layout: fixed;
-        width: 100% !important;
-      }
+    .ant-table-thead > tr > th:first-child {
+      border-start-start-radius: var(--rd-radius-lg);
+    }
+
+    .ant-table-thead > tr > th:last-child {
+      border-start-end-radius: var(--rd-radius-lg);
+    }
+
+    &.ant-table-headerless .ant-table-tbody > tr:first-child > td:first-child {
+      border-start-start-radius: var(--rd-radius-lg);
+    }
+
+    &.ant-table-headerless .ant-table-tbody > tr:first-child > td:last-child {
+      border-start-end-radius: var(--rd-radius-lg);
+    }
+
+    .ant-pagination.ant-table-pagination {
+      background: var(--rd-color-surface) !important;
+      border-top: 1px solid var(--rd-color-divider);
+      margin: 0 !important;
+      padding: 10px 16px 12px;
+      border-radius: 0 0 var(--rd-radius-lg) var(--rd-radius-lg);
     }
   }
 
@@ -274,7 +292,7 @@
     padding: 10px 0 12px;
   }
 
-  &:not(:has(> .paginator-container)) .table-data.ant-table-wrapper {
+  &:not(:has(> .paginator-container)) .ant-table-wrapper:not(:has(.ant-table-pagination)) {
     .ant-table-tbody > tr:last-child > td:first-child {
       border-end-start-radius: var(--rd-radius-lg);
     }
@@ -285,14 +303,22 @@
   }
 }
 
-.list-page-layout__content {
-  .list-page-table {
-    .table-data.ant-table-wrapper .ant-table-thead > tr > th:first-child {
-      border-start-start-radius: var(--rd-radius-lg);
-    }
+.list-page-table {
+  .list-page-table-shell();
+  .list-page-table-ant-styles();
 
-    .table-data.ant-table-wrapper .ant-table-thead > tr > th:last-child {
-      border-start-end-radius: var(--rd-radius-lg);
+  &--fixed {
+    .ant-table-wrapper {
+      .ant-table {
+        table-layout: fixed;
+        width: 100% !important;
+      }
     }
   }
+}
+
+// Legacy wrapper still used in a few settings/admin pages.
+.table-responsive:has(.ant-table-wrapper) {
+  .list-page-table-shell();
+  .list-page-table-ant-styles();
 }

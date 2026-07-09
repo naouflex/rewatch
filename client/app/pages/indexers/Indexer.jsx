@@ -19,6 +19,7 @@ import IndexerEdit from "./IndexerEdit";
 import IndexerNew from "./IndexerNew";
 
 import "@/components/items-list/create-page-layout.less";
+import "./indexers.less";
 
 const MODES = {
   NEW: 0,

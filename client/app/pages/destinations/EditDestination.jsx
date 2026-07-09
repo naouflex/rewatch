@@ -9,12 +9,16 @@ import CreatePageLayout from "@/components/items-list/CreatePageLayout";
 import LoadingState from "@/components/items-list/components/LoadingState";
 import DynamicForm from "@/components/dynamic-form/DynamicForm";
 import helper from "@/components/dynamic-form/dynamicFormHelper";
+import ConfigSection from "@/components/ConfigSection/ConfigSection";
 
 import DestinationService, { IMG_ROOT } from "@/services/destination";
 import notification from "@/services/notification";
 import routes from "@/services/routes";
+import DestinationTypePreview from "./DestinationTypePreview";
 
+import "@/components/ConfigSection/ConfigSection.less";
 import "@/components/items-list/create-page-layout.less";
+import "./DestinationTypePreview.less";
 
 class EditDestination extends React.Component {
   static propTypes = {
@@ -91,11 +95,19 @@ class EditDestination extends React.Component {
 
     return (
       <div data-test="Destination">
-        <div className="text-center m-b-20">
-          <img className="p-5" src={`${IMG_ROOT}/${type.type}.png`} alt={type.name} width="64" />
-          <h3 className="m-0">{type.name}</h3>
+        <div className="destination-edit-header">
+          <img src={`${IMG_ROOT}/${type.type}.png`} alt={type.name} />
+          <div>
+            <h3>{destination.name || type.name}</h3>
+            <p>{type.name} destination</p>
+          </div>
         </div>
-        <DynamicForm {...formProps} />
+
+        <DestinationTypePreview type={type} />
+
+        <ConfigSection title="Configuration">
+          <DynamicForm {...formProps} />
+        </ConfigSection>
       </div>
     );
   }

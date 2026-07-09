@@ -1,0 +1,50 @@
+.indexer-detail-list {
+  margin: 0;
+
+  &__row {
+    display: flex;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--rd-color-divider);
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    dt {
+      flex: 0 0 140px;
+      margin: 0;
+      font-size: var(--rd-font-size-sm);
+      font-weight: var(--rd-font-weight-medium);
+      color: var(--rd-color-text-secondary);
+    }
+
+    dd {
+      flex: 1 1 auto;
+      margin: 0;
+      color: var(--rd-color-text);
+    }
+  }
+}
+
+.indexer-form-field {
+  margin-bottom: 16px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  &__label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: var(--rd-font-size-sm);
+    font-weight: var(--rd-font-weight-medium);
+    color: var(--rd-color-text-secondary);
+  }
+
+  &__help {
+    margin: 6px 0 0;
+    font-size: var(--rd-font-size-sm);
+    color: var(--rd-color-text-muted);
+  }
+}

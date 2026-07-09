@@ -576,7 +576,14 @@ export class ParameterMappingListInput extends React.Component {
 
     return (
       <div className="parameters-mapping-list">
-        <Table dataSource={dataSource} size="middle" pagination={false} rowKey={(record, idx) => `row${idx}`}>
+        <div className="list-page-table">
+          <Table
+            className="table-data"
+            dataSource={dataSource}
+            size="middle"
+            pagination={false}
+            rowKey={(record, idx) => `row${idx}`}
+          >
           <Table.Column
             title="Keyword"
             dataIndex="mapping"
@@ -626,6 +633,7 @@ export class ParameterMappingListInput extends React.Component {
             render={mapping => this.constructor.getDefaultValue(mapping, this.props.existingParams)}
           />
         </Table>
+        </div>
       </div>
     );
   }

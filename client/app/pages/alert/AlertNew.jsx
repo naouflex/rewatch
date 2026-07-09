@@ -5,15 +5,18 @@ import HelpTrigger from "@/components/HelpTrigger";
 import CreatePageLayout from "@/components/items-list/CreatePageLayout";
 import { Alert as AlertType } from "@/components/proptypes";
 
-import Form from "antd/lib/form";
 import Button from "antd/lib/button";
+
+import LoadingOutlinedIcon from "@ant-design/icons/LoadingOutlined";
+import QuestionCircleOutlinedIcon from "@ant-design/icons/QuestionCircleOutlined";
 
 import Title from "./components/Title";
 import Criteria from "./components/Criteria";
 import NotificationTemplate from "./components/NotificationTemplate";
 import Rearm from "./components/Rearm";
 import Query from "./components/Query";
-import HorizontalFormItem from "./components/HorizontalFormItem";
+import AlertDestinations from "./components/AlertDestinations";
+import AlertSection from "./components/AlertSection";
 
 export default class AlertNew extends React.Component {
   state = {
@@ -43,43 +46,48 @@ export default class AlertNew extends React.Component {
           <p className="create-page-form__intro">
             Select the query you want to monitor. Alerts do not work with queries that use parameters.
           </p>
-          <div className="d-flex">
-            <Form className="flex-fill">
-              <HorizontalFormItem label="Query">
-                <Query query={query} queryResult={queryResult} onChange={onQuerySelected} editMode />
-              </HorizontalFormItem>
-              {queryResult && options && (
-                <>
-                  <HorizontalFormItem label="Trigger when" className="alert-criteria">
-                    <Criteria
-                      columnNames={queryResult.getColumnNames()}
-                      resultValues={queryResult.getData()}
-                      alertOptions={options}
-                      onChange={onCriteriaChange}
-                      editMode
-                    />
-                  </HorizontalFormItem>
-                  <HorizontalFormItem
-                    label="When triggered, send notification"
-                    help={
-                      options.send_for_each_row
-                        ? "When sending one notification per row, the current row is exposed to the template via QUERY_RESULT_ROW (and overrides QUERY_RESULT_VALUE)."
-                        : null
-                    }>
-                    <Rearm
-                      value={pendingRearm || 0}
-                      onChange={onRearmChange}
-                      sendForEachRow={!!options.send_for_each_row}
-                      onSendForEachRowChange={checked =>
-                        onCriteriaChange({ send_for_each_row: checked })
-                      }
-                      editMode
-                    />
-                  </HorizontalFormItem>
-                  <HorizontalFormItem label="Template">
+
+          <AlertSection title="Query">
+            <Query query={query} queryResult={queryResult} onChange={onQuerySelected} editMode />
+          </AlertSection>
+
+          {queryResult && options && (
+            <>
+              <AlertSection title="Rule" className="alert-criteria">
+                <Criteria
+                  columnNames={queryResult.getColumnNames()}
+                  resultValues={queryResult.getData()}
+                  alertOptions={options}
+                  onChange={onCriteriaChange}
+                  editMode
+                />
+              </AlertSection>
+
+              <AlertSection title="Destinations">
+                <AlertDestinations />
+              </AlertSection>
+
+              <AlertSection
+                title="Notifications"
+                help={
+                  options.send_for_each_row
+                    ? "When sending one notification per row, the current row is exposed to the template via QUERY_RESULT_ROW (and overrides QUERY_RESULT_VALUE)."
+                    : null
+                }>
+                <Rearm
+                  value={pendingRearm || 0}
+                  onChange={onRearmChange}
+                  sendForEachRow={!!options.send_for_each_row}
+                  onSendForEachRowChange={checked => onCriteriaChange({ send_for_each_row: checked })}
+                  editMode
+                />
+              </AlertSection>
+
+              <AlertSection title="Template">
                     <NotificationTemplate
                       alert={alert}
                       query={query}
+                      alertId={alert.id}
                       columnNames={queryResult.getColumnNames()}
                       resultValues={queryResult.getData()}
                       subject={options.custom_subject}
@@ -87,24 +95,20 @@ export default class AlertNew extends React.Component {
                       body={options.custom_body}
                       setBody={body => onNotificationTemplateChange({ custom_body: body })}
                     />
-                  </HorizontalFormItem>
-                </>
-              )}
-              <HorizontalFormItem>
-                <Button type="primary" onClick={this.save} disabled={!query} className="btn-create-alert">
-                  {saving && (
-                    <span role="status" aria-live="polite" aria-relevant="additions removals">
-                      <i className="fa fa-spinner fa-pulse m-r-5" aria-hidden="true" />
-                      <span className="sr-only">Saving...</span>
-                    </span>
-                  )}
-                  Create Alert
-                </Button>
-              </HorizontalFormItem>
-            </Form>
+              </AlertSection>
+            </>
+          )}
+
+          <div className="create-page-form__footer">
+            <Button type="primary" onClick={this.save} disabled={!query} loading={saving}>
+              {saving && <LoadingOutlinedIcon />}
+              Create Alert
+            </Button>
+          </div>
+
+          <div className="alert-edit-help">
             <HelpTrigger className="f-13" type="ALERT_SETUP">
-              Setup Instructions <i className="fa fa-question-circle" aria-hidden="true" />
-              <span className="sr-only">(help)</span>
+              <QuestionCircleOutlinedIcon aria-hidden="true" /> Setup Instructions
             </HelpTrigger>
           </div>
         </div>
@@ -115,7 +119,7 @@ export default class AlertNew extends React.Component {
 
 AlertNew.propTypes = {
   alert: AlertType.isRequired,
-  queryResult: PropTypes.object, // eslint-disable-line react/forbid-prop-types,
+  queryResult: PropTypes.object, // eslint-disable-line react/forbid-prop-types
   pendingRearm: PropTypes.number,
   onQuerySelected: PropTypes.func.isRequired,
   save: PropTypes.func.isRequired,

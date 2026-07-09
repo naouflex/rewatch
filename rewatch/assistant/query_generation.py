@@ -6,10 +6,8 @@ import logging
 import re
 from typing import Any, Optional
 
-from openai import OpenAI
-
 from rewatch import settings
-from rewatch.assistant.openai_retry import call_with_retry, create_openai_client
+from rewatch.assistant.llm_client import complete_text
 from rewatch.assistant.catalog import build_query_generation_context
 
 logger = logging.getLogger(__name__)
@@ -43,10 +41,6 @@ General rules:
         "sql": "\n- Output SQL only. Use table/column names from schema.",
     }
     return base + syntax_specific.get(syntax, "")
-
-
-def _client() -> OpenAI:
-    return create_openai_client()
 
 
 def _extract_query_text(content: str) -> str:
@@ -266,22 +260,9 @@ def generate_query(
         {"role": "user", "content": "\n\n".join(user_parts)},
     ]
 
-    kwargs: dict[str, Any] = {
-        "model": settings.OPENAI_MODEL,
-        "messages": messages,
-        "temperature": 0.2,
-    }
-    if settings.OPENAI_REASONING_EFFORT:
-        kwargs["reasoning_effort"] = settings.OPENAI_REASONING_EFFORT
-
-    client = _client()
-
-    def _generate() -> str:
-        response = client.chat.completions.create(**kwargs)
-        content = response.choices[0].message.content or ""
-        query_text = _extract_query_text(content)
-        if not query_text:
-            raise RuntimeError("The AI returned an empty query.")
-        return query_text
-
-    return call_with_retry(_generate, log_label="Query generation OpenAI")
+    temperature = None if settings.ASSISTANT_PROVIDER == "anthropic" else 0.2
+    content = complete_text(messages, temperature=temperature, log_label="Query generation")
+    query_text = _extract_query_text(content)
+    if not query_text:
+        raise RuntimeError("The AI returned an empty query.")
+    return query_text

@@ -115,8 +115,9 @@ QUERY_RUNNER_NOTES: dict[str, dict[str, Any]] = {
             "CHART": "Map date/metric columns via options.columnMapping after validation.",
         },
         "workflow": [
+            "discover_public_sources(topic, data_kind=json) to find APIs and candidate endpoints",
             "list_data_sources → pick type `json`",
-            "web_search + fetch_url to find public JSON endpoints",
+            "fetch_url on docs or candidate endpoints (mode=json for .json URLs)",
             "run_query with YAML query_text to inspect columns",
             "create_query → create_visualization",
         ],

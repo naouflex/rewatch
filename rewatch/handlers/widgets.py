@@ -1,6 +1,7 @@
 from flask import request
 
 from rewatch import models
+from rewatch.assistant.dashboard_layout import prepare_widget_options, prepare_widget_options_for_update
 from rewatch.handlers.base import BaseResource
 from rewatch.permissions import (
     require_access,
@@ -8,7 +9,24 @@ from rewatch.permissions import (
     require_permission,
     view_only,
 )
-from rewatch.serializers import serialize_widget
+from rewatch.serializers import serialize_dashboard, serialize_widget
+
+
+def _dashboard_widgets(dashboard, user=None):
+    return [
+        w
+        for w in (serialize_dashboard(dashboard, with_widgets=True, user=user).get("widgets") or [])
+        if isinstance(w, dict)
+    ]
+
+
+def _prepare_widget_options(dashboard, visualization, text, options, user=None):
+    return prepare_widget_options(
+        _dashboard_widgets(dashboard, user=user),
+        visualization_type=visualization.type if visualization else None,
+        text=text,
+        options=options,
+    )
 
 
 class WidgetListResource(BaseResource):
@@ -39,6 +57,13 @@ class WidgetListResource(BaseResource):
             visualization = None
 
         widget_properties["visualization"] = visualization
+        widget_properties["options"] = _prepare_widget_options(
+            dashboard,
+            visualization,
+            widget_properties.get("text"),
+            widget_properties.get("options"),
+            user=self.current_user,
+        )
 
         widget = models.Widget(**widget_properties)
         models.db.session.add(widget)
@@ -48,6 +73,18 @@ class WidgetListResource(BaseResource):
 
 
 class WidgetResource(BaseResource):
+    @require_permission("view_dashboard")
+    def get(self, widget_id):
+        """
+        Get a single dashboard widget (layout options and linked visualization).
+
+        :param number widget_id: The ID of the widget
+        """
+        widget = models.Widget.get_by_id_and_org(widget_id, self.current_org)
+        if widget.visualization_id:
+            require_access(widget.visualization.query_rel, self.current_user, view_only)
+        return serialize_widget(widget)
+
     @require_permission("edit_dashboard")
     def post(self, widget_id):
         """
@@ -64,7 +101,13 @@ class WidgetResource(BaseResource):
         if "text" in widget_properties:
             widget.text = widget_properties["text"]
         if "options" in widget_properties:
-            widget.options = widget_properties["options"]
+            widget.options = prepare_widget_options_for_update(
+                serialize_widget(widget),
+                _dashboard_widgets(widget.dashboard, user=self.current_user),
+                visualization_type=widget.visualization.type if widget.visualization else None,
+                text=widget_properties.get("text", widget.text),
+                options=widget_properties["options"],
+            )
         models.db.session.commit()
         return serialize_widget(widget)
 

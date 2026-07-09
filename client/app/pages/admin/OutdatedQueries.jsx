@@ -115,7 +115,7 @@ class OutdatedQueries extends React.Component {
           <div className="text-center p-15">There are no outdated queries.</div>
         )}
         {controller.isLoaded && !controller.isEmpty && (
-          <div className="bg-white tiled table-responsive">
+          <div className="list-page-table">
             <ItemsTable
               items={controller.pageItems}
               columns={this.listColumns}

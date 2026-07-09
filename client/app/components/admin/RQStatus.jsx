@@ -82,17 +82,20 @@ const TablePropTypes = {
 
 export function WorkersTable({ loading, items }) {
   return (
-    <Table
-      loading={loading}
-      columns={workersColumns}
-      rowKey="name"
-      dataSource={items}
-      pagination={{
-        defaultPageSize: 25,
-        pageSizeOptions: ["10", "25", "50"],
-        showSizeChanger: true,
-      }}
-    />
+    <div className="list-page-table">
+      <Table
+        className="table-data"
+        loading={loading}
+        columns={workersColumns}
+        rowKey="name"
+        dataSource={items}
+        pagination={{
+          defaultPageSize: 25,
+          pageSizeOptions: ["10", "25", "50"],
+          showSizeChanger: true,
+        }}
+      />
+    </div>
   );
 }
 
@@ -100,17 +103,20 @@ WorkersTable.propTypes = TablePropTypes;
 
 export function QueuesTable({ loading, items }) {
   return (
-    <Table
-      loading={loading}
-      columns={queuesColumns}
-      rowKey="name"
-      dataSource={items}
-      pagination={{
-        defaultPageSize: 25,
-        pageSizeOptions: ["10", "25", "50"],
-        showSizeChanger: true,
-      }}
-    />
+    <div className="list-page-table">
+      <Table
+        className="table-data"
+        loading={loading}
+        columns={queuesColumns}
+        rowKey="name"
+        dataSource={items}
+        pagination={{
+          defaultPageSize: 25,
+          pageSizeOptions: ["10", "25", "50"],
+          showSizeChanger: true,
+        }}
+      />
+    </div>
   );
 }
 
@@ -118,17 +124,20 @@ QueuesTable.propTypes = TablePropTypes;
 
 export function QueryJobsTable({ loading, items }) {
   return (
-    <Table
-      loading={loading}
-      columns={queryJobsColumns}
-      rowKey="id"
-      dataSource={items}
-      pagination={{
-        defaultPageSize: 25,
-        pageSizeOptions: ["10", "25", "50"],
-        showSizeChanger: true,
-      }}
-    />
+    <div className="list-page-table">
+      <Table
+        className="table-data"
+        loading={loading}
+        columns={queryJobsColumns}
+        rowKey="id"
+        dataSource={items}
+        pagination={{
+          defaultPageSize: 25,
+          pageSizeOptions: ["10", "25", "50"],
+          showSizeChanger: true,
+        }}
+      />
+    </div>
   );
 }
 
@@ -136,17 +145,20 @@ QueryJobsTable.propTypes = TablePropTypes;
 
 export function OtherJobsTable({ loading, items }) {
   return (
-    <Table
-      loading={loading}
-      columns={otherJobsColumns}
-      rowKey="id"
-      dataSource={items}
-      pagination={{
-        defaultPageSize: 25,
-        pageSizeOptions: ["10", "25", "50"],
-        showSizeChanger: true,
-      }}
-    />
+    <div className="list-page-table">
+      <Table
+        className="table-data"
+        loading={loading}
+        columns={otherJobsColumns}
+        rowKey="id"
+        dataSource={items}
+        pagination={{
+          defaultPageSize: 25,
+          pageSizeOptions: ["10", "25", "50"],
+          showSizeChanger: true,
+        }}
+      />
+    </div>
   );
 }
 

@@ -198,7 +198,7 @@ class GroupDataSources extends React.Component {
               </div>
             )}
             {controller.isLoaded && !controller.isEmpty && (
-              <div className="table-responsive">
+              <div className="list-page-table">
                 <ItemsTable
                   items={controller.pageItems}
                   columns={this.listColumns}

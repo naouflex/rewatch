@@ -15,6 +15,13 @@ import { destinationLabel, statusTag } from "@/pages/alert-events/alertEventUtil
 import TimeAgo from "@/components/TimeAgo";
 import { FIXED_TABLE_WIDTHS as W } from "@/components/items-list/fixedTableWidths";
 import AlertHistoryChart from "./AlertHistoryChart";
+import AlertHistoryTimeline from "./AlertHistoryTimeline";
+import AlertSection from "./AlertSection";
+
+import ReloadOutlinedIcon from "@ant-design/icons/ReloadOutlined";
+import EyeOutlinedIcon from "@ant-design/icons/EyeOutlined";
+import InboxOutlinedIcon from "@ant-design/icons/InboxOutlined";
+import DeleteOutlinedIcon from "@ant-design/icons/DeleteOutlined";
 
 import "@/components/items-list/list-page-layout.less";
 import "./AlertHistory.less";
@@ -142,14 +149,14 @@ export default class AlertHistory extends React.Component {
           <span>
             <Tooltip title="Show rendered notification">
               <PlainButton onClick={() => this.setState({ selectedEvent: event })}>
-                <i className="fa fa-eye" aria-hidden="true" />
+                <EyeOutlinedIcon aria-hidden="true" />
                 <span className="sr-only">view</span>
               </PlainButton>
             </Tooltip>
             {canManage && (
               <Tooltip title="Archive">
                 <PlainButton onClick={() => this.archiveEvent(event)} className="m-l-10">
-                  <i className="fa fa-archive" aria-hidden="true" />
+                  <InboxOutlinedIcon aria-hidden="true" />
                   <span className="sr-only">archive</span>
                 </PlainButton>
               </Tooltip>
@@ -157,7 +164,7 @@ export default class AlertHistory extends React.Component {
             {canManage && (
               <Tooltip title="Delete permanently">
                 <PlainButton onClick={() => this.deleteEvent(event)} className="m-l-10">
-                  <i className="fa fa-trash text-danger" aria-hidden="true" />
+                  <DeleteOutlinedIcon className="text-danger" aria-hidden="true" />
                   <span className="sr-only">delete</span>
                 </PlainButton>
               </Tooltip>
@@ -168,17 +175,19 @@ export default class AlertHistory extends React.Component {
     ];
 
     return (
-      <div className="alert-history" data-test="AlertHistory">
-        <div className="alert-history__header">
-          <h4 className="alert-history__title">History</h4>
+      <AlertSection
+        className="alert-history"
+        title="History"
+        action={
           <Button size="small" onClick={this.refresh} loading={loading}>
-            <i className="fa fa-refresh m-r-5" aria-hidden="true" />
-            Refresh
+            <ReloadOutlinedIcon /> Refresh
           </Button>
-        </div>
+        }>
+        <AlertHistoryTimeline alertId={this.props.alertId} refreshToken={refreshToken} />
         <AlertHistoryChart alertId={this.props.alertId} refreshToken={refreshToken} />
         <div className="list-page-table">
           <Table
+            className="table-data"
             rowKey="id"
             size="small"
             loading={loading}
@@ -202,7 +211,7 @@ export default class AlertHistory extends React.Component {
           event={selectedEvent}
           onClose={() => this.setState({ selectedEvent: null })}
         />
-      </div>
+      </AlertSection>
     );
   }
 }

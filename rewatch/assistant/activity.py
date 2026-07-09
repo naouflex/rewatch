@@ -83,6 +83,9 @@ TOOL_START_LABELS: dict[str, Callable[[dict[str, Any]], str]] = {
     "update_indexer": lambda a: f"Updating indexer #{a.get('indexer_id')}",
     "search_docs": lambda a: f"Searching docs for “{_truncate(a.get('q', ''), 48)}”",
     "get_docs_topic": lambda a: f"Opening docs topic “{a.get('topic_id')}”",
+    "discover_public_sources": lambda a: (
+        f"Discovering public {a.get('data_kind', 'json')} sources for “{_truncate(a.get('topic', ''), 48)}”"
+    ),
     "web_search": lambda a: f"Searching the web for “{_truncate(a.get('q', ''), 56)}”",
     "fetch_url": lambda a: f"Reading {_truncate(a.get('url', ''), 64)}",
     "list_endpoints": lambda a: f"Browsing API endpoints{f' tagged {a.get('tag')!r}' if a.get('tag') else ''}",
@@ -145,14 +148,33 @@ def tool_result_summary(tool_name: str, payload: Any) -> Optional[str]:
                 return f"{prefix}{value}"
             return _truncate(str(value), 80)
 
+    if tool_name == "discover_public_sources":
+        count = payload.get("result_count")
+        if isinstance(count, int):
+            endpoints = payload.get("candidate_endpoints") or []
+            endpoint_note = f", {len(endpoints)} endpoint{'s' if len(endpoints) != 1 else ''}" if endpoints else ""
+            return f"{count} source{'s' if count != 1 else ''}{endpoint_note}"
+
     if isinstance(payload.get("results"), list):
         count = len(payload["results"])
+        if tool_name == "web_search" and count:
+            top = payload["results"][0]
+            if isinstance(top, dict) and top.get("title"):
+                return f"{count} result{'s' if count != 1 else ''} — {_truncate(top['title'], 56)}"
         return f"{count} result{'s' if count != 1 else ''}"
 
     if isinstance(payload.get("count"), int):
         return f"{payload['count']} item{'s' if payload['count'] != 1 else ''}"
 
-    if tool_name in ("web_search", "fetch_url") and payload.get("title"):
+    if tool_name == "fetch_url":
+        if payload.get("openapi_detected"):
+            return "OpenAPI spec detected"
+        if payload.get("format") == "json":
+            return "Fetched JSON endpoint"
+        if payload.get("title"):
+            return _truncate(payload["title"], 80)
+
+    if tool_name == "web_search" and payload.get("title"):
         return _truncate(payload["title"], 80)
 
     return None

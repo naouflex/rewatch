@@ -1,18 +1,68 @@
 .alert-query-link {
   font-size: 14px;
+  font-weight: var(--rd-font-weight-medium);
 
-  .fa-external-link {
-    vertical-align: text-bottom;
+  .anticon {
+    margin-left: 4px;
+    font-size: 12px;
   }
 }
 
-.alert-query-schedule {
-  font-style: italic;
-  text-transform: lowercase;
+.alert-query-context {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-top: 8px;
+}
+
+.alert-query-schedule-tag {
+  margin: 0;
+  text-transform: none;
+  font-weight: var(--rd-font-weight-normal);
+}
+
+.alert-query-data-at {
+  font-size: var(--rd-font-size-sm);
+  color: var(--rd-color-text-secondary);
+}
+
+.alert-query-warning {
+  color: var(--rd-color-text-secondary);
+}
+
+.alert-query-warning-link {
+  cursor: help;
+}
+
+.alert-query-preview {
+  margin-top: 10px;
+  max-width: 100%;
+  overflow-x: auto;
+
+  .ant-table {
+    font-size: var(--rd-font-size-sm);
+  }
+}
+
+.alert-query-preview-empty {
+  display: block;
+  margin-top: 8px;
+  color: var(--rd-color-text-muted);
+}
+
+.alert-query-loading {
+  margin-top: 12px;
+  color: var(--rd-color-text-secondary);
+  font-size: var(--rd-font-size-sm);
+}
+
+.alert-query-selector {
+  min-width: 250px;
+  width: auto !important;
 }
 
 @media only percy {
-  // hide query selector arrow in Percy to avoid a flaky snapshot
   .alert-query-selector {
     .ant-select-arrow-icon {
       display: none !important;

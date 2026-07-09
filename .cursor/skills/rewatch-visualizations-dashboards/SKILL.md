@@ -198,10 +198,18 @@ Omit `options` on `add_widget_to_dashboard` to auto-place below existing widgets
 Layout edits:
 
 ```text
-get_dashboard(dashboard_id)           # read layout_summary, widget ids
+get_dashboard(dashboard_id)           # read layout_summary, widget ids, layout_issues
 update_widget(widget_id, text?, options={"position": {...}})
+repair_dashboard_layout(dashboard_id) # fix widgets with null/invalid col/row/sizeX/sizeY
 delete_widget(widget_id)
 ```
+
+**Layout safety:** `add_widget_to_dashboard` and `update_widget` always normalize
+`options.position` — all of `col`, `row`, `sizeX`, and `sizeY` must be numbers.
+Null or missing values crash the React grid (`ReactGridLayout.children[0].x must be a number`).
+Omit `options` on add to auto-place; on update, omit `position` to keep the current slot.
+`get_dashboard` returns `layout_summary.layout_issues` when anything is broken; call
+`repair_dashboard_layout` to coerce bad widgets in one step.
 
 ## Decision guide: pick the right viz
 
@@ -223,6 +231,9 @@ Just explore raw data?                  → TABLE (already created)
 - **Draft dashboards**: new dashboards are drafts — call `update_dashboard(is_draft=false)` before sharing.
 - **GeoJSON geometry**: MAP needs separate lat/lon numeric columns, not raw GeoJSON.
 - **Over-specifying options**: prefer server auto-mapping over manual `columnMapping`.
+- **Null widget positions**: never pass `col: null` or `sizeX: null` in `options.position`.
+  Use dedicated MCP tools (not raw `call_api` for widgets when possible) — they coerce
+  positions automatically. Check `layout_summary.layout_issues` after changes.
 
 ## Checklist
 

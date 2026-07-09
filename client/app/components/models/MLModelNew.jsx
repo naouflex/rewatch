@@ -13,6 +13,8 @@ import Query from "./Query";
 import HorizontalFormItem from "../HorizontalFormItem";
 import RegressorSelect from "./RegressorSelect";
 import TrainTestSplitSlider from "./TrainTestSplitSlider";
+import ConfigSection from "@/components/ConfigSection/ConfigSection";
+import "@/components/ConfigSection/ConfigSection.less";
 
 import DynamicComponent from "@/components/DynamicComponent";
 
@@ -107,7 +109,7 @@ export default class ModelNew extends React.Component {
             Select the query you want to use for training and predictions. Models do not work with queries that use
             parameters.
           </p>
-          <div className="d-flex">
+          <ConfigSection title="Query & data">
             <Form className="flex-fill">
               <HorizontalFormItem label="Query">
                 <Query
@@ -178,9 +180,19 @@ export default class ModelNew extends React.Component {
                   />
                 </Form.Item>
               </HorizontalFormItem>
-              {queryResult && options && (
-                <>
-                  <h4>Training Options</h4>
+            </Form>
+            <div className="m-t-10">
+              <HelpTrigger className="f-13" type="MODEL_SETUP">
+                Setup Instructions <i className="fa fa-question-circle" aria-hidden="true" />
+                <span className="sr-only">(help)</span>
+              </HelpTrigger>
+            </div>
+          </ConfigSection>
+
+          {queryResult && options && (
+            <>
+              <ConfigSection title="Training">
+                <Form>
                   <HorizontalFormItem label="Retrain when" className="model-criteria">
                     <Criteria
                       columnNames={queryResult.getColumnNames()}
@@ -212,7 +224,10 @@ export default class ModelNew extends React.Component {
                       templateType="train"
                     />
                   </HorizontalFormItem>
-                  <h4>Prediction Options</h4>
+                </Form>
+              </ConfigSection>
+              <ConfigSection title="Prediction">
+                <Form>
                   <HorizontalFormItem label="Predict when" className="model-criteria">
                     <Criteria
                       columnNames={queryResult.getColumnNames()}
@@ -243,25 +258,22 @@ export default class ModelNew extends React.Component {
                       setBody={body => onNotificationTemplateChange({ custom_body: body })}
                     />
                   </HorizontalFormItem>
-                </>
+                </Form>
+              </ConfigSection>
+            </>
+          )}
+
+          <HorizontalFormItem>
+            <Button type="primary" onClick={this.save} disabled={!query} className="btn-create-model">
+              {saving && (
+                <span role="status" aria-live="polite" aria-relevant="additions removals">
+                  <i className="fa fa-spinner fa-pulse m-r-5" aria-hidden="true" />
+                  <span className="sr-only">Saving...</span>
+                </span>
               )}
-              <HorizontalFormItem>
-                <Button type="primary" onClick={this.save} disabled={!query} className="btn-create-model">
-                  {saving && (
-                    <span role="status" aria-live="polite" aria-relevant="additions removals">
-                      <i className="fa fa-spinner fa-pulse m-r-5" aria-hidden="true" />
-                      <span className="sr-only">Saving...</span>
-                    </span>
-                  )}
-                  Create Model
-                </Button>
-              </HorizontalFormItem>
-            </Form>
-            <HelpTrigger className="f-13" type="ALERT_SETUP">
-              Setup Instructions <i className="fa fa-question-circle" aria-hidden="true" />
-              <span className="sr-only">(help)</span>
-            </HelpTrigger>
-          </div>
+              Create Model
+            </Button>
+          </HorizontalFormItem>
         </div>
       </>
     );

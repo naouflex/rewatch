@@ -17,6 +17,8 @@ import PlainButton from "@/components/PlainButton";
 import Tooltip from "@/components/Tooltip";
 
 import CloseOutlinedIcon from "@ant-design/icons/CloseOutlined";
+import PlusOutlinedIcon from "@ant-design/icons/PlusOutlined";
+import MailOutlinedIcon from "@ant-design/icons/MailOutlined";
 import Switch from "antd/lib/switch";
 
 import "./AlertDestinations.less";
@@ -48,7 +50,6 @@ function ListItem({ destination: { name, type }, user, unsubscribe }) {
       {canUnsubscribe && (
         <Tooltip title="Remove" mouseEnterDelay={0.5}>
           <PlainButton className="remove-button" onClick={unsubscribe}>
-            {/* TODO: lacks visual feedback */}
             <CloseOutlinedIcon />
           </PlainButton>
         </Tooltip>
@@ -65,7 +66,15 @@ ListItem.propTypes = {
 
 export default class AlertDestinations extends React.Component {
   static propTypes = {
-    alertId: PropTypes.any.isRequired,
+    alertId: PropTypes.any,
+    hideAddButton: PropTypes.bool,
+    onSubscriptionsChange: PropTypes.func,
+  };
+
+  static defaultProps = {
+    alertId: null,
+    hideAddButton: false,
+    onSubscriptionsChange: null,
   };
 
   state = {
@@ -74,15 +83,25 @@ export default class AlertDestinations extends React.Component {
   };
 
   componentDidMount() {
+    if (this.props.alertId) {
+      this.loadSubscriptions();
+    }
+  }
+
+  componentDidUpdate(prevProps) {
+    if (this.props.alertId && this.props.alertId !== prevProps.alertId) {
+      this.loadSubscriptions();
+    }
+  }
+
+  loadSubscriptions = () => {
     const { alertId } = this.props;
-    Promise.all([
-      DestinationService.query(), // get all destinations
-      AlertSubscription.query({ alertId }), // get subcriptions per alert
-    ]).then(([dests, subs]) => {
+    Promise.all([DestinationService.query(), AlertSubscription.query({ alertId })]).then(([dests, subs]) => {
       subs = subs.map(normalizeSub);
       this.setState({ dests, subs });
+      this.props.onSubscriptionsChange?.(subs);
     });
-  }
+  };
 
   showAddAlertSubDialog = () => {
     const { dests, subs } = this.state;
@@ -92,7 +111,7 @@ export default class AlertDestinations extends React.Component {
       showCount: true,
       extraFooterContent: (
         <>
-          <i className="fa fa-info-circle" aria-hidden="true" /> Create new destinations in{" "}
+          Create new destinations in{" "}
           <Tooltip title="Opens page in a new tab.">
             <Link href="destinations/new" target="_blank">
               Alert Destinations
@@ -129,7 +148,7 @@ export default class AlertDestinations extends React.Component {
         })
         .catch(() => {
           notification.error("Failed saving subscription.");
-          return Promise.reject(null); // keep dialog visible but suppress its default error message
+          return Promise.reject(null);
         });
     });
   };
@@ -152,29 +171,52 @@ export default class AlertDestinations extends React.Component {
 
     return AlertSubscription.create(sub).then(sub => {
       const { subs } = this.state;
+      const nextSubs = [...subs, normalizeSub(sub)];
       this.setState({
-        subs: [...subs, normalizeSub(sub)],
+        subs: nextSubs,
       });
+      this.props.onSubscriptionsChange?.(nextSubs);
     });
   };
 
   unsubscribe = sub => {
     AlertSubscription.delete(sub)
       .then(() => {
-        // not showing subscribe notification cause it's redundant here
         const { subs } = this.state;
+        const nextSubs = without(subs, sub);
         this.setState({
-          subs: without(subs, sub),
+          subs: nextSubs,
         });
+        this.props.onSubscriptionsChange?.(nextSubs);
       })
       .catch(() => {
         notification.error("Failed unsubscribing.");
       });
   };
 
+  renderAddButton() {
+    return (
+      <Tooltip title='Add an existing alert destination' mouseEnterDelay={0.5}>
+        <Button
+          data-test="ShowAddAlertSubDialog"
+          type="primary"
+          size="small"
+          onClick={this.showAddAlertSubDialog}>
+          <PlusOutlinedIcon /> Add
+        </Button>
+      </Tooltip>
+    );
+  }
+
   render() {
-    if (!this.props.alertId) {
-      return null;
+    const { alertId, hideAddButton } = this.props;
+
+    if (!alertId) {
+      return (
+        <div className="alert-destinations alert-destinations--placeholder">
+          Save the alert first to configure notification destinations.
+        </div>
+      );
     }
 
     const { subs } = this.state;
@@ -187,19 +229,10 @@ export default class AlertDestinations extends React.Component {
 
     return (
       <div className="alert-destinations" data-test="AlertDestinations">
-        <Tooltip title='Click to add an existing "Alert Destination"' mouseEnterDelay={0.5}>
-          <Button
-            data-test="ShowAddAlertSubDialog"
-            type="primary"
-            size="small"
-            className="add-button"
-            onClick={this.showAddAlertSubDialog}>
-            <i className="fa fa-plus f-12 m-r-5" aria-hidden="true" /> Add
-          </Button>
-        </Tooltip>
+        {!hideAddButton && this.renderAddButton()}
         <ul>
           <li className="destination-wrapper">
-            <i className="destination-icon fa fa-envelope" aria-hidden="true" />
+            <MailOutlinedIcon className="destination-icon destination-icon--ant" aria-hidden="true" />
             <span className="flex-fill">{currentUser.email}</span>
             <EmailSettingsWarning className="destination-warning" featureName="alert emails" mode="icon" />
             {!mailSettingsMissing && (

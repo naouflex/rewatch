@@ -204,6 +204,82 @@ def test_suggest_next_position_defaults_unchanged_without_type():
     assert suggest_next_position([]) == {"col": 0, "row": 0, "sizeX": 6, "sizeY": 3}
 
 
+def test_sanitize_widget_position_coerces_nulls():
+    from rewatch.assistant.dashboard_layout import sanitize_widget_position
+
+    pos = sanitize_widget_position(
+        {"col": None, "row": 5, "sizeX": None, "sizeY": None},
+        visualization_type="CHART",
+    )
+    assert pos == {
+        "col": 0,
+        "row": 5,
+        "sizeX": 6,
+        "sizeY": 8,
+        "minSizeX": 2,
+        "maxSizeX": 12,
+        "minSizeY": 2,
+        "maxSizeY": 1000,
+        "autoHeight": False,
+    }
+
+
+def test_find_invalid_widget_positions_detects_missing_col():
+    from rewatch.assistant.dashboard_layout import find_invalid_widget_positions
+
+    issues = find_invalid_widget_positions(
+        [{"id": 9, "options": {"position": {"row": 1, "sizeX": 6, "sizeY": 3}}}]
+    )
+    assert issues[0]["widget_id"] == 9
+    assert "col" in issues[0]["missing_fields"]
+
+
+def test_suggest_next_position_tolerates_broken_existing_widgets():
+    from rewatch.assistant.dashboard_layout import suggest_next_position
+
+    widgets = [{"options": {"position": {"row": 10, "sizeX": None, "sizeY": 8}}}]
+    pos = suggest_next_position(widgets, visualization_type="CHART")
+    assert pos["col"] == 0
+    assert pos["row"] == 18
+    assert pos["sizeX"] == 6
+    assert pos["sizeY"] == 8
+
+
+def test_prepare_widget_options_auto_places():
+    from rewatch.assistant.dashboard_layout import prepare_widget_options
+
+    options = prepare_widget_options(
+        [{"id": 1, "options": {"position": {"col": 0, "row": 0, "sizeX": 12, "sizeY": 3}}}],
+        visualization_type="CHART",
+    )
+    assert options["position"]["row"] == 3
+    assert options["position"]["sizeX"] == 6
+
+
+def test_prepare_widget_options_for_update_preserves_position():
+    from rewatch.assistant.dashboard_layout import prepare_widget_options_for_update
+
+    widget = {"id": 5, "options": {"position": {"col": 6, "row": 12, "sizeX": 6, "sizeY": 8}}}
+    options = prepare_widget_options_for_update(widget, [widget], visualization_type="CHART", options={})
+    assert options["position"]["col"] == 6
+    assert options["position"]["row"] == 12
+
+
+def test_prepare_widget_options_for_update_coerces_partial_position():
+    from rewatch.assistant.dashboard_layout import prepare_widget_options_for_update
+
+    widget = {"id": 5, "options": {"position": {"col": None, "row": 12, "sizeX": None, "sizeY": 8}}}
+    options = prepare_widget_options_for_update(
+        widget,
+        [widget],
+        visualization_type="CHART",
+        options={"position": {"col": None, "row": 12}},
+    )
+    assert options["position"]["col"] == 0
+    assert options["position"]["sizeX"] == 6
+    assert options["position"]["row"] == 12
+
+
 def test_enrich_dashboard_adds_layout_summary():
     from rewatch.assistant.dashboard_layout import enrich_dashboard_for_assistant
 

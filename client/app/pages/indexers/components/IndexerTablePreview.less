@@ -3,6 +3,19 @@
   padding-top: 24px;
   border-top: 1px solid var(--rd-color-divider);
 
+  &--embedded {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+  }
+
+  &__table-name {
+    flex: 1 1 auto;
+    font-size: var(--rd-font-size-sm);
+    color: var(--rd-color-text-secondary);
+    font-family: "Roboto Mono", monospace;
+  }
+
   &__header {
     display: flex;
     align-items: center;
@@ -28,14 +41,5 @@
     margin: 10px 0 0;
     font-size: var(--rd-font-size-xs);
     color: var(--rd-color-text-muted);
-  }
-
-  .list-page-table {
-    .ant-table-wrapper {
-      .ant-table,
-      .ant-table-container {
-        background: var(--rd-color-surface);
-      }
-    }
   }
 }

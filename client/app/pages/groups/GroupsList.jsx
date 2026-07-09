@@ -102,7 +102,7 @@ class GroupsList extends React.Component {
         {!controller.isLoaded && <LoadingState className="" />}
         {controller.isLoaded && controller.isEmpty && <EmptyState className="" />}
         {controller.isLoaded && !controller.isEmpty && (
-          <div className="table-responsive">
+          <div className="list-page-table">
             <ItemsTable
               items={controller.pageItems}
               columns={this.listColumns}

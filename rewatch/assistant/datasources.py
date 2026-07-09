@@ -47,6 +47,7 @@ def enrich_data_sources(payload: Any) -> Any:
         types = sorted(
             {(item.get("type") or "").lower() for item in enriched if isinstance(item, dict) and item.get("type")}
         )
+        json_source_id = pick_data_source_id({"data_sources": enriched}, preferred_type="json")
         result: dict[str, Any] = {
             "data_sources": enriched,
             "available_types": types,
@@ -54,9 +55,12 @@ def enrich_data_sources(payload: Any) -> Any:
                 "Each data source includes query_runner (syntax, summary, query_keys, example_query). "
                 "For YAML API sources (coingecko, defillama) also check endpoint_catalog. "
                 "Call get_query_runner_type with the data source `type` for full docs. "
-                "Pick a data source by id before create_query."
+                "Pick a data source by id before create_query. "
+                "For new public internet data, call discover_public_sources first, then use the json data source."
             ),
         }
+        if json_source_id is not None:
+            result["suggested_json_data_source_id"] = json_source_id
         return result
     return payload
 

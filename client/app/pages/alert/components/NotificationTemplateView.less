@@ -1,0 +1,36 @@
+.alert-template-view {
+  &__type {
+    margin-bottom: 8px;
+    font-size: var(--rd-font-size-sm);
+    color: var(--rd-color-text-secondary);
+  }
+
+  &__edit-link {
+    font-size: inherit;
+    color: var(--rd-color-brand);
+    text-decoration: underline;
+  }
+
+  &__preview {
+    max-width: 500px;
+    padding: 10px 12px;
+    border: 1px solid var(--rd-color-divider);
+    border-radius: var(--rd-radius-xs);
+    background: var(--rd-color-surface-alt);
+    font-family: "Roboto Mono", monospace;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  &__subject {
+    font-weight: var(--rd-font-weight-semibold);
+    margin-bottom: 6px;
+    color: var(--rd-color-text);
+  }
+
+  &__body-line {
+    color: var(--rd-color-text-secondary);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+}

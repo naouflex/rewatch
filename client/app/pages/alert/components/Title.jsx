@@ -9,24 +9,26 @@ import "./Title.less";
 
 export default function Title({ alert, editMode, name, onChange, children }) {
   const defaultName = getDefaultName(alert);
+
   return (
     <div className="alert-header">
       <div className="alert-title">
-        <h3>
-          {editMode ? (
-            // BUG: Input is not the same width as the container
-            // TODO: consider adding a label (not obvious for sighted users)
+        {editMode ? (
+          <div className="alert-title-field">
+            <label htmlFor="alert-name" className="alert-title-field__label">
+              Alert name
+            </label>
             <Input
-              className="f-inherit"
+              id="alert-name"
+              className="alert-title-field__input"
               placeholder={alert.query ? defaultName : "Alert name"}
               value={name}
-              aria-label="Alert title"
               onChange={e => onChange(e.target.value)}
             />
-          ) : (
-            name || defaultName
-          )}
-        </h3>
+          </div>
+        ) : (
+          <h3>{name || defaultName}</h3>
+        )}
       </div>
       <div className="alert-actions">{children}</div>
     </div>

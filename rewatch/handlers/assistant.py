@@ -8,6 +8,7 @@ from flask_restful import abort
 
 from rewatch import models, settings
 from rewatch.assistant import storage
+from rewatch.assistant.llm_config import assistant_api_key_env_var, assistant_enabled, assistant_model, assistant_provider_label
 from rewatch.assistant.decision_graph import merge_thread_decision_graph
 from rewatch.assistant.previews import render_dashboard_svg, render_query_svg, render_visualization_svg
 from rewatch.assistant.service import chat
@@ -32,8 +33,11 @@ def _help_base_url():
 def _ensure_assistant_enabled(current_user):
     if not settings.ASSISTANT_ENABLED:
         abort(503, message="Assistant is disabled.")
-    if not settings.OPENAI_API_KEY:
-        abort(503, message="OpenAI API key is not configured.")
+    if not assistant_enabled():
+        abort(
+            503,
+            message=f"{assistant_provider_label()} API key is not configured.",
+        )
     if current_user.is_api_user():
         abort(403, message="Assistant is not available for API key sessions.")
 
@@ -98,8 +102,10 @@ def _finalize_chat(current_user, current_org, thread_id, message, result, resour
 class AssistantStatusResource(BaseResource):
     def get(self):
         return {
-            "enabled": bool(settings.ASSISTANT_ENABLED and settings.OPENAI_API_KEY),
-            "model": settings.ASSISTANT_OPENAI_MODEL if settings.OPENAI_API_KEY else None,
+            "enabled": assistant_enabled(),
+            "model": assistant_model() if assistant_enabled() else None,
+            "provider": settings.ASSISTANT_PROVIDER if assistant_enabled() else None,
+            "api_key_env": assistant_api_key_env_var() if not assistant_enabled() else None,
         }
 
 

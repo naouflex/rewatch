@@ -24,3 +24,23 @@ def test_tool_result_summary_error():
 
 def test_tool_result_summary_count():
     assert tool_result_summary("list_data_sources", {"count": 2}) == "2 items"
+
+
+def test_tool_result_summary_discover_public_sources():
+    summary = tool_result_summary(
+        "discover_public_sources",
+        {
+            "result_count": 3,
+            "candidate_endpoints": [{"url": "https://api.example.com/data.json"}],
+        },
+    )
+    assert summary == "3 sources, 1 endpoint"
+
+
+def test_tool_result_summary_web_search_top_hit():
+    summary = tool_result_summary(
+        "web_search",
+        {"results": [{"title": "SNCF Open Data API", "url": "https://example.com"}]},
+    )
+    assert summary.startswith("1 result")
+    assert "SNCF Open Data API" in summary

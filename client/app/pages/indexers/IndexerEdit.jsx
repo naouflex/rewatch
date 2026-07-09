@@ -1,24 +1,27 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-import Form from "antd/lib/form";
 import Button from "antd/lib/button";
 import Select from "antd/lib/select";
 import Checkbox from "antd/lib/checkbox";
+import CloseOutlinedIcon from "@ant-design/icons/CloseOutlined";
+import CheckOutlinedIcon from "@ant-design/icons/CheckOutlined";
+import LoadingOutlinedIcon from "@ant-design/icons/LoadingOutlined";
+
+import ConfigSection from "@/components/ConfigSection/ConfigSection";
+import "@/components/ConfigSection/ConfigSection.less";
 
 import Title from "./components/Title";
 import Query from "./components/Query";
-import HorizontalFormItem from "./components/HorizontalFormItem";
 import IndexerDestination from "./components/IndexerDestination";
 import IndexerInsertStrategy from "./components/IndexerInsertStrategy";
 import IndexerTargetTable from "./components/IndexerTargetTable";
+import IndexerStatusStrip from "./components/IndexerStatusStrip";
 
 export default class IndexerEdit extends React.Component {
   _isMounted = false;
 
-  state = {
-    saving: false,
-  };
+  state = { saving: false };
 
   componentDidMount() {
     this._isMounted = true;
@@ -35,10 +38,6 @@ export default class IndexerEdit extends React.Component {
     });
   };
 
-  cancel = () => {
-    this.props.cancel();
-  };
-
   render() {
     const {
       indexer,
@@ -49,91 +48,96 @@ export default class IndexerEdit extends React.Component {
       onNameChange,
       onOptionsChange,
       onDataSourceChange,
+      cancel,
     } = this.props;
     const { query, name, options, tags, data_source: dataSource } = indexer;
     const { saving } = this.state;
     const dataSourceId = dataSource ? dataSource.id : null;
+    const dataSourceName = dataSource ? dataSource.name : null;
+    const targetTable = (options && options.target_table) || `indexed_data_${indexer.id}`;
 
     return (
       <>
         <div className="create-page-form__header">
           <Title indexer={indexer} name={name} onChange={onNameChange} editMode>
-            <Button className="m-r-5" onClick={() => this.cancel()}>
-              <i className="fa fa-times m-r-5" aria-hidden="true" />
-              Cancel
+            <Button onClick={() => cancel()}>
+              <CloseOutlinedIcon /> Cancel
             </Button>
-            <Button type="primary" onClick={() => this.save()}>
-              {saving ? (
-                <span role="status" aria-live="polite" aria-relevant="additions removals">
-                  <i className="fa fa-spinner fa-pulse m-r-5" aria-hidden="true" />
-                  <span className="sr-only">Saving...</span>
-                </span>
-              ) : (
-                <i className="fa fa-check m-r-5" aria-hidden="true" />
-              )}
+            <Button type="primary" onClick={() => this.save()} loading={saving}>
+              {saving ? <LoadingOutlinedIcon /> : <CheckOutlinedIcon />}
               Save Changes
             </Button>
             {menuButton}
           </Title>
         </div>
+
+        {indexer.id && (
+          <IndexerStatusStrip
+            indexer={indexer}
+            queryResult={queryResult}
+            dataSourceName={dataSourceName}
+            targetTable={targetTable}
+          />
+        )}
+
         <div className="create-page-form__body">
-          <div className="d-flex">
-            <Form className="flex-fill">
-              <HorizontalFormItem label="Query">
-                <Query query={query} queryResult={queryResult} onChange={onQuerySelected} editMode />
-              </HorizontalFormItem>
-              <HorizontalFormItem label="Tags" help="Press enter to add a tag.">
-                <Select
-                  mode="tags"
-                  style={{ minWidth: 240 }}
-                  value={tags || []}
-                  onChange={onTagsChange}
-                  tokenSeparators={[","]}
-                  placeholder="Add tags"
+          <ConfigSection title="Query">
+            <Query query={query} queryResult={queryResult} onChange={onQuerySelected} editMode />
+          </ConfigSection>
+
+          <ConfigSection title="Tags" help="Press enter to add a tag.">
+            <Select
+              mode="tags"
+              style={{ width: "100%", maxWidth: 400 }}
+              value={tags || []}
+              onChange={onTagsChange}
+              tokenSeparators={[","]}
+              placeholder="Add tags"
+            />
+          </ConfigSection>
+
+          {queryResult && options && (
+            <ConfigSection title="Target">
+              <div className="indexer-form-field">
+                <label className="indexer-form-field__label">Target data source</label>
+                <IndexerDestination value={dataSourceId} onChange={onDataSourceChange} />
+              </div>
+              <div className="indexer-form-field">
+                <label className="indexer-form-field__label">Target table</label>
+                <IndexerTargetTable
+                  targetTable={options.target_table || ""}
+                  onChange={value => onOptionsChange({ target_table: value })}
                 />
-              </HorizontalFormItem>
-              {queryResult && options && (
-                <>
-                  <HorizontalFormItem label="Target data source">
-                    <IndexerDestination value={dataSourceId} onChange={onDataSourceChange} />
-                  </HorizontalFormItem>
-                  <HorizontalFormItem
-                    label="Target table"
-                    help={`If left empty, results will be written to "indexed_data_<id>".`}>
-                    <IndexerTargetTable
-                      targetTable={options.target_table || ""}
-                      onChange={value => onOptionsChange({ target_table: value })}
-                    />
-                  </HorizontalFormItem>
-                  <HorizontalFormItem label="Insert strategy">
-                    <IndexerInsertStrategy
-                      insertStrategy={options.insert_strategy}
-                      onChange={value => onOptionsChange({ insert_strategy: value })}
-                    />
-                  </HorizontalFormItem>
-                  <HorizontalFormItem
-                    label="Timestamp column"
-                    help="Optional. If set, missing values are filled with the current timestamp at indexing time.">
-                    <input
-                      type="text"
-                      style={{ minWidth: 280 }}
-                      className="ant-input"
-                      placeholder="e.g. inserted_at"
-                      value={options.timestamp_field || ""}
-                      onChange={e => onOptionsChange({ timestamp_field: e.target.value })}
-                    />
-                  </HorizontalFormItem>
-                  <HorizontalFormItem label="Options">
-                    <Checkbox
-                      checked={!!options.remove_duplicates}
-                      onChange={e => onOptionsChange({ remove_duplicates: e.target.checked })}>
-                      Remove duplicate rows after indexing (requires an <code>id</code> column on the target table).
-                    </Checkbox>
-                  </HorizontalFormItem>
-                </>
-              )}
-            </Form>
-          </div>
+                <p className="indexer-form-field__help">If left empty, results will be written to indexed_data_&lt;id&gt;.</p>
+              </div>
+              <div className="indexer-form-field">
+                <label className="indexer-form-field__label">Insert strategy</label>
+                <IndexerInsertStrategy
+                  insertStrategy={options.insert_strategy}
+                  onChange={value => onOptionsChange({ insert_strategy: value })}
+                />
+              </div>
+              <div className="indexer-form-field">
+                <label className="indexer-form-field__label">Timestamp column</label>
+                <input
+                  type="text"
+                  className="ant-input"
+                  style={{ maxWidth: 320 }}
+                  placeholder="e.g. inserted_at"
+                  value={options.timestamp_field || ""}
+                  onChange={e => onOptionsChange({ timestamp_field: e.target.value })}
+                />
+                <p className="indexer-form-field__help">Optional. Missing values are filled with the current timestamp.</p>
+              </div>
+              <div className="indexer-form-field">
+                <Checkbox
+                  checked={!!options.remove_duplicates}
+                  onChange={e => onOptionsChange({ remove_duplicates: e.target.checked })}>
+                  Remove duplicate rows after indexing (requires an <code>id</code> column on the target table).
+                </Checkbox>
+              </div>
+            </ConfigSection>
+          )}
         </div>
       </>
     );

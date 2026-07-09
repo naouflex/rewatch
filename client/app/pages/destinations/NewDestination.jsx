@@ -14,11 +14,16 @@ import { PreviewCard } from "@/components/PreviewCard";
 import EmptyState from "@/components/items-list/components/EmptyState";
 import DynamicForm from "@/components/dynamic-form/DynamicForm";
 import helper from "@/components/dynamic-form/dynamicFormHelper";
+import ConfigSection from "@/components/ConfigSection/ConfigSection";
+import DestinationTypePreview from "./DestinationTypePreview";
 
 import DestinationService, { IMG_ROOT } from "@/services/destination";
 import { policy } from "@/services/policy";
 import notification from "@/services/notification";
 import routes from "@/services/routes";
+
+import "@/components/ConfigSection/ConfigSection.less";
+import "./DestinationTypePreview.less";
 
 const { Search } = Input;
 const { Step } = Steps;
@@ -123,7 +128,10 @@ class NewDestination extends React.Component {
           <img className="p-5" src={`${IMG_ROOT}/${selectedType.type}.png`} alt={selectedType.name} width="48" />
           <h4 className="m-0">{selectedType.name}</h4>
         </div>
-        <DynamicForm fields={fields} onSubmit={this.createDestination} feedbackIcons saveText="Create" />
+        <DestinationTypePreview type={selectedType} />
+        <ConfigSection title="Configuration" className="m-t-15">
+          <DynamicForm fields={fields} onSubmit={this.createDestination} feedbackIcons saveText="Create" />
+        </ConfigSection>
       </div>
     );
   }

@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sys
 import time
 from pathlib import Path
@@ -75,15 +76,23 @@ except ImportError:
 try:
     from rewatch.assistant.dashboard_layout import (
         enrich_dashboard_for_assistant,
+        find_invalid_widget_positions,
         has_explicit_position,
         normalize_widget_options,
+        prepare_widget_options,
+        prepare_widget_options_for_update,
         suggest_next_position,
+        summarize_dashboard_layout,
     )
 except ImportError:
     enrich_dashboard_for_assistant = None  # type: ignore[assignment,misc]
+    find_invalid_widget_positions = None  # type: ignore[assignment,misc]
     has_explicit_position = None  # type: ignore[assignment,misc]
     normalize_widget_options = None  # type: ignore[assignment,misc]
+    prepare_widget_options = None  # type: ignore[assignment,misc]
+    prepare_widget_options_for_update = None  # type: ignore[assignment,misc]
     suggest_next_position = None  # type: ignore[assignment,misc]
+    summarize_dashboard_layout = None  # type: ignore[assignment,misc]
 
 try:
     from rewatch.assistant.datasources import enrich_data_sources
@@ -122,11 +131,14 @@ mcp = FastMCP(
         "and call any REST API endpoint. For dashboards with 3+ widgets, prefer "
         "build_dashboard_from_spec — it validates, creates, lays out, and publishes "
         "everything in one call (use `derived` + {{cached_query.KEY}} for queries that "
-        "aggregate other queries' cached results). For alerts: run_query first to validate "
-        "columns, get_destination_type for webhook template examples, create_destination, "
-        "then create_alert with destination_ids to subscribe. Use list_endpoints/"
-        "describe_endpoint to discover the full API surface, then call_api for anything "
-        "not covered by a dedicated tool."
+        "aggregate other queries' cached results). Widget layout: add_widget_to_dashboard "
+        "and update_widget always coerce col/row/sizeX/sizeY to numbers; get_dashboard "
+        "reports layout_issues; repair_dashboard_layout fixes broken grids. For alerts: "
+        "run_query first to validate columns, get_destination_type for webhook template "
+        "examples, create_destination, then create_alert with destination_ids to subscribe. "
+        "Use list_endpoints/describe_endpoint to discover the full API surface, then "
+        "call_api for anything not covered by a dedicated tool (widget POSTs are still "
+        "layout-normalized)."
     ),
 )
 
@@ -195,6 +207,101 @@ def _require_catalog_result(result: Any, label: str = "lookup") -> Any:
 def _require_widget_content(visualization_id: Optional[int], text: Optional[str]) -> None:
     if visualization_id is None and not text:
         raise RuntimeError("Provide visualization_id (chart/table widget) or text (text box widget).")
+
+
+def _require_layout_helpers() -> None:
+    if prepare_widget_options is None or normalize_widget_options is None:
+        raise RuntimeError(
+            "Dashboard layout helpers are unavailable in this MCP environment. "
+            "Cannot safely add or update widgets without position normalization."
+        )
+
+
+def _visualization_type(visualization_id: Optional[int]) -> Optional[str]:
+    if not visualization_id:
+        return None
+    try:
+        viz = _request("GET", f"/api/visualizations/{visualization_id}")
+        return viz.get("type") if isinstance(viz, dict) else None
+    except RuntimeError:
+        return None
+
+
+def _widget_visualization_type(widget: dict[str, Any]) -> Optional[str]:
+    vis = widget.get("visualization") if isinstance(widget.get("visualization"), dict) else {}
+    return vis.get("type")
+
+
+def _prepare_widget_options_for_dashboard(
+    dashboard_id: int,
+    *,
+    visualization_id: Optional[int] = None,
+    text: Optional[str] = None,
+    options: Optional[dict] = None,
+    widget: Optional[dict[str, Any]] = None,
+) -> dict[str, Any]:
+    """Always return options.position with numeric col/row/sizeX/sizeY."""
+    _require_layout_helpers()
+    viz_type = _visualization_type(visualization_id) if visualization_id else None
+    if widget and not viz_type:
+        viz_type = _widget_visualization_type(widget)
+    dashboard = _request("GET", f"/api/dashboards/{dashboard_id}")
+    widgets = dashboard.get("widgets") if isinstance(dashboard.get("widgets"), list) else []
+    if widget:
+        return prepare_widget_options_for_update(  # type: ignore[misc]
+            widget,
+            widgets,
+            visualization_type=viz_type,
+            text=text,
+            options=options,
+        )
+    return prepare_widget_options(  # type: ignore[misc]
+        widgets,
+        visualization_type=viz_type,
+        text=text,
+        options=options,
+    )
+
+
+def _normalize_widget_call_body(
+    method: str,
+    path: str,
+    body: Optional[dict[str, Any]],
+) -> Optional[dict[str, Any]]:
+    """Coerce widget layout fields when agents use call_api instead of dedicated tools."""
+    if not body or method.upper() != "POST":
+        return body
+    if prepare_widget_options is None or normalize_widget_options is None:
+        return body
+
+    if path == "/api/widgets":
+        dashboard_id = body.get("dashboard_id")
+        if not dashboard_id:
+            return body
+        body = dict(body)
+        body["options"] = _prepare_widget_options_for_dashboard(
+            int(dashboard_id),
+            visualization_id=body.get("visualization_id"),
+            text=body.get("text"),
+            options=body.get("options"),
+        )
+        return body
+
+    match = re.fullmatch(r"/api/widgets/(\d+)", path)
+    if match and "options" in body:
+        widget_id = int(match.group(1))
+        widget = _request("GET", f"/api/widgets/{widget_id}")
+        dashboard_id = widget.get("dashboard_id") if isinstance(widget, dict) else None
+        if not dashboard_id:
+            return body
+        body = dict(body)
+        body["options"] = _prepare_widget_options_for_dashboard(
+            int(dashboard_id),
+            text=body.get("text") or (widget.get("text") if isinstance(widget, dict) else None),
+            options=body.get("options"),
+            widget=widget if isinstance(widget, dict) else None,
+        )
+    return body
 
 
 def _run_saved_query_result(query_id: int, max_age: int = -1) -> dict[str, Any]:
@@ -286,6 +393,7 @@ def call_api(
         raise RuntimeError("This MCP server is running in read-only mode (REWATCH_MCP_READ_ONLY); only GET is allowed.")
     if "{" in path:
         raise RuntimeError(f"Path {path!r} still contains a template placeholder; substitute real values first.")
+    body = _normalize_widget_call_body(method, path, body)
     return _compact(_request(method, path, params=query_params, body=body))
 
 
@@ -1256,42 +1364,50 @@ def add_widget_to_dashboard(
     Omit ``options`` to auto-place below existing widgets with a type-aware size
     (counters 3x3 packed side by side, charts 6x8, tables 12x8). Pass explicit
     ``options.position`` (col, row, sizeX, sizeY on a 12-column grid) to override.
+    Positions are always normalized server-side — col/row/sizeX/sizeY must be numbers.
     """
     _ensure_writable()
     _require_widget_content(visualization_id, text)
-    viz_type = None
-    if visualization_id:
-        try:
-            viz = _request("GET", f"/api/visualizations/{visualization_id}")
-            viz_type = viz.get("type") if isinstance(viz, dict) else None
-        except RuntimeError:
-            viz_type = None
-    if normalize_widget_options is not None and has_explicit_position is not None:
-        if has_explicit_position(options):
-            options = normalize_widget_options(options, visualization_type=viz_type)
-        else:
-            dashboard = _request("GET", f"/api/dashboards/{dashboard_id}")
-            widgets = dashboard.get("widgets") if isinstance(dashboard.get("widgets"), list) else []
-            options = normalize_widget_options(
-                options,
-                position=suggest_next_position(widgets, visualization_type=viz_type, text=text),
-                visualization_type=viz_type,
-            )
+    options = _prepare_widget_options_for_dashboard(
+        dashboard_id,
+        visualization_id=visualization_id,
+        text=text,
+        options=options,
+    )
     body = _merge_body(
         dashboard_id=dashboard_id,
         visualization_id=visualization_id,
         text=text,
-        options=options or {},
+        options=options,
         width=width,
     )
-    return _compact(_request("POST", "/api/widgets", body=body))
+    widget = _request("POST", "/api/widgets", body=body)
+    if isinstance(widget, dict) and summarize_dashboard_layout is not None:
+        dashboard = _request("GET", f"/api/dashboards/{dashboard_id}")
+        widgets = dashboard.get("widgets") if isinstance(dashboard.get("widgets"), list) else []
+        widget["layout_summary"] = summarize_dashboard_layout(widgets)
+    return _compact(widget)
 
 
 @mcp.tool()
 def update_widget(widget_id: int, text: Optional[str] = None, options: Optional[dict] = None) -> str:
-    """Update a dashboard widget. Pass ``text`` and/or ``options`` (e.g. position/size in the layout grid)."""
+    """Update a dashboard widget. Pass ``text`` and/or ``options`` (e.g. position/size in the layout grid).
+
+    When ``options`` includes ``position``, all of col, row, sizeX, and sizeY are coerced to numbers.
+    """
     _ensure_writable()
-    body = _merge_body(text=text, options=options)
+    body = _merge_body(text=text)
+    if options is not None:
+        widget = _request("GET", f"/api/widgets/{widget_id}")
+        dashboard_id = widget.get("dashboard_id") if isinstance(widget, dict) else None
+        if not dashboard_id:
+            raise RuntimeError(f"Widget {widget_id} has no dashboard_id.")
+        body["options"] = _prepare_widget_options_for_dashboard(
+            dashboard_id,
+            text=text or (widget.get("text") if isinstance(widget, dict) else None),
+            options=options,
+            widget=widget if isinstance(widget, dict) else None,
+        )
     if not body:
         raise RuntimeError("Provide text and/or options to update a widget.")
     return _compact(_request("POST", f"/api/widgets/{widget_id}", body=body))
@@ -1303,6 +1419,56 @@ def delete_widget(widget_id: int) -> str:
     _ensure_writable()
     _request("DELETE", f"/api/widgets/{widget_id}")
     return _compact({"deleted": True, "widget_id": widget_id})
+
+
+@mcp.tool()
+def repair_dashboard_layout(dashboard_id: int) -> str:
+    """Fix widgets with null or invalid grid positions that would crash the dashboard UI.
+
+    Coerces col, row, sizeX, and sizeY to numbers for every broken widget. Call
+    ``get_dashboard`` first to inspect ``layout_summary.layout_issues``.
+    """
+    _ensure_writable()
+    _require_layout_helpers()
+    dashboard = _request("GET", f"/api/dashboards/{dashboard_id}")
+    widgets = dashboard.get("widgets") if isinstance(dashboard.get("widgets"), list) else []
+    issues = find_invalid_widget_positions(widgets)  # type: ignore[misc]
+    if not issues:
+        return _compact({"dashboard_id": dashboard_id, "repaired": 0, "message": "No layout issues found."})
+
+    repaired: list[dict[str, Any]] = []
+    for issue in issues:
+        widget_id = issue.get("widget_id")
+        if not widget_id:
+            continue
+        widget = next((w for w in widgets if isinstance(w, dict) and w.get("id") == widget_id), None)
+        if not widget:
+            continue
+        options = normalize_widget_options(  # type: ignore[misc]
+            {"position": issue.get("position") or {}},
+            visualization_type=_widget_visualization_type(widget),
+        )
+        updated = _request("POST", f"/api/widgets/{widget_id}", body={"options": options})
+        repaired.append(
+            {
+                "widget_id": widget_id,
+                "position": options.get("position"),
+                "visualization_name": issue.get("visualization_name"),
+                "widget": updated if isinstance(updated, dict) else None,
+            }
+        )
+
+    dashboard = _request("GET", f"/api/dashboards/{dashboard_id}")
+    if enrich_dashboard_for_assistant is not None and isinstance(dashboard, dict):
+        dashboard = enrich_dashboard_for_assistant(dashboard)
+    return _compact(
+        {
+            "dashboard_id": dashboard_id,
+            "repaired": len(repaired),
+            "widgets": repaired,
+            "layout_summary": dashboard.get("layout_summary") if isinstance(dashboard, dict) else None,
+        }
+    )
 
 
 @mcp.tool()

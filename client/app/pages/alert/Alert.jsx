@@ -192,9 +192,15 @@ class Alert extends React.Component {
   evaluate = () => {
     const { alert } = this.state;
     return AlertService.evaluate(alert)
-      .then(() => {
-        notification.success("Alert evaluated. Refresh page for updated status.");
-      })
+      .then(() =>
+        AlertService.get({ id: alert.id }).then(updatedAlert => {
+          if (this._isMounted) {
+            this.setState({ alert: updatedAlert, pendingRearm: updatedAlert.rearm });
+            this.onQuerySelected(updatedAlert.query);
+            notification.success("Alert evaluated.");
+          }
+        })
+      )
       .catch(() => {
         notifications.error("Failed to evaluate alert.");
       });
@@ -262,6 +268,7 @@ class Alert extends React.Component {
       pendingRearm,
       save: this.save,
       menuButton,
+      evaluate: this.evaluate,
       onQuerySelected: this.onQuerySelected,
       onRearmChange: this.onRearmChange,
       onNameChange: this.onNameChange,

@@ -22,7 +22,10 @@ from rewatch.assistant.dashboard_layout import (
     enrich_dashboard_for_assistant,
     has_explicit_position,
     normalize_widget_options,
+    prepare_widget_options,
+    prepare_widget_options_for_update,
     suggest_next_position,
+    summarize_dashboard_layout,
     summarize_dashboard_layout,
 )
 from rewatch.assistant.datasources import enrich_data_source, enrich_data_sources
@@ -1228,13 +1231,55 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
     {
         "type": "function",
         "function": {
+            "name": "discover_public_sources",
+            "description": (
+                "Find public APIs, open datasets, and JSON/CSV endpoints for a topic on the internet. "
+                "Runs multiple targeted searches, ranks results, and extracts candidate API URLs. "
+                "Use this first when the user wants a new query/report from an external public source "
+                "that is not already in list_data_sources."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "topic": {
+                        "type": "string",
+                        "description": "Subject to research (e.g. 'SNCF train delays', 'US weather alerts')",
+                    },
+                    "data_kind": {
+                        "type": "string",
+                        "enum": ["json", "csv", "api", "dataset", "openapi"],
+                        "default": "json",
+                        "description": "Preferred public data format",
+                    },
+                    "max_results": {"type": "integer", "default": 8},
+                },
+                "required": ["topic"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "web_search",
-            "description": "Search the public internet for documentation, APIs, SQL syntax, libraries, or current information.",
+            "description": (
+                "Search the public internet for documentation, APIs, datasets, SQL syntax, libraries, "
+                "or current information. Prefer discover_public_sources when starting from an unknown topic."
+            ),
             "parameters": {
                 "type": "object",
                 "properties": {
                     "q": {"type": "string", "description": "Search query"},
                     "max_results": {"type": "integer", "default": 5},
+                    "search_type": {
+                        "type": "string",
+                        "enum": ["general", "api", "dataset", "docs", "openapi"],
+                        "default": "general",
+                        "description": "Bias results toward APIs, datasets, docs, or OpenAPI specs",
+                    },
+                    "site": {
+                        "type": "string",
+                        "description": "Optional domain to restrict search (e.g. github.com or data.gouv.fr)",
+                    },
                 },
                 "required": ["q"],
             },
@@ -1244,11 +1289,20 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
         "type": "function",
         "function": {
             "name": "fetch_url",
-            "description": "Fetch a public web page and return its readable text content.",
+            "description": (
+                "Fetch a public web page or JSON endpoint. Auto-detects JSON and OpenAPI specs, "
+                "extracts candidate API URLs from HTML docs, and returns a readable preview."
+            ),
             "parameters": {
                 "type": "object",
                 "properties": {
                     "url": {"type": "string", "description": "http or https URL"},
+                    "mode": {
+                        "type": "string",
+                        "enum": ["auto", "text", "json"],
+                        "default": "auto",
+                        "description": "auto detects JSON; json requires valid JSON response",
+                    },
                 },
                 "required": ["url"],
             },
@@ -1790,10 +1844,11 @@ class ToolContext:
         else:
             dashboard = _as_dict(self.request("GET", f"/api/dashboards/{dashboard_id}"), "dashboard")
             widgets = dashboard.get("widgets") if isinstance(dashboard.get("widgets"), list) else []
-            options = normalize_widget_options(
-                raw_options,
-                position=suggest_next_position(widgets, visualization_type=viz_type, text=args.get("text")),
+            options = prepare_widget_options(
+                widgets,
                 visualization_type=viz_type,
+                text=args.get("text"),
+                options=raw_options,
             )
 
         body = _merge_body(
@@ -1816,7 +1871,18 @@ class ToolContext:
         if "text" in args:
             body["text"] = args.pop("text")
         if "options" in args:
-            body["options"] = normalize_widget_options(args.pop("options"))
+            widget = _as_dict(self.request("GET", f"/api/widgets/{widget_id}"), "widget")
+            dashboard_id = widget.get("dashboard_id")
+            viz = widget.get("visualization") if isinstance(widget.get("visualization"), dict) else {}
+            dashboard = _as_dict(self.request("GET", f"/api/dashboards/{dashboard_id}"), "dashboard")
+            widgets = dashboard.get("widgets") if isinstance(dashboard.get("widgets"), list) else []
+            body["options"] = prepare_widget_options_for_update(
+                widget,
+                widgets,
+                visualization_type=viz.get("type"),
+                text=body.get("text", widget.get("text")),
+                options=args.pop("options"),
+            )
         if not body:
             raise RuntimeError("Provide text and/or options to update a widget.")
         return self.request("POST", f"/api/widgets/{widget_id}", body=body)
@@ -1870,6 +1936,13 @@ _PRESERVE_KEYS = frozenset(
         "error",
         "app_link",
         "preview_image_url",
+        "candidate_endpoints",
+        "candidate_api_urls",
+        "discovered_urls",
+        "json_preview",
+        "recommended_workflow",
+        "assistant_note",
+        "effective_query",
         "name",
         "id",
         "query_id",
@@ -2096,8 +2169,18 @@ def execute_tool(ctx: ToolContext, name: str, arguments: dict) -> str:
         ),
         "search_docs": lambda a: docs_catalog.search_docs(a["q"], ctx.help_base_url),
         "get_docs_topic": lambda a: docs_catalog.get_docs_topic(a["topic_id"], ctx.help_base_url),
-        "web_search": lambda a: web_tools.web_search(a["q"], a.get("max_results", 5)),
-        "fetch_url": lambda a: web_tools.fetch_url(a["url"]),
+        "discover_public_sources": lambda a: web_tools.discover_public_sources(
+            a["topic"],
+            a.get("data_kind", "json"),
+            a.get("max_results", 8),
+        ),
+        "web_search": lambda a: web_tools.web_search(
+            a["q"],
+            a.get("max_results", 5),
+            a.get("search_type", "general"),
+            a.get("site"),
+        ),
+        "fetch_url": lambda a: web_tools.fetch_url(a["url"], a.get("mode", "auto")),
         "list_endpoints": lambda a: api_meta.list_endpoints(
             ctx.request, tag=a.get("tag"), search=a.get("search")
         ),

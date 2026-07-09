@@ -117,14 +117,14 @@ class DashboardGrid extends React.Component {
 
     return {
       i: id.toString(),
-      x: pos.col,
-      y: pos.row,
-      w: pos.sizeX,
-      h: pos.sizeY,
-      minW: pos.minSizeX,
-      maxW: pos.maxSizeX,
-      minH: pos.minSizeY,
-      maxH: pos.maxSizeY,
+      x: pos.col ?? 0,
+      y: pos.row ?? 0,
+      w: pos.sizeX ?? cfg.defaultSizeX,
+      h: pos.sizeY ?? cfg.defaultSizeY,
+      minW: pos.minSizeX ?? cfg.minSizeX,
+      maxW: pos.maxSizeX ?? cfg.maxSizeX,
+      minH: pos.minSizeY ?? cfg.minSizeY,
+      maxH: pos.maxSizeY ?? cfg.maxSizeY,
     };
   }
 

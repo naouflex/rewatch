@@ -5,6 +5,8 @@ import Table from "antd/lib/table";
 import Button from "antd/lib/button";
 import Alert from "antd/lib/alert";
 
+import ReloadOutlinedIcon from "@ant-design/icons/ReloadOutlined";
+
 import IndexerService from "@/services/indexer";
 
 import "@/components/items-list/list-page-layout.less";
@@ -34,10 +36,12 @@ export default class IndexerTablePreview extends React.Component {
   static propTypes = {
     indexerId: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
     targetTable: PropTypes.string,
+    embedded: PropTypes.bool,
   };
 
   static defaultProps = {
     targetTable: null,
+    embedded: false,
   };
 
   state = {
@@ -68,19 +72,23 @@ export default class IndexerTablePreview extends React.Component {
   };
 
   render() {
-    const { targetTable } = this.props;
+    const { targetTable, embedded } = this.props;
     const { preview, loading, error } = this.state;
     const tableName = preview?.target_table || targetTable;
     const columns = buildColumns(preview?.columns);
     const rows = (preview?.rows || []).map((row, index) => ({ ...row, __rowKey: index }));
 
     return (
-      <div className="indexer-table-preview" data-test="IndexerTablePreview">
+      <div
+        className={`indexer-table-preview ${embedded ? "indexer-table-preview--embedded" : ""}`}
+        data-test="IndexerTablePreview">
         <div className="indexer-table-preview__header">
-          <h4 className="indexer-table-preview__title">Table preview{tableName ? `: ${tableName}` : ""}</h4>
+          {!embedded && (
+            <h4 className="indexer-table-preview__title">Table preview{tableName ? `: ${tableName}` : ""}</h4>
+          )}
+          {embedded && tableName && <span className="indexer-table-preview__table-name">{tableName}</span>}
           <Button size="small" onClick={this.refresh} loading={loading}>
-            <i className="fa fa-refresh m-r-5" aria-hidden="true" />
-            Refresh
+            <ReloadOutlinedIcon /> Refresh
           </Button>
         </div>
         {error && !loading && (
@@ -88,6 +96,7 @@ export default class IndexerTablePreview extends React.Component {
         )}
         <div className="list-page-table">
           <Table
+            className="table-data"
             rowKey="__rowKey"
             size="small"
             loading={loading}

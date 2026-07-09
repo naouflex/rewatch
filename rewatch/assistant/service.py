@@ -1,4 +1,4 @@
-"""OpenAI chat loop with tool execution."""
+"""LLM chat loop with tool execution."""
 
 from __future__ import annotations
 
@@ -6,17 +6,16 @@ import json
 import logging
 from typing import Any, Callable, Optional
 
-from openai import OpenAI
-
 from rewatch import settings
-from rewatch.assistant.openai_retry import call_with_retry, create_openai_client
+from rewatch.assistant.llm_client import stream_completion
+from rewatch.assistant.llm_config import assistant_provider_label
 from rewatch.assistant.activity import tool_result_summary, tool_start_label
 from rewatch.assistant.decision_graph import DecisionGraph
 from rewatch.assistant.links import append_preview_markdown, collect_previews, normalize_reply_links
 from rewatch.assistant.page_context import format_page_context
 from rewatch.assistant.session_context import extract_resource_ids_from_payload
 from rewatch.assistant.skills_prompt import build_skills_prompt
-from rewatch.assistant.tools import TOOL_DEFINITIONS, ToolContext, execute_tool
+from rewatch.assistant.tools import ToolContext, execute_tool
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +43,11 @@ Guidelines:
 - When the user asks to create a query and the data source is not specified, call list_data_sources first and pick the best match by type/name. Never ask the user which data source to use if one is available.
 - SQL data sources: use get_data_source_schema when table/column names are unknown.
 - Non-SQL data sources: follow get_query_runner_type docs exactly (YAML, JSON, GraphQL, Python, etc.). Test with run_query (ad-hoc query_text) before create_query.
-- For public HTTP/JSON datasets: web_search + fetch_url to find real endpoints — never invent sample data.
+- For new public HTTP/JSON/CSV datasets or external APIs not already connected:
+  - Call discover_public_sources(topic, data_kind) first to find real APIs, open-data portals, and candidate endpoint URLs.
+  - Then fetch_url on the best documentation page or a candidate endpoint; use mode=json when probing a .json URL.
+  - list_data_sources → pick a type `json` data source (or another API runner if documented) before create_query.
+  - Never invent endpoints or sample data — validate with run_query before create_query.
 - create_query and update_query automatically execute query text before saving and again after saving. Always read the validation block in the tool response:
   - If validation status is error, fix the query using the error message, schema, and sample data, then update_query. Never tell the user a broken query succeeded.
   - If status is needs_parameters, ask the user for parameter values or use run_query with parameters before continuing.
@@ -87,7 +90,7 @@ Guidelines:
 - For endpoints not covered by dedicated tools, use list_endpoints / describe_endpoint / call_api (full REST API via OpenAPI spec).
 - For dashboard inspiration, call list_dashboard_examples and get_dashboard_example before build_dashboard_from_spec.
 - For analytics patterns (derived SQL, Python chaining, EVM logs/state, subgraph GraphQL, KPI counters), call list_instance_examples and get_instance_example — they reflect a production deployment with 500+ active queries.
-- For external APIs, libraries, SQL dialects, or current events, use web_search then fetch_url on the best results.
+- For external APIs, libraries, SQL dialects, or current events: discover_public_sources or web_search, then fetch_url on the best results.
 - Cite URLs when using information from the web.
 - After creating or changing resources, share direct links using app_link from tool results, or path-based URLs like /queries/{id} and /dashboards/{id}-{slug}.
 - When tool results include preview_image_url, show the preview in chat using markdown images, e.g. ![Query name](preview_image_url). Previews are auto-appended when you forget.
@@ -98,12 +101,7 @@ Guidelines:
 """
 
 
-def _client() -> OpenAI:
-    return create_openai_client()
-
-
 def _stream_completion(
-    client: OpenAI,
     conversation: list[dict[str, Any]],
     on_activity: Optional[ActivityCallback],
     *,
@@ -114,54 +112,7 @@ def _stream_completion(
     Returns {"content": str, "tool_calls": [{"id", "name", "arguments"}, ...]}.
     Retries transient API errors with backoff.
     """
-    kwargs: dict[str, Any] = {
-        "model": settings.ASSISTANT_OPENAI_MODEL,
-        "messages": conversation,
-        "tools": TOOL_DEFINITIONS,
-        "tool_choice": tool_choice,
-        "stream": True,
-    }
-    if settings.OPENAI_REASONING_EFFORT:
-        kwargs["reasoning_effort"] = settings.OPENAI_REASONING_EFFORT
-
-    emitted_any_delta = False
-
-    def _consume_stream() -> dict[str, Any]:
-        nonlocal emitted_any_delta
-        emitted_any_delta = False
-        content_parts: list[str] = []
-        tool_calls: dict[int, dict[str, str]] = {}
-        stream = client.chat.completions.create(**kwargs)
-        for chunk in stream:
-            if not chunk.choices:
-                continue
-            delta = chunk.choices[0].delta
-            if delta is None:
-                continue
-            if delta.content:
-                content_parts.append(delta.content)
-                emitted_any_delta = True
-                _emit(on_activity, {"type": "reply_delta", "text": delta.content})
-            for tc in delta.tool_calls or []:
-                entry = tool_calls.setdefault(tc.index, {"id": "", "name": "", "arguments": ""})
-                if tc.id:
-                    entry["id"] = tc.id
-                if tc.function:
-                    if tc.function.name:
-                        entry["name"] = tc.function.name
-                    if tc.function.arguments:
-                        entry["arguments"] += tc.function.arguments
-        return {
-            "content": "".join(content_parts),
-            "tool_calls": [tool_calls[i] for i in sorted(tool_calls)],
-        }
-
-    return call_with_retry(
-        _consume_stream,
-        on_status=on_activity,
-        can_retry=lambda: not emitted_any_delta,
-        log_label="Assistant OpenAI",
-    )
+    return stream_completion(conversation, on_activity, tool_choice=tool_choice)
 
 
 def _emit(on_activity: Optional[ActivityCallback], event: dict[str, Any]) -> None:
@@ -227,7 +178,6 @@ def chat(
 ) -> dict[str, Any]:
     """Run the assistant chat loop. Returns reply text and updated message history."""
     ctx = ToolContext(base_url=base_url, api_key=api_key, help_base_url=help_base_url)
-    client = _client()
     web_base = base_url.rstrip("/")
 
     system_content = SYSTEM_PROMPT.replace("{base_url}", web_base)
@@ -271,13 +221,12 @@ def chat(
 
         try:
             turn = _stream_completion(
-                client,
                 conversation,
                 activity,
                 tool_choice="none" if final_round else "auto",
             )
         except Exception as exc:
-            logger.exception("Assistant OpenAI request failed")
+            logger.exception("Assistant %s request failed", assistant_provider_label())
             fallback = (
                 "Sorry, I ran into an error talking to the AI service. "
                 f"Please try again. ({exc})"

@@ -10,7 +10,7 @@ import EllipsisOutlinedIcon from "@ant-design/icons/EllipsisOutlined";
 import PlainButton from "@/components/PlainButton";
 import { confirmDialog } from "@/components/ModalShell/confirmDialog";
 
-export default function MenuButton({ doDelete, canEdit, mute, unmute, evaluate, muted }) {
+export default function MenuButton({ doDelete, canEdit, mute, unmute, muted }) {
   const [loading, setLoading] = useState(false);
 
   const execute = useCallback(action => {
@@ -49,17 +49,13 @@ export default function MenuButton({ doDelete, canEdit, mute, unmute, evaluate, 
         key: "delete",
         label: <PlainButton onClick={confirmDelete}>Delete</PlainButton>,
       },
-      {
-        key: "evaluate",
-        label: <PlainButton onClick={() => execute(evaluate)}>Evaluate</PlainButton>,
-      },
     ],
-    [confirmDelete, evaluate, execute, mute, muted, unmute]
+    [confirmDelete, execute, mute, muted, unmute]
   );
 
   return (
     <Dropdown
-      className={cx("m-l-5", { disabled: !canEdit })}
+      className={cx({ disabled: !canEdit })}
       trigger={[canEdit ? "click" : undefined]}
       placement="bottomRight"
       menu={{ items: menuItems }}>
@@ -75,7 +71,6 @@ MenuButton.propTypes = {
   canEdit: PropTypes.bool.isRequired,
   mute: PropTypes.func.isRequired,
   unmute: PropTypes.func.isRequired,
-  evaluate: PropTypes.func.isRequired,
   muted: PropTypes.bool,
 };
 

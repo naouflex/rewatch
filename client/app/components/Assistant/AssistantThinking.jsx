@@ -11,7 +11,7 @@ function activityIcon(tool, status) {
   if (status === "done") {
     return <CheckOutlined aria-hidden="true" />;
   }
-  if (tool === "web_search" || tool === "fetch_url") {
+  if (tool === "web_search" || tool === "fetch_url" || tool === "discover_public_sources") {
     return <GlobalOutlined aria-hidden="true" spin={status === "running"} />;
   }
   return <LoadingOutlined aria-hidden="true" spin={status === "running"} />;
@@ -35,7 +35,10 @@ export default function AssistantThinking({ status, activities }) {
             <li
               key={item.id}
               className={cx("assistant-thinking-step", item.status, {
-                "is-web": item.tool === "web_search" || item.tool === "fetch_url",
+                "is-web":
+                  item.tool === "web_search" ||
+                  item.tool === "fetch_url" ||
+                  item.tool === "discover_public_sources",
               })}
             >
               <span className="assistant-thinking-step-icon">{activityIcon(item.tool, item.status)}</span>

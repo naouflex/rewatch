@@ -279,6 +279,20 @@ OPENAI_MODEL = os.environ.get("REDASH_OPENAI_MODEL", "gpt-5.4-mini")
 OPENAI_REASONING_EFFORT = os.environ.get("REDASH_OPENAI_REASONING_EFFORT", "")
 # Assistant-specific model override (falls back to OPENAI_MODEL when unset).
 ASSISTANT_OPENAI_MODEL = os.environ.get("REDASH_ASSISTANT_OPENAI_MODEL", "") or OPENAI_MODEL
+
+ANTHROPIC_API_KEY = os.environ.get("REDASH_ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_API_KEY", "")
+ANTHROPIC_MODEL = os.environ.get("REDASH_ANTHROPIC_MODEL", "claude-opus-4-6")
+ASSISTANT_ANTHROPIC_MODEL = os.environ.get("REDASH_ASSISTANT_ANTHROPIC_MODEL", "") or ANTHROPIC_MODEL
+ASSISTANT_MAX_TOKENS = int(os.environ.get("REDASH_ASSISTANT_MAX_TOKENS", "16384"))
+
+_assistant_provider = (os.environ.get("REDASH_ASSISTANT_PROVIDER") or "").strip().lower()
+if _assistant_provider in ("openai", "anthropic"):
+    ASSISTANT_PROVIDER = _assistant_provider
+elif ANTHROPIC_API_KEY:
+    ASSISTANT_PROVIDER = "anthropic"
+else:
+    ASSISTANT_PROVIDER = "openai"
+
 ASSISTANT_ENABLED = parse_boolean(os.environ.get("REDASH_ASSISTANT_ENABLED", "true"))
 ASSISTANT_MAX_TOOL_ROUNDS = int(os.environ.get("REDASH_ASSISTANT_MAX_TOOL_ROUNDS", "40"))
 ASSISTANT_MAX_TOOL_RESULT_CHARS = int(os.environ.get("REDASH_ASSISTANT_MAX_TOOL_RESULT_CHARS", "48000"))

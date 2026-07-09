@@ -13,6 +13,8 @@ import Query from "./Query";
 import HorizontalFormItem from "../HorizontalFormItem";
 import RegressorSelect from "./RegressorSelect";
 import TrainTestSplitSlider from "./TrainTestSplitSlider";
+import ConfigSection from "@/components/ConfigSection/ConfigSection";
+import "@/components/ConfigSection/ConfigSection.less";
 
 export default class ModelEdit extends React.Component {
   _isMounted = false;
@@ -103,7 +105,7 @@ export default class ModelEdit extends React.Component {
           </Title>
         </div>
         <div className="create-page-form__body">
-          <div className="d-flex">
+          <ConfigSection title="Query & data">
             <Form className="flex-fill">
               <HorizontalFormItem label="Query">
                 <Query
@@ -175,10 +177,20 @@ export default class ModelEdit extends React.Component {
                   />
                 </Form.Item>
               </HorizontalFormItem>
-              {queryResult && options && (
-                <>
-                      <h4>Training Options</h4>
-                      <HorizontalFormItem label={<span style={{ display: 'inline-block', marginBottom: '8px' }}>Retrain when</span>} className="model-criteria">
+            </Form>
+            <div className="m-t-10">
+              <HelpTrigger className="f-13" type="MODEL_SETUP">
+                Setup Instructions <i className="fa fa-question-circle" aria-hidden="true" />
+                <span className="sr-only">(help)</span>
+              </HelpTrigger>
+            </div>
+          </ConfigSection>
+
+          {queryResult && options && (
+            <>
+              <ConfigSection title="Training">
+                <Form>
+                  <HorizontalFormItem label="Retrain when" className="model-criteria">
                         <Criteria
                           columnNames={queryResult.getColumnNames()}
                           resultValues={queryResult.getData()}
@@ -208,9 +220,12 @@ export default class ModelEdit extends React.Component {
                           setBody={(body) => onNotificationTrainTemplateChange({ custom_body: body })}
                           templateType="train"
                         />
-                      </HorizontalFormItem>
-                      <h4>Prediction Options</h4>
-                      <HorizontalFormItem label={<span style={{ display: 'inline-block', marginBottom: '8px' }}>Predict when</span>} className="model-criteria">
+                  </HorizontalFormItem>
+                </Form>
+              </ConfigSection>
+              <ConfigSection title="Prediction">
+                <Form>
+                  <HorizontalFormItem label="Predict when" className="model-criteria">
                         <Criteria
                           columnNames={queryResult.getColumnNames()}
                           resultValues={queryResult.getData()}
@@ -240,17 +255,11 @@ export default class ModelEdit extends React.Component {
                           setBody={(body) => onNotificationPredictTemplateChange({ custom_body: body })}
                           templateType="predict"
                         />
-                      </HorizontalFormItem>
-                      </>
-              )}
-            </Form>
-            <div>
-              <HelpTrigger className="f-13" type="MODEL_SETUP">
-                Setup Instructions <i className="fa fa-question-circle" aria-hidden="true" />
-                <span className="sr-only">(help)</span>
-              </HelpTrigger>
-            </div>
-          </div>
+                  </HorizontalFormItem>
+                </Form>
+              </ConfigSection>
+            </>
+          )}
         </div>
       </>
     );

@@ -2,15 +2,15 @@ import React from "react";
 import PropTypes from "prop-types";
 import cx from "classnames";
 
-import Link from "@/components/Link";
-import TimeAgo from "@/components/TimeAgo";
 import { MLModel as ModelType } from "@/components/proptypes";
-
 import Form from "antd/lib/form";
 import Button from "antd/lib/button";
 import Tooltip from "@/components/Tooltip";
 import AntAlert from "antd/lib/alert";
-import * as Grid from "antd/lib/grid";
+
+import ConfigSection from "@/components/ConfigSection/ConfigSection";
+import ModelStatusStrip from "./ModelStatusStrip";
+import "@/components/ConfigSection/ConfigSection.less";
 
 import Title from "./Title";
 import Criteria from "./Criteria";
@@ -24,32 +24,6 @@ import TrainTestSplitSlider from "./TrainTestSplitSlider";
 import RegressorSelect from "./RegressorSelect";
 import NotificationTemplate from "./NotificationTemplate";
 import "./MLModelView.less";
-
-function ModelState({ text, state, lastTriggered }) {
-  return (
-    <div className="model-state">
-      <span className={`model-state-indicator label ${STATE_CLASS[state]}`}>{text} {state}</span>
-      {state === "unknown" && <div className="ant-form-item-explain">Model condition has not been evaluated.</div>}
-      {lastTriggered && (
-        <div className="ant-form-item-explain">
-          Last triggered{" "}
-          <span className="model-last-triggered">
-            <TimeAgo date={lastTriggered} />
-          </span>
-        </div>
-      )}
-    </div>
-  );
-}
-
-ModelState.propTypes = {
-  state: PropTypes.string.isRequired,
-  lastTriggered: PropTypes.string,
-};
-
-ModelState.defaultProps = {
-  lastTriggered: null,
-};
 
 export default class ModelView extends React.Component {
   _isMounted = false;
@@ -174,7 +148,7 @@ export default class ModelView extends React.Component {
   render() {
     const { model, queryResult, canEdit, onEdit, menuButton, onChange, setModelTags } = this.props; // Ensure this is passed correctly
     const { query, name, description, version, options } = model;
-    const { train_template, predict_template, train_last_triggered_at, predict_last_triggered_at } = options;
+    const { train_template, predict_template } = options;
 
 
     return (
@@ -191,16 +165,14 @@ export default class ModelView extends React.Component {
             </Tooltip>
           </Title>
         </div>
+        <ModelStatusStrip
+          model={model}
+          queryDataAt={queryResult ? queryResult.getUpdatedAt() : null}
+        />
         <div className="create-page-form__body">
-          <Grid.Row type="flex" gutter={16}>
-            <Grid.Col xs={24} md={16} className="d-flex">
-              <Form className="flex-fill">
-                <HorizontalFormItem>
-                  <ModelState text="Status :" state={model.state} lastTriggered={null} />
-                  <ModelState text="Training :" state={model.state_train} lastTriggered={train_last_triggered_at} />
-                  <ModelState text="Predicting :" state={model.state_predict} lastTriggered={predict_last_triggered_at} />
-                </HorizontalFormItem>
-                <HorizontalFormItem label="Query">
+          <ConfigSection title="Query & data">
+            <Form className="flex-fill">
+              <HorizontalFormItem label="Query">
                   <Query
                     query={query}
                     queryResult={queryResult}
@@ -238,14 +210,17 @@ export default class ModelView extends React.Component {
                     } : null}
                   />
                 </HorizontalFormItem>
-                <HorizontalFormItem label="Random State">
-                  <p>{options.random_state}</p>
-                </HorizontalFormItem>
+              <HorizontalFormItem label="Random State">
+                <p>{options.random_state}</p>
+              </HorizontalFormItem>
+            </Form>
+          </ConfigSection>
 
-                {queryResult && options && (
-                  <>
-                    <h4>Training Options</h4>
-                    <HorizontalFormItem label={<span style={{ display: 'inline-block', marginBottom: '8px' }}>Retrain when</span>} className="model-criteria">
+          {queryResult && options && (
+            <>
+              <ConfigSection title="Training">
+                <Form>
+                  <HorizontalFormItem label="Retrain when" className="model-criteria">
                       <Criteria
                         columnNames={queryResult.getColumnNames()}
                         resultValues={queryResult.getData()}
@@ -272,9 +247,12 @@ export default class ModelView extends React.Component {
                         templateType="train"
                         disabled={true}
                       />
-                    </HorizontalFormItem>
-                    <h4>Prediction Options</h4>
-                    <HorizontalFormItem label={<span style={{ display: 'inline-block', marginBottom: '8px' }}>Predict when</span>} className="model-criteria">
+                  </HorizontalFormItem>
+                </Form>
+              </ConfigSection>
+              <ConfigSection title="Prediction">
+                <Form>
+                  <HorizontalFormItem label="Predict when" className="model-criteria">
                       <Criteria
                         columnNames={queryResult.getColumnNames()}
                         resultValues={queryResult.getData()}
@@ -301,54 +279,41 @@ export default class ModelView extends React.Component {
                         templateType="predict"
                         disabled={true}
                       />
-                    </HorizontalFormItem>
+                  </HorizontalFormItem>
+                </Form>
+              </ConfigSection>
+            </>
+          )}
+
+          {options.muted && (
+            <AntAlert
+              className="m-b-20"
+              message="Notifications are muted"
+              description={
+                canEdit ? (
+                  <>
+                    Notifications for this model will not be sent.
+                    <Button
+                      size="small"
+                      type="primary"
+                      onClick={this.unmute}
+                      loading={this.state.unmuting}
+                      className="m-l-5">
+                      Unmute
+                    </Button>
                   </>
-                )}
-              </Form>
-            </Grid.Col>
-            <Grid.Col xs={24} md={8}>
-              {options.muted && (
-                <AntAlert
-                  className="m-b-20"
-                  message={
-                    <>
-                      <i className="fa fa-bell-slash-o" aria-hidden="true" /> Notifications are muted
-                    </>
-                  }
-                  description={
-                    <>
-                      Notifications for this model will not be sent.
-                      <br />
-                      {canEdit && (
-                        <>
-                          To restore notifications click
-                          <Button
-                            size="small"
-                            type="primary"
-                            onClick={this.unmute}
-                            loading={this.state.unmuting}
-                            className="m-t-5 m-l-5">
-                            Unmute
-                          </Button>
-                        </>
-                      )}
-                    </>
-                  }
-                  type="warning"
-                />
-              )}
-              <h4>
-                Destinations{" "}
-                <Tooltip title="Open Model Destinations page in a new tab.">
-                  <Link href="destinations" target="_blank">
-                    <i className="fa fa-external-link f-13" aria-hidden="true" />
-                    <span className="sr-only">(opens in a new tab)</span>
-                  </Link>
-                </Tooltip>
-              </h4>
+                ) : (
+                  "Notifications for this model will not be sent."
+                )
+              }
+              type="warning"
+              showIcon
+            />
+          )}
+
+          <ConfigSection title="Destinations">
               <ModelDestinations modelId={model.id} />
-            </Grid.Col>
-          </Grid.Row>
+          </ConfigSection>
         </div>
       </>
     );

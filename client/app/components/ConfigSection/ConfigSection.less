@@ -1,0 +1,78 @@
+.config-section {
+  margin-bottom: 24px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  &--bordered {
+    padding: 16px;
+    border: 1px solid var(--rd-color-divider);
+    border-radius: var(--rd-radius-sm);
+    background: var(--rd-color-surface);
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  &__title {
+    flex: 1 1 auto;
+    margin: 0;
+    font-size: var(--rd-font-size-sm);
+    font-weight: var(--rd-font-weight-semibold);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--rd-color-text-secondary);
+  }
+
+  &__action {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__help {
+    margin: -4px 0 10px;
+    font-size: var(--rd-font-size-sm);
+    color: var(--rd-color-text-muted);
+    line-height: 1.45;
+  }
+
+  &__body {
+    color: var(--rd-color-text);
+  }
+}
+
+// Backward compatibility with alert pages
+.alert-section {
+  &:extend(.config-section all);
+}
+
+.alert-section--bordered {
+  &:extend(.config-section--bordered all);
+}
+
+.alert-section__header {
+  &:extend(.config-section__header all);
+}
+
+.alert-section__title {
+  &:extend(.config-section__title all);
+}
+
+.alert-section__action {
+  &:extend(.config-section__action all);
+}
+
+.alert-section__help {
+  &:extend(.config-section__help all);
+}
+
+.alert-section__body {
+  &:extend(.config-section__body all);
+}

@@ -1,7 +1,5 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
-import { head, isEmpty, isNull, isUndefined } from "lodash";
-import Mustache from "mustache";
 
 import HelpTrigger from "@/components/HelpTrigger";
 import { Alert as AlertType, Query as QueryType } from "@/components/proptypes";
@@ -10,38 +8,41 @@ import Input from "antd/lib/input";
 import Select from "antd/lib/select";
 import { confirmDialog } from "@/components/ModalShell/confirmDialog";
 import Switch from "antd/lib/switch";
+import QuestionCircleOutlinedIcon from "@ant-design/icons/QuestionCircleOutlined";
+
+import DiscordWebhookPreview from "./DiscordWebhookPreview";
+import useDiscordDestination from "./useDiscordDestination";
+import { looksLikeDiscordPayload, renderAlertTemplate, buildAlertTemplateContext } from "./alertTemplateUtils";
 
 import "./NotificationTemplate.less";
 
-function normalizeCustomTemplateData(alert, query, columnNames, resultValues) {
-  const topValue = !isEmpty(resultValues) ? head(resultValues)[alert.options.column] : null;
-
-  return {
-    ALERT_STATUS: "TRIGGERED",
-    ALERT_CONDITION: alert.options.op,
-    ALERT_THRESHOLD: alert.options.value,
-    ALERT_NAME: alert.name,
-    ALERT_URL: `${window.location.origin}/alerts/${alert.id}`,
-    QUERY_NAME: query.name,
-    QUERY_URL: `${window.location.origin}/queries/${query.id}`,
-    QUERY_RESULT_VALUE: isNull(topValue) || isUndefined(topValue) ? "UNKNOWN" : topValue,
-    QUERY_RESULT_ROWS: resultValues,
-    QUERY_RESULT_COLS: columnNames,
-  };
-}
-
-function NotificationTemplate({ alert, query, columnNames, resultValues, subject, setSubject, body, setBody }) {
+function NotificationTemplate({
+  alert,
+  query,
+  columnNames,
+  resultValues,
+  subject,
+  setSubject,
+  body,
+  setBody,
+  alertId,
+  subscriptionsRefresh,
+}) {
   const hasContent = !!(subject || body);
   const [enabled, setEnabled] = useState(hasContent ? 1 : 0);
-  const [showPreview, setShowPreview] = useState(false);
+  const [showEmailPreview, setShowEmailPreview] = useState(false);
+  const { hasDiscordWebhook, destinationOptions } = useDiscordDestination(alertId, subscriptionsRefresh);
 
-  const renderData = normalizeCustomTemplateData(alert, query, columnNames, resultValues);
+  const showDiscordPreview =
+    !!enabled && (hasDiscordWebhook || looksLikeDiscordPayload(body) || !body);
 
-  const render = tmpl => Mustache.render(tmpl || "", renderData);
+  const templateContext = buildAlertTemplateContext({ alert, query, columnNames, resultValues });
+  const render = tmpl => renderAlertTemplate(tmpl, templateContext);
+
   const onEnabledChange = value => {
     if (value || !hasContent) {
       setEnabled(value);
-      setShowPreview(false);
+      setShowEmailPreview(false);
     } else {
       confirmDialog({
         title: "Are you sure?",
@@ -50,7 +51,7 @@ function NotificationTemplate({ alert, query, columnNames, resultValues, subject
           setSubject(null);
           setBody(null);
           setEnabled(value);
-          setShowPreview(false);
+          setShowEmailPreview(false);
         },
       });
     }
@@ -71,34 +72,82 @@ function NotificationTemplate({ alert, query, columnNames, resultValues, subject
           Custom template
         </Select.Option>
       </Select>
+
       {!!enabled && (
         <div className="alert-custom-template" data-test="AlertCustomTemplate">
-          <div className="d-flex align-items-center">
-            <h5 className="flex-fill">Subject / Body</h5>
-            Preview{" "}
-            <Switch size="small" className="alert-template-preview" value={showPreview} onChange={setShowPreview} />
-          </div>
-          {/* TODO: consider adding real labels (not clear for sighted users as well) */}
+          {hasDiscordWebhook && (
+            <p className="alert-template-hint">
+              Discord webhook uses the <strong>body</strong> field as a Mustache template that renders to Discord JSON
+              (<code>content</code>, <code>embeds</code>, …). Subject is used by email and other destinations only.
+            </p>
+          )}
+
+          <label className="alert-template-field-label" htmlFor="custom-subject">
+            Subject <span className="alert-template-field-label__optional">(email &amp; others)</span>
+          </label>
           <Input
-            value={showPreview ? render(subject) : subject}
+            id="custom-subject"
+            value={showEmailPreview ? render(subject) : subject}
             aria-label="Subject"
             onChange={e => setSubject(e.target.value)}
-            disabled={showPreview}
+            disabled={showEmailPreview}
             data-test="CustomSubject"
+            placeholder="{{ALERT_NAME}} is {{ALERT_STATUS}}"
           />
+
+          <label className="alert-template-field-label" htmlFor="custom-body">
+            Body{" "}
+            {hasDiscordWebhook && (
+              <span className="alert-template-field-label__optional">(Discord webhook JSON template)</span>
+            )}
+          </label>
           <Input.TextArea
-            value={showPreview ? render(body) : body}
+            id="custom-body"
+            value={showEmailPreview ? render(body) : body}
             aria-label="Body"
             autoSize={{ minRows: 9 }}
             onChange={e => setBody(e.target.value)}
-            disabled={showPreview}
+            disabled={showEmailPreview}
             data-test="CustomBody"
+            placeholder={
+              hasDiscordWebhook
+                ? '{"content": "{{ALERT_NAME}} triggered", "embeds": [{"title": "Value: {{QUERY_RESULT_VALUE}}", "color": 15158332}]}'
+                : "Notification body (Mustache)"
+            }
           />
+
+          {showDiscordPreview && (
+            <DiscordWebhookPreview
+              alert={alert}
+              query={query}
+              columnNames={columnNames}
+              resultValues={resultValues}
+              customBody={body}
+              destinationOptions={destinationOptions}
+              sendForEachRow={!!alert.options?.send_for_each_row}
+            />
+          )}
+
+          <div className="alert-template-email-preview-toggle">
+            Email / plain preview{" "}
+            <Switch
+              size="small"
+              className="alert-template-preview"
+              checked={showEmailPreview}
+              onChange={setShowEmailPreview}
+            />
+          </div>
+
           <HelpTrigger type="ALERT_NOTIF_TEMPLATE_GUIDE" className="f-13">
-            <i className="fa fa-question-circle" aria-hidden="true" /> Formatting guide{" "}
-            <span className="sr-only">(help)</span>
+            <QuestionCircleOutlinedIcon aria-hidden="true" /> Formatting guide
           </HelpTrigger>
         </div>
+      )}
+
+      {!!enabled && hasDiscordWebhook && !body && (
+        <p className="alert-template-hint alert-template-hint--below">
+          With an empty body, Discord receives the default status-colored embed (title, condition, links).
+        </p>
       )}
     </div>
   );
@@ -113,11 +162,15 @@ NotificationTemplate.propTypes = {
   setSubject: PropTypes.func.isRequired,
   body: PropTypes.string,
   setBody: PropTypes.func.isRequired,
+  alertId: PropTypes.any,
+  subscriptionsRefresh: PropTypes.number,
 };
 
 NotificationTemplate.defaultProps = {
   subject: "",
   body: "",
+  alertId: null,
+  subscriptionsRefresh: 0,
 };
 
 export default NotificationTemplate;
