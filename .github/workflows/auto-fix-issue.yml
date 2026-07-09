@@ -1,0 +1,147 @@
+name: Auto Fix Issue
+
+# Automatically attempts to resolve a newly opened issue with the Cursor
+# CLI agent and opens a pull request with the proposed fix.
+#
+# Requirements:
+#   - Repository secret `CURSOR_API_KEY` (create at https://cursor.com/dashboard -> API Keys).
+#   - "Allow GitHub Actions to create and approve pull requests" enabled under
+#     Settings -> Actions -> General (needed for the bot to open PRs).
+#
+# The workflow can be triggered automatically when an issue is opened, or
+# manually for an existing issue via the "Run workflow" button.
+
+on:
+  issues:
+    types: [opened]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'Issue number to fix'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: auto-fix-issue-${{ github.event.issue.number || github.event.inputs.issue_number }}
+  cancel-in-progress: false
+
+jobs:
+  fix-issue:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      # Model used by the agent. Override via repository variable CURSOR_MODEL.
+      MODEL: ${{ vars.CURSOR_MODEL || 'auto' }}
+    # Skip bot-authored issues to avoid loops. Comment this line out to run on
+    # every newly opened issue, or change it to gate on a label, e.g.
+    # `contains(github.event.issue.labels.*.name, 'auto-fix')`.
+    if: github.event_name == 'workflow_dispatch' || github.event.issue.user.type != 'Bot'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve issue details
+        id: issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number || github.event.inputs.issue_number }}
+        run: |
+          set -euo pipefail
+          DATA=$(gh issue view "$ISSUE_NUMBER" --json number,title,body)
+          echo "number=$(echo "$DATA" | jq -r '.number')" >> "$GITHUB_OUTPUT"
+          {
+            echo "title<<EOF_TITLE"
+            echo "$DATA" | jq -r '.title'
+            echo "EOF_TITLE"
+            echo "body<<EOF_BODY"
+            echo "$DATA" | jq -r '.body // ""'
+            echo "EOF_BODY"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Install Cursor CLI
+        run: |
+          curl https://cursor.com/install -fsS | bash
+          # The installer location has varied across versions; add both.
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          echo "$HOME/.cursor/bin" >> "$GITHUB_PATH"
+
+      - name: Configure Git
+        run: |
+          git config user.name "cursor-agent[bot]"
+          git config user.email "cursor-agent[bot]@users.noreply.github.com"
+
+      - name: Run Cursor agent to fix the issue
+        id: agent
+        env:
+          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ steps.issue.outputs.number }}
+          ISSUE_TITLE: ${{ steps.issue.outputs.title }}
+          ISSUE_BODY: ${{ steps.issue.outputs.body }}
+        run: |
+          set -euo pipefail
+
+          BRANCH="cursor/auto-fix-issue-${ISSUE_NUMBER}-${GITHUB_RUN_ID}"
+          git checkout -b "$BRANCH"
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+
+          PROMPT=$(cat <<PROMPT_EOF
+          You are operating inside a GitHub Actions runner with a checked-out git
+          repository. Your task is to resolve the following GitHub issue and leave
+          the working tree containing a complete, committed fix.
+
+          Issue #${ISSUE_NUMBER}: ${ISSUE_TITLE}
+
+          Issue description:
+          ${ISSUE_BODY}
+
+          Instructions:
+          - Investigate the repository to understand the relevant code.
+          - Implement the smallest correct change that resolves the issue.
+          - Follow the existing code style and conventions in this project.
+          - If the issue is a question, ambiguous, or cannot be fixed with code,
+            make no changes and clearly explain why in your final message.
+          - When you make changes, stage and commit them with a clear message that
+            references the issue (e.g. "Fix #${ISSUE_NUMBER}: <summary>").
+          - Do NOT push or open a pull request yourself; the workflow handles that.
+          PROMPT_EOF
+          )
+
+          cursor-agent --force --model "$MODEL" --output-format text --print "$PROMPT" 2>&1 | tee agent-output.txt
+
+      - name: Open pull request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ steps.issue.outputs.number }}
+          ISSUE_TITLE: ${{ steps.issue.outputs.title }}
+          BRANCH: ${{ steps.agent.outputs.branch }}
+        run: |
+          set -euo pipefail
+
+          BASE="${GITHUB_REF_NAME:-master}"
+
+          # The agent is instructed to commit its work. If it produced no commits
+          # (e.g. the issue was a question or not actionable), skip the PR.
+          if [ -z "$(git log "origin/${BASE}..HEAD" --oneline 2>/dev/null)" ]; then
+            echo "No new commits were produced by the agent; skipping pull request."
+            gh issue comment "$ISSUE_NUMBER" --body "The auto-fix agent ran but did not produce any code changes for this issue. A maintainer may need to take a look."
+            exit 0
+          fi
+
+          git push -u origin "$BRANCH"
+
+          PR_URL=$(gh pr create \
+            --base "${GITHUB_REF_NAME:-master}" \
+            --head "$BRANCH" \
+            --title "Fix #${ISSUE_NUMBER}: ${ISSUE_TITLE}" \
+            --body "$(printf 'Automated fix for #%s generated by the Cursor agent.\n\nCloses #%s\n\n---\n_This PR was opened automatically and should be reviewed before merging._' "$ISSUE_NUMBER" "$ISSUE_NUMBER")")
+
+          echo "Opened PR: $PR_URL"
+          gh issue comment "$ISSUE_NUMBER" --body "I opened a pull request with a proposed fix: ${PR_URL}"
