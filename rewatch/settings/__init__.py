@@ -280,7 +280,11 @@ OPENAI_REASONING_EFFORT = os.environ.get("REDASH_OPENAI_REASONING_EFFORT", "")
 # Assistant-specific model override (falls back to OPENAI_MODEL when unset).
 ASSISTANT_OPENAI_MODEL = os.environ.get("REDASH_ASSISTANT_OPENAI_MODEL", "") or OPENAI_MODEL
 
-ANTHROPIC_API_KEY = os.environ.get("REDASH_ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_API_KEY", "")
+ANTHROPIC_API_KEY = (
+    os.environ.get("REDASH_ANTHROPIC_API_KEY")
+    or os.environ.get("ANTHROPIC_API_KEY", "")
+    or os.environ.get("REDASH_ANTROPIC_API_KEY", "")  # tolerate common typo
+)
 ANTHROPIC_MODEL = os.environ.get("REDASH_ANTHROPIC_MODEL", "claude-opus-4-6")
 ASSISTANT_ANTHROPIC_MODEL = os.environ.get("REDASH_ASSISTANT_ANTHROPIC_MODEL", "") or ANTHROPIC_MODEL
 ASSISTANT_MAX_TOKENS = int(os.environ.get("REDASH_ASSISTANT_MAX_TOKENS", "16384"))

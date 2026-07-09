@@ -33,6 +33,18 @@ class TestLLMConfig:
         assert assistant_enabled() is True
         assert assistant_api_key_env_var() == "REDASH_ANTHROPIC_API_KEY"
 
+    def test_anthropic_provider_falls_back_to_openai_without_key(self, monkeypatch):
+        from rewatch.assistant.llm_config import effective_assistant_provider
+
+        monkeypatch.setattr("rewatch.settings.ASSISTANT_PROVIDER", "anthropic")
+        monkeypatch.setattr("rewatch.settings.ANTHROPIC_API_KEY", "")
+        monkeypatch.setattr("rewatch.settings.OPENAI_API_KEY", "sk-test")
+        monkeypatch.setattr("rewatch.settings.ASSISTANT_ENABLED", True)
+        monkeypatch.setattr("rewatch.settings.ASSISTANT_OPENAI_MODEL", "gpt-test")
+        assert assistant_enabled() is True
+        assert effective_assistant_provider() == "openai"
+        assert assistant_model() == "gpt-test"
+
 
 class TestAnthropicMessageConversion:
     def test_split_system_messages(self):

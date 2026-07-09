@@ -8,7 +8,13 @@ from flask_restful import abort
 
 from rewatch import models, settings
 from rewatch.assistant import storage
-from rewatch.assistant.llm_config import assistant_api_key_env_var, assistant_enabled, assistant_model, assistant_provider_label
+from rewatch.assistant.llm_config import (
+    assistant_api_key_env_var,
+    assistant_enabled,
+    assistant_model,
+    assistant_provider_label,
+    effective_assistant_provider,
+)
 from rewatch.assistant.decision_graph import merge_thread_decision_graph
 from rewatch.assistant.previews import render_dashboard_svg, render_query_svg, render_visualization_svg
 from rewatch.assistant.service import chat
@@ -104,7 +110,7 @@ class AssistantStatusResource(BaseResource):
         return {
             "enabled": assistant_enabled(),
             "model": assistant_model() if assistant_enabled() else None,
-            "provider": settings.ASSISTANT_PROVIDER if assistant_enabled() else None,
+            "provider": effective_assistant_provider() if assistant_enabled() else None,
             "api_key_env": assistant_api_key_env_var() if not assistant_enabled() else None,
         }
 

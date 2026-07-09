@@ -9,7 +9,7 @@ from typing import Any, Callable, Optional
 from rewatch import settings
 from rewatch.assistant.anthropic_retry import call_with_retry as anthropic_call_with_retry
 from rewatch.assistant.anthropic_retry import create_anthropic_client
-from rewatch.assistant.llm_config import assistant_model, assistant_provider
+from rewatch.assistant.llm_config import assistant_model, assistant_provider, effective_assistant_provider
 from rewatch.assistant.openai_retry import call_with_retry as openai_call_with_retry
 from rewatch.assistant.openai_retry import create_openai_client
 from rewatch.assistant.tools import TOOL_DEFINITIONS
@@ -258,7 +258,7 @@ def stream_completion(
     tool_choice: str = "auto",
 ) -> dict[str, Any]:
     """Stream one completion from the configured assistant provider."""
-    if assistant_provider() == "anthropic":
+    if effective_assistant_provider() == "anthropic":
         return _anthropic_stream_completion(conversation, on_activity, tool_choice=tool_choice)
     return _openai_stream_completion(conversation, on_activity, tool_choice=tool_choice)
 
@@ -273,7 +273,7 @@ def complete_text(
     """Non-streaming text completion for query generation and similar tasks."""
     resolved_model = model or assistant_model()
 
-    if assistant_provider() == "anthropic":
+    if effective_assistant_provider() == "anthropic":
         client = create_anthropic_client()
         system_content, other_messages = split_system_messages(messages)
         anthropic_messages = openai_messages_to_anthropic(other_messages)
