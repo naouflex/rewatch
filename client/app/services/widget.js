@@ -221,7 +221,7 @@ class Widget {
 
     const queryParams = location.search;
 
-    const localTypes = [Widget.MappingType.WidgetLevel, Widget.MappingType.StaticValue];
+    const localTypes = [Widget.MappingType.StaticValue];
     const localParameters = map(
       filter(params, param => localTypes.indexOf(mappings[param.name].type) >= 0),
       param => {
@@ -255,17 +255,22 @@ class Widget {
     const existingParams = {};
     // textboxes does not have query
     const params = this.getQuery() ? this.getQuery().getParametersDefs(false) : [];
+    each(this.options.parameterMappings, (mapping, name) => {
+      if (mapping.type === Widget.MappingType.WidgetLevel) {
+        mapping.type = Widget.MappingType.DashboardLevel;
+        mapping.mapTo = mapping.mapTo || mapping.name || name;
+      }
+    });
+
     each(params, param => {
       existingParams[param.name] = true;
       if (!isObject(this.options.parameterMappings[param.name])) {
-        // "migration" for old dashboards: parameters with `global` flag
-        // should be mapped to a dashboard-level parameter with the same name
         this.options.parameterMappings[param.name] = {
           name: param.name,
-          type: param.global ? Widget.MappingType.DashboardLevel : Widget.MappingType.WidgetLevel,
-          mapTo: param.name, // map to param with the same name
-          value: null, // for StaticValue
-          title: "", // Use parameter's title
+          type: Widget.MappingType.DashboardLevel,
+          mapTo: param.name,
+          value: null,
+          title: "",
         };
       }
     });

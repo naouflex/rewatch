@@ -13,7 +13,7 @@ See `DEPLOY.md` and `setup/README.md` for local development setup.
 
 ## Documentation
 
-Product help is served from the configured help base URL (see `HelpTrigger.jsx` and `REDASH_HELP_BASE_URL` at build time).
+Product help is served from the configured help base URL (see `HelpTrigger.jsx` and `REWATCH_HELP_BASE_URL` at build time).
 
 ## Security
 

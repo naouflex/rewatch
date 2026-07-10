@@ -21,7 +21,7 @@ class TestLLMConfig:
         assert assistant_provider() == "openai"
         assert assistant_model() == "gpt-test"
         assert assistant_enabled() is True
-        assert assistant_api_key_env_var() == "REDASH_OPENAI_API_KEY"
+        assert assistant_api_key_env_var() == "REWATCH_OPENAI_API_KEY"
 
     def test_anthropic_provider_and_model(self, monkeypatch):
         monkeypatch.setattr("rewatch.settings.ASSISTANT_PROVIDER", "anthropic")
@@ -31,7 +31,7 @@ class TestLLMConfig:
         assert assistant_provider() == "anthropic"
         assert assistant_model() == "claude-opus-4-6"
         assert assistant_enabled() is True
-        assert assistant_api_key_env_var() == "REDASH_ANTHROPIC_API_KEY"
+        assert assistant_api_key_env_var() == "REWATCH_ANTHROPIC_API_KEY"
 
     def test_anthropic_provider_falls_back_to_openai_without_key(self, monkeypatch):
         from rewatch.assistant.llm_config import effective_assistant_provider
@@ -101,4 +101,4 @@ class TestAnthropicMessageConversion:
         assert converted[2]["role"] == "user"
         assert converted[2]["content"][0]["type"] == "tool_result"
         assert converted[2]["content"][0]["tool_use_id"] == "toolu_123"
-        assert converted[3] == {"role": "assistant", "content": [{"type": "text", "text": "Done."}]}
+        assert converted[3] == {"role": "assistant", "content": "Done."}

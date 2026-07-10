@@ -58,21 +58,21 @@ describe("Dashboard Parameters", () => {
       });
   };
 
-  it("supports widget parameters", function() {
-    // widget parameter mapping is the default for the API
-    cy.getByTestId(this.widgetTestId).within(() => {
-      cy.getByTestId("TableVisualization").should("contain", "example1");
+  it("supports dashboard parameters", function() {
+    cy.getByTestId("DashboardParameters").should("exist");
 
+    cy.getByTestId("DashboardParameters").within(() => {
       cy.getByTestId("ParameterName-param1")
         .find("input")
         .type("{selectall}Rewatch");
 
       cy.getByTestId("ParameterApplyButton").click();
-
-      cy.getByTestId("TableVisualization").should("contain", "Rewatch");
     });
 
-    cy.getByTestId("DashboardParameters").should("not.exist");
+    cy.getByTestId(this.widgetTestId).within(() => {
+      cy.getByTestId("ParameterName-param1").should("not.exist");
+      cy.getByTestId("TableVisualization").should("contain", "Rewatch");
+    });
   });
 
   it("supports static values for parameters", function() {
@@ -93,7 +93,7 @@ describe("Dashboard Parameters", () => {
       cy.getByTestId("ParameterName-param1").should("not.exist");
     });
 
-    cy.getByTestId("DashboardParameters").should("not.exist");
+    cy.getByTestId("DashboardParameters").should("exist");
 
     cy.getByTestId(this.widgetTestId).within(() => {
       cy.getByTestId("TableVisualization").should("contain", "StaticValue");

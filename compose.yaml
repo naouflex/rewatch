@@ -1,5 +1,5 @@
 # Production setup, modeled after ~/inverse-watch/docker-compose.yml.
-# REDASH_DATABASE_URL / REDASH_HOST / mail credentials are loaded from .env.
+# REWATCH_DATABASE_URL / REWATCH_HOST / mail credentials are loaded from .env.
 x-rewatch-service: &rewatch-service
   build:
     context: .
@@ -11,15 +11,15 @@ x-rewatch-service: &rewatch-service
     - .env
   restart: unless-stopped
 x-rewatch-environment: &rewatch-environment
-  REDASH_LOG_LEVEL: "INFO"
-  REDASH_REDIS_URL: "redis://redis:6379/0"
-  REDASH_DATABASE_URL: ${REDASH_DATABASE_URL}
-  REDASH_RATELIMIT_ENABLED: "false"
-  REDASH_MAIL_DEFAULT_SENDER: ${REDASH_MAIL_DEFAULT_SENDER}
-  REDASH_MAIL_SERVER: ${REDASH_MAIL_SERVER}
-  REDASH_MAIL_PORT: ${REDASH_MAIL_PORT}
-  REDASH_ENFORCE_CSRF: "true"
-  REDASH_GUNICORN_TIMEOUT: 300
+  REWATCH_LOG_LEVEL: "INFO"
+  REWATCH_REDIS_URL: "redis://redis:6379/0"
+  REWATCH_DATABASE_URL: ${REWATCH_DATABASE_URL}
+  REWATCH_RATELIMIT_ENABLED: "false"
+  REWATCH_MAIL_DEFAULT_SENDER: ${REWATCH_MAIL_DEFAULT_SENDER}
+  REWATCH_MAIL_SERVER: ${REWATCH_MAIL_SERVER}
+  REWATCH_MAIL_PORT: ${REWATCH_MAIL_PORT}
+  REWATCH_ENFORCE_CSRF: "true"
+  REWATCH_GUNICORN_TIMEOUT: 300
   # Set secret keys in the .env file
 services:
   server:
@@ -77,14 +77,14 @@ services:
     restart: unless-stopped
     volumes:
       - redis_data:/data
-  # NOTE: no local postgres service. REDASH_DATABASE_URL in .env points at the
+  # NOTE: no local postgres service. REWATCH_DATABASE_URL in .env points at the
   # GCP Cloud SQL `watch-db-vm` instance over its public IP (sslmode=require). The
   # client host's public IPv4 must be in that instance's Authorized Networks. To
   # run a local Postgres instead, restore a `postgres` service here and set
-  # REDASH_DATABASE_URL=postgresql://rewatch:rewatch@postgres:5432/rewatch.
+  # REWATCH_DATABASE_URL=postgresql://rewatch:rewatch@postgres:5432/rewatch.
   # The landing site + in-app help center is now its own Docker stack so it
   # can be deployed on a separate VM. See ../landing/ for the project, and
-  # build the frontend with REDASH_HELP_BASE_URL=https://<landing-host>
+  # build the frontend with REWATCH_HELP_BASE_URL=https://<landing-host>
   # (consumed by client/app/components/HelpTrigger.jsx) so the question-mark
   # icon in the sidebar opens that host instead of localhost:5002.
 volumes:

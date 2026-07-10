@@ -108,6 +108,11 @@ def tool_start_label(tool_name: str, args: dict[str, Any]) -> str:
     return f"Using {tool_name.replace('_', ' ')}"
 
 
+def tool_preparing_label(tool_name: str) -> str:
+    """Short label while the model is still building a tool call."""
+    return f"Preparing {tool_name.replace('_', ' ')}…"
+
+
 def _truncate(value: str, limit: int = 96) -> str:
     text = (value or "").strip()
     if len(text) <= limit:

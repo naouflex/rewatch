@@ -25,7 +25,7 @@ worker() {
 workers_healthcheck() {
   WORKERS_COUNT=${WORKERS_COUNT}
   echo "Checking active workers count against $WORKERS_COUNT..."
-  ACTIVE_WORKERS_COUNT=`echo $(rq info --url $REDASH_REDIS_URL -R | grep workers | grep -oP ^[0-9]+)`
+  ACTIVE_WORKERS_COUNT=`echo $(rq info --url $REWATCH_REDIS_URL -R | grep workers | grep -oP ^[0-9]+)`
   if [ "$ACTIVE_WORKERS_COUNT" -lt "$WORKERS_COUNT"  ]; then
     echo "$ACTIVE_WORKERS_COUNT workers are active, Exiting"
     exit 1
@@ -45,9 +45,9 @@ server() {
   # Recycle gunicorn workers every n-th request. See http://docs.gunicorn.org/en/stable/settings.html#max-requests for more details.
   MAX_REQUESTS=${MAX_REQUESTS:-1000}
   MAX_REQUESTS_JITTER=${MAX_REQUESTS_JITTER:-100}
-  TIMEOUT=${REDASH_GUNICORN_TIMEOUT:-60}
-  BIND_ADDRESS=${REDASH_GUNICORN_BIND:-[::]:5000}
-  exec /usr/local/bin/gunicorn -b "$BIND_ADDRESS" --name rewatch -w${REDASH_WEB_WORKERS:-4} rewatch.wsgi:app --max-requests $MAX_REQUESTS --max-requests-jitter $MAX_REQUESTS_JITTER --timeout $TIMEOUT --limit-request-line ${REDASH_GUNICORN_LIMIT_REQUEST_LINE:-0}
+  TIMEOUT=${REWATCH_GUNICORN_TIMEOUT:-60}
+  BIND_ADDRESS=${REWATCH_GUNICORN_BIND:-[::]:5000}
+  exec python -m gunicorn -b "$BIND_ADDRESS" --name rewatch -w${REWATCH_WEB_WORKERS:-4} rewatch.wsgi:app --max-requests $MAX_REQUESTS --max-requests-jitter $MAX_REQUESTS_JITTER --timeout $TIMEOUT --limit-request-line ${REWATCH_GUNICORN_LIMIT_REQUEST_LINE:-0}
 }
 
 create_db() {
@@ -75,7 +75,7 @@ help() {
 }
 
 tests() {
-  export REDASH_DATABASE_URL="postgresql://postgres@postgres/tests"
+  export REWATCH_DATABASE_URL="postgresql://postgres@postgres/tests"
 
   if [ $# -eq 0 ]; then
     TEST_ARGS=tests/

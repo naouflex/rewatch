@@ -3,7 +3,7 @@
 #
 # Mirrors every step in DEPLOY.md and adds an optional HTTPS phase that puts
 # Caddy in front of the rewatch `server` container with an automatically
-# renewing Let's Encrypt certificate for $REDASH_HOST (read from .env).
+# renewing Let's Encrypt certificate for $REWATCH_HOST (read from .env).
 #
 # All phases are idempotent. Run a single phase at a time, or `all` for the
 # happy-path first-time deploy.
@@ -40,7 +40,7 @@
 #   REMOTE_DIR        Remote directory  (default: rewatch)
 #   CLOUD_SQL_INSTANCE Cloud SQL name to whitelist VM IP on (default: watch-db)
 #   LETSENCRYPT_EMAIL Override the cert registration email
-#                     (defaults to REDASH_MAIL_DEFAULT_SENDER from .env)
+#                     (defaults to REWATCH_MAIL_DEFAULT_SENDER from .env)
 set -euo pipefail
 
 # ---------- defaults ----------------------------------------------------------
@@ -470,14 +470,14 @@ cmd_https() {
   instance_exists || die "VM $INSTANCE not found; run 'provision' first."
 
   local host domain email ip
-  host="$(read_env_var REDASH_HOST || true)"
-  [[ -n "$host" ]] || die "REDASH_HOST not found in $ENV_FILE"
+  host="$(read_env_var REWATCH_HOST || true)"
+  [[ -n "$host" ]] || die "REWATCH_HOST not found in $ENV_FILE"
   domain="${host#https://}"
   domain="${domain#http://}"
   domain="${domain%/}"
 
-  email="${LETSENCRYPT_EMAIL:-$(read_env_var REDASH_MAIL_DEFAULT_SENDER || true)}"
-  [[ -n "$email" ]] || die "Set LETSENCRYPT_EMAIL or REDASH_MAIL_DEFAULT_SENDER in .env"
+  email="${LETSENCRYPT_EMAIL:-$(read_env_var REWATCH_MAIL_DEFAULT_SENDER || true)}"
+  [[ -n "$email" ]] || die "Set LETSENCRYPT_EMAIL or REWATCH_MAIL_DEFAULT_SENDER in .env"
 
   ip="$(vm_external_ip || true)"
   [[ -n "$ip" ]] || die "Could not determine VM external IP."

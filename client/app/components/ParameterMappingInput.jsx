@@ -48,7 +48,8 @@ export function parameterMappingsToEditableMappings(mappings, parameters, existi
         result.param.setValue(result.value);
         break;
       case ParameterMappingType.WidgetLevel:
-        result.type = MappingType.WidgetLevel;
+        result.type = alreadyExists ? MappingType.DashboardMapToExisting : MappingType.DashboardAddNew;
+        result.mapTo = result.mapTo || mapping.name;
         result.value = null;
         break;
       // no default
@@ -180,9 +181,6 @@ export class ParameterMappingInput extends React.Component {
               <QuestionCircleFilledIcon />
             </Tooltip>
           ) : null}
-        </Radio>
-        <Radio className="radio" value={MappingType.WidgetLevel} data-test="WidgetParameterOption">
-          Widget parameter
         </Radio>
         <Radio className="radio" value={MappingType.StaticValue} data-test="StaticValueOption">
           Static value
@@ -550,7 +548,11 @@ export class ParameterMappingListInput extends React.Component {
           </Fragment>
         );
       case MappingType.WidgetLevel:
-        return "Widget parameter";
+        return (
+          <Fragment>
+            Dashboard <Tag className="tag">{mapTo}</Tag>
+          </Fragment>
+        );
       case MappingType.StaticValue:
         return "Static value";
       default:

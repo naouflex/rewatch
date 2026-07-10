@@ -6,9 +6,8 @@ import json
 import logging
 from typing import Any, Callable, Optional
 
-from rewatch import settings
+from rewatch.assistant.llm_config import assistant_max_tool_rounds, assistant_provider_label
 from rewatch.assistant.llm_client import stream_completion
-from rewatch.assistant.llm_config import assistant_provider_label
 from rewatch.assistant.activity import tool_result_summary, tool_start_label
 from rewatch.assistant.decision_graph import DecisionGraph
 from rewatch.assistant.links import append_preview_markdown, collect_previews, normalize_reply_links
@@ -199,7 +198,7 @@ def chat(
     graph.start("Analyzing your request…")
     activity = _wrap_activity(graph, on_activity)
 
-    max_rounds = settings.ASSISTANT_MAX_TOOL_ROUNDS
+    max_rounds = assistant_max_tool_rounds()
     collected_previews: list[dict[str, str]] = []
     tool_graph_ids: dict[str, str] = {}
     for round_idx in range(max_rounds + 1):
@@ -218,6 +217,13 @@ def chat(
                     ),
                 }
             )
+
+        round_status = (
+            "Summarizing progress…"
+            if final_round
+            else ("Consulting the model…" if round_idx == 0 else "Planning next step…")
+        )
+        _emit(activity, {"type": "status", "message": round_status})
 
         try:
             turn = _stream_completion(

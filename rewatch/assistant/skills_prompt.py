@@ -6,7 +6,10 @@ import re
 from pathlib import Path
 from typing import Optional
 
-from rewatch import settings
+from rewatch.assistant.llm_config import (
+    assistant_include_skill_guides,
+    assistant_skill_guides_max_chars,
+)
 
 _PACKAGE_GUIDES = Path(__file__).resolve().parent / "skill_guides"
 _REPO_SKILLS = Path(__file__).resolve().parents[2] / ".cursor" / "skills"
@@ -44,11 +47,11 @@ def _resolve_guide(bundled_name: str, cursor_relative: Optional[str]) -> Optiona
 
 
 def build_skills_prompt() -> Optional[str]:
-    if not settings.ASSISTANT_INCLUDE_SKILL_GUIDES:
+    if not assistant_include_skill_guides():
         return None
 
     sections: list[str] = []
-    budget = settings.ASSISTANT_SKILL_GUIDES_MAX_CHARS
+    budget = assistant_skill_guides_max_chars()
 
     for bundled_name, cursor_relative in _GUIDE_SOURCES:
         content = _resolve_guide(bundled_name, cursor_relative)

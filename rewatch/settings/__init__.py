@@ -17,19 +17,19 @@ from rewatch.settings.helpers import (
 from rewatch.settings.organization import DATE_FORMAT, TIME_FORMAT  # noqa
 
 # _REDIS_URL is the unchanged REDIS_URL we get from env vars, to be used later with RQ
-_REDIS_URL = os.environ.get("REDASH_REDIS_URL", os.environ.get("REDIS_URL", "redis://localhost:6379/0"))
+_REDIS_URL = os.environ.get("REWATCH_REDIS_URL", os.environ.get("REDIS_URL", "redis://localhost:6379/0"))
 # This is the one to use for Rewatch' own connection:
 REDIS_URL = add_decode_responses_to_redis_url(_REDIS_URL)
-PROXIES_COUNT = int(os.environ.get("REDASH_PROXIES_COUNT", "1"))
+PROXIES_COUNT = int(os.environ.get("REWATCH_PROXIES_COUNT", "1"))
 
-STATSD_HOST = os.environ.get("REDASH_STATSD_HOST", "127.0.0.1")
-STATSD_PORT = int(os.environ.get("REDASH_STATSD_PORT", "8125"))
-STATSD_PREFIX = os.environ.get("REDASH_STATSD_PREFIX", "rewatch")
-STATSD_USE_TAGS = parse_boolean(os.environ.get("REDASH_STATSD_USE_TAGS", "false"))
+STATSD_HOST = os.environ.get("REWATCH_STATSD_HOST", "127.0.0.1")
+STATSD_PORT = int(os.environ.get("REWATCH_STATSD_PORT", "8125"))
+STATSD_PREFIX = os.environ.get("REWATCH_STATSD_PREFIX", "rewatch")
+STATSD_USE_TAGS = parse_boolean(os.environ.get("REWATCH_STATSD_USE_TAGS", "false"))
 
 # Connection settings for Rewatch's own database (where we store the queries, results, etc)
 SQLALCHEMY_DATABASE_URI = os.environ.get(
-    "REDASH_DATABASE_URL", os.environ.get("DATABASE_URL", "postgresql:///postgres")
+    "REWATCH_DATABASE_URL", os.environ.get("DATABASE_URL", "postgresql:///postgres")
 )
 SQLALCHEMY_MAX_OVERFLOW = int_or_none(os.environ.get("SQLALCHEMY_MAX_OVERFLOW"))
 SQLALCHEMY_POOL_SIZE = int_or_none(os.environ.get("SQLALCHEMY_POOL_SIZE"))
@@ -41,70 +41,70 @@ SQLALCHEMY_ECHO = False
 RQ_REDIS_URL = os.environ.get("RQ_REDIS_URL", _REDIS_URL)
 
 # The following enables periodic job (every 5 minutes) of removing unused query results.
-QUERY_RESULTS_CLEANUP_ENABLED = parse_boolean(os.environ.get("REDASH_QUERY_RESULTS_CLEANUP_ENABLED", "true"))
-QUERY_RESULTS_CLEANUP_COUNT = int(os.environ.get("REDASH_QUERY_RESULTS_CLEANUP_COUNT", "100"))
-QUERY_RESULTS_CLEANUP_MAX_AGE = int(os.environ.get("REDASH_QUERY_RESULTS_CLEANUP_MAX_AGE", "7"))
+QUERY_RESULTS_CLEANUP_ENABLED = parse_boolean(os.environ.get("REWATCH_QUERY_RESULTS_CLEANUP_ENABLED", "true"))
+QUERY_RESULTS_CLEANUP_COUNT = int(os.environ.get("REWATCH_QUERY_RESULTS_CLEANUP_COUNT", "100"))
+QUERY_RESULTS_CLEANUP_MAX_AGE = int(os.environ.get("REWATCH_QUERY_RESULTS_CLEANUP_MAX_AGE", "7"))
 
-QUERY_RESULTS_EXPIRED_TTL_ENABLED = parse_boolean(os.environ.get("REDASH_QUERY_RESULTS_EXPIRED_TTL_ENABLED", "false"))
+QUERY_RESULTS_EXPIRED_TTL_ENABLED = parse_boolean(os.environ.get("REWATCH_QUERY_RESULTS_EXPIRED_TTL_ENABLED", "false"))
 # default set query results expired ttl 86400 seconds
-QUERY_RESULTS_EXPIRED_TTL = int(os.environ.get("REDASH_QUERY_RESULTS_EXPIRED_TTL", "86400"))
+QUERY_RESULTS_EXPIRED_TTL = int(os.environ.get("REWATCH_QUERY_RESULTS_EXPIRED_TTL", "86400"))
 
-SCHEMAS_REFRESH_SCHEDULE = int(os.environ.get("REDASH_SCHEMAS_REFRESH_SCHEDULE", 30))
-SCHEMAS_REFRESH_TIMEOUT = int(os.environ.get("REDASH_SCHEMAS_REFRESH_TIMEOUT", 300))
+SCHEMAS_REFRESH_SCHEDULE = int(os.environ.get("REWATCH_SCHEMAS_REFRESH_SCHEDULE", 30))
+SCHEMAS_REFRESH_TIMEOUT = int(os.environ.get("REWATCH_SCHEMAS_REFRESH_TIMEOUT", 300))
 
-AUTH_TYPE = os.environ.get("REDASH_AUTH_TYPE", "api_key")
-INVITATION_TOKEN_MAX_AGE = int(os.environ.get("REDASH_INVITATION_TOKEN_MAX_AGE", 60 * 60 * 24 * 7))
+AUTH_TYPE = os.environ.get("REWATCH_AUTH_TYPE", "api_key")
+INVITATION_TOKEN_MAX_AGE = int(os.environ.get("REWATCH_INVITATION_TOKEN_MAX_AGE", 60 * 60 * 24 * 7))
 
 # The secret key to use in the Flask app for various cryptographic features
-SECRET_KEY = os.environ.get("REDASH_COOKIE_SECRET")
+SECRET_KEY = os.environ.get("REWATCH_COOKIE_SECRET")
 
 if SECRET_KEY is None:
     raise Exception(
-        "You must set the REDASH_COOKIE_SECRET environment variable. Visit http://naoufel.io/help/open-source/admin-guide/secrets for more information."
+        "You must set the REWATCH_COOKIE_SECRET environment variable. Visit http://naoufel.io/help/open-source/admin-guide/secrets for more information."
     )
 
 # The secret key to use when encrypting data source options
-DATASOURCE_SECRET_KEY = os.environ.get("REDASH_SECRET_KEY", SECRET_KEY)
+DATASOURCE_SECRET_KEY = os.environ.get("REWATCH_SECRET_KEY", SECRET_KEY)
 
 # Whether and how to redirect non-HTTP requests to HTTPS. Disabled by default.
-ENFORCE_HTTPS = parse_boolean(os.environ.get("REDASH_ENFORCE_HTTPS", "false"))
-ENFORCE_HTTPS_PERMANENT = parse_boolean(os.environ.get("REDASH_ENFORCE_HTTPS_PERMANENT", "true"))
+ENFORCE_HTTPS = parse_boolean(os.environ.get("REWATCH_ENFORCE_HTTPS", "false"))
+ENFORCE_HTTPS_PERMANENT = parse_boolean(os.environ.get("REWATCH_ENFORCE_HTTPS_PERMANENT", "true"))
 # Whether file downloads are enforced or not.
-ENFORCE_FILE_SAVE = parse_boolean(os.environ.get("REDASH_ENFORCE_FILE_SAVE", "true"))
+ENFORCE_FILE_SAVE = parse_boolean(os.environ.get("REWATCH_ENFORCE_FILE_SAVE", "true"))
 
 # Whether api calls using the json query runner will block private addresses
-ENFORCE_PRIVATE_ADDRESS_BLOCK = parse_boolean(os.environ.get("REDASH_ENFORCE_PRIVATE_IP_BLOCK", "true"))
+ENFORCE_PRIVATE_ADDRESS_BLOCK = parse_boolean(os.environ.get("REWATCH_ENFORCE_PRIVATE_IP_BLOCK", "true"))
 
 # Whether to use secure cookies by default.
-COOKIES_SECURE = parse_boolean(os.environ.get("REDASH_COOKIES_SECURE", str(ENFORCE_HTTPS)))
+COOKIES_SECURE = parse_boolean(os.environ.get("REWATCH_COOKIES_SECURE", str(ENFORCE_HTTPS)))
 # Whether the session cookie is set to secure.
-SESSION_COOKIE_SECURE = parse_boolean(os.environ.get("REDASH_SESSION_COOKIE_SECURE") or str(COOKIES_SECURE))
+SESSION_COOKIE_SECURE = parse_boolean(os.environ.get("REWATCH_SESSION_COOKIE_SECURE") or str(COOKIES_SECURE))
 # Whether the session cookie is set HttpOnly.
-SESSION_COOKIE_HTTPONLY = parse_boolean(os.environ.get("REDASH_SESSION_COOKIE_HTTPONLY", "true"))
-SESSION_EXPIRY_TIME = int(os.environ.get("REDASH_SESSION_EXPIRY_TIME", 60 * 60 * 6))
-SESSION_COOKIE_NAME = os.environ.get("REDASH_SESSION_COOKIE_NAME", "session")
+SESSION_COOKIE_HTTPONLY = parse_boolean(os.environ.get("REWATCH_SESSION_COOKIE_HTTPONLY", "true"))
+SESSION_EXPIRY_TIME = int(os.environ.get("REWATCH_SESSION_EXPIRY_TIME", 60 * 60 * 6))
+SESSION_COOKIE_NAME = os.environ.get("REWATCH_SESSION_COOKIE_NAME", "session")
 
 # Whether the session cookie is set to secure.
-REMEMBER_COOKIE_SECURE = parse_boolean(os.environ.get("REDASH_REMEMBER_COOKIE_SECURE") or str(COOKIES_SECURE))
+REMEMBER_COOKIE_SECURE = parse_boolean(os.environ.get("REWATCH_REMEMBER_COOKIE_SECURE") or str(COOKIES_SECURE))
 # Whether the remember cookie is set HttpOnly.
-REMEMBER_COOKIE_HTTPONLY = parse_boolean(os.environ.get("REDASH_REMEMBER_COOKIE_HTTPONLY", "true"))
+REMEMBER_COOKIE_HTTPONLY = parse_boolean(os.environ.get("REWATCH_REMEMBER_COOKIE_HTTPONLY", "true"))
 # The amount of time before the remember cookie expires.
-REMEMBER_COOKIE_DURATION = int(os.environ.get("REDASH_REMEMBER_COOKIE_DURATION", 60 * 60 * 24 * 31))
+REMEMBER_COOKIE_DURATION = int(os.environ.get("REWATCH_REMEMBER_COOKIE_DURATION", 60 * 60 * 24 * 31))
 
 # Doesn't set X-Frame-Options by default since it's highly dependent
 # on the specific deployment.
 # See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options
 # for more information.
-FRAME_OPTIONS = os.environ.get("REDASH_FRAME_OPTIONS", "deny")
-FRAME_OPTIONS_ALLOW_FROM = os.environ.get("REDASH_FRAME_OPTIONS_ALLOW_FROM", "")
+FRAME_OPTIONS = os.environ.get("REWATCH_FRAME_OPTIONS", "deny")
+FRAME_OPTIONS_ALLOW_FROM = os.environ.get("REWATCH_FRAME_OPTIONS_ALLOW_FROM", "")
 
 # Whether and how to send Strict-Transport-Security response headers.
 # See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security
 # for more information.
-HSTS_ENABLED = parse_boolean(os.environ.get("REDASH_HSTS_ENABLED") or str(ENFORCE_HTTPS))
-HSTS_PRELOAD = parse_boolean(os.environ.get("REDASH_HSTS_PRELOAD", "false"))
-HSTS_MAX_AGE = int(os.environ.get("REDASH_HSTS_MAX_AGE", talisman.ONE_YEAR_IN_SECS))
-HSTS_INCLUDE_SUBDOMAINS = parse_boolean(os.environ.get("REDASH_HSTS_INCLUDE_SUBDOMAINS", "false"))
+HSTS_ENABLED = parse_boolean(os.environ.get("REWATCH_HSTS_ENABLED") or str(ENFORCE_HTTPS))
+HSTS_PRELOAD = parse_boolean(os.environ.get("REWATCH_HSTS_PRELOAD", "false"))
+HSTS_MAX_AGE = int(os.environ.get("REWATCH_HSTS_MAX_AGE", talisman.ONE_YEAR_IN_SECS))
+HSTS_INCLUDE_SUBDOMAINS = parse_boolean(os.environ.get("REWATCH_HSTS_INCLUDE_SUBDOMAINS", "false"))
 
 # Whether and how to send Content-Security-Policy response headers.
 # See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy
@@ -114,7 +114,7 @@ HSTS_INCLUDE_SUBDOMAINS = parse_boolean(os.environ.get("REDASH_HSTS_INCLUDE_SUBD
 # individual CSP directives, see https://github.com/GoogleCloudPlatform/flask-talisman#example-7
 # for more information. E.g.:
 CONTENT_SECURITY_POLICY = os.environ.get(
-    "REDASH_CONTENT_SECURITY_POLICY",
+    "REWATCH_CONTENT_SECURITY_POLICY",
     # NOTE: Google Fonts (fonts.googleapis.com / fonts.gstatic.com) are
     # whitelisted because the rebranded UI loads Inter + JetBrains Mono
     # from there in client/app/index.html.
@@ -129,34 +129,34 @@ CONTENT_SECURITY_POLICY = os.environ.get(
     "frame-ancestors 'none'; "
     "frame-src naoufel.io;",
 )
-CONTENT_SECURITY_POLICY_REPORT_URI = os.environ.get("REDASH_CONTENT_SECURITY_POLICY_REPORT_URI", "")
+CONTENT_SECURITY_POLICY_REPORT_URI = os.environ.get("REWATCH_CONTENT_SECURITY_POLICY_REPORT_URI", "")
 CONTENT_SECURITY_POLICY_REPORT_ONLY = parse_boolean(
-    os.environ.get("REDASH_CONTENT_SECURITY_POLICY_REPORT_ONLY", "false")
+    os.environ.get("REWATCH_CONTENT_SECURITY_POLICY_REPORT_ONLY", "false")
 )
-CONTENT_SECURITY_POLICY_NONCE_IN = array_from_string(os.environ.get("REDASH_CONTENT_SECURITY_POLICY_NONCE_IN", ""))
+CONTENT_SECURITY_POLICY_NONCE_IN = array_from_string(os.environ.get("REWATCH_CONTENT_SECURITY_POLICY_NONCE_IN", ""))
 
 # Whether and how to send Referrer-Policy response headers. Defaults to
 # 'strict-origin-when-cross-origin'.
 # See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy
 # for more information.
-REFERRER_POLICY = os.environ.get("REDASH_REFERRER_POLICY", "strict-origin-when-cross-origin")
+REFERRER_POLICY = os.environ.get("REWATCH_REFERRER_POLICY", "strict-origin-when-cross-origin")
 # Whether and how to send Feature-Policy response headers. Defaults to
 # an empty value.
 # See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Feature-Policy
 # for more information.
-FEATURE_POLICY = os.environ.get("REDASH_FEATURE_POLICY", "")
+FEATURE_POLICY = os.environ.get("REWATCH_FEATURE_POLICY", "")
 
-MULTI_ORG = parse_boolean(os.environ.get("REDASH_MULTI_ORG", "false"))
+MULTI_ORG = parse_boolean(os.environ.get("REWATCH_MULTI_ORG", "false"))
 
 # If Rewatch is behind a proxy it might sometimes receive a X-Forwarded-Proto of HTTP
 # even if your actual Rewatch URL scheme is HTTPS. This will cause Flask to build
 # the OAuth redirect URL incorrectly thus failing auth. This is especially common if
 # you're behind a SSL/TCP configured AWS ELB or similar.
 # This setting will force the URL scheme.
-GOOGLE_OAUTH_SCHEME_OVERRIDE = os.environ.get("REDASH_GOOGLE_OAUTH_SCHEME_OVERRIDE", "")
+GOOGLE_OAUTH_SCHEME_OVERRIDE = os.environ.get("REWATCH_GOOGLE_OAUTH_SCHEME_OVERRIDE", "")
 
-GOOGLE_CLIENT_ID = os.environ.get("REDASH_GOOGLE_CLIENT_ID", "")
-GOOGLE_CLIENT_SECRET = os.environ.get("REDASH_GOOGLE_CLIENT_SECRET", "")
+GOOGLE_CLIENT_ID = os.environ.get("REWATCH_GOOGLE_CLIENT_ID", "")
+GOOGLE_CLIENT_SECRET = os.environ.get("REWATCH_GOOGLE_CLIENT_SECRET", "")
 GOOGLE_OAUTH_ENABLED = bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET)
 
 # If Rewatch is behind a proxy it might sometimes receive a X-Forwarded-Proto of HTTP
@@ -164,17 +164,17 @@ GOOGLE_OAUTH_ENABLED = bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET)
 # the SAML redirect URL incorrect thus failing auth. This is especially common if
 # you're behind a SSL/TCP configured AWS ELB or similar.
 # This setting will force the URL scheme.
-SAML_SCHEME_OVERRIDE = os.environ.get("REDASH_SAML_SCHEME_OVERRIDE", "")
+SAML_SCHEME_OVERRIDE = os.environ.get("REWATCH_SAML_SCHEME_OVERRIDE", "")
 
-SAML_ENCRYPTION_PEM_PATH = os.environ.get("REDASH_SAML_ENCRYPTION_PEM_PATH", "")
-SAML_ENCRYPTION_CERT_PATH = os.environ.get("REDASH_SAML_ENCRYPTION_CERT_PATH", "")
+SAML_ENCRYPTION_PEM_PATH = os.environ.get("REWATCH_SAML_ENCRYPTION_PEM_PATH", "")
+SAML_ENCRYPTION_CERT_PATH = os.environ.get("REWATCH_SAML_ENCRYPTION_CERT_PATH", "")
 SAML_ENCRYPTION_ENABLED = SAML_ENCRYPTION_PEM_PATH != "" and SAML_ENCRYPTION_CERT_PATH != ""
 
 # Enables the use of an externally-provided and trusted remote user via an HTTP
 # header.  The "user" must be an email address.
 #
 # By default the trusted header is X-Forwarded-Remote-User.  You can change
-# this by setting REDASH_REMOTE_USER_HEADER.
+# this by setting REWATCH_REMOTE_USER_HEADER.
 #
 # Enabling this authentication method is *potentially dangerous*, and it is
 # your responsibility to ensure that only a trusted frontend (usually on the
@@ -193,61 +193,61 @@ SAML_ENCRYPTION_ENABLED = SAML_ENCRYPTION_PEM_PATH != "" and SAML_ENCRYPTION_CER
 # If you also set the organization setting auth_password_login_enabled to false,
 # then your authentication will be seamless.  Otherwise a link will be presented
 # on the login page to trigger remote user auth.
-REMOTE_USER_LOGIN_ENABLED = parse_boolean(os.environ.get("REDASH_REMOTE_USER_LOGIN_ENABLED", "false"))
-REMOTE_USER_HEADER = os.environ.get("REDASH_REMOTE_USER_HEADER", "X-Forwarded-Remote-User")
+REMOTE_USER_LOGIN_ENABLED = parse_boolean(os.environ.get("REWATCH_REMOTE_USER_LOGIN_ENABLED", "false"))
+REMOTE_USER_HEADER = os.environ.get("REWATCH_REMOTE_USER_HEADER", "X-Forwarded-Remote-User")
 
 # If the organization setting auth_password_login_enabled is not false, then users will still be
 # able to login through Rewatch instead of the LDAP server
-LDAP_LOGIN_ENABLED = parse_boolean(os.environ.get("REDASH_LDAP_LOGIN_ENABLED", "false"))
+LDAP_LOGIN_ENABLED = parse_boolean(os.environ.get("REWATCH_LDAP_LOGIN_ENABLED", "false"))
 # Bind LDAP using SSL. Default is False
-LDAP_SSL = parse_boolean(os.environ.get("REDASH_LDAP_USE_SSL", "false"))
+LDAP_SSL = parse_boolean(os.environ.get("REWATCH_LDAP_USE_SSL", "false"))
 # Choose authentication method(SIMPLE, ANONYMOUS or NTLM). Default is SIMPLE
-LDAP_AUTH_METHOD = os.environ.get("REDASH_LDAP_AUTH_METHOD", "SIMPLE")
+LDAP_AUTH_METHOD = os.environ.get("REWATCH_LDAP_AUTH_METHOD", "SIMPLE")
 # The LDAP directory address (ex. ldap://10.0.10.1:389)
-LDAP_HOST_URL = os.environ.get("REDASH_LDAP_URL", None)
+LDAP_HOST_URL = os.environ.get("REWATCH_LDAP_URL", None)
 # The DN & password used to connect to LDAP to determine the identity of the user being authenticated.
 # For AD this should be "org\\user".
-LDAP_BIND_DN = os.environ.get("REDASH_LDAP_BIND_DN", None)
-LDAP_BIND_DN_PASSWORD = os.environ.get("REDASH_LDAP_BIND_DN_PASSWORD", "")
+LDAP_BIND_DN = os.environ.get("REWATCH_LDAP_BIND_DN", None)
+LDAP_BIND_DN_PASSWORD = os.environ.get("REWATCH_LDAP_BIND_DN_PASSWORD", "")
 # AD/LDAP email and display name keys
-LDAP_DISPLAY_NAME_KEY = os.environ.get("REDASH_LDAP_DISPLAY_NAME_KEY", "displayName")
-LDAP_EMAIL_KEY = os.environ.get("REDASH_LDAP_EMAIL_KEY", "mail")
+LDAP_DISPLAY_NAME_KEY = os.environ.get("REWATCH_LDAP_DISPLAY_NAME_KEY", "displayName")
+LDAP_EMAIL_KEY = os.environ.get("REWATCH_LDAP_EMAIL_KEY", "mail")
 # Prompt that should be shown above username/email field.
-LDAP_CUSTOM_USERNAME_PROMPT = os.environ.get("REDASH_LDAP_CUSTOM_USERNAME_PROMPT", "LDAP/AD/SSO username:")
+LDAP_CUSTOM_USERNAME_PROMPT = os.environ.get("REWATCH_LDAP_CUSTOM_USERNAME_PROMPT", "LDAP/AD/SSO username:")
 # LDAP Search DN TEMPLATE (for AD this should be "(sAMAccountName=%(username)s)"")
-LDAP_SEARCH_TEMPLATE = os.environ.get("REDASH_LDAP_SEARCH_TEMPLATE", "(cn=%(username)s)")
+LDAP_SEARCH_TEMPLATE = os.environ.get("REWATCH_LDAP_SEARCH_TEMPLATE", "(cn=%(username)s)")
 # The schema to bind to (ex. cn=users,dc=ORG,dc=local)
-LDAP_SEARCH_DN = os.environ.get("REDASH_LDAP_SEARCH_DN", os.environ.get("REDASH_SEARCH_DN"))
+LDAP_SEARCH_DN = os.environ.get("REWATCH_LDAP_SEARCH_DN", os.environ.get("REWATCH_SEARCH_DN"))
 
-STATIC_ASSETS_PATH = fix_assets_path(os.environ.get("REDASH_STATIC_ASSETS_PATH", "../client/dist/"))
-FLASK_TEMPLATE_PATH = fix_assets_path(os.environ.get("REDASH_FLASK_TEMPLATE_PATH", STATIC_ASSETS_PATH))
+STATIC_ASSETS_PATH = fix_assets_path(os.environ.get("REWATCH_STATIC_ASSETS_PATH", "../client/dist/"))
+FLASK_TEMPLATE_PATH = fix_assets_path(os.environ.get("REWATCH_FLASK_TEMPLATE_PATH", STATIC_ASSETS_PATH))
 # Time limit (in seconds) for scheduled queries. Set this to -1 to execute without a time limit.
-SCHEDULED_QUERY_TIME_LIMIT = int(os.environ.get("REDASH_SCHEDULED_QUERY_TIME_LIMIT", -1))
+SCHEDULED_QUERY_TIME_LIMIT = int(os.environ.get("REWATCH_SCHEDULED_QUERY_TIME_LIMIT", -1))
 
 # Time limit (in seconds) for adhoc queries. Set this to -1 to execute without a time limit.
-ADHOC_QUERY_TIME_LIMIT = int(os.environ.get("REDASH_ADHOC_QUERY_TIME_LIMIT", -1))
+ADHOC_QUERY_TIME_LIMIT = int(os.environ.get("REWATCH_ADHOC_QUERY_TIME_LIMIT", -1))
 
-JOB_EXPIRY_TIME = int(os.environ.get("REDASH_JOB_EXPIRY_TIME", 3600 * 12))
-JOB_DEFAULT_FAILURE_TTL = int(os.environ.get("REDASH_JOB_DEFAULT_FAILURE_TTL", 7 * 24 * 60 * 60))
+JOB_EXPIRY_TIME = int(os.environ.get("REWATCH_JOB_EXPIRY_TIME", 3600 * 12))
+JOB_DEFAULT_FAILURE_TTL = int(os.environ.get("REWATCH_JOB_DEFAULT_FAILURE_TTL", 7 * 24 * 60 * 60))
 
 # ML model training/predicting time limits (seconds). Training defaults to 10h
 # because hyperparameter searches on RandomForest/GradientBoosting can be slow;
 # predicting defaults to 6 minutes which is plenty for sklearn inference.
-ML_MODEL_TRAINING_TIME_LIMIT = int(os.environ.get("REDASH_ML_MODEL_TRAINING_TIME_LIMIT", 36000))
-ML_MODEL_PREDICTING_TIME_LIMIT = int(os.environ.get("REDASH_ML_MODEL_PREDICTING_TIME_LIMIT", 360))
+ML_MODEL_TRAINING_TIME_LIMIT = int(os.environ.get("REWATCH_ML_MODEL_TRAINING_TIME_LIMIT", 36000))
+ML_MODEL_PREDICTING_TIME_LIMIT = int(os.environ.get("REWATCH_ML_MODEL_PREDICTING_TIME_LIMIT", 360))
 # Hard cap on a serialized model blob (compressed). Trained models that exceed
 # this are rejected to avoid filling Postgres with multi-GB pickles.
-ML_MODEL_MAX_BLOB_MB = int(os.environ.get("REDASH_ML_MODEL_MAX_BLOB_MB", 100))
+ML_MODEL_MAX_BLOB_MB = int(os.environ.get("REWATCH_ML_MODEL_MAX_BLOB_MB", 100))
 
-LOG_LEVEL = os.environ.get("REDASH_LOG_LEVEL", "INFO")
-LOG_STDOUT = parse_boolean(os.environ.get("REDASH_LOG_STDOUT", "false"))
-LOG_PREFIX = os.environ.get("REDASH_LOG_PREFIX", "")
+LOG_LEVEL = os.environ.get("REWATCH_LOG_LEVEL", "INFO")
+LOG_STDOUT = parse_boolean(os.environ.get("REWATCH_LOG_STDOUT", "false"))
+LOG_PREFIX = os.environ.get("REWATCH_LOG_PREFIX", "")
 LOG_FORMAT = os.environ.get(
-    "REDASH_LOG_FORMAT",
+    "REWATCH_LOG_FORMAT",
     LOG_PREFIX + "[%(asctime)s][PID:%(process)d][%(levelname)s][%(name)s] %(message)s",
 )
 RQ_WORKER_JOB_LOG_FORMAT = os.environ.get(
-    "REDASH_RQ_WORKER_JOB_LOG_FORMAT",
+    "REWATCH_RQ_WORKER_JOB_LOG_FORMAT",
     (
         LOG_PREFIX + "[%(asctime)s][PID:%(process)d][%(levelname)s][%(name)s] "
         "job.func_name=%(job_func_name)s "
@@ -256,40 +256,63 @@ RQ_WORKER_JOB_LOG_FORMAT = os.environ.get(
 )
 
 # Mail settings:
-MAIL_SERVER = os.environ.get("REDASH_MAIL_SERVER", "localhost")
-MAIL_PORT = int(os.environ.get("REDASH_MAIL_PORT", 25))
-MAIL_USE_TLS = parse_boolean(os.environ.get("REDASH_MAIL_USE_TLS", "false"))
-MAIL_USE_SSL = parse_boolean(os.environ.get("REDASH_MAIL_USE_SSL", "false"))
-MAIL_USERNAME = os.environ.get("REDASH_MAIL_USERNAME", None)
-MAIL_PASSWORD = os.environ.get("REDASH_MAIL_PASSWORD", None)
-MAIL_DEFAULT_SENDER = os.environ.get("REDASH_MAIL_DEFAULT_SENDER", None)
-MAIL_MAX_EMAILS = os.environ.get("REDASH_MAIL_MAX_EMAILS", None)
-MAIL_ASCII_ATTACHMENTS = parse_boolean(os.environ.get("REDASH_MAIL_ASCII_ATTACHMENTS", "false"))
+MAIL_SERVER = os.environ.get("REWATCH_MAIL_SERVER", "localhost")
+MAIL_PORT = int(os.environ.get("REWATCH_MAIL_PORT", 25))
+MAIL_USE_TLS = parse_boolean(os.environ.get("REWATCH_MAIL_USE_TLS", "false"))
+MAIL_USE_SSL = parse_boolean(os.environ.get("REWATCH_MAIL_USE_SSL", "false"))
+MAIL_USERNAME = os.environ.get("REWATCH_MAIL_USERNAME", None)
+MAIL_PASSWORD = os.environ.get("REWATCH_MAIL_PASSWORD", None)
+MAIL_DEFAULT_SENDER = os.environ.get("REWATCH_MAIL_DEFAULT_SENDER", None)
+MAIL_MAX_EMAILS = os.environ.get("REWATCH_MAIL_MAX_EMAILS", None)
+MAIL_ASCII_ATTACHMENTS = parse_boolean(os.environ.get("REWATCH_MAIL_ASCII_ATTACHMENTS", "false"))
 
 
 def email_server_is_configured():
     return MAIL_DEFAULT_SENDER is not None
 
 
-HOST = os.environ.get("REDASH_HOST", "")
+HOST = os.environ.get("REWATCH_HOST", "")
 
-OPENAI_API_KEY = os.environ.get("REDASH_OPENAI_API_KEY") or os.environ.get("OPENAI_API_KEY", "")
-OPENAI_MODEL = os.environ.get("REDASH_OPENAI_MODEL", "gpt-5.4-mini")
+OPENAI_API_KEY = os.environ.get("REWATCH_OPENAI_API_KEY") or os.environ.get("OPENAI_API_KEY", "")
+OPENAI_MODEL = os.environ.get("REWATCH_OPENAI_MODEL", "gpt-5.4-mini")
 # Optional reasoning effort for GPT-5+ models (none/low/medium/high). Empty = API default.
-OPENAI_REASONING_EFFORT = os.environ.get("REDASH_OPENAI_REASONING_EFFORT", "")
+OPENAI_REASONING_EFFORT = os.environ.get("REWATCH_OPENAI_REASONING_EFFORT", "")
 # Assistant-specific model override (falls back to OPENAI_MODEL when unset).
-ASSISTANT_OPENAI_MODEL = os.environ.get("REDASH_ASSISTANT_OPENAI_MODEL", "") or OPENAI_MODEL
+ASSISTANT_OPENAI_MODEL = os.environ.get("REWATCH_ASSISTANT_OPENAI_MODEL", "") or OPENAI_MODEL
 
 ANTHROPIC_API_KEY = (
-    os.environ.get("REDASH_ANTHROPIC_API_KEY")
+    os.environ.get("REWATCH_ANTHROPIC_API_KEY")
     or os.environ.get("ANTHROPIC_API_KEY", "")
-    or os.environ.get("REDASH_ANTROPIC_API_KEY", "")  # tolerate common typo
+    or os.environ.get("REWATCH_ANTROPIC_API_KEY", "")  # tolerate common typo
 )
-ANTHROPIC_MODEL = os.environ.get("REDASH_ANTHROPIC_MODEL", "claude-opus-4-6")
-ASSISTANT_ANTHROPIC_MODEL = os.environ.get("REDASH_ASSISTANT_ANTHROPIC_MODEL", "") or ANTHROPIC_MODEL
-ASSISTANT_MAX_TOKENS = int(os.environ.get("REDASH_ASSISTANT_MAX_TOKENS", "16384"))
+ANTHROPIC_MODEL = os.environ.get("REWATCH_ANTHROPIC_MODEL", "claude-sonnet-4-6")
+ASSISTANT_ANTHROPIC_MODEL = os.environ.get("REWATCH_ASSISTANT_ANTHROPIC_MODEL", "") or ANTHROPIC_MODEL
+ASSISTANT_MAX_TOKENS = int(os.environ.get("REWATCH_ASSISTANT_MAX_TOKENS", "16384"))
+# Anthropic-specific cost controls (tool-heavy turns resend tools + system every round).
+ASSISTANT_ANTHROPIC_MAX_TOKENS = int(os.environ.get("REWATCH_ASSISTANT_ANTHROPIC_MAX_TOKENS", "8192"))
+ASSISTANT_ANTHROPIC_MAX_TOOL_ROUNDS = int(os.environ.get("REWATCH_ASSISTANT_ANTHROPIC_MAX_TOOL_ROUNDS", "20"))
+ASSISTANT_ANTHROPIC_MAX_TOOL_RESULT_CHARS = int(
+    os.environ.get("REWATCH_ASSISTANT_ANTHROPIC_MAX_TOOL_RESULT_CHARS", "16000")
+)
+ASSISTANT_ANTHROPIC_INCLUDE_SKILL_GUIDES = parse_boolean(
+    os.environ.get("REWATCH_ASSISTANT_ANTHROPIC_INCLUDE_SKILL_GUIDES", "false")
+)
+ASSISTANT_ANTHROPIC_SKILL_GUIDES_MAX_CHARS = int(
+    os.environ.get("REWATCH_ASSISTANT_ANTHROPIC_SKILL_GUIDES_MAX_CHARS", "8000")
+)
+ASSISTANT_ANTHROPIC_MAX_LLM_CHARS = int(os.environ.get("REWATCH_ASSISTANT_ANTHROPIC_MAX_LLM_CHARS", "60000"))
+ASSISTANT_ANTHROPIC_MAX_LLM_MESSAGES = int(os.environ.get("REWATCH_ASSISTANT_ANTHROPIC_MAX_LLM_MESSAGES", "30"))
+ASSISTANT_ANTHROPIC_PROMPT_CACHING = parse_boolean(
+    os.environ.get("REWATCH_ASSISTANT_ANTHROPIC_PROMPT_CACHING", "true")
+)
+ASSISTANT_ANTHROPIC_COMPACT_TOOLS = parse_boolean(
+    os.environ.get("REWATCH_ASSISTANT_ANTHROPIC_COMPACT_TOOLS", "true")
+)
+ASSISTANT_ANTHROPIC_TOOL_DESCRIPTION_MAX_CHARS = int(
+    os.environ.get("REWATCH_ASSISTANT_ANTHROPIC_TOOL_DESCRIPTION_MAX_CHARS", "320")
+)
 
-_assistant_provider = (os.environ.get("REDASH_ASSISTANT_PROVIDER") or "").strip().lower()
+_assistant_provider = (os.environ.get("REWATCH_ASSISTANT_PROVIDER") or "").strip().lower()
 if _assistant_provider in ("openai", "anthropic"):
     ASSISTANT_PROVIDER = _assistant_provider
 elif ANTHROPIC_API_KEY:
@@ -297,42 +320,44 @@ elif ANTHROPIC_API_KEY:
 else:
     ASSISTANT_PROVIDER = "openai"
 
-ASSISTANT_ENABLED = parse_boolean(os.environ.get("REDASH_ASSISTANT_ENABLED", "true"))
-ASSISTANT_MAX_TOOL_ROUNDS = int(os.environ.get("REDASH_ASSISTANT_MAX_TOOL_ROUNDS", "40"))
-ASSISTANT_MAX_TOOL_RESULT_CHARS = int(os.environ.get("REDASH_ASSISTANT_MAX_TOOL_RESULT_CHARS", "48000"))
-ASSISTANT_INCLUDE_SKILL_GUIDES = parse_boolean(os.environ.get("REDASH_ASSISTANT_INCLUDE_SKILL_GUIDES", "true"))
-ASSISTANT_SKILL_GUIDES_MAX_CHARS = int(os.environ.get("REDASH_ASSISTANT_SKILL_GUIDES_MAX_CHARS", "32000"))
-HELP_BASE_URL = os.environ.get("REDASH_HELP_BASE_URL", "https://naoufel.io")
+ASSISTANT_ENABLED = parse_boolean(os.environ.get("REWATCH_ASSISTANT_ENABLED", "true"))
+ASSISTANT_MAX_TOOL_ROUNDS = int(os.environ.get("REWATCH_ASSISTANT_MAX_TOOL_ROUNDS", "40"))
+ASSISTANT_MAX_TOOL_RESULT_CHARS = int(os.environ.get("REWATCH_ASSISTANT_MAX_TOOL_RESULT_CHARS", "48000"))
+ASSISTANT_MAX_LLM_MESSAGES = int(os.environ.get("REWATCH_ASSISTANT_MAX_LLM_MESSAGES", "60"))
+ASSISTANT_MAX_LLM_CHARS = int(os.environ.get("REWATCH_ASSISTANT_MAX_LLM_CHARS", "120000"))
+ASSISTANT_INCLUDE_SKILL_GUIDES = parse_boolean(os.environ.get("REWATCH_ASSISTANT_INCLUDE_SKILL_GUIDES", "true"))
+ASSISTANT_SKILL_GUIDES_MAX_CHARS = int(os.environ.get("REWATCH_ASSISTANT_SKILL_GUIDES_MAX_CHARS", "32000"))
+HELP_BASE_URL = os.environ.get("REWATCH_HELP_BASE_URL", "https://naoufel.io")
 
-SEND_FAILURE_EMAIL_INTERVAL = int(os.environ.get("REDASH_SEND_FAILURE_EMAIL_INTERVAL", 60))
-MAX_FAILURE_REPORTS_PER_QUERY = int(os.environ.get("REDASH_MAX_FAILURE_REPORTS_PER_QUERY", 100))
+SEND_FAILURE_EMAIL_INTERVAL = int(os.environ.get("REWATCH_SEND_FAILURE_EMAIL_INTERVAL", 60))
+MAX_FAILURE_REPORTS_PER_QUERY = int(os.environ.get("REWATCH_MAX_FAILURE_REPORTS_PER_QUERY", 100))
 
 ALERTS_DEFAULT_MAIL_SUBJECT_TEMPLATE = os.environ.get(
-    "REDASH_ALERTS_DEFAULT_MAIL_SUBJECT_TEMPLATE", "Alert: {alert_name} changed status to {state}"
+    "REWATCH_ALERTS_DEFAULT_MAIL_SUBJECT_TEMPLATE", "Alert: {alert_name} changed status to {state}"
 )
 
-REDASH_ALERTS_DEFAULT_MAIL_BODY_TEMPLATE_FILE = os.environ.get(
-    "REDASH_ALERTS_DEFAULT_MAIL_BODY_TEMPLATE_FILE", fix_assets_path("templates/emails/alert.html")
+REWATCH_ALERTS_DEFAULT_MAIL_BODY_TEMPLATE_FILE = os.environ.get(
+    "REWATCH_ALERTS_DEFAULT_MAIL_BODY_TEMPLATE_FILE", fix_assets_path("templates/emails/alert.html")
 )
 
 # How many requests are allowed per IP to the login page before
 # being throttled?
 # See https://flask-limiter.readthedocs.io/en/stable/#rate-limit-string-notation
 
-RATELIMIT_ENABLED = parse_boolean(os.environ.get("REDASH_RATELIMIT_ENABLED", "true"))
-THROTTLE_LOGIN_PATTERN = os.environ.get("REDASH_THROTTLE_LOGIN_PATTERN", "50/hour")
-LIMITER_STORAGE = os.environ.get("REDASH_LIMITER_STORAGE", REDIS_URL)
-THROTTLE_PASS_RESET_PATTERN = os.environ.get("REDASH_THROTTLE_PASS_RESET_PATTERN", "10/hour")
+RATELIMIT_ENABLED = parse_boolean(os.environ.get("REWATCH_RATELIMIT_ENABLED", "true"))
+THROTTLE_LOGIN_PATTERN = os.environ.get("REWATCH_THROTTLE_LOGIN_PATTERN", "50/hour")
+LIMITER_STORAGE = os.environ.get("REWATCH_LIMITER_STORAGE", REDIS_URL)
+THROTTLE_PASS_RESET_PATTERN = os.environ.get("REWATCH_THROTTLE_PASS_RESET_PATTERN", "10/hour")
 
 # CORS settings for the Query Result API (and possibly future external APIs).
-# In most cases all you need to do is set REDASH_CORS_ACCESS_CONTROL_ALLOW_ORIGIN
+# In most cases all you need to do is set REWATCH_CORS_ACCESS_CONTROL_ALLOW_ORIGIN
 # to the calling domain (or domains in a comma separated list).
-ACCESS_CONTROL_ALLOW_ORIGIN = set_from_string(os.environ.get("REDASH_CORS_ACCESS_CONTROL_ALLOW_ORIGIN", ""))
+ACCESS_CONTROL_ALLOW_ORIGIN = set_from_string(os.environ.get("REWATCH_CORS_ACCESS_CONTROL_ALLOW_ORIGIN", ""))
 ACCESS_CONTROL_ALLOW_CREDENTIALS = parse_boolean(
-    os.environ.get("REDASH_CORS_ACCESS_CONTROL_ALLOW_CREDENTIALS", "false")
+    os.environ.get("REWATCH_CORS_ACCESS_CONTROL_ALLOW_CREDENTIALS", "false")
 )
-ACCESS_CONTROL_REQUEST_METHOD = os.environ.get("REDASH_CORS_ACCESS_CONTROL_REQUEST_METHOD", "GET, POST, PUT")
-ACCESS_CONTROL_ALLOW_HEADERS = os.environ.get("REDASH_CORS_ACCESS_CONTROL_ALLOW_HEADERS", "Content-Type")
+ACCESS_CONTROL_REQUEST_METHOD = os.environ.get("REWATCH_CORS_ACCESS_CONTROL_REQUEST_METHOD", "GET, POST, PUT")
+ACCESS_CONTROL_ALLOW_HEADERS = os.environ.get("REWATCH_CORS_ACCESS_CONTROL_ALLOW_HEADERS", "Content-Type")
 
 # Query Runners
 default_query_runners = [
@@ -414,10 +439,10 @@ default_query_runners = [
 ]
 
 enabled_query_runners = array_from_string(
-    os.environ.get("REDASH_ENABLED_QUERY_RUNNERS", ",".join(default_query_runners))
+    os.environ.get("REWATCH_ENABLED_QUERY_RUNNERS", ",".join(default_query_runners))
 )
-additional_query_runners = array_from_string(os.environ.get("REDASH_ADDITIONAL_QUERY_RUNNERS", ""))
-disabled_query_runners = array_from_string(os.environ.get("REDASH_DISABLED_QUERY_RUNNERS", ""))
+additional_query_runners = array_from_string(os.environ.get("REWATCH_ADDITIONAL_QUERY_RUNNERS", ""))
+disabled_query_runners = array_from_string(os.environ.get("REWATCH_DISABLED_QUERY_RUNNERS", ""))
 
 QUERY_RUNNERS = remove(
     set(disabled_query_runners),
@@ -425,7 +450,7 @@ QUERY_RUNNERS = remove(
 )
 
 dynamic_settings = importlib.import_module(
-    os.environ.get("REDASH_DYNAMIC_SETTINGS_MODULE", "rewatch.settings.dynamic_settings")
+    os.environ.get("REWATCH_DYNAMIC_SETTINGS_MODULE", "rewatch.settings.dynamic_settings")
 )
 
 # Destinations
@@ -448,23 +473,23 @@ default_destinations = [
     "rewatch.destinations.twitter_private",
 ]
 
-enabled_destinations = array_from_string(os.environ.get("REDASH_ENABLED_DESTINATIONS", ",".join(default_destinations)))
-additional_destinations = array_from_string(os.environ.get("REDASH_ADDITIONAL_DESTINATIONS", ""))
+enabled_destinations = array_from_string(os.environ.get("REWATCH_ENABLED_DESTINATIONS", ",".join(default_destinations)))
+additional_destinations = array_from_string(os.environ.get("REWATCH_ADDITIONAL_DESTINATIONS", ""))
 
 DESTINATIONS = distinct(enabled_destinations + additional_destinations)
 
-EVENT_REPORTING_WEBHOOKS = array_from_string(os.environ.get("REDASH_EVENT_REPORTING_WEBHOOKS", ""))
+EVENT_REPORTING_WEBHOOKS = array_from_string(os.environ.get("REWATCH_EVENT_REPORTING_WEBHOOKS", ""))
 
 # Support for Sentry (https://getsentry.com/). Just set your Sentry DSN to enable it:
-SENTRY_DSN = os.environ.get("REDASH_SENTRY_DSN", "")
-SENTRY_ENVIRONMENT = os.environ.get("REDASH_SENTRY_ENVIRONMENT")
+SENTRY_DSN = os.environ.get("REWATCH_SENTRY_DSN", "")
+SENTRY_ENVIRONMENT = os.environ.get("REWATCH_SENTRY_ENVIRONMENT")
 
 # Client side toggles:
-ALLOW_SCRIPTS_IN_USER_INPUT = parse_boolean(os.environ.get("REDASH_ALLOW_SCRIPTS_IN_USER_INPUT", "false"))
+ALLOW_SCRIPTS_IN_USER_INPUT = parse_boolean(os.environ.get("REWATCH_ALLOW_SCRIPTS_IN_USER_INPUT", "false"))
 DASHBOARD_REFRESH_INTERVALS = list(
     map(
         int,
-        array_from_string(os.environ.get("REDASH_DASHBOARD_REFRESH_INTERVALS", "60,300,600,1800,3600,43200,86400")),
+        array_from_string(os.environ.get("REWATCH_DASHBOARD_REFRESH_INTERVALS", "60,300,600,1800,3600,43200,86400")),
     )
 )
 QUERY_REFRESH_INTERVALS = list(
@@ -472,48 +497,48 @@ QUERY_REFRESH_INTERVALS = list(
         int,
         array_from_string(
             os.environ.get(
-                "REDASH_QUERY_REFRESH_INTERVALS",
+                "REWATCH_QUERY_REFRESH_INTERVALS",
                 "60, 300, 600, 900, 1800, 3600, 7200, 10800, 14400, 18000, 21600, 25200, 28800, 32400, 36000, 39600, 43200, 86400, 604800, 1209600, 2592000",
             )
         ),
     )
 )
-PAGE_SIZE = int(os.environ.get("REDASH_PAGE_SIZE", 20))
+PAGE_SIZE = int(os.environ.get("REWATCH_PAGE_SIZE", 20))
 PAGE_SIZE_OPTIONS = list(
     map(
         int,
-        array_from_string(os.environ.get("REDASH_PAGE_SIZE_OPTIONS", "5,10,20,50,100")),
+        array_from_string(os.environ.get("REWATCH_PAGE_SIZE_OPTIONS", "5,10,20,50,100")),
     )
 )
-TABLE_CELL_MAX_JSON_SIZE = int(os.environ.get("REDASH_TABLE_CELL_MAX_JSON_SIZE", 50000))
+TABLE_CELL_MAX_JSON_SIZE = int(os.environ.get("REWATCH_TABLE_CELL_MAX_JSON_SIZE", 50000))
 
 # Features:
-VERSION_CHECK = parse_boolean(os.environ.get("REDASH_VERSION_CHECK", "true"))
-FEATURE_DISABLE_REFRESH_QUERIES = parse_boolean(os.environ.get("REDASH_FEATURE_DISABLE_REFRESH_QUERIES", "false"))
-FEATURE_SHOW_QUERY_RESULTS_COUNT = parse_boolean(os.environ.get("REDASH_FEATURE_SHOW_QUERY_RESULTS_COUNT", "true"))
+VERSION_CHECK = parse_boolean(os.environ.get("REWATCH_VERSION_CHECK", "true"))
+FEATURE_DISABLE_REFRESH_QUERIES = parse_boolean(os.environ.get("REWATCH_FEATURE_DISABLE_REFRESH_QUERIES", "false"))
+FEATURE_SHOW_QUERY_RESULTS_COUNT = parse_boolean(os.environ.get("REWATCH_FEATURE_SHOW_QUERY_RESULTS_COUNT", "true"))
 FEATURE_ALLOW_CUSTOM_JS_VISUALIZATIONS = parse_boolean(
-    os.environ.get("REDASH_FEATURE_ALLOW_CUSTOM_JS_VISUALIZATIONS", "true")
+    os.environ.get("REWATCH_FEATURE_ALLOW_CUSTOM_JS_VISUALIZATIONS", "true")
 )
-FEATURE_AUTO_PUBLISH_NAMED_QUERIES = parse_boolean(os.environ.get("REDASH_FEATURE_AUTO_PUBLISH_NAMED_QUERIES", "true"))
-FEATURE_EXTENDED_ALERT_OPTIONS = parse_boolean(os.environ.get("REDASH_FEATURE_EXTENDED_ALERT_OPTIONS", "false"))
+FEATURE_AUTO_PUBLISH_NAMED_QUERIES = parse_boolean(os.environ.get("REWATCH_FEATURE_AUTO_PUBLISH_NAMED_QUERIES", "true"))
+FEATURE_EXTENDED_ALERT_OPTIONS = parse_boolean(os.environ.get("REWATCH_FEATURE_EXTENDED_ALERT_OPTIONS", "false"))
 
 # BigQuery
-BIGQUERY_HTTP_TIMEOUT = int(os.environ.get("REDASH_BIGQUERY_HTTP_TIMEOUT", "600"))
+BIGQUERY_HTTP_TIMEOUT = int(os.environ.get("REWATCH_BIGQUERY_HTTP_TIMEOUT", "600"))
 
 # Allow Parameters in Embeds
 # WARNING: Deprecated!
 # See https://discuss.rewatch.io/t/support-for-parameters-in-embedded-visualizations/3337 for more details.
-ALLOW_PARAMETERS_IN_EMBEDS = parse_boolean(os.environ.get("REDASH_ALLOW_PARAMETERS_IN_EMBEDS", "false"))
+ALLOW_PARAMETERS_IN_EMBEDS = parse_boolean(os.environ.get("REWATCH_ALLOW_PARAMETERS_IN_EMBEDS", "false"))
 
 # Enhance schema fetching
 SCHEMA_RUN_TABLE_SIZE_CALCULATIONS = parse_boolean(
-    os.environ.get("REDASH_SCHEMA_RUN_TABLE_SIZE_CALCULATIONS", "false")
+    os.environ.get("REWATCH_SCHEMA_RUN_TABLE_SIZE_CALCULATIONS", "false")
 )
 
 # kylin
-KYLIN_OFFSET = int(os.environ.get("REDASH_KYLIN_OFFSET", 0))
-KYLIN_LIMIT = int(os.environ.get("REDASH_KYLIN_LIMIT", 50000))
-KYLIN_ACCEPT_PARTIAL = parse_boolean(os.environ.get("REDASH_KYLIN_ACCEPT_PARTIAL", "false"))
+KYLIN_OFFSET = int(os.environ.get("REWATCH_KYLIN_OFFSET", 0))
+KYLIN_LIMIT = int(os.environ.get("REWATCH_KYLIN_LIMIT", 50000))
+KYLIN_ACCEPT_PARTIAL = parse_boolean(os.environ.get("REWATCH_KYLIN_ACCEPT_PARTIAL", "false"))
 
 # sqlparse
 SQLPARSE_FORMAT_OPTIONS = {
@@ -522,15 +547,15 @@ SQLPARSE_FORMAT_OPTIONS = {
 }
 
 # requests
-REQUESTS_ALLOW_REDIRECTS = parse_boolean(os.environ.get("REDASH_REQUESTS_ALLOW_REDIRECTS", "false"))
+REQUESTS_ALLOW_REDIRECTS = parse_boolean(os.environ.get("REWATCH_REQUESTS_ALLOW_REDIRECTS", "false"))
 
 # Enforces CSRF token validation on API requests.
 # This is turned off by default to avoid breaking any existing deployments but it is highly recommended to turn this toggle on to prevent CSRF attacks.
-ENFORCE_CSRF = parse_boolean(os.environ.get("REDASH_ENFORCE_CSRF", "false"))
+ENFORCE_CSRF = parse_boolean(os.environ.get("REWATCH_ENFORCE_CSRF", "false"))
 
 # Databricks
 
-CSRF_TIME_LIMIT = int(os.environ.get("REDASH_CSRF_TIME_LIMIT", 3600 * 6))
+CSRF_TIME_LIMIT = int(os.environ.get("REWATCH_CSRF_TIME_LIMIT", 3600 * 6))
 
 # Email blocked domains, use delimiter comma to separated multiple domains
-BLOCKED_DOMAINS = set_from_string(os.environ.get("REDASH_BLOCKED_DOMAINS", "qq.com"))
+BLOCKED_DOMAINS = set_from_string(os.environ.get("REWATCH_BLOCKED_DOMAINS", "qq.com"))

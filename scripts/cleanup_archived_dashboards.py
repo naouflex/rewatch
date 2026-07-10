@@ -11,7 +11,7 @@ import psycopg2
 import psycopg2.extras
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-DB_URL = REPO_ROOT.joinpath(".env").read_text().split("REDASH_DATABASE_URL=")[1].split("\n")[0].strip()
+DB_URL = REPO_ROOT.joinpath(".env").read_text().split("REWATCH_DATABASE_URL=")[1].split("\n")[0].strip()
 
 CACHED_QUERY_RE = re.compile(r"cached_query_(\d+)")
 

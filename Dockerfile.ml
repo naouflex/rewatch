@@ -53,8 +53,8 @@ RUN pip install --no-cache-dir -r /tmp/requirements.ml.txt && \
 # Default this container to the ML queues. Can be overridden in compose.
 ENV QUEUES="training,predicting" \
     WORKERS_COUNT=2 \
-    REDASH_ML_MODEL_TRAINING_TIME_LIMIT=36000 \
-    REDASH_ML_MODEL_PREDICTING_TIME_LIMIT=360
+    REWATCH_ML_MODEL_TRAINING_TIME_LIMIT=36000 \
+    REWATCH_ML_MODEL_PREDICTING_TIME_LIMIT=360
 
 USER rewatch
 

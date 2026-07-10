@@ -35,7 +35,7 @@ const isDevelopment = !isProduction;
 const isHotReloadingEnabled =
   isDevelopment && process.env.HOT_RELOAD === "true";
 
-const rewatchBackend = process.env.REDASH_BACKEND || "http://localhost:5001";
+const rewatchBackend = process.env.REWATCH_BACKEND || "http://localhost:5001";
 const baseHref = CONFIG.baseHref || "/";
 const staticPath = CONFIG.staticPath || "/static/";
 const htmlTitle = CONFIG.title || "Rewatch";
@@ -50,7 +50,7 @@ const extensionPath = path.join(__dirname, extensionsRelativePath);
 // Function to apply configuration overrides (see scripts/README)
 function maybeApplyOverrides(config) {
   const overridesLocation =
-    process.env.REDASH_WEBPACK_OVERRIDES || "./scripts/webpack/overrides";
+    process.env.REWATCH_WEBPACK_OVERRIDES || "./scripts/webpack/overrides";
   const applyOverrides = optionalRequire(overridesLocation);
   if (!applyOverrides) {
     return config;
@@ -162,12 +162,12 @@ const config = {
       // Thanks to https://stackoverflow.com/a/65018686/14239942
       process: 'process/browser'
     }),
-    // Expose a small allowlist of REDASH_* env vars to the frontend bundle.
+    // Expose a small allowlist of REWATCH_* env vars to the frontend bundle.
     // Defaults make sense for the dev compose stack:
-    //   - REDASH_HELP_BASE_URL: where the in-app help drawer loads pages from
+    //   - REWATCH_HELP_BASE_URL: where the in-app help drawer loads pages from
     //     (see client/app/components/HelpTrigger.jsx and ./landing/).
     new webpack.EnvironmentPlugin({
-      REDASH_HELP_BASE_URL: process.env.REDASH_HELP_BASE_URL || "https://naoufel.io",
+      REWATCH_HELP_BASE_URL: process.env.REWATCH_HELP_BASE_URL || "https://naoufel.io",
     })
   ].filter(Boolean),
   optimization: {

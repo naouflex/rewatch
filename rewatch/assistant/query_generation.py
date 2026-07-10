@@ -6,8 +6,7 @@ import logging
 import re
 from typing import Any, Optional
 
-from rewatch import settings
-from rewatch.assistant.llm_client import complete_text
+from rewatch.assistant.llm_config import effective_assistant_provider
 from rewatch.assistant.catalog import build_query_generation_context
 
 logger = logging.getLogger(__name__)
@@ -260,7 +259,7 @@ def generate_query(
         {"role": "user", "content": "\n\n".join(user_parts)},
     ]
 
-    temperature = None if settings.ASSISTANT_PROVIDER == "anthropic" else 0.2
+    temperature = None if effective_assistant_provider() == "anthropic" else 0.2
     content = complete_text(messages, temperature=temperature, log_label="Query generation")
     query_text = _extract_query_text(content)
     if not query_text:

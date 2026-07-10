@@ -39,6 +39,14 @@ function isAwaitingReply(messages) {
   return messages[messages.length - 1].role === "user";
 }
 
+function isWelcomePlaceholder(message, index) {
+  return (
+    index === 0 &&
+    message.role === "assistant" &&
+    message.content === WELCOME.content
+  );
+}
+
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -100,9 +108,7 @@ export default function AssistantChat({
     if (!onMessagesChange) {
       return;
     }
-    const conversationMessages = messages.filter(
-      message => !(message.role === "assistant" && message.content === WELCOME.content && messages.length <= 1)
-    );
+    const conversationMessages = messages.filter((message, index) => !isWelcomePlaceholder(message, index));
     onMessagesChange(conversationMessages);
   }, [messages, onMessagesChange]);
 
@@ -408,6 +414,7 @@ export default function AssistantChat({
         streamingThreadIdRef.current = null;
         setLoading(false);
         setThinkingActivities([]);
+        setThinkingGraph(null);
         setThinkingStatus("Thinking…");
         setDraftReply("");
       }
@@ -568,7 +575,7 @@ export default function AssistantChat({
             <HtmlContent className="markdown">{renderMarkdown(draftReply)}</HtmlContent>
           </div>
         )}
-        {loading && !draftReply && (
+        {loading && (
           <>
             <AssistantThinking status={thinkingStatus} activities={thinkingActivities} />
             {thinkingGraph && <AssistantDecisionGraph graph={thinkingGraph} live defaultExpanded />}

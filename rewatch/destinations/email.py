@@ -40,7 +40,7 @@ class Email(BaseDestination):
         if custom_body:
             html = custom_body
         else:
-            with open(settings.REDASH_ALERTS_DEFAULT_MAIL_BODY_TEMPLATE_FILE, "r") as f:
+            with open(settings.REWATCH_ALERTS_DEFAULT_MAIL_BODY_TEMPLATE_FILE, "r") as f:
                 html = alert.render_template(f.read(), row=row, row_index=row_index)
         logging.debug("Notifying: %s", recipients)
 

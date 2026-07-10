@@ -10,7 +10,6 @@ maintainers = [
     { name = "Rewatch maintainers", email = "maintainers@naoufel.io" }
 ]
 readme = "README.md"
-dependencies = ["anthropic (>=0.49.0)"]
 
 [tool.black]
 target-version = ['py38']

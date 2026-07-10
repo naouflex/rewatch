@@ -110,7 +110,7 @@ export const ColorPaletteTypes = {
 };
 
 const COLOR_SCHEME_ALIASES: Record<string, string> = {
-  Redash: "Rewatch",
+  Rewatch: "Rewatch",
 };
 
 export function resolveColorScheme(name: string) {

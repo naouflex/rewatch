@@ -304,14 +304,14 @@ def main():
     )
     parser.add_argument(
         "--target-url",
-        default=os.environ.get("TARGET_DATABASE_URL") or os.environ.get("REDASH_DATABASE_URL"),
+        default=os.environ.get("TARGET_DATABASE_URL") or os.environ.get("REWATCH_DATABASE_URL"),
     )
     parser.add_argument("--no-predictions", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
     if not args.source_url or not args.target_url:
-        print("SOURCE_DATABASE_URL and REDASH_DATABASE_URL (or TARGET_DATABASE_URL) are required.", file=sys.stderr)
+        print("SOURCE_DATABASE_URL and REWATCH_DATABASE_URL (or TARGET_DATABASE_URL) are required.", file=sys.stderr)
         sys.exit(1)
 
     migrate(

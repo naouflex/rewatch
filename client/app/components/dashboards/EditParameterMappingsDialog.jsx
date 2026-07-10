@@ -21,7 +21,8 @@ export function getParamValuesSnapshot(mappings, dashboardParameters) {
         case MappingType.StaticValue:
           return [m.name, m.value];
         case MappingType.WidgetLevel:
-          return [m.name, m.param.value];
+          param = find(dashboardParameters, p => p.name === (m.mapTo || m.name));
+          return [m.name, param ? param.value : m.param.value];
         case MappingType.DashboardAddNew:
         case MappingType.DashboardMapToExisting:
           param = find(dashboardParameters, p => p.name === m.mapTo);
@@ -45,7 +46,7 @@ class EditParameterMappingsDialog extends React.Component {
     super(props);
 
     const parameterMappings = parameterMappingsToEditableMappings(
-      props.widget.options.parameterMappings,
+      props.widget.getParameterMappings(),
       props.widget.query.getParametersDefs(),
       map(this.props.dashboard.getParametersDefs(), p => p.name)
     );
@@ -101,7 +102,7 @@ class EditParameterMappingsDialog extends React.Component {
       <ModalShell
         dialog={dialog}
         title="Parameters"
-        description="Map widget parameters to dashboard-level values."
+        description="Map query parameters to dashboard-level values."
         size="lg"
         onOk={() => this.saveWidget()}
         okButtonProps={{ loading: this.state.saveInProgress }}>

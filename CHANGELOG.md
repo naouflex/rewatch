@@ -147,7 +147,7 @@
 * Automatically remove orphans when running make up ([\#7164](https://github.com/getrewatch/rewatch/pull/7164))
 * Update `make up` to automatically initialize the db ([\#7161](https://github.com/getrewatch/rewatch/pull/7161))
 * Better error msg for token validation ([\#7159](https://github.com/getrewatch/rewatch/pull/7159))
-* Add REDASH_HOST to the docker compose file ([\#7157](https://github.com/getrewatch/rewatch/pull/7157))
+* Add REWATCH_HOST to the docker compose file ([\#7157](https://github.com/getrewatch/rewatch/pull/7157))
 * Make schema refresh timeout configurable via env var ([\#7114](https://github.com/getrewatch/rewatch/pull/7114))
 * Dependencies 
   * Update pymssql to fix some problems with macOS ARM64 (`2.3.1`) ([\#7140](https://github.com/getrewatch/rewatch/pull/7140))
@@ -323,7 +323,7 @@
 
 This release includes patches for three security vulnerabilities:
 
-- Insecure default configuration affects installations where REDASH_COOKIE_SECRET is not set explicitly (CVE-2021-41192)
+- Insecure default configuration affects installations where REWATCH_COOKIE_SECRET is not set explicitly (CVE-2021-41192)
 - SSRF vulnerability affects installations that enabled URL-loading data sources (CVE-2021-43780)
 - Incorrect usage of state parameter in OAuth client code affects installations where Google Login is enabled (CVE-2021-43777)
 
@@ -736,7 +736,7 @@ This release was made possible with the help of 34 contributors. 🙇‍♂️
 
 ### Data Sources
 
-- **All data source options are now encrypted in the database.** By default the encryption uses the `REDASH_COOKIE_SECRET` value (`rewatch.settings.COOKIE_SECRET`), but you can specify a different value by setting the `REDASH_SECRET_KEY` environment variable value. Note that you need to set this _before_ doing the upgrade.
+- **All data source options are now encrypted in the database.** By default the encryption uses the `REWATCH_COOKIE_SECRET` value (`rewatch.settings.COOKIE_SECRET`), but you can specify a different value by setting the `REWATCH_SECRET_KEY` environment variable value. Note that you need to set this _before_ doing the upgrade.
 - New Data Sources: Uptycs and Apache Drill.
 - Snowplow: is now enabled by default & supports region setting.
 - Elasticsearch: add support for Amazon Elasticsearch IAM authentication (with IAM profile or key/secret pair).
@@ -1417,7 +1417,7 @@ And much more!
 - Replace deprecated ng-annotate with babel plugin. @44px
 - Update Python dependencies to recent versions. @alison985
 - Bootstrap script: create /opt/rewatch directory only if it doesn't exist. @isomura
-- Bootstrap script: make use of REDASH_BASE_PATH variable in setup script. @sylvain
+- Bootstrap script: make use of REWATCH_BASE_PATH variable in setup script. @sylvain
 
 ### Fixed
 
@@ -1516,7 +1516,7 @@ This is a patch release, that adds support for Redshift ACM certificates (see #2
 - Enable strict checking for Angular DI.
 - Disable Angular debug info (should improve performance).
 - Update to Webpack 2. @44px
-- Remove /forgot endpoint if REDASH_PASSWORD_LOGIN_ENABLED is false. @amarjayr
+- Remove /forgot endpoint if REWATCH_PASSWORD_LOGIN_ENABLED is false. @amarjayr
 - Docker: make Gunicorn worker count configurable. @unixwitch
 - Snowflake support is no longer enabled by default.
 - Enable memory optimization for Excel exporter.
@@ -1661,7 +1661,7 @@ and fixes to the existing ones (mainly ElasticSearch and Cassandra).
 When upgrading make sure to upgrade from version 0.12.0 and update your .env file:
 
 1. If you have local PostreSQL database, you will need to update the URL from `postgresql://rewatch` to `postgresql:///rewatch`.
-2. Remove the `REDASH_STATIC_ASSETS_PATH` definition.
+2. Remove the `REWATCH_STATIC_ASSETS_PATH` definition.
 
 Make sure to make these changes before running upgrade as otherwise it will fail.
 
@@ -1736,7 +1736,7 @@ We're releasing a new upgrade script -- see [here](https://rewatch.io/help-onpre
 
 ### Added
 
-- 61fe16e #1374: Add: allow '\*' in REDASH_CORS_ACCESS_CONTROL_ALLOW_ORIGIN (Allen Short)
+- 61fe16e #1374: Add: allow '\*' in REWATCH_CORS_ACCESS_CONTROL_ALLOW_ORIGIN (Allen Short)
 - 2f09043 #1113: Add: share modify/access permissions for queries and dashboard (whummer)
 - 3db0eea #1341: Add: support for specifying SAML nameid-format (zoetrope)
 - b0ecd0e #1343: Add: support for local SAML metadata file (zoetrope)

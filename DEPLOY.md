@@ -40,9 +40,9 @@ gcloud compute scp --recurse --compress \
 ```
 
 `.env` is in `.gitignore` but `scp --recurse` copies it; double-check it landed
-on the VM and that secrets inside are the production values (`REDASH_HOST`,
-`REDASH_DATABASE_URL`, mail creds, `REDASH_COOKIE_SECRET`,
-`REDASH_SECRET_KEY`).
+on the VM and that secrets inside are the production values (`REWATCH_HOST`,
+`REWATCH_DATABASE_URL`, mail creds, `REWATCH_COOKIE_SECRET`,
+`REWATCH_SECRET_KEY`).
 
 ## 4. First-run database setup
 
@@ -74,5 +74,5 @@ docker compose up -d
 Put an HTTPS-terminating proxy in front of port `5001`. Easiest options:
 
 - A Google Cloud HTTPS Load Balancer pointing at the VM.
-- Caddy / Nginx on the VM with a Let's Encrypt cert for `REDASH_HOST`
+- Caddy / Nginx on the VM with a Let's Encrypt cert for `REWATCH_HOST`
   (`rewatch.naoufel.io` in this project's `.env`).

@@ -9,7 +9,11 @@ from typing import Any, Callable, Optional
 
 import requests
 
-from rewatch import settings
+from rewatch.assistant.llm_config import (
+    assistant_max_llm_chars,
+    assistant_max_llm_messages,
+    assistant_max_tool_result_chars,
+)
 from rewatch.assistant import api_meta
 from rewatch.assistant import catalog as platform_catalog
 from rewatch.assistant import alert_catalog
@@ -1969,7 +1973,7 @@ _TRUNCATION_SCHEMA_TABLE_KEEP = 80
 
 
 def _max_tool_result_chars() -> int:
-    return settings.ASSISTANT_MAX_TOOL_RESULT_CHARS
+    return assistant_max_tool_result_chars()
 
 
 def _shrink_rows(rows: list[Any]) -> list[Any]:

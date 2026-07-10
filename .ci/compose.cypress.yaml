@@ -5,13 +5,13 @@ x-rewatch-service: &rewatch-service
       install_groups: "main"
       code_coverage: ${CODE_COVERAGE}
 x-rewatch-environment: &rewatch-environment
-  REDASH_LOG_LEVEL: "INFO"
-  REDASH_REDIS_URL: "redis://redis:6379/0"
+  REWATCH_LOG_LEVEL: "INFO"
+  REWATCH_REDIS_URL: "redis://redis:6379/0"
   POSTGRES_PASSWORD: "FmTKs5vX52ufKR1rd8tn4MoSP7zvCJwb"
-  REDASH_DATABASE_URL: "postgresql://postgres:FmTKs5vX52ufKR1rd8tn4MoSP7zvCJwb@postgres/postgres"
-  REDASH_RATELIMIT_ENABLED: "false"
-  REDASH_ENFORCE_CSRF: "true"
-  REDASH_COOKIE_SECRET: "2H9gNG9obnAQ9qnR9BDTQUph6CbXKCzF"
+  REWATCH_DATABASE_URL: "postgresql://postgres:FmTKs5vX52ufKR1rd8tn4MoSP7zvCJwb@postgres/postgres"
+  REWATCH_RATELIMIT_ENABLED: "false"
+  REWATCH_ENFORCE_CSRF: "true"
+  REWATCH_COOKIE_SECRET: "2H9gNG9obnAQ9qnR9BDTQUph6CbXKCzF"
 services:
   server:
     <<: *rewatch-service

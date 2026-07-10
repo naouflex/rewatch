@@ -5,13 +5,10 @@ from __future__ import annotations
 import uuid
 from typing import Any, Optional
 
+from rewatch.assistant.llm_config import assistant_max_llm_chars, assistant_max_llm_messages
 from rewatch.models import AssistantMessage, AssistantThread, db
 
 MAX_THREADS = 30
-# gpt-5.4-mini has a 400K-token window; allow much longer thread recall while
-# still bounding worst-case prompt size (~30K tokens of history).
-MAX_LLM_MESSAGES = 60
-MAX_LLM_CHARS = 120000
 DEFAULT_TITLE = "New chat"
 
 
@@ -145,9 +142,11 @@ def touch_thread(
 
 
 def fit_messages_for_llm(messages: list[dict[str, str]]) -> list[dict[str, str]]:
-    trimmed = messages[-MAX_LLM_MESSAGES:]
+    max_messages = assistant_max_llm_messages()
+    max_chars = assistant_max_llm_chars()
+    trimmed = messages[-max_messages:]
     total = sum(len(m.get("content") or "") for m in trimmed)
-    while trimmed and total > MAX_LLM_CHARS:
+    while trimmed and total > max_chars:
         trimmed.pop(0)
         total = sum(len(m.get("content") or "") for m in trimmed)
     return trimmed

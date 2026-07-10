@@ -112,7 +112,8 @@ ARG POETRY_OPTIONS="--no-root --no-interaction --no-ansi"
 # for LDAP authentication, install with `ldap3` group
 # disabled by default due to GPL license conflict
 ARG install_groups="main,all_ds,dev"
-RUN /etc/poetry/bin/poetry install --only $install_groups $POETRY_OPTIONS
+RUN /etc/poetry/bin/poetry install --only $install_groups $POETRY_OPTIONS && \
+    python -c "import flask, gunicorn, rq; print('Python deps OK')"
 
 # The /api/docs/ Scalar UI and the OpenAPI spec at /api/spec are generated
 # by ``rewatch.handlers.swagger``. That module only needs PyYAML (already

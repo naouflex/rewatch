@@ -1,6 +1,10 @@
 """Tests for assistant activity labels and summaries."""
 
-from rewatch.assistant.activity import tool_result_summary, tool_start_label
+from rewatch.assistant.activity import tool_preparing_label, tool_result_summary, tool_start_label
+
+
+def test_tool_preparing_label():
+    assert tool_preparing_label("run_query") == "Preparing run query…"
 
 
 def test_run_query_ad_hoc_label_is_not_sql_specific():

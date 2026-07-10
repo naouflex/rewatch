@@ -7,9 +7,19 @@ import logging
 from typing import Any, Callable, Optional
 
 from rewatch import settings
+from rewatch.assistant.activity import tool_preparing_label
+from rewatch.assistant.anthropic_compat import normalize_anthropic_messages, sanitize_json_schema
 from rewatch.assistant.anthropic_retry import call_with_retry as anthropic_call_with_retry
 from rewatch.assistant.anthropic_retry import create_anthropic_client
-from rewatch.assistant.llm_config import assistant_model, assistant_provider, effective_assistant_provider
+from rewatch.assistant.llm_config import (
+    assistant_compact_tools_enabled,
+    assistant_max_tokens,
+    assistant_model,
+    assistant_prompt_caching_enabled,
+    assistant_provider,
+    assistant_tool_description_max_chars,
+    effective_assistant_provider,
+)
 from rewatch.assistant.openai_retry import call_with_retry as openai_call_with_retry
 from rewatch.assistant.openai_retry import create_openai_client
 from rewatch.assistant.tools import TOOL_DEFINITIONS
@@ -17,6 +27,63 @@ from rewatch.assistant.tools import TOOL_DEFINITIONS
 logger = logging.getLogger(__name__)
 
 ActivityCallback = Callable[[dict[str, Any]], None]
+
+
+def _truncate_tool_description(description: str, limit: int) -> str:
+    text = (description or "").strip()
+    if not text or limit <= 0 or len(text) <= limit:
+        return text
+    return text[: limit - 1].rstrip() + "…"
+
+
+def compact_openai_tools(tools: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Shrink verbose tool descriptions before sending them to the LLM."""
+    limit = assistant_tool_description_max_chars()
+    if limit <= 0:
+        return tools
+
+    compacted: list[dict[str, Any]] = []
+    for tool in tools:
+        fn = tool.get("function") or {}
+        description = _truncate_tool_description(fn.get("description", ""), limit)
+        compacted.append(
+            {
+                **tool,
+                "function": {
+                    **fn,
+                    "description": description,
+                },
+            }
+        )
+    return compacted
+
+
+def _tools_for_provider() -> list[dict[str, Any]]:
+    tools = TOOL_DEFINITIONS
+    if assistant_compact_tools_enabled():
+        tools = compact_openai_tools(tools)
+    return tools
+
+
+def _anthropic_system_prompt(system_content: str) -> str | list[dict[str, Any]]:
+    if not system_content:
+        return system_content
+    if not assistant_prompt_caching_enabled():
+        return system_content
+    return [
+        {
+            "type": "text",
+            "text": system_content,
+            "cache_control": {"type": "ephemeral"},
+        }
+    ]
+
+
+def _anthropic_tools_payload() -> list[dict[str, Any]]:
+    tools = openai_tools_to_anthropic(_tools_for_provider())
+    if tools and assistant_prompt_caching_enabled():
+        tools[-1] = {**tools[-1], "cache_control": {"type": "ephemeral"}}
+    return tools
 
 
 def openai_tools_to_anthropic(tools: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -27,7 +94,9 @@ def openai_tools_to_anthropic(tools: list[dict[str, Any]]) -> list[dict[str, Any
             {
                 "name": fn["name"],
                 "description": fn.get("description", ""),
-                "input_schema": fn.get("parameters") or {"type": "object", "properties": {}},
+                "input_schema": sanitize_json_schema(
+                    fn.get("parameters") or {"type": "object", "properties": {}}
+                ),
             }
         )
     return converted
@@ -81,17 +150,21 @@ def openai_messages_to_anthropic(messages: list[dict[str, Any]]) -> list[dict[st
                     }
                 )
 
-            converted.append({"role": "assistant", "content": blocks or ""})
+            if blocks:
+                converted.append({"role": "assistant", "content": blocks})
             index += 1
 
             tool_results: list[dict[str, Any]] = []
             while index < len(messages) and messages[index].get("role") == "tool":
                 tool_message = messages[index]
+                tool_content = tool_message.get("content") or ""
+                if not isinstance(tool_content, str):
+                    tool_content = json.dumps(tool_content)
                 tool_results.append(
                     {
                         "type": "tool_result",
                         "tool_use_id": tool_message.get("tool_call_id") or "",
-                        "content": tool_message.get("content") or "",
+                        "content": tool_content,
                     }
                 )
                 index += 1
@@ -100,6 +173,9 @@ def openai_messages_to_anthropic(messages: list[dict[str, Any]]) -> list[dict[st
             continue
 
         if role == "tool":
+            tool_content = message.get("content") or ""
+            if not isinstance(tool_content, str):
+                tool_content = json.dumps(tool_content)
             converted.append(
                 {
                     "role": "user",
@@ -107,7 +183,7 @@ def openai_messages_to_anthropic(messages: list[dict[str, Any]]) -> list[dict[st
                         {
                             "type": "tool_result",
                             "tool_use_id": message.get("tool_call_id") or "",
-                            "content": message.get("content") or "",
+                            "content": tool_content,
                         }
                     ],
                 }
@@ -117,7 +193,7 @@ def openai_messages_to_anthropic(messages: list[dict[str, Any]]) -> list[dict[st
 
         index += 1
 
-    return converted
+    return normalize_anthropic_messages(converted)
 
 
 def _emit(on_activity: Optional[ActivityCallback], event: dict[str, Any]) -> None:
@@ -135,7 +211,7 @@ def _openai_stream_completion(
     kwargs: dict[str, Any] = {
         "model": assistant_model(),
         "messages": conversation,
-        "tools": TOOL_DEFINITIONS,
+        "tools": _tools_for_provider(),
         "tool_choice": tool_choice,
         "stream": True,
     }
@@ -143,12 +219,15 @@ def _openai_stream_completion(
         kwargs["reasoning_effort"] = settings.OPENAI_REASONING_EFFORT
 
     emitted_any_delta = False
+    seen_tool_indices: set[int] = set()
 
     def _consume_stream() -> dict[str, Any]:
         nonlocal emitted_any_delta
         emitted_any_delta = False
         content_parts: list[str] = []
         tool_calls: dict[int, dict[str, str]] = {}
+        seen_tool_indices.clear()
+        _emit(on_activity, {"type": "status", "message": "Consulting the model…"})
         stream = client.chat.completions.create(**kwargs)
         for chunk in stream:
             if not chunk.choices:
@@ -167,6 +246,25 @@ def _openai_stream_completion(
                 if tc.function:
                     if tc.function.name:
                         entry["name"] = tc.function.name
+                        if tc.index not in seen_tool_indices:
+                            seen_tool_indices.add(tc.index)
+                            tool_name = tc.function.name
+                            _emit(
+                                on_activity,
+                                {
+                                    "type": "status",
+                                    "message": f"Choosing tool: {tool_name.replace('_', ' ')}",
+                                },
+                            )
+                            _emit(
+                                on_activity,
+                                {
+                                    "type": "tool_start",
+                                    "id": entry["id"] or f"pending_{tc.index}",
+                                    "tool": tool_name,
+                                    "label": tool_preparing_label(tool_name),
+                                },
+                            )
                     if tc.function.arguments:
                         entry["arguments"] += tc.function.arguments
         return {
@@ -194,34 +292,66 @@ def _anthropic_stream_completion(
 
     kwargs: dict[str, Any] = {
         "model": assistant_model(),
-        "max_tokens": settings.ASSISTANT_MAX_TOKENS,
+        "max_tokens": assistant_max_tokens(),
         "messages": anthropic_messages,
     }
     if system_content:
-        kwargs["system"] = system_content
+        kwargs["system"] = _anthropic_system_prompt(system_content)
     if tool_choice != "none":
-        kwargs["tools"] = openai_tools_to_anthropic(TOOL_DEFINITIONS)
+        kwargs["tools"] = _anthropic_tools_payload()
         kwargs["tool_choice"] = {"type": "auto"}
+    else:
+        kwargs["tool_choice"] = {"type": "none"}
 
     emitted_any_delta = False
+    seen_tool_blocks: set[int] = set()
+    emitted_args_status: set[int] = set()
 
     def _consume_stream() -> dict[str, Any]:
         nonlocal emitted_any_delta
         emitted_any_delta = False
         content_parts: list[str] = []
         tool_calls: dict[int, dict[str, str]] = {}
+        seen_tool_blocks.clear()
+        emitted_args_status.clear()
+
+        _emit(on_activity, {"type": "status", "message": "Consulting Claude…"})
 
         with client.messages.stream(**kwargs) as stream:
             for event in stream:
                 event_type = getattr(event, "type", None)
                 if event_type == "content_block_start":
                     block = getattr(event, "content_block", None)
-                    if block is not None and getattr(block, "type", None) == "tool_use":
+                    if block is None:
+                        continue
+                    block_type = getattr(block, "type", None)
+                    if block_type == "tool_use":
                         tool_calls[event.index] = {
                             "id": block.id,
                             "name": block.name,
                             "arguments": "",
                         }
+                        if event.index not in seen_tool_blocks:
+                            seen_tool_blocks.add(event.index)
+                            tool_name = block.name or "tool"
+                            _emit(
+                                on_activity,
+                                {
+                                    "type": "status",
+                                    "message": f"Choosing tool: {tool_name.replace('_', ' ')}",
+                                },
+                            )
+                            _emit(
+                                on_activity,
+                                {
+                                    "type": "tool_start",
+                                    "id": block.id,
+                                    "tool": tool_name,
+                                    "label": tool_preparing_label(tool_name),
+                                },
+                            )
+                    elif block_type == "text":
+                        _emit(on_activity, {"type": "status", "message": "Composing reply…"})
                 elif event_type == "content_block_delta":
                     delta = getattr(event, "delta", None)
                     if delta is None:
@@ -237,6 +367,27 @@ def _anthropic_stream_completion(
                         entry = tool_calls.get(event.index)
                         if entry is not None:
                             entry["arguments"] += getattr(delta, "partial_json", "") or ""
+                            if event.index in seen_tool_blocks and event.index not in emitted_args_status:
+                                emitted_args_status.add(event.index)
+                                _emit(
+                                    on_activity,
+                                    {
+                                        "type": "status",
+                                        "message": f"Building {entry['name'].replace('_', ' ')} arguments…",
+                                    },
+                                )
+
+            get_final = getattr(stream, "get_final_message", None)
+            if callable(get_final):
+                final_message = get_final()
+                if getattr(final_message, "stop_reason", None) == "max_tokens":
+                    _emit(
+                        on_activity,
+                        {
+                            "type": "status",
+                            "message": "Claude hit the token limit — finishing with what it has so far…",
+                        },
+                    )
 
         return {
             "content": "".join(content_parts),
@@ -279,11 +430,13 @@ def complete_text(
         anthropic_messages = openai_messages_to_anthropic(other_messages)
         kwargs: dict[str, Any] = {
             "model": resolved_model,
-            "max_tokens": settings.ASSISTANT_MAX_TOKENS,
+            "max_tokens": assistant_max_tokens(),
             "messages": anthropic_messages,
         }
         if system_content:
-            kwargs["system"] = system_content
+            kwargs["system"] = _anthropic_system_prompt(system_content)
+        if temperature is not None:
+            kwargs["temperature"] = temperature
 
         def _generate() -> str:
             response = client.messages.create(**kwargs)

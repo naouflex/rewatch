@@ -1,20 +1,52 @@
 #!/usr/bin/env python3
-"""Create the Montpellier Weather dashboard — identical layout to Paris Weather.
+"""Create a parameterized France Weather dashboard with a city dropdown.
 
-Thin declarative spec on top of rewatch.assistant.dashboard_builder. All
-queries run on the Python data source (id 4) and call the free Open-Meteo
-forecast + air quality APIs, so every refresh pulls live data.
+All widgets share a dashboard-level ``city`` enum parameter. Coordinates are
+resolved inside each Python query from a built-in lookup table, then Open-Meteo
+forecast and air-quality APIs are called for the selected city.
 """
 
 from __future__ import annotations
 
-from dashboard_script_utils import build_and_report
+from dashboard_script_utils import build_and_report, request
+from rewatch.assistant import dashboard_builder
 
 DS_PYTHON = 4
-
-LATITUDE = 43.6113
-LONGITUDE = 3.8772
 TIMEZONE = "Europe/Paris"
+DEFAULT_CITY = "Paris"
+
+CITY_ENUM_OPTIONS = "\n".join(
+    [
+        "Paris",
+        "Montpellier",
+        "Lyon",
+        "Marseille",
+        "Toulouse",
+        "Nice",
+        "Bordeaux",
+        "Lille",
+        "Strasbourg",
+        "Nantes",
+    ]
+)
+
+CITY_PARAM = {
+    "name": "city",
+    "title": "City",
+    "type": "enum",
+    "enumOptions": CITY_ENUM_OPTIONS,
+    "value": DEFAULT_CITY,
+}
+
+DASHBOARD_PARAM_MAPPING = {
+    "city": {
+        "name": "city",
+        "type": "dashboard-level",
+        "mapTo": "city",
+        "value": None,
+        "title": "City",
+    }
+}
 
 # Shared helper injected at the top of every Python query.
 PY_COMMON = """
@@ -46,6 +78,18 @@ EMOJI = {
     85: "\\U0001f328\\ufe0f", 86: "\\U0001f328\\ufe0f",
     95: "\\u26c8\\ufe0f", 96: "\\u26c8\\ufe0f", 99: "\\u26c8\\ufe0f",
 }
+CITIES = {
+    "Paris": (48.8566, 2.3522),
+    "Montpellier": (43.6113, 3.8772),
+    "Lyon": (45.7640, 4.8357),
+    "Marseille": (43.2965, 5.3698),
+    "Toulouse": (43.6047, 1.4442),
+    "Nice": (43.7102, 7.2620),
+    "Bordeaux": (44.8378, -0.5792),
+    "Lille": (50.6292, 3.0573),
+    "Strasbourg": (48.5734, 7.7521),
+    "Nantes": (47.2184, -1.5536),
+}
 
 
 def describe(code, WMO=WMO, EMOJI=EMOJI):
@@ -56,12 +100,16 @@ def describe(code, WMO=WMO, EMOJI=EMOJI):
 
 def fetch(url, params, requests=requests):
     return requests.get(url, params=params, timeout=25).json()
+
+
+city = "{{city}}"
+latitude, longitude = CITIES[city]
 """
 
 CURRENT_QUERY = PY_COMMON + """
 data = fetch("https://api.open-meteo.com/v1/forecast", {
-    "latitude": %(lat)s,
-    "longitude": %(lon)s,
+    "latitude": latitude,
+    "longitude": longitude,
     "current": "temperature_2m,apparent_temperature,relative_humidity_2m,"
                "precipitation,weather_code,cloud_cover,surface_pressure,"
                "wind_speed_10m,wind_gusts_10m,wind_direction_10m,is_day",
@@ -74,6 +122,7 @@ cur = data["current"]
 day = data["daily"]
 
 result = {}
+add_result_column(result, "city", "City", "string")
 add_result_column(result, "conditions", "Conditions", "string")
 add_result_column(result, "temperature_c", "Temperature (\\u00b0C)", "float")
 add_result_column(result, "feels_like_c", "Feels Like (\\u00b0C)", "float")
@@ -90,6 +139,7 @@ add_result_column(result, "sunrise", "Sunrise", "string")
 add_result_column(result, "sunset", "Sunset", "string")
 add_result_column(result, "updated_at", "Updated", "string")
 add_result_row(result, {
+    "city": city,
     "conditions": describe(cur["weather_code"]),
     "temperature_c": cur["temperature_2m"],
     "feels_like_c": cur["apparent_temperature"],
@@ -106,12 +156,12 @@ add_result_row(result, {
     "sunset": day["sunset"][0][-5:],
     "updated_at": datetime.datetime.now().strftime("%%H:%%M %%d %%b %%Y"),
 })
-""" % {"lat": LATITUDE, "lon": LONGITUDE, "tz": TIMEZONE}
+""" % {"tz": TIMEZONE}
 
 HOURLY_QUERY = PY_COMMON + """
 data = fetch("https://api.open-meteo.com/v1/forecast", {
-    "latitude": %(lat)s,
-    "longitude": %(lon)s,
+    "latitude": latitude,
+    "longitude": longitude,
     "hourly": "temperature_2m,apparent_temperature,precipitation_probability,"
               "precipitation,wind_speed_10m,wind_gusts_10m,relative_humidity_2m",
     "forecast_days": 3,
@@ -146,12 +196,12 @@ for i, ts in enumerate(hourly["time"]):
         "wind_gusts_kmh": hourly["wind_gusts_10m"][i],
         "humidity_pct": hourly["relative_humidity_2m"][i],
     })
-""" % {"lat": LATITUDE, "lon": LONGITUDE, "tz": TIMEZONE}
+""" % {"tz": TIMEZONE}
 
 DAILY_QUERY = PY_COMMON + """
 data = fetch("https://api.open-meteo.com/v1/forecast", {
-    "latitude": %(lat)s,
-    "longitude": %(lon)s,
+    "latitude": latitude,
+    "longitude": longitude,
     "daily": "weather_code,temperature_2m_max,temperature_2m_min,"
              "precipitation_sum,precipitation_probability_max,"
              "wind_speed_10m_max,uv_index_max,sunrise,sunset",
@@ -188,18 +238,12 @@ for i, date_str in enumerate(daily["time"]):
         "sunrise": daily["sunrise"][i][-5:],
         "sunset": daily["sunset"][i][-5:],
     })
-""" % {"lat": LATITUDE, "lon": LONGITUDE, "tz": TIMEZONE}
+""" % {"tz": TIMEZONE}
 
-AIR_QUALITY_QUERY = """
-import requests
-import datetime
-
-def fetch(url, params, requests=requests):
-    return requests.get(url, params=params, timeout=25).json()
-
+AIR_QUALITY_QUERY = PY_COMMON + """
 data = fetch("https://air-quality-api.open-meteo.com/v1/air-quality", {
-    "latitude": %(lat)s,
-    "longitude": %(lon)s,
+    "latitude": latitude,
+    "longitude": longitude,
     "current": "european_aqi,pm2_5,pm10,ozone,nitrogen_dioxide",
     "hourly": "european_aqi,pm2_5",
     "forecast_days": 3,
@@ -250,7 +294,7 @@ for i, ts in enumerate(hourly["time"]):
         "ozone_now": cur["ozone"],
         "no2_now": cur["nitrogen_dioxide"],
     })
-""" % {"lat": LATITUDE, "lon": LONGITUDE, "tz": TIMEZONE}
+""" % {"tz": TIMEZONE}
 
 
 def counter(name: str, column: str, label: str = "") -> dict:
@@ -268,8 +312,8 @@ def chart(name: str, mapping: dict, *, chart_type: str = "line") -> dict:
 
 QUERIES = [
     {
-        "name": "Montpellier Weather - Current Conditions",
-        "description": "Live conditions in Montpellier from the Open-Meteo API.",
+        "name": "France Weather - Current Conditions",
+        "description": "Live conditions for the selected French city (Open-Meteo).",
         "data_source_id": DS_PYTHON,
         "query": CURRENT_QUERY,
         "visualizations": [
@@ -284,43 +328,33 @@ QUERIES = [
         ],
     },
     {
-        "name": "Montpellier Weather - 48h Hourly Forecast",
-        "description": "Hour-by-hour forecast for the next 48 hours from Open-Meteo.",
+        "name": "France Weather - 48h Hourly Forecast",
+        "description": "Hour-by-hour forecast for the next 48 hours (Open-Meteo).",
         "data_source_id": DS_PYTHON,
         "query": HOURLY_QUERY,
         "visualizations": [
-            chart(
-                "48h Temperature",
-                {"time": "x", "temperature_c": "y", "feels_like_c": "y"},
-            ),
+            chart("48h Temperature", {"time": "x", "temperature_c": "y", "feels_like_c": "y"}),
             chart(
                 "48h Rain Chance & Precipitation",
                 {"time": "x", "rain_chance_pct": "y", "precipitation_mm": "y"},
                 chart_type="column",
             ),
-            chart(
-                "48h Wind",
-                {"time": "x", "wind_kmh": "y", "wind_gusts_kmh": "y"},
-                chart_type="area",
-            ),
+            chart("48h Wind", {"time": "x", "wind_kmh": "y", "wind_gusts_kmh": "y"}, chart_type="area"),
         ],
     },
     {
-        "name": "Montpellier Weather - 7-Day Forecast",
-        "description": "Daily outlook for the next 7 days from Open-Meteo.",
+        "name": "France Weather - 7-Day Forecast",
+        "description": "Daily outlook for the next 7 days (Open-Meteo).",
         "data_source_id": DS_PYTHON,
         "query": DAILY_QUERY,
         "visualizations": [
-            chart(
-                "7-Day High & Low",
-                {"date": "x", "high_c": "y", "low_c": "y"},
-            ),
+            chart("7-Day High & Low", {"date": "x", "high_c": "y", "low_c": "y"}),
             {"type": "TABLE", "name": "7-Day Outlook Table"},
         ],
     },
     {
-        "name": "Montpellier Weather - Air Quality",
-        "description": "Current and 48h air quality (European AQI) from Open-Meteo.",
+        "name": "France Weather - Air Quality",
+        "description": "Current and 48h air quality for the selected city (Open-Meteo).",
         "data_source_id": DS_PYTHON,
         "query": AIR_QUALITY_QUERY,
         "visualizations": [
@@ -337,14 +371,14 @@ def pos(col: int, row: int, size_x: int, size_y: int) -> dict:
     return {"col": col, "row": row, "sizeX": size_x, "sizeY": size_y}
 
 
-# Layout mirrors the Paris Weather dashboard (id 11) exactly.
 WIDGETS = [
     {
         "text": (
-            "# \U0001f33f Montpellier Weather\n\n"
+            "# \U0001f30d France Weather\n\n"
             "Live conditions, 48-hour and 7-day forecast, and air quality for "
-            "Montpellier, France (43.61\u00b0N, 3.88\u00b0E) \u2014 powered by "
-            "[Open-Meteo](https://open-meteo.com). Refresh any query to pull the latest data."
+            "cities across France. Use the **City** dropdown above to switch "
+            "between Paris, Montpellier, Lyon, and more \u2014 powered by "
+            "[Open-Meteo](https://open-meteo.com)."
         ),
         "position": pos(0, 0, 12, 3),
     },
@@ -372,9 +406,99 @@ WIDGETS = [
 ]
 
 
+def configure_dashboard_parameters(dashboard_id: int, query_ids: list[int]) -> None:
+    """Attach city parameter definitions and dashboard-level widget mappings."""
+    for query_id in query_ids:
+        query = request("GET", f"/api/queries/{query_id}")
+        options = query.get("options") or {}
+        options["parameters"] = [CITY_PARAM]
+        request(
+            "POST",
+            f"/api/queries/{query_id}",
+            body={
+                "options": options,
+                "version": query["version"],
+                "is_draft": False,
+            },
+        )
+
+    dashboard = request("GET", f"/api/dashboards/{dashboard_id}")
+    options = dashboard.get("options") or {}
+    options["parameters"] = [CITY_PARAM]
+    options["globalParamOrder"] = ["city"]
+
+    for widget in dashboard.get("widgets", []):
+        visualization = widget.get("visualization")
+        if not visualization:
+            continue
+        visualization_id = visualization.get("id") or widget.get("visualization_id")
+        widget_options = widget.get("options") or {}
+        widget_options["parameterMappings"] = DASHBOARD_PARAM_MAPPING
+        request(
+            "POST",
+            f"/api/widgets/{widget['id']}",
+            body={
+                "options": widget_options,
+                "dashboard_id": dashboard_id,
+                "visualization_id": visualization_id,
+                "text": widget.get("text") or "",
+            },
+        )
+
+    request(
+        "POST",
+        f"/api/dashboards/{dashboard_id}",
+        body={
+            "options": options,
+            "version": dashboard["version"],
+            "is_draft": False,
+        },
+    )
+
+
+def refresh_queries(query_ids: list[int], city: str = DEFAULT_CITY) -> None:
+    import time
+
+    for query_id in query_ids:
+        request(
+            "POST",
+            f"/api/queries/{query_id}/results",
+            body={"parameters": {"city": city}, "max_age": 0},
+        )
+        time.sleep(2)
+
+
+def _run_adhoc_query_with_city(request_fn, query_text, data_source_id, *, timeout_seconds=120):
+    """Validate parameterized queries using the default city."""
+    import time
+
+    deadline = time.monotonic() + timeout_seconds
+    response = request_fn(
+        "POST",
+        "/api/query_results",
+        body={
+            "query": query_text,
+            "data_source_id": data_source_id,
+            "max_age": 0,
+            "parameters": {"city": DEFAULT_CITY},
+            "apply_auto_limit": True,
+        },
+    )
+    if isinstance(response, dict) and "job" in response:
+        result_id = dashboard_builder._poll_job(request_fn, dict(response["job"]), deadline)
+        response = request_fn("GET", f"/api/query_results/{result_id}")
+    return dashboard_builder._extract_result(response)
+
+
 if __name__ == "__main__":
-    build_and_report(
-        name="Montpellier Weather",
+    dashboard_builder.run_adhoc_query = _run_adhoc_query_with_city
+    result = build_and_report(
+        name="France Weather",
         queries=QUERIES,
         widgets=WIDGETS,
     )
+    query_ids = [entry["query_id"] for entry in result["queries"]]
+    configure_dashboard_parameters(result["dashboard_id"], query_ids)
+    refresh_queries(query_ids, DEFAULT_CITY)
+    print(f"City parameter configured on queries {query_ids}")
+    print("Default city: Paris — change via dashboard dropdown or ?p_city=Lyon")
