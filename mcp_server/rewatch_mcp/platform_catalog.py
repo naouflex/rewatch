@@ -18,7 +18,11 @@ if _CATALOG_PATH.is_file():
     if spec and spec.loader:
         mod = importlib.util.module_from_spec(spec)
         sys.modules[spec.name] = mod
-        spec.loader.exec_module(mod)
-        platform_catalog = mod
+        try:
+            spec.loader.exec_module(mod)
+            platform_catalog = mod
+        except Exception as exc:  # degrade instead of crashing the whole MCP server
+            sys.modules.pop(spec.name, None)
+            print(f"rewatch-mcp: platform catalog unavailable ({exc})", file=sys.stderr)
 
 __all__ = ["platform_catalog"]

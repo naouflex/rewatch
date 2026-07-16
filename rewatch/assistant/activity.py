@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any, Callable, Optional
+
+logger = logging.getLogger(__name__)
 
 
 def _truncate(value: str, limit: int = 72) -> str:
@@ -103,8 +106,8 @@ def tool_start_label(tool_name: str, args: dict[str, Any]) -> str:
     if formatter:
         try:
             return formatter(args)
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.debug("Tool start label formatter for %s failed: %s", tool_name, exc)
     return f"Using {tool_name.replace('_', ' ')}"
 
 

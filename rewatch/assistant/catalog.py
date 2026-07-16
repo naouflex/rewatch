@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any, Optional
 
 try:
@@ -10,6 +11,8 @@ except ImportError:
     # Flask-free environments (e.g. the standalone MCP server) can still use
     # the static notes/guides below; live runner introspection is skipped.
     query_runners = {}
+
+logger = logging.getLogger(__name__)
 
 # --- Query syntax (shared across many data source types) ---
 
@@ -439,7 +442,8 @@ def _runner_syntax(runner_cls) -> str:
     try:
         instance = runner_cls({})
         return getattr(instance, "syntax", "sql") or "sql"
-    except Exception:
+    except Exception as exc:
+        logger.debug("Could not instantiate runner %s to read syntax: %s", runner_cls, exc)
         return "sql"
 
 

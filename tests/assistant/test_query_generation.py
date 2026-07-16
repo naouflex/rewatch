@@ -1,8 +1,13 @@
 """Tests for LLM query generation context and schema formatting."""
-from unittest import TestCase
+from unittest import TestCase, mock
 
 from rewatch.assistant.catalog import build_query_generation_context
-from rewatch.assistant.query_generation import _format_schema, _runner_context, _system_prompt
+from rewatch.assistant.query_generation import (
+    _format_schema,
+    _runner_context,
+    _system_prompt,
+    generate_query,
+)
 
 
 class TestQueryGenerationContext(TestCase):
@@ -84,3 +89,29 @@ class TestSchemaFormatting(TestCase):
         text = _format_schema(schema, "sql")
         self.assertIn("users", text)
         self.assertIn("id (integer)", text)
+
+
+class TestGenerateQuery(TestCase):
+    def test_generate_query_calls_llm_and_strips_fences(self):
+        # Regression test: complete_text must be importable/callable from generate_query.
+        with mock.patch(
+            "rewatch.assistant.query_generation.complete_text",
+            return_value="```sql\nSELECT 1\n```",
+        ) as mocked:
+            result = generate_query(
+                prompt="count users",
+                data_source_type="pg",
+                data_source_name="Main",
+                syntax="sql",
+            )
+        self.assertEqual(result, "SELECT 1")
+        mocked.assert_called_once()
+
+    def test_generate_query_empty_prompt_raises(self):
+        with self.assertRaises(ValueError):
+            generate_query(prompt="  ", data_source_type="pg", data_source_name="Main", syntax="sql")
+
+    def test_generate_query_empty_reply_raises(self):
+        with mock.patch("rewatch.assistant.query_generation.complete_text", return_value=""):
+            with self.assertRaises(RuntimeError):
+                generate_query(prompt="count users", data_source_type="pg", data_source_name="Main", syntax="sql")

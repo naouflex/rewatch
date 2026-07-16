@@ -21,7 +21,9 @@ A local [MCP](https://modelcontextprotocol.io) (stdio) server that exposes the R
 |---|---|---|---|
 | `REWATCH_API_KEY` | yes | — | Your user API key (Rewatch UI → profile → API Key) |
 | `REWATCH_BASE_URL` | no | `http://localhost:5001` | Base URL of the Rewatch instance |
-| `REWATCH_MCP_READ_ONLY` | no | unset | When `true`, `call_api` only allows GET requests |
+| `REWATCH_MCP_READ_ONLY` | no | unset | When `true`, all write tools are disabled, `call_api` only allows GET requests, and ad-hoc `query_text` execution is rejected |
+
+**Read-only mode scope:** read-only mode protects Rewatch metadata (queries, dashboards, alerts, …) and blocks arbitrary ad-hoc query text. Saved queries can still be executed (same as viewing them in the UI), so if a data source's credentials permit writes, a saved query containing write statements would still run. Use read-only database credentials for full protection.
 
 The server automatically loads `${workspace}/.env` when present, so you can keep the API key there instead of in `mcp.json`.
 

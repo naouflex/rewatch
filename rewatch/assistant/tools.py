@@ -1139,7 +1139,9 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
             "description": (
                 "Invoke any Rewatch REST API endpoint and return JSON. "
                 "Path must use real IDs (not {placeholders}). "
-                "Prefer dedicated tools when they cover the task."
+                "Prefer dedicated tools when they cover the task. "
+                "DELETE is not allowed (use delete_alert/delete_widget/delete_visualization/archive_query); "
+                "non-GET calls to user/group/organization/settings/data-source admin endpoints are rejected."
             ),
             "parameters": {
                 "type": "object",
@@ -1147,7 +1149,7 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
                     "method": {"type": "string"},
                     "path": {"type": "string", "description": "Concrete path, e.g. /api/queries/42"},
                     "query_params": {"type": "object", "description": "URL query parameters"},
-                    "body": {"type": "object", "description": "JSON request body for POST/PUT/DELETE"},
+                    "body": {"type": "object", "description": "JSON request body for POST/PUT"},
                 },
                 "required": ["method", "path"],
             },

@@ -10,7 +10,11 @@ Configuration (environment variables):
 
 * ``REWATCH_BASE_URL``      — base URL of the instance (default ``http://localhost:5001``)
 * ``REWATCH_API_KEY``       — required; user API key from the Rewatch UI
-* ``REWATCH_MCP_READ_ONLY`` — when truthy, ``call_api`` rejects non-GET methods
+* ``REWATCH_MCP_READ_ONLY`` — when truthy, all mutating tools are disabled,
+  ``call_api`` rejects non-GET methods, and ad-hoc ``query_text`` execution is
+  rejected. Saved queries can still be executed (equivalent to viewing them in
+  the UI), so data sources whose credentials permit writes are only as safe as
+  their saved queries.
 """
 
 from __future__ import annotations
@@ -164,7 +168,10 @@ def _request(method: str, path: str, *, params: Optional[dict] = None, body: Opt
     """Perform an API request and return parsed JSON, raising a readable error on failure."""
     if not path.startswith("/"):
         path = "/" + path
-    resp = _http().request(method.upper(), path, params=params, json=body)
+    try:
+        resp = _http().request(method.upper(), path, params=params, json=body)
+    except httpx.HTTPError as exc:
+        raise RuntimeError(f"{method.upper()} {path} against {BASE_URL} failed: {exc}") from exc
     if resp.status_code >= 400:
         detail = resp.text[:2000]
         raise RuntimeError(f"{method.upper()} {path} failed with HTTP {resp.status_code}: {detail}")
@@ -183,8 +190,18 @@ def _spec() -> dict:
     return _spec_cache
 
 
+_MAX_OUTPUT_CHARS = 200_000
+
+
 def _compact(obj: Any) -> str:
-    return json.dumps(obj, indent=2, default=str)
+    text = json.dumps(obj, indent=2, default=str)
+    if len(text) > _MAX_OUTPUT_CHARS:
+        return (
+            text[:_MAX_OUTPUT_CHARS]
+            + f"\n… [truncated: response was {len(text)} characters; "
+            "narrow the request (page_size, max_rows, filters) to see the rest]"
+        )
+    return text
 
 
 def _ensure_writable() -> None:
@@ -403,40 +420,41 @@ def call_api(
 
 
 def _poll_job(job: dict, timeout_seconds: int) -> int:
-    """Poll a background job until it finishes; return the query result id."""
+    """Poll a background job until it finishes; return the query result id.
+
+    Delegates to the shared, hardened implementation in
+    ``rewatch.assistant.dashboard_builder`` (guards against string ``"None"``
+    result ids and malformed job payloads) so the two poll loops cannot drift.
+    """
     deadline = time.monotonic() + timeout_seconds
-    job_id = job["id"]
-    while time.monotonic() < deadline:
+    if dashboard_builder is not None:
+        try:
+            return dashboard_builder._poll_job(_request, dict(job), deadline)
+        except dashboard_builder.DashboardBuildError as exc:
+            raise RuntimeError(str(exc)) from exc
+
+    # Fallback when the shared module is unavailable in this install.
+    job_id = job.get("id")
+    if not job_id:
+        raise RuntimeError(f"Job payload has no id: {job}")
+    while True:
         status = job.get("status")
         if status == JOB_FINISHED:
             result_id = job.get("query_result_id") or job.get("result")
-            if not result_id:
+            if not result_id or result_id == "None":
                 raise RuntimeError(f"Job {job_id} finished but returned no query result id: {job}")
-            return result_id
+            return int(result_id)
         if status in (JOB_FAILED, JOB_CANCELED):
             raise RuntimeError(f"Query execution failed: {job.get('error') or job}")
+        if time.monotonic() >= deadline:
+            raise RuntimeError(
+                f"Query did not finish within {timeout_seconds}s (job {job_id} status {job.get('status')})."
+            )
         time.sleep(1)
-        job = _request("GET", f"/api/jobs/{job_id}")["job"]
-    raise RuntimeError(f"Query did not finish within {timeout_seconds}s (job {job_id} status {job.get('status')}).")
-
-
-def _format_query_result(query_result: dict, max_rows: int) -> str:
-    data = query_result.get("data", {})
-    rows = data.get("rows", [])
-    columns = [c.get("name") for c in data.get("columns", [])]
-    out = {
-        "query_result_id": query_result.get("id"),
-        "retrieved_at": query_result.get("retrieved_at"),
-        "runtime_seconds": query_result.get("runtime"),
-        "columns": columns,
-        "row_count": len(rows),
-        "rows": rows[:max_rows],
-    }
-    if build_visualization_hints is not None:
-        out["visualization_hints"] = build_visualization_hints(columns, rows)
-    if len(rows) > max_rows:
-        out["note"] = f"Showing first {max_rows} of {len(rows)} rows."
-    return _compact(out)
+        response = _request("GET", f"/api/jobs/{job_id}")
+        job = response.get("job") if isinstance(response, dict) and "job" in response else response
+        if not isinstance(job, dict):
+            raise RuntimeError(f"Unexpected job status payload: {job}")
 
 
 def _run_query_internal(
@@ -494,12 +512,17 @@ def _run_query_internal(
     return result
 
 
-def _execute_saved_query_validation(query_id: int, parameters: Optional[dict] = None, max_rows: int = 10) -> dict[str, Any]:
+def _execute_saved_query_validation(
+    query_id: int,
+    parameters: Optional[dict] = None,
+    max_rows: int = 10,
+    max_age: int = 0,
+) -> dict[str, Any]:
     try:
         result = _run_query_internal(
             query_id=query_id,
             parameters=parameters,
-            max_age=0,
+            max_age=max_age,
             max_rows=max_rows,
             timeout_seconds=120,
         )
@@ -542,6 +565,11 @@ def run_query(
     if none exists), 0 forces execution, N accepts results up to N seconds old.
     Handles the background-job polling automatically.
     """
+    if READ_ONLY and query_text is not None:
+        raise RuntimeError(
+            "This MCP server is running in read-only mode (REWATCH_MCP_READ_ONLY); "
+            "ad-hoc query_text execution is disabled. Pass query_id to run a saved query."
+        )
     return _compact(
         _run_query_internal(
             query_id=query_id,
@@ -581,11 +609,19 @@ def search_queries(q: str, page: int = 1, page_size: int = 25) -> str:
 def get_query(query_id: int) -> str:
     """Get a saved query: its SQL text, data source, parameters, schedule and visualizations.
 
-    Also runs the query (max_age=0) and returns validation columns, visualization_hints,
-    and per-visualization options_health when column mappings are broken.
+    Also fetches query results (cached when available, executing only if no
+    cache exists) and returns validation columns, visualization_hints, and
+    per-visualization options_health when column mappings are broken. Use
+    run_query(query_id, max_age=0) to force a fresh execution.
     """
     query = _request("GET", f"/api/queries/{query_id}")
-    validation = _execute_saved_query_validation(query_id)
+    if READ_ONLY:
+        query["validation"] = {
+            "status": "skipped",
+            "message": "Query execution skipped in read-only mode (REWATCH_MCP_READ_ONLY).",
+        }
+        return _compact(query)
+    validation = _execute_saved_query_validation(query_id, max_age=-1)
     query["validation"] = validation
     if validation.get("status") == "ok" and enrich_visualizations_for_assistant is not None:
         columns = validation.get("columns") or []
@@ -644,8 +680,8 @@ def create_query(
 
     ``query`` is the query text (syntax depends on the data source type — call
     get_query_runner_type first for non-SQL sources). ``data_source_id`` comes
-    from list_data_sources. The query text is executed automatically before and
-    after saving; read the ``validation`` block in the response and fix errors
+    from list_data_sources. The query text is executed automatically before
+    saving; read the ``validation`` block in the response and fix errors
     with update_query instead of creating duplicates.
     ``schedule`` example: ``{"interval": 3600, "time": null, "day_of_week": null, "until": null}``.
     """
@@ -663,15 +699,10 @@ def create_query(
         tags=tags,
     )
     saved = _request("POST", "/api/queries", body=body)
-    validation: dict[str, Any] = {"pre_save": pre_validation}
-    if isinstance(saved, dict) and saved.get("id"):
-        post_save = _execute_saved_query_validation(saved["id"])
-        validation["post_save"] = post_save
-        if post_save.get("status") == "error":
-            validation["action_required"] = (
-                f"Query #{saved['id']} was saved but failed to run. Fix it with update_query."
-            )
-        saved["validation"] = validation
+    if isinstance(saved, dict):
+        # The query text was executed just before saving; re-running it here
+        # would double the cost (and API quota for external-API data sources).
+        saved["validation"] = {"pre_save": pre_validation}
     return _compact(saved)
 
 
@@ -883,13 +914,20 @@ def _validate_alert_column_from_query(query_id: int, column: str) -> dict[str, A
     return alert_catalog.validate_alert_column(column, columns)
 
 
-def _subscribe_alert_destinations(alert_id: int, destination_ids: list[int]) -> list[dict[str, Any]]:
-    subscriptions = []
+def _subscribe_alert_destinations(
+    alert_id: int, destination_ids: list[int]
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Subscribe destinations one by one; a failure must not lose the created alert."""
+    subscriptions: list[dict[str, Any]] = []
+    errors: list[dict[str, Any]] = []
     for destination_id in destination_ids:
-        subscriptions.append(
-            _request("POST", f"/api/alerts/{alert_id}/subscriptions", body={"destination_id": destination_id})
-        )
-    return subscriptions
+        try:
+            subscriptions.append(
+                _request("POST", f"/api/alerts/{alert_id}/subscriptions", body={"destination_id": destination_id})
+            )
+        except RuntimeError as exc:
+            errors.append({"destination_id": destination_id, "error": str(exc)})
+    return subscriptions, errors
 
 
 @mcp.tool()
@@ -987,7 +1025,14 @@ def create_alert(
     if column_check:
         result["column_validation"] = column_check
     if destination_ids:
-        result["subscriptions"] = _subscribe_alert_destinations(alert["id"], destination_ids)
+        subscriptions, subscription_errors = _subscribe_alert_destinations(alert["id"], destination_ids)
+        result["subscriptions"] = subscriptions
+        if subscription_errors:
+            result["subscription_errors"] = subscription_errors
+            result["note"] = (
+                f"Alert #{alert['id']} was created but {len(subscription_errors)} destination "
+                "subscription(s) failed — retry them with subscribe_alert (do NOT create a new alert)."
+            )
     return _compact(result)
 
 
@@ -1000,8 +1045,29 @@ def update_alert(
     rearm: Optional[int] = None,
     tags: Optional[list[str]] = None,
 ) -> str:
-    """Update an alert's name, linked query, trigger options (incl. custom_body/custom_subject), rearm or tags."""
+    """Update an alert's name, linked query, trigger options (incl. custom_body/custom_subject), rearm or tags.
+
+    Partial ``options`` are merged into the alert's existing options (the API
+    replaces the options column wholesale, so e.g. ``{"muted": true}`` alone
+    would otherwise destroy the trigger condition). The merged result is
+    validated before saving.
+    """
     _ensure_writable()
+    if options is not None:
+        current = _request("GET", f"/api/alerts/{alert_id}")
+        current_options = current.get("options") if isinstance(current.get("options"), dict) else {}
+        options = {**current_options, **options}
+        if alert_catalog is not None:
+            try:
+                alert_catalog.validate_alert_operator(options.get("op"))
+                alert_catalog.validate_alert_selector_value(options.get("selector") or "first")
+            except ValueError as exc:
+                raise RuntimeError(str(exc)) from exc
+        if not options.get("column"):
+            raise RuntimeError(
+                "Merged alert options have no trigger column. Pass options with at least "
+                "column/op/value, or fix the alert's existing options first."
+            )
     body = _merge_body(name=name, query_id=query_id, options=options, rearm=rearm, tags=tags)
     return _compact(_request("POST", f"/api/alerts/{alert_id}", body=body))
 
@@ -1478,6 +1544,7 @@ def build_dashboard_from_spec(
     widgets: list[dict],
     derived: Optional[list[dict]] = None,
     publish: bool = True,
+    validate_before_create: bool = True,
 ) -> str:
     """Build a complete dashboard in ONE call: validate, create, and publish all
     queries, visualizations, and widgets from a declarative spec.
@@ -1501,6 +1568,10 @@ def build_dashboard_from_spec(
     "section" | "kpi" | "half" | "third" | "full"}. Widgets without explicit
     positions are packed onto a 12-column grid with type-aware sizes (counters
     3x3 four per row, charts 6x8, tables 12x8, text headers full width).
+
+    Set ``validate_before_create=false`` for expensive external-API queries
+    that should run only once (create → refresh → derived) to avoid doubling
+    rate-limited API quota usage.
     """
     _ensure_writable()
     if dashboard_builder is None:
@@ -1513,6 +1584,7 @@ def build_dashboard_from_spec(
             widgets=widgets,
             derived=derived,
             publish=publish,
+            validate_before_create=validate_before_create,
         )
     except dashboard_builder.DashboardBuildError as exc:
         raise RuntimeError(str(exc)) from exc

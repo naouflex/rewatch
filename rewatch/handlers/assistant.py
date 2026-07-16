@@ -2,6 +2,7 @@ import json
 import logging
 import queue
 import threading
+from urllib.parse import urlparse
 
 from flask import Response, copy_current_request_context, request, stream_with_context
 from flask_restful import abort
@@ -29,7 +30,20 @@ logger = logging.getLogger(__name__)
 def _assistant_base_url():
     if settings.HOST:
         return settings.HOST.rstrip("/")
-    return request.url_root.rstrip("/")
+    # Without a configured HOST the only fallback is the client-supplied Host
+    # header. Tool calls send the user's API key to this URL, so a spoofed
+    # header could exfiltrate it — only trust the header for local development.
+    url_root = request.url_root.rstrip("/")
+    hostname = urlparse(url_root).hostname or ""
+    if hostname in ("localhost", "127.0.0.1", "::1"):
+        return url_root
+    abort(
+        503,
+        message=(
+            "Assistant requires the REWATCH_HOST setting to be configured "
+            "(refusing to derive the API base URL from the request Host header)."
+        ),
+    )
 
 
 def _help_base_url():

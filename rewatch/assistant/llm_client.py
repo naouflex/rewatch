@@ -297,11 +297,11 @@ def _anthropic_stream_completion(
     }
     if system_content:
         kwargs["system"] = _anthropic_system_prompt(system_content)
-    if tool_choice != "none":
-        kwargs["tools"] = _anthropic_tools_payload()
-        kwargs["tool_choice"] = {"type": "auto"}
-    else:
-        kwargs["tool_choice"] = {"type": "none"}
+    # tools must always be sent: Anthropic rejects histories containing
+    # tool_use blocks when the tools param is missing, and tool_choice
+    # may only be set alongside tools.
+    kwargs["tools"] = _anthropic_tools_payload()
+    kwargs["tool_choice"] = {"type": "none"} if tool_choice == "none" else {"type": "auto"}
 
     emitted_any_delta = False
     seen_tool_blocks: set[int] = set()

@@ -25,7 +25,13 @@ async function consumeSseStream(response, onEvent) {
   let buffer = "";
 
   while (true) {
-    const { done, value } = await reader.read();
+    let done;
+    let value;
+    try {
+      ({ done, value } = await reader.read());
+    } catch (err) {
+      throw new Error("Connection to the assistant was interrupted.");
+    }
     if (done) {
       break;
     }
@@ -33,15 +39,26 @@ async function consumeSseStream(response, onEvent) {
     const chunks = buffer.split("\n\n");
     buffer = chunks.pop() || "";
 
-    chunks.forEach(chunk => {
-      const line = chunk
+    for (const chunk of chunks) {
+      // Per the SSE spec an event may span multiple "data:" lines.
+      const data = chunk
         .split("\n")
-        .find(entry => entry.startsWith("data: "));
-      if (!line) {
-        return;
+        .filter(entry => entry.startsWith("data:"))
+        .map(entry => entry.slice(5).replace(/^ /, ""))
+        .join("\n");
+      if (!data) {
+        continue;
       }
-      onEvent(JSON.parse(line.slice(6)));
-    });
+      let event;
+      try {
+        event = JSON.parse(data);
+      } catch (err) {
+        // Skip malformed frames (truncated writes, proxy keep-alives)
+        // instead of aborting the whole stream.
+        continue;
+      }
+      onEvent(event);
+    }
   }
 }
 
@@ -84,20 +101,28 @@ const Assistant = {
     });
 
     let result = null;
-    await consumeSseStream(response, event => {
-      if (event.type === "thread_started" && event.thread_id) {
-        Assistant.setStoredThreadId(event.thread_id);
-      } else if (event.type === "complete") {
-        if (event.thread_id) {
+    try {
+      await consumeSseStream(response, event => {
+        if (event.type === "thread_started" && event.thread_id) {
           Assistant.setStoredThreadId(event.thread_id);
+        } else if (event.type === "complete") {
+          if (event.thread_id) {
+            Assistant.setStoredThreadId(event.thread_id);
+          }
+          result = event;
+        } else if (event.type === "error") {
+          throw new Error(event.message || "Assistant request failed.");
+        } else if (onEvent) {
+          onEvent(event);
         }
-        result = event;
-      } else if (event.type === "error") {
-        throw new Error(event.message || "Assistant request failed.");
-      } else if (onEvent) {
-        onEvent(event);
+      });
+    } catch (err) {
+      // A connection drop after the final "complete" event should not
+      // discard the reply we already received.
+      if (!result) {
+        throw err;
       }
-    });
+    }
 
     if (!result) {
       throw new Error("Assistant stream ended without a response.");

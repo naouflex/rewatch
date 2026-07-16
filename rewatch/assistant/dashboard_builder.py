@@ -55,7 +55,10 @@ def _poll_job(request: RequestFn, job: dict[str, Any], deadline: float) -> int:
     job_id = job.get("id")
     if not job_id:
         raise DashboardBuildError(f"Job payload has no id: {job}")
-    while time.monotonic() < deadline:
+    # Check job status at least once before enforcing the deadline, so a
+    # deadline exhausted by earlier work never reports a spurious timeout for
+    # a job that already finished.
+    while True:
         status = job.get("status")
         if status == JOB_FINISHED:
             result_id = job.get("query_result_id") or job.get("result")
@@ -64,12 +67,13 @@ def _poll_job(request: RequestFn, job: dict[str, Any], deadline: float) -> int:
             return int(result_id)
         if status in (JOB_FAILED, JOB_CANCELED):
             raise DashboardBuildError(str(job.get("error") or "Query execution failed"))
+        if time.monotonic() >= deadline:
+            raise DashboardBuildError(f"Query timed out (job {job_id}).")
         time.sleep(1)
         response = request("GET", f"/api/jobs/{job_id}")
         job = response.get("job") if isinstance(response, dict) and "job" in response else response
         if not isinstance(job, dict):
             raise DashboardBuildError(f"Unexpected job status payload: {job}")
-    raise DashboardBuildError(f"Query timed out (job {job_id}).")
 
 
 def _extract_result(response: Any) -> tuple[list[str], list[dict[str, Any]]]:
@@ -374,6 +378,22 @@ def build_dashboard_from_spec(
     viz_name_to_id: dict[str, int] = {}
     key_to_query_id: dict[str, int] = {}
     created_queries: list[dict[str, Any]] = []
+    dashboard_id: Optional[int] = None
+
+    def _partial_state_error(exc: Exception, phase: str) -> DashboardBuildError:
+        """Build an error that reports what was already created (no rollback)."""
+        lines = [f"Dashboard build failed during {phase}: {exc}"]
+        if created_queries:
+            created = ", ".join(f"{e['name']!r} (query id {e['query_id']})" for e in created_queries)
+            lines.append(f"Already created and NOT rolled back — queries: {created}.")
+        if dashboard_id:
+            lines.append(f"Already created and NOT rolled back — dashboard id {dashboard_id}.")
+        if created_queries or dashboard_id:
+            lines.append(
+                "Reuse or clean up these resources (archive_query / update_dashboard is_archived) "
+                "instead of retrying the full build blindly."
+            )
+        return DashboardBuildError("\n".join(lines))
 
     def create_from_spec(query_spec: dict[str, Any], columns: list[str], rows: list[dict[str, Any]]) -> None:
         body: dict[str, Any] = {
@@ -427,7 +447,10 @@ def build_dashboard_from_spec(
         )
 
     for query_spec in validated:
-        create_from_spec(query_spec, query_spec.pop("_columns"), query_spec.pop("_rows"))
+        try:
+            create_from_spec(query_spec, query_spec.pop("_columns"), query_spec.pop("_rows"))
+        except (RuntimeError, DashboardBuildError) as exc:
+            raise _partial_state_error(exc, f"creation of query {query_spec.get('name')!r}") from exc
 
     # Phase 2: refresh base queries and create derived queries.
     if derived:
@@ -443,17 +466,23 @@ def build_dashboard_from_spec(
                 for e in created_queries
                 if e["query_id"] in failed_ids
             ]
-            raise DashboardBuildError(
-                "Base query refresh failed — nothing else was created. Fix these and retry:\n- "
-                + "\n- ".join(lines)
+            raise _partial_state_error(
+                DashboardBuildError("Base query refresh failed:\n- " + "\n- ".join(lines)),
+                "base query refresh",
             )
 
         if results_data_source_id is None:
-            results_data_source_id = _find_results_data_source_id(request)
+            try:
+                results_data_source_id = _find_results_data_source_id(request)
+            except (RuntimeError, DashboardBuildError) as exc:
+                raise _partial_state_error(exc, "Query Results data source lookup") from exc
         if results_data_source_id is None:
-            raise DashboardBuildError(
-                "Cannot create derived queries: no Query Results data source found. "
-                "Pass results_data_source_id explicitly."
+            raise _partial_state_error(
+                DashboardBuildError(
+                    "Cannot create derived queries: no Query Results data source found. "
+                    "Pass results_data_source_id explicitly."
+                ),
+                "derived query setup",
             )
 
         for derived_spec in derived:
@@ -478,9 +507,15 @@ def build_dashboard_from_spec(
                 warnings.append(f"Derived query {derived_name!r} failed and was skipped: {exc}")
 
     # Phase 3: create the dashboard and place widgets.
-    dashboard = request("POST", "/api/dashboards", body={"name": name})
+    try:
+        dashboard = request("POST", "/api/dashboards", body={"name": name})
+    except (RuntimeError, DashboardBuildError) as exc:
+        raise _partial_state_error(exc, "dashboard creation") from exc
     if not isinstance(dashboard, dict) or not dashboard.get("id"):
-        raise DashboardBuildError(f"Failed to create dashboard {name!r}: {dashboard}")
+        raise _partial_state_error(
+            DashboardBuildError(f"Failed to create dashboard {name!r}: {dashboard}"),
+            "dashboard creation",
+        )
     dashboard_id = dashboard["id"]
 
     viz_id_to_type = {
@@ -518,20 +553,25 @@ def build_dashboard_from_spec(
 
     created_widgets: list[dict[str, Any]] = []
     for layout_item, widget_spec, position in zip(layout_items, widget_specs, positions):
-        widget = request(
-            "POST",
-            "/api/widgets",
-            body={
-                "dashboard_id": dashboard_id,
-                "visualization_id": widget_spec["visualization_id"],
-                "text": widget_spec["text"],
-                "options": normalize_widget_options(
-                    position=position,
-                    visualization_type=layout_item.get("visualization_type"),
-                ),
-                "width": 1,
-            },
-        )
+        try:
+            widget = request(
+                "POST",
+                "/api/widgets",
+                body={
+                    "dashboard_id": dashboard_id,
+                    "visualization_id": widget_spec["visualization_id"],
+                    "text": widget_spec["text"],
+                    "options": normalize_widget_options(
+                        position=position,
+                        visualization_type=layout_item.get("visualization_type"),
+                    ),
+                    "width": 1,
+                },
+            )
+        except (RuntimeError, DashboardBuildError) as exc:
+            label = widget_spec["ref"] or (widget_spec["text"] or "")[:40] or "widget"
+            warnings.append(f"Widget {label!r} could not be created and was skipped: {exc}")
+            continue
         created_widgets.append(
             {
                 "id": widget.get("id") if isinstance(widget, dict) else None,
@@ -541,14 +581,22 @@ def build_dashboard_from_spec(
             }
         )
 
-    # Phase 4: publish and summarize.
+    # Phase 4: publish and summarize. Failures here should not lose the build —
+    # the dashboard exists, so report the problem as a warning instead.
     if publish:
-        request(
-            "POST",
-            f"/api/dashboards/{dashboard_id}",
-            body={"is_draft": False, "version": dashboard.get("version")},
-        )
-    final = request("GET", f"/api/dashboards/{dashboard_id}")
+        try:
+            request(
+                "POST",
+                f"/api/dashboards/{dashboard_id}",
+                body={"is_draft": False, "version": dashboard.get("version")},
+            )
+        except (RuntimeError, DashboardBuildError) as exc:
+            warnings.append(f"Dashboard was built but publishing failed: {exc}. Publish with update_dashboard(is_draft=false).")
+    try:
+        final = request("GET", f"/api/dashboards/{dashboard_id}")
+    except (RuntimeError, DashboardBuildError) as exc:
+        warnings.append(f"Could not fetch the final dashboard state: {exc}")
+        final = {}
     final = final if isinstance(final, dict) else {}
     slug = final.get("slug") or dashboard.get("slug") or ""
 

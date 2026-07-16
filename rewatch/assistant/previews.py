@@ -55,6 +55,19 @@ def _escape(value: Any) -> str:
     return html.escape(str(value if value is not None else ""))
 
 
+def _escape_trunc(value: Any, limit: int) -> str:
+    """Truncate before escaping so entities are never cut in half."""
+    return html.escape(str(value if value is not None else "")[:limit])
+
+
+def _safe_int(value: Any, default: int = 1) -> int:
+    """Tolerant int coercion for LLM/user-supplied option values."""
+    try:
+        return int(float(value))
+    except (TypeError, ValueError):
+        return default
+
+
 def _query_rows(query: models.Query) -> tuple[list[str], list[dict[str, Any]]]:
     result = query.latest_query_data
     if not result or not result.data:
@@ -117,7 +130,7 @@ def render_table_svg(title: str, columns: list[str], rows: list[dict[str, Any]],
             lines.append(f'<rect x="{x}" y="{y}" width="{col_width - 2}" height="{row_height}" fill="{fill}" stroke="{GRID}"/>')
             value = row.get(column, "")
             lines.append(
-                f'<text x="{x + 8}" y="{y + 16}" fill="{TEXT}" font-family="Inter, Arial, sans-serif" font-size="11">{_escape(value)[:22]}</text>'
+                f'<text x="{x + 8}" y="{y + 16}" fill="{TEXT}" font-family="Inter, Arial, sans-serif" font-size="11">{_escape_trunc(value, 22)}</text>'
             )
 
     if len(rows) > len(display_rows) or len(columns) > len(display_cols):
@@ -147,7 +160,7 @@ def render_chart_svg(title: str, columns: list[str], rows: list[dict[str, Any]],
 
     series_type = (options or {}).get("globalSeriesType") or "column"
     points = rows[:12]
-    labels = [_escape(row.get(x_col, ""))[:10] for row in points]
+    labels = [_escape_trunc(row.get(x_col, ""), 10) for row in points]
     values: list[float] = []
     for row in points:
         raw = row.get(y_col, 0)
@@ -226,7 +239,7 @@ def render_counter_svg(title: str, columns: list[str], rows: list[dict[str, Any]
 
     opts = options or {}
     column = opts.get("counterColName") or (columns[0] if columns else None)
-    row_index = max(int(opts.get("rowNumber") or 1) - 1, 0)
+    row_index = max(_safe_int(opts.get("rowNumber"), 1) - 1, 0)
     row = rows[min(row_index, len(rows) - 1)]
     value = row.get(column, "") if column else ""
     label = opts.get("counterLabel") or column or "Value"
@@ -337,7 +350,7 @@ def _render_cell_counter(
 ) -> list[str]:
     opts = options or {}
     column = opts.get("counterColName") or (columns[0] if columns else None)
-    row_index = max(int(opts.get("rowNumber") or 1) - 1, 0)
+    row_index = max(_safe_int(opts.get("rowNumber"), 1) - 1, 0)
     row = rows[min(row_index, len(rows) - 1)] if rows else {}
     value = row.get(column, "") if column else ""
     accent = colors.get("accent", ACCENT)
@@ -401,7 +414,7 @@ def _render_cell_table(
             lines.append(
                 f'<text x="{x + 3:.1f}" y="{y + row_height - 3:.1f}" fill="{colors["text"]}" '
                 f'font-family="Inter, Arial, sans-serif" font-size="{font_size}">'
-                f"{_escape(value)[: max(3, int(col_width / 5))]}</text>"
+                f"{_escape_trunc(value, max(3, int(col_width / 5)))}</text>"
             )
     return lines
 

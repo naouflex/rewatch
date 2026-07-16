@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import json
+import logging
 import re
 from html.parser import HTMLParser
 from typing import Any, Optional
 from urllib.parse import parse_qs, unquote, urlparse
 
 from rewatch.utils.requests_session import UnacceptableAddressException, requests_session
+
+logger = logging.getLogger(__name__)
 
 MAX_FETCH_BYTES = 500_000
 MAX_TEXT_CHARS = 14_000
@@ -352,7 +355,10 @@ def web_search(
     try:
         backends_tried.append("duckduckgo_html")
         results = _search_duckduckgo_html(effective_query, max_results)
-    except Exception:
+    except UnacceptableAddressException:
+        raise
+    except Exception as exc:
+        logger.warning("Assistant web search backend duckduckgo_html failed: %s", exc)
         results = []
 
     if len(results) < max_results:
@@ -360,16 +366,20 @@ def web_search(
             backends_tried.append("duckduckgo_lite")
             lite_results = _search_duckduckgo_lite(effective_query, max_results)
             results = _dedupe_results(results + lite_results)
-        except Exception:
-            pass
+        except UnacceptableAddressException:
+            raise
+        except Exception as exc:
+            logger.warning("Assistant web search backend duckduckgo_lite failed: %s", exc)
 
     if len(results) < max_results:
         try:
             backends_tried.append("duckduckgo_instant_answer")
             instant_results = _search_duckduckgo_instant_answer(effective_query, max_results)
             results = _dedupe_results(results + instant_results)
-        except Exception:
-            pass
+        except UnacceptableAddressException:
+            raise
+        except Exception as exc:
+            logger.warning("Assistant web search backend duckduckgo_instant_answer failed: %s", exc)
 
     results = results[:max_results]
     for item in results:
@@ -523,7 +533,9 @@ def fetch_url(url: str, mode: str = "auto") -> dict[str, Any]:
 
     if "html" in content_type or raw.lstrip().startswith(b"<"):
         text = _html_to_text(decoded)
-        discovered_urls = _extract_urls_from_text(text)
+        # Scan the raw HTML too: API links usually live in href attributes,
+        # which the text extraction drops.
+        discovered_urls = _extract_urls_from_text(f"{text}\n{decoded}")
         api_urls = [item for item in discovered_urls if _API_SIGNAL_RE.search(item) or item.endswith(".json")]
         payload.update(
             {

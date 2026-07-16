@@ -6,8 +6,9 @@ import logging
 import re
 from typing import Any, Optional
 
-from rewatch.assistant.llm_config import effective_assistant_provider
 from rewatch.assistant.catalog import build_query_generation_context
+from rewatch.assistant.llm_client import complete_text
+from rewatch.assistant.llm_config import effective_assistant_provider
 
 logger = logging.getLogger(__name__)
 

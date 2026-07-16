@@ -61,6 +61,19 @@ def describe_endpoint(request: RequestFn, *, method: str, path: str) -> dict[str
     return op
 
 
+# The assistant executes tools autonomously (no per-call approval UI), and web
+# content fetched by other tools flows into the same LLM context. Keep the
+# blast radius of a prompt-injected call_api small: no DELETE, and no
+# mutations of admin-level resources.
+_PROTECTED_PATH_PREFIXES = (
+    "/api/users",
+    "/api/groups",
+    "/api/organization",
+    "/api/settings",
+    "/api/data_sources",
+)
+
+
 def call_api(
     request: RequestFn,
     *,
@@ -72,6 +85,21 @@ def call_api(
     if "{" in path:
         raise RuntimeError(
             f"Path {path!r} still contains a template placeholder; substitute real values first."
+        )
+    method_upper = (method or "GET").upper()
+    if method_upper == "DELETE":
+        raise RuntimeError(
+            "call_api does not allow DELETE. Use the dedicated tools "
+            "(delete_alert, delete_widget, delete_visualization, archive_query) "
+            "for the supported destructive operations."
+        )
+    normalized = "/" + path.lstrip("/")
+    if method_upper != "GET" and any(
+        normalized == prefix or normalized.startswith(prefix + "/") for prefix in _PROTECTED_PATH_PREFIXES
+    ):
+        raise RuntimeError(
+            f"call_api does not allow {method_upper} on {normalized}: user, group, organization, "
+            "settings, and data source administration must be done by the user in the Rewatch UI."
         )
     return request(method, path, params=query_params, body=body)
 

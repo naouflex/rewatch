@@ -146,9 +146,14 @@ def fit_messages_for_llm(messages: list[dict[str, str]]) -> list[dict[str, str]]
     max_chars = assistant_max_llm_chars()
     trimmed = messages[-max_messages:]
     total = sum(len(m.get("content") or "") for m in trimmed)
-    while trimmed and total > max_chars:
-        trimmed.pop(0)
-        total = sum(len(m.get("content") or "") for m in trimmed)
+    # Drop oldest messages first, but never the newest one — it carries the
+    # user's current request.
+    while len(trimmed) > 1 and total > max_chars:
+        total -= len(trimmed.pop(0).get("content") or "")
+    if trimmed and total > max_chars:
+        newest = dict(trimmed[-1])
+        newest["content"] = (newest.get("content") or "")[:max_chars]
+        trimmed[-1] = newest
     return trimmed
 
 

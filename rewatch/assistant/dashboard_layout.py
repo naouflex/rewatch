@@ -85,10 +85,11 @@ def sanitize_widget_position(
     pos = dict(position or {})
     defaults = suggest_widget_size(visualization_type=visualization_type)
     sanitized = {
-        "col": _coerce_int(pos.get("col"), 0),
-        "row": _coerce_int(pos.get("row"), 0),
-        "sizeX": _coerce_int(pos.get("sizeX"), defaults["sizeX"]),
-        "sizeY": _coerce_int(pos.get("sizeY"), defaults["sizeY"]),
+        # Clamp to the grid: negative or off-grid positions render broken dashboards.
+        "col": max(0, min(_coerce_int(pos.get("col"), 0), DASHBOARD_GRID["columns"] - 1)),
+        "row": max(0, _coerce_int(pos.get("row"), 0)),
+        "sizeX": max(1, min(_coerce_int(pos.get("sizeX"), defaults["sizeX"]), DASHBOARD_GRID["max_size_x"])),
+        "sizeY": max(1, _coerce_int(pos.get("sizeY"), defaults["sizeY"])),
     }
     mins = widget_min_size(visualization_type=visualization_type)
     sanitized["minSizeX"] = _coerce_int(pos.get("minSizeX"), mins["minSizeX"])
@@ -256,6 +257,7 @@ def suggest_next_position(
 
     max_row_end = 0
     last_pos: dict[str, Any] = {}
+    last_type: Optional[str] = None
     last_row_start = 0
     for widget in widgets:
         pos = widget_position(widget)
@@ -266,8 +268,12 @@ def suggest_next_position(
             max_row_end = row_end
             last_row_start = row
             last_pos = pos
+            vis = widget.get("visualization") if isinstance(widget.get("visualization"), dict) else {}
+            last_type = (vis.get("type") or "").upper() or None
 
-    if (visualization_type or "").upper() == "COUNTER" and last_pos:
+    # Pack beside the previous widget only when it is (or may be) a counter;
+    # a counter after a chart/table starts its own row.
+    if (visualization_type or "").upper() == "COUNTER" and last_pos and last_type in (None, "COUNTER"):
         last_col_end = int(last_pos.get("col") or 0) + int(last_pos.get("sizeX") or 0)
         same_size = int(last_pos.get("sizeY") or 0) == size["sizeY"]
         if same_size and last_col_end + size["sizeX"] <= DASHBOARD_GRID["columns"]:

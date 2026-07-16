@@ -110,3 +110,57 @@ def test_anthropic_stream_emits_reply_delta_for_text(monkeypatch):
     assert any(
         event.get("type") == "status" and event.get("message") == "Composing reply…" for event in events
     )
+
+
+def test_anthropic_stream_always_sends_tools_even_when_tool_choice_none(monkeypatch):
+    """Anthropic rejects tool_use histories without a tools param, so the
+    budget-exhausted summary round (tool_choice="none") must still send tools."""
+    captured = {}
+
+    class FakeMessages:
+        def stream(self, **kwargs):
+            captured.update(kwargs)
+            return _FakeStream([_text_delta("Summary")])
+
+    fake_client = SimpleNamespace(messages=FakeMessages())
+    monkeypatch.setattr(llm_client, "create_anthropic_client", lambda: fake_client)
+    monkeypatch.setattr(llm_client, "anthropic_call_with_retry", lambda operation, **_kwargs: operation())
+    monkeypatch.setattr(llm_client, "effective_assistant_provider", lambda: "anthropic")
+    monkeypatch.setattr(llm_client, "assistant_max_tokens", lambda: 1024)
+
+    conversation = [
+        {"role": "user", "content": "Build a dashboard"},
+        {
+            "role": "assistant",
+            "content": "",
+            "tool_calls": [
+                {"id": "toolu_1", "type": "function", "function": {"name": "run_query", "arguments": "{}"}}
+            ],
+        },
+        {"role": "tool", "tool_call_id": "toolu_1", "content": '{"ok": true}'},
+    ]
+    result = llm_client.stream_completion(conversation, None, tool_choice="none")
+
+    assert result["content"] == "Summary"
+    assert captured.get("tools"), "tools must be sent even when tool_choice is none"
+    assert captured["tool_choice"] == {"type": "none"}
+
+
+def test_anthropic_stream_tool_choice_auto_sends_tools(monkeypatch):
+    captured = {}
+
+    class FakeMessages:
+        def stream(self, **kwargs):
+            captured.update(kwargs)
+            return _FakeStream([_text_delta("Hi")])
+
+    fake_client = SimpleNamespace(messages=FakeMessages())
+    monkeypatch.setattr(llm_client, "create_anthropic_client", lambda: fake_client)
+    monkeypatch.setattr(llm_client, "anthropic_call_with_retry", lambda operation, **_kwargs: operation())
+    monkeypatch.setattr(llm_client, "effective_assistant_provider", lambda: "anthropic")
+    monkeypatch.setattr(llm_client, "assistant_max_tokens", lambda: 1024)
+
+    llm_client.stream_completion([{"role": "user", "content": "hi"}], None, tool_choice="auto")
+
+    assert captured.get("tools")
+    assert captured["tool_choice"] == {"type": "auto"}

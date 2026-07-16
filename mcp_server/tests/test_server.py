@@ -10,6 +10,12 @@ import pytest
 from rewatch_mcp import server
 
 
+@pytest.fixture(autouse=True)
+def writable_mode(monkeypatch):
+    """Pin read-only off so a REWATCH_MCP_READ_ONLY in .env cannot break tests."""
+    monkeypatch.setattr(server, "READ_ONLY", False)
+
+
 @pytest.fixture
 def fake_request(monkeypatch):
     calls = []
