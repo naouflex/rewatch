@@ -1,0 +1,410 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Festival Arabesques 2026//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Festival Arabesques 2026
+X-WR-TIMEZONE:Europe/Paris
+BEGIN:VTIMEZONE
+TZID:Europe/Paris
+BEGIN:DAYLIGHT
+TZOFFSETFROM:+0100
+TZOFFSETTO:+0200
+TZNAME:CEST
+DTSTART:19700329T020000
+RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU
+END:DAYLIGHT
+BEGIN:STANDARD
+TZOFFSETFROM:+0200
+TZOFFSETTO:+0100
+TZNAME:CET
+DTSTART:19701025T030000
+RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU
+END:STANDARD
+END:VTIMEZONE
+BEGIN:VEVENT
+UID:arabesques-2026-festival@festivalarabesques.fr
+DTSTAMP:20260729T114000Z
+DTSTART;VALUE=DATE:20260908
+DTEND;VALUE=DATE:20260921
+SUMMARY:Festival Arabesques 2026
+LOCATION:Montpellier\, France
+DESCRIPTION:21e édition du Festival Arabesques — le plus grand rendez-vous 
+ des arts du monde arabe en Europe. Du 8 au 20 septembre 2026 à Montpellier
+ .\n\nLieux : Opéra Comédie\, Domaine d'O\, Halle Tropisme\n\nSite : https:
+ //www.festivalarabesques.fr/\n\nGoogle-Calendar-ColorId: 2
+COLOR:mediumseagreen
+X-GOOGLE-CALENDAR-CONTENT-COLOR:#33B679
+X-GOOGLE-CALENDAR-CONTENT-COLOR-ID:2
+URL:https://www.festivalarabesques.fr/
+END:VEVENT
+BEGIN:VEVENT
+UID:arabesques-2026-oum@festivalarabesques.fr
+DTSTAMP:20260729T114000Z
+DTSTART;TZID=Europe/Paris:20260908T200000
+DTEND;TZID=Europe/Paris:20260908T213000
+SUMMARY:Oum — Concert d'ouverture
+LOCATION:Opéra Comédie / Salle Molière\, 14 Rue de la République\, 34000 Mo
+ ntpellier
+DESCRIPTION:Concert d'ouverture du Festival Arabesques 2026. La vocaliste m
+ arocaine Oum ouvre la 21e édition.\n\nGoogle-Calendar-ColorId: 8
+COLOR:gray
+X-GOOGLE-CALENDAR-CONTENT-COLOR:#616161
+X-GOOGLE-CALENDAR-CONTENT-COLOR-ID:8
+URL:https://www.festivalarabesques.fr/
+END:VEVENT
+BEGIN:VEVENT
+UID:arabesques-2026-bachar@festivalarabesques.fr
+DTSTAMP:20260729T114000Z
+DTSTART;TZID=Europe/Paris:20260909T200000
+DTEND;TZID=Europe/Paris:20260909T213000
+SUMMARY:Bachar Mar-Khalifé joue Christophe
+LOCATION:Opéra Comédie / Salle Molière\, 14 Rue de la République\, 34000 Mo
+ ntpellier
+DESCRIPTION:Hommage émouvant à l'artiste Christophe par le musicien franco-
+ libanais Bachar Mar-Khalifé.\n\nGoogle-Calendar-ColorId: 2
+COLOR:mediumseagreen
+X-GOOGLE-CALENDAR-CONTENT-COLOR:#33B679
+X-GOOGLE-CALENDAR-CONTENT-COLOR-ID:2
+URL:https://www.festivalarabesques.fr/
+END:VEVENT
+BEGIN:VEVENT
+UID:arabesques-2026-imarhan@festivalarabesques.fr
+DTSTAMP:20260729T114000Z
+DTSTART;TZID=Europe/Paris:20260911T193000
+DTEND;TZID=Europe/Paris:20260911T210000
+SUMMARY:Imarhan
+LOCATION:Théâtre Jean-Claude Carrière\, Domaine d'O\, 178 Rue de la Carriér
+ asse\, 34090 Montpellier
+DESCRIPTION:Rock touareg — emblème de la nouvelle génération du blues tamas
+ heq.\n\nGoogle-Calendar-ColorId: 11
+COLOR:tomato
+X-GOOGLE-CALENDAR-CONTENT-COLOR:#D50000
+X-GOOGLE-CALENDAR-CONTENT-COLOR-ID:11
+URL:https://www.festivalarabesques.fr/
+END:VEVENT
+BEGIN:VEVENT
+UID:arabesques-2026-anouar@festivalarabesques.fr
+DTSTAMP:20260729T114000Z
+DTSTART;TZID=Europe/Paris:20260911T213000
+DTEND;TZID=Europe/Paris:20260911T230000
+SUMMARY:Anouar Brahem Quartet
+LOCATION:Amphi d'O\, Domaine d'O\, 178 Rue de la Carriérasse\, 34090 Montpe
+ llier
+DESCRIPTION:Le maître oudiste tunisien Anouar Brahem et son quartet de jazz
+ .\n\nGoogle-Calendar-ColorId: 5
+COLOR:gold
+X-GOOGLE-CALENDAR-CONTENT-COLOR:#F6BF26
+X-GOOGLE-CALENDAR-CONTENT-COLOR-ID:5
+URL:https://www.festivalarabesques.fr/
+END:VEVENT
+BEGIN:VEVENT
+UID:arabesques-2026-jihad-sat@festivalarabesques.fr
+DTSTAMP:20260729T114000Z
+DTSTART;TZID=Europe/Paris:20260912T143000
+DTEND;TZID=Europe/Paris:20260912T154500
+SUMMARY:Jihad Darwiche — Contes
+LOCATION:Domaine d'O\, 178 Rue de la Carriérasse\, 34090 Montpellier
+DESCRIPTION:Contes et histoires par Jihad Darwiche.\n\nGoogle-Calendar-Colo
+ rId: 2
+COLOR:mediumseagreen
+X-GOOGLE-CALENDAR-CONTENT-COLOR:#33B679
+X-GOOGLE-CALENDAR-CONTENT-COLOR-ID:2
+URL:https://www.festivalarabesques.fr/
+END:VEVENT
+BEGIN:VEVENT
+UID:arabesques-2026-antidote@festivalarabesques.fr
+DTSTAMP:20260729T114000Z
+DTSTART;TZID=Europe/Paris:20260912T163000
+DTEND;TZID=Europe/Paris:20260912T174500
+SUMMARY:L'Antidote — Bijan Chemirani\, Redi Hasa & Rami Khalifé
+LOCATION:Théâtre Jean-Claude Carrière\, Domaine d'O\, 178 Rue de la Carriér
+ asse\, 34090 Montpellier
+DESCRIPTION:World jazz — Bijan Chemirani (zarb)\, Redi Hasa (violoncelle) e
+ t Rami Khalifé (piano). Durée : 1h15.\n\nGoogle-Calendar-ColorId: 6
+COLOR:darkorange
+X-GOOGLE-CALENDAR-CONTENT-COLOR:#F4511E
+X-GOOGLE-CALENDAR-CONTENT-COLOR-ID:6
+URL:https://www.festivalarabesques.fr/
+END:VEVENT
+BEGIN:VEVENT
+UID:arabesques-2026-zar@festivalarabesques.fr
+DTSTAMP:20260729T114000Z
+DTSTART;TZID=Europe/Paris:20260912T193000
+DTEND;TZID=Europe/Paris:20260912T210000
+SUMMARY:Zar Electrik + Temenik Electric
+LOCATION:Théâtre Jean-Claude Carrière\, Domaine d'O\, 178 Rue de la Carriér
+ asse\, 34090 Montpellier
+DESCRIPTION:Performance hybride entre traditions et modernité.\n\nGoogle-Ca
+ lendar-ColorId: 6
+COLOR:darkorange
+X-GOOGLE-CALENDAR-CONTENT-COLOR:#F4511E
+X-GOOGLE-CALENDAR-CONTENT-COLOR-ID:6
+URL:https://www.festivalarabesques.fr/
+END:VEVENT
+BEGIN:VEVENT
+UID:arabesques-2026-sahravane@festivalarabesques.fr
+DTSTAMP:20260729T114000Z
+DTSTART;TZID=Europe/Paris:20260912T213000
+DTEND;TZID=Europe/Paris:20260912T230000
+SUMMARY:Sahravane : Souad Asla\, Omar Sosa & Lemma
+LOCATION:Amphi d'O\, Domaine d'O\, 178 Rue de la Carriérasse\, 34090 Montpe
+ llier
+DESCRIPTION:Un pont entre le Sahara et Cuba — chants du sud algérien et tra
+ ditions afro-caribéennes.\n\nGoogle-Calendar-ColorId: 7
+COLOR:deepskyblue
+X-GOOGLE-CALENDAR-CONTENT-COLOR:#039BE5
+X-GOOGLE-CALENDAR-CONTENT-COLOR-ID:7
+URL:https://www.festivalarabesques.fr/
+END:VEVENT
+BEGIN:VEVENT
+UID:arabesques-2026-jihad-sun@festivalarabesques.fr
+DTSTAMP:20260729T114000Z
+DTSTART;TZID=Europe/Paris:20260913T143000
+DTEND;TZID=Europe/Paris:20260913T154500
+SUMMARY:Jihad Darwiche — Contes
+LOCATION:Domaine d'O\, 178 Rue de la Carriérasse\, 34090 Montpellier
+DESCRIPTION:Contes et histoires par Jihad Darwiche. Rencontres littéraires 
+ en hommage à Driss Chraïbi.\n\nGoogle-Calendar-ColorId: 2
+COLOR:mediumseagreen
+X-GOOGLE-CALENDAR-CONTENT-COLOR:#33B679
+X-GOOGLE-CALENDAR-CONTENT-COLOR-ID:2
+URL:https://www.festivalarabesques.fr/
+END:VEVENT
+BEGIN:VEVENT
+UID:arabesques-2026-meryem@festivalarabesques.fr
+DTSTAMP:20260729T114000Z
+DTSTART;TZID=Europe/Paris:20260913T163000
+DTEND;TZID=Europe/Paris:20260913T174500
+SUMMARY:Meryem Aboulouafa
+LOCATION:Théâtre Jean-Claude Carrière\, Domaine d'O\, 178 Rue de la Carriér
+ asse\, 34090 Montpellier
+DESCRIPTION:Pop et musiques du monde — auteure-compositrice-interprète de C
+ asablanca.\n\nGoogle-Calendar-ColorId: 5
+COLOR:gold
+X-GOOGLE-CALENDAR-CONTENT-COLOR:#F6BF26
+X-GOOGLE-CALENDAR-CONTENT-COLOR-ID:5
+URL:https://www.festivalarabesques.fr/
+END:VEVENT
+BEGIN:VEVENT
+UID:arabesques-2026-amine@festivalarabesques.fr
+DTSTAMP:20260729T114000Z
+DTSTART;TZID=Europe/Paris:20260913T170000
+DTEND;TZID=Europe/Paris:20260913T181500
+SUMMARY:Amine Radi — Stand-up
+LOCATION:Amphi d'O\, Domaine d'O\, 178 Rue de la Carriérasse\, 34090 Montpe
+ llier
+DESCRIPTION:One-man show — humour franc par l'humoriste Amine Radi.\n\nGoog
+ le-Calendar-ColorId: 4
+COLOR:salmon
+X-GOOGLE-CALENDAR-CONTENT-COLOR:#E67C73
+X-GOOGLE-CALENDAR-CONTENT-COLOR-ID:4
+URL:https://www.festivalarabesques.fr/
+END:VEVENT
+BEGIN:VEVENT
+UID:arabesques-2026-daoud@festivalarabesques.fr
+DTSTAMP:20260729T114000Z
+DTSTART;TZID=Europe/Paris:20260913T193000
+DTEND;TZID=Europe/Paris:20260913T210000
+SUMMARY:Daoud
+LOCATION:Théâtre Jean-Claude Carrière\, Domaine d'O\, 178 Rue de la Carriér
+ asse\, 34090 Montpellier
+DESCRIPTION:Jazz — le trompettiste Daoud.\n\nGoogle-Calendar-ColorId: 5
+COLOR:gold
+X-GOOGLE-CALENDAR-CONTENT-COLOR:#F6BF26
+X-GOOGLE-CALENDAR-CONTENT-COLOR-ID:5
+URL:https://www.festivalarabesques.fr/
+END:VEVENT
+BEGIN:VEVENT
+UID:arabesques-2026-zina@festivalarabesques.fr
+DTSTAMP:20260729T114000Z
+DTSTART;TZID=Europe/Paris:20260913T210000
+DTEND;TZID=Europe/Paris:20260913T223000
+SUMMARY:Zina Daoudia
+LOCATION:Amphi d'O\, Domaine d'O\, 178 Rue de la Carriérasse\, 34090 Montpe
+ llier
+DESCRIPTION:Concert de musiques du monde.\n\nGoogle-Calendar-ColorId: 3
+COLOR:purple
+X-GOOGLE-CALENDAR-CONTENT-COLOR:#8E24AA
+X-GOOGLE-CALENDAR-CONTENT-COLOR-ID:3
+URL:https://www.festivalarabesques.fr/
+END:VEVENT
+BEGIN:VEVENT
+UID:arabesques-2026-soundsystem@festivalarabesques.fr
+DTSTAMP:20260729T114000Z
+DTSTART;TZID=Europe/Paris:20260917T193000
+DTEND;TZID=Europe/Paris:20260918T004500
+SUMMARY:Arabesques Sound System — 100% Féminin : Kbira + Yasmina Karrum + L
+ a Louuve
+LOCATION:Halle Tropisme\, Montpellier
+DESCRIPTION:Soirée DJ set 100% féminin — sonorités maghrébines\, électroniq
+ ues et afro. De 19h30 à 00h45.\n\nGoogle-Calendar-ColorId: 1
+COLOR:mediumpurple
+X-GOOGLE-CALENDAR-CONTENT-COLOR:#7986CB
+X-GOOGLE-CALENDAR-CONTENT-COLOR-ID:1
+URL:https://www.festivalarabesques.fr/
+END:VEVENT
+BEGIN:VEVENT
+UID:arabesques-2026-sofiane@festivalarabesques.fr
+DTSTAMP:20260729T114000Z
+DTSTART;TZID=Europe/Paris:20260918T193000
+DTEND;TZID=Europe/Paris:20260918T210000
+SUMMARY:Sofiane Saidi avec Théo & Valentin Ceccaldi
+LOCATION:Théâtre Jean-Claude Carrière\, Domaine d'O\, 178 Rue de la Carriér
+ asse\, 34090 Montpellier
+DESCRIPTION:Musiques du monde et jazz.\n\nGoogle-Calendar-ColorId: 3
+COLOR:purple
+X-GOOGLE-CALENDAR-CONTENT-COLOR:#8E24AA
+X-GOOGLE-CALENDAR-CONTENT-COLOR-ID:3
+URL:https://www.festivalarabesques.fr/
+END:VEVENT
+BEGIN:VEVENT
+UID:arabesques-2026-ino@festivalarabesques.fr
+DTSTAMP:20260729T114000Z
+DTSTART;TZID=Europe/Paris:20260918T213000
+DTEND;TZID=Europe/Paris:20260918T230000
+SUMMARY:Ino · Casablanca
+LOCATION:Amphi d'O\, Domaine d'O\, 178 Rue de la Carriérasse\, 34090 Montpe
+ llier
+DESCRIPTION:Rap marocain — phénomène Ino Casablanca.\n\nGoogle-Calendar-Col
+ orId: 8
+COLOR:gray
+X-GOOGLE-CALENDAR-CONTENT-COLOR:#616161
+X-GOOGLE-CALENDAR-CONTENT-COLOR-ID:8
+URL:https://www.festivalarabesques.fr/
+END:VEVENT
+BEGIN:VEVENT
+UID:arabesques-2026-ali-sat@festivalarabesques.fr
+DTSTAMP:20260729T114000Z
+DTSTART;TZID=Europe/Paris:20260919T143000
+DTEND;TZID=Europe/Paris:20260919T154500
+SUMMARY:Ali Merghache — Contes
+LOCATION:Amphi d'O\, Domaine d'O\, 178 Rue de la Carriérasse\, 34090 Montpe
+ llier
+DESCRIPTION:Contes et histoires par Ali Merghache.\n\nGoogle-Calendar-Color
+ Id: 8
+COLOR:gray
+X-GOOGLE-CALENDAR-CONTENT-COLOR:#616161
+X-GOOGLE-CALENDAR-CONTENT-COLOR-ID:8
+URL:https://www.festivalarabesques.fr/
+END:VEVENT
+BEGIN:VEVENT
+UID:arabesques-2026-merwane@festivalarabesques.fr
+DTSTAMP:20260729T114000Z
+DTSTART;TZID=Europe/Paris:20260919T163000
+DTEND;TZID=Europe/Paris:20260919T174500
+SUMMARY:Merwane Benlazar — Stand-up
+LOCATION:Théâtre Jean-Claude Carrière\, Domaine d'O\, 178 Rue de la Carriér
+ asse\, 34090 Montpellier
+DESCRIPTION:One-man show par Merwane Benlazar.\n\nGoogle-Calendar-ColorId: 
+ 7
+COLOR:deepskyblue
+X-GOOGLE-CALENDAR-CONTENT-COLOR:#039BE5
+X-GOOGLE-CALENDAR-CONTENT-COLOR-ID:7
+URL:https://www.festivalarabesques.fr/
+END:VEVENT
+BEGIN:VEVENT
+UID:arabesques-2026-yasmine@festivalarabesques.fr
+DTSTAMP:20260729T114000Z
+DTSTART;TZID=Europe/Paris:20260919T193000
+DTEND;TZID=Europe/Paris:20260919T210000
+SUMMARY:Yasmine Hamdan
+LOCATION:Théâtre Jean-Claude Carrière\, Domaine d'O\, 178 Rue de la Carriér
+ asse\, 34090 Montpellier
+DESCRIPTION:Pop électro — pionnière de la scène underground de Beyrouth.\n\
+ nGoogle-Calendar-ColorId: 4
+COLOR:salmon
+X-GOOGLE-CALENDAR-CONTENT-COLOR:#E67C73
+X-GOOGLE-CALENDAR-CONTENT-COLOR-ID:4
+URL:https://www.festivalarabesques.fr/
+END:VEVENT
+BEGIN:VEVENT
+UID:arabesques-2026-emel@festivalarabesques.fr
+DTSTAMP:20260729T114000Z
+DTSTART;TZID=Europe/Paris:20260919T213000
+DTEND;TZID=Europe/Paris:20260919T230000
+SUMMARY:Emel + Camélia Jordana
+LOCATION:Amphi d'O\, Domaine d'O\, 178 Rue de la Carriérasse\, 34090 Montpe
+ llier
+DESCRIPTION:Concert folk et musiques du monde.\n\nGoogle-Calendar-ColorId: 
+ 11
+COLOR:tomato
+X-GOOGLE-CALENDAR-CONTENT-COLOR:#D50000
+X-GOOGLE-CALENDAR-CONTENT-COLOR-ID:11
+URL:https://www.festivalarabesques.fr/
+END:VEVENT
+BEGIN:VEVENT
+UID:arabesques-2026-ali-sun@festivalarabesques.fr
+DTSTAMP:20260729T114000Z
+DTSTART;TZID=Europe/Paris:20260920T143000
+DTEND;TZID=Europe/Paris:20260920T154500
+SUMMARY:Ali Merghache — Contes
+LOCATION:Amphi d'O\, Domaine d'O\, 178 Rue de la Carriérasse\, 34090 Montpe
+ llier
+DESCRIPTION:Contes et histoires par Ali Merghache.\n\nGoogle-Calendar-Color
+ Id: 6
+COLOR:darkorange
+X-GOOGLE-CALENDAR-CONTENT-COLOR:#F4511E
+X-GOOGLE-CALENDAR-CONTENT-COLOR-ID:6
+URL:https://www.festivalarabesques.fr/
+END:VEVENT
+BEGIN:VEVENT
+UID:arabesques-2026-abdullah@festivalarabesques.fr
+DTSTAMP:20260729T114000Z
+DTSTART;TZID=Europe/Paris:20260920T163000
+DTEND;TZID=Europe/Paris:20260920T174500
+SUMMARY:Abdullah Miniawy
+LOCATION:Théâtre Jean-Claude Carrière\, Domaine d'O\, 178 Rue de la Carriér
+ asse\, 34090 Montpellier
+DESCRIPTION:Jazz alternatif — chanteur et poète égyptien.\n\nGoogle-Calenda
+ r-ColorId: 4
+COLOR:salmon
+X-GOOGLE-CALENDAR-CONTENT-COLOR:#E67C73
+X-GOOGLE-CALENDAR-CONTENT-COLOR-ID:4
+URL:https://www.festivalarabesques.fr/
+END:VEVENT
+BEGIN:VEVENT
+UID:arabesques-2026-abdelkader@festivalarabesques.fr
+DTSTAMP:20260729T114000Z
+DTSTART;TZID=Europe/Paris:20260920T170000
+DTEND;TZID=Europe/Paris:20260920T181500
+SUMMARY:Abdelkader Secteur — Stand-up
+LOCATION:Amphi d'O\, Domaine d'O\, 178 Rue de la Carriérasse\, 34090 Montpe
+ llier
+DESCRIPTION:One-man show par Abdelkader Secteur.\n\nGoogle-Calendar-ColorId
+ : 10
+COLOR:seagreen
+X-GOOGLE-CALENDAR-CONTENT-COLOR:#0B8043
+X-GOOGLE-CALENDAR-CONTENT-COLOR-ID:10
+URL:https://www.festivalarabesques.fr/
+END:VEVENT
+BEGIN:VEVENT
+UID:arabesques-2026-samifati@festivalarabesques.fr
+DTSTAMP:20260729T114000Z
+DTSTART;TZID=Europe/Paris:20260920T193000
+DTEND;TZID=Europe/Paris:20260920T210000
+SUMMARY:Samifati & Transe Gnawa Express
+LOCATION:Théâtre Jean-Claude Carrière\, Domaine d'O\, 178 Rue de la Carriér
+ asse\, 34090 Montpellier
+DESCRIPTION:Électro-gnawa.\n\nGoogle-Calendar-ColorId: 6
+COLOR:darkorange
+X-GOOGLE-CALENDAR-CONTENT-COLOR:#F4511E
+X-GOOGLE-CALENDAR-CONTENT-COLOR-ID:6
+URL:https://www.festivalarabesques.fr/
+END:VEVENT
+BEGIN:VEVENT
+UID:arabesques-2026-souad@festivalarabesques.fr
+DTSTAMP:20260729T114000Z
+DTSTART;TZID=Europe/Paris:20260920T210000
+DTEND;TZID=Europe/Paris:20260920T223000
+SUMMARY:Souad Massi — Concert de clôture
+LOCATION:Amphi d'O\, Domaine d'O\, 178 Rue de la Carriérasse\, 34090 Montpe
+ llier
+DESCRIPTION:Concert de clôture du festival — icône chaâbi-folk algéroise\, 
+ sous les étoiles.\n\nGoogle-Calendar-ColorId: 9
+COLOR:mediumslateblue
+X-GOOGLE-CALENDAR-CONTENT-COLOR:#3F51B5
+X-GOOGLE-CALENDAR-CONTENT-COLOR-ID:9
+URL:https://www.festivalarabesques.fr/
+END:VEVENT
+END:VCALENDAR
