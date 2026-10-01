@@ -32,6 +32,11 @@ services:
     environment:
       <<: *rewatch-environment
       PYTHONUNBUFFERED: 0
+    networks:
+      default: {}
+      web-edge:
+        aliases:
+          - rewatch
   scheduler:
     <<: *rewatch-service
     command: scheduler
@@ -85,3 +90,7 @@ services:
   # Product help lives in this app at /help (see client/app/pages/help/).
 volumes:
   redis_data:
+
+networks:
+  web-edge:
+    external: true

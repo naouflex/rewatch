@@ -38,7 +38,7 @@
 #   BOOT_DISK_SIZE                      (default: 50GB)
 #   APP_PORT          Rewatch host port  (default: 5001)
 #   REMOTE_DIR        Remote directory  (default: rewatch)
-#   CLOUD_SQL_INSTANCE Cloud SQL name to whitelist VM IP on (default: watch-db)
+#   CLOUD_SQL_INSTANCE Cloud SQL name to whitelist VM IP on (default: watch-db-2)
 #   LETSENCRYPT_EMAIL Override the cert registration email
 #                     (defaults to REWATCH_MAIL_DEFAULT_SENDER from .env)
 set -euo pipefail
@@ -47,7 +47,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-INSTANCE="${INSTANCE:-rewatch-prod}"
+INSTANCE="${INSTANCE:-apps-prod}"
 ZONE="${ZONE:-europe-west1-b}"
 MACHINE_TYPE="${MACHINE_TYPE:-e2-standard-2}"
 IMAGE_FAMILY="${IMAGE_FAMILY:-debian-12}"
@@ -57,7 +57,7 @@ TAGS="${TAGS:-http-server,https-server}"
 APP_PORT="${APP_PORT:-5001}"
 REMOTE_DIR="${REMOTE_DIR:-rewatch}"
 ENV_FILE="${ENV_FILE:-$PROJECT_ROOT/.env}"
-CLOUD_SQL_INSTANCE="${CLOUD_SQL_INSTANCE:-watch-db}"
+CLOUD_SQL_INSTANCE="${CLOUD_SQL_INSTANCE:-watch-db-2}"
 
 # ---------- ui helpers --------------------------------------------------------
 if [[ -t 1 ]]; then
@@ -516,10 +516,6 @@ services:
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp"
     volumes:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
