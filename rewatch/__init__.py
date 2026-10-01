@@ -14,7 +14,7 @@ from rewatch.app import create_app  # noqa
 from rewatch.destinations import import_destinations
 from rewatch.query_runner import import_query_runners
 
-__version__ = "26.09.0-dev"
+__version__ = "26.10.0-dev"
 
 
 if os.environ.get("REMOTE_DEBUG"):
