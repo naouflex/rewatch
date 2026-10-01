@@ -1,6 +1,6 @@
 {
   "name": "rewatch-client",
-  "version": "26.09.0-dev",
+  "version": "26.10.0-dev",
   "description": "The frontend for Rewatch.",
   "main": "index.js",
   "scripts": {

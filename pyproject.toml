@@ -1,6 +1,6 @@
 [project]
 name = "rewatch"
-version = "26.09.0-dev"
+version = "26.10.0-dev"
 requires-python = ">=3.13"
 description = "Rewatch — connect to any data source, visualize, dashboard, and share your data."
 authors = [
